@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.cursor/
+.vscode/
+*.swp
+*~
+
+# Debug session logs
+.cursor/debug-*.log
+
+# Local preview / tooling
+node_modules/
+.wrangler/
+.dev.vars
+
+# Tailwind standalone CLI (download via build-css.sh)
+bin/
+
+# Legacy dc-runtime site
+legacy/

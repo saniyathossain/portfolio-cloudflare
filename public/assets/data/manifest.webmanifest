@@ -1,0 +1,21 @@
+{
+  "name": "Saniyat — Portfolio",
+  "short_name": "Saniyat",
+  "description": "Staff Software Engineer — backend, microservices, and AI-assisted delivery.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/assets/img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/assets/img/saniyat-hossain.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

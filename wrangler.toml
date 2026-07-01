@@ -1,0 +1,8 @@
+name = "saniyat-portfolio"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+# Custom domain: saniyat.com (configure in Cloudflare dashboard → Workers → Domains & Routes)
+
+[assets]
+directory = "./public"
+binding = "ASSETS"

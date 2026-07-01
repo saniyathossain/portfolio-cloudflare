@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-shell px-5 sm:px-8;
+  }
+  .pill-btn {
+    @apply inline-flex items-center gap-3 rounded-full text-sm font-medium transition-transform duration-300;
+  }
+  .pill-btn-dark {
+    @apply bg-ink text-white py-1.5 pl-6 pr-1.5;
+  }
+  .pill-btn-outline {
+    @apply border border-line bg-transparent text-ink py-3.5 px-7;
+  }
+  .glass-header {
+    @apply rounded-full border border-white/60 bg-white/55 backdrop-blur-2xl shadow-lg;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-sm font-medium text-ink/70;
+  }
+  .eyebrow-dot {
+    @apply h-1.5 w-1.5 rounded-full bg-ink/50;
+  }
+  .tag-chip {
+    @apply inline-flex rounded-full border border-white/25 px-4 py-2 text-sm text-white;
+  }
+}

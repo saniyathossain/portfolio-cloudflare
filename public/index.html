@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio</title>
+  <meta name="description" content="">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="author" content="">
+  <meta name="keywords" content="">
+  <link rel="canonical" href="/">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/img/saniyat-hossain.jpg">
+  <link rel="manifest" href="/assets/data/manifest.webmanifest">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:title" content="">
+  <meta property="og:description" content="">
+  <meta property="og:image" content="">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="">
+  <meta name="twitter:description" content="">
+  <meta name="twitter:image" content="">
+
+  <link rel="stylesheet" href="/assets/css/tailwind.css">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body x-data="portfolioApp()" x-cloak>
+
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <!-- Page Loader -->
+  <div id="loader" class="loader" role="status" aria-live="polite" aria-label="Loading">
+    <div class="loader__center">
+      <div class="loader__skeleton" aria-hidden="true">
+        <span class="loader__sk loader__sk--brand"></span>
+        <span class="loader__sk loader__sk--tag"></span>
+      </div>
+      <div class="loader__content">
+        <div class="loader__brand">
+          <svg class="icon" viewBox="0 0 48 48" width="1.875rem" height="1.875rem" aria-hidden="true"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+          <span id="loader-brand-name"></span>
+        </div>
+        <p id="loader-tagline" class="loader__tagline"></p>
+      </div>
+    </div>
+    <div class="loader__track-wrap">
+      <div class="loader__track">
+        <div class="loader__track-shimmer" aria-hidden="true"></div>
+        <div id="loadFill" class="loader__fill">
+          <span class="loader__fill-shimmer" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="loader__meta"><span>Loading</span><span id="loadNum" class="loader__num">000</span></div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="shell">
+      <div class="glass-pill">
+        <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Go to home">
+          <svg class="icon" viewBox="0 0 48 48" width="1.25rem" height="1.25rem" aria-hidden="true"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+          <span x-text="profile.shortName"></span>
+        </button>
+        <nav class="nav-desktop" aria-label="Primary">
+          <template x-for="item in nav" :key="item.id">
+            <button type="button" @click="navGo(item)">
+              <img :src="iconSrc(item.icon)" class="ui-icon" alt="" width="16" height="16" decoding="async" aria-hidden="true">
+              <span x-text="item.label"></span>
+            </button>
+          </template>
+        </nav>
+        <div class="header-right">
+          <div class="clock-chip" aria-label="Local time">
+            <img :src="iconSrc('clock')" class="ui-icon ui-icon--sm" alt="" width="14" height="14" decoding="async" aria-hidden="true">
+            <span class="clock-time" x-text="clockTime"></span>
+            <span class="clock-sep">•</span>
+            <span x-text="clockDate"></span>
+          </div>
+          <button type="button" class="menu-btn" @click="openMenu()" aria-label="Open menu">
+            <span>
+              <img :src="iconSrc('menu')" class="ui-icon ui-icon--on-ink" alt="" width="14" height="14" decoding="async" aria-hidden="true">
+              Menu
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- Hero -->
+    <section id="home" class="hero">
+      <div class="hero__backdrop" aria-hidden="true">
+        <div id="heroLiquid" class="hero__backdrop-liquid">
+          <img id="heroBaseImg" :src="profile.avatar" :alt="profile.name" width="900" height="1200" fetchpriority="high" decoding="async">
+          <img id="heroBrushImg" :src="profile.avatar" alt="" width="900" height="1200" hidden decoding="async">
+          <canvas id="heroCanvas"></canvas>
+        </div>
+        <div class="hero__backdrop-scrim"></div>
+      </div>
+      <div id="heroGlow" class="hero__glow" aria-hidden="true"></div>
+      <p class="hero__wm" data-reveal="fade" data-delay="300" aria-hidden="true" x-text="profile.shortName.toUpperCase()"></p>
+
+      <div class="shell hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow" data-reveal data-delay="200">
+            <span class="icon-chip icon-chip--sm" aria-hidden="true"><img :src="iconSrc('engineer')" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+            <span class="eyebrow-dot"></span><span x-text="profile.eyebrow"></span>
+          </p>
+          <h1>
+            <template x-for="(line, i) in profile.nameLines" :key="'name-' + i">
+              <span class="line-wrap">
+                <span class="line-inner" :class="i === profile.nameLines.length - 1 && 'accent grad'" x-text="line"></span>
+              </span>
+            </template>
+          </h1>
+          <div class="hero-rating" data-reveal data-delay="650">
+            <span class="hero-stars" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z"/></svg>
+              <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z"/></svg>
+              <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z"/></svg>
+              <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z"/></svg>
+              <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z"/></svg>
+            </span>
+            <span class="hero-rating__text" x-text="profile.heroRating"></span>
+          </div>
+          <div class="hero__actions" data-reveal data-delay="750">
+            <button type="button" class="pill-btn pill-btn-dark" data-magnetic @click="openModal()">
+              Get in touch
+              <span class="pill-btn__icon"><img :src="iconSrc('arrow')" class="ui-icon ui-icon--on-ink" alt="" width="16" height="16" decoding="async" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="pill-btn pill-btn-glass" data-magnetic @click="scrollTo('experience')">View experience</button>
+          </div>
+        </div>
+
+        <div class="hero__aside">
+          <div class="hero-card" data-reveal="scale" data-delay="400" @click="cardStep(1)">
+            <div class="hero-card__inner">
+              <div class="hero-card__badge">
+                <svg class="icon" viewBox="0 0 48 48" width="1.5rem" height="1.5rem"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+              </div>
+              <div class="hero-card__body">
+                <div>
+                  <div class="hero-card__caption" x-text="activeCard().caption"></div>
+                  <div class="hero-card__title" x-text="activeCard().title"></div>
+                </div>
+                <div class="hero-card__footer">
+                  <div class="hero-card__dots">
+                    <template x-for="(c,i) in heroCards" :key="i">
+                      <span class="hero-card__dot" :class="i===cardIndex && 'is-active'"></span>
+                    </template>
+                  </div>
+                  <div class="hero-card__nav">
+                    <button type="button" class="hero-card__arrow" @click.stop="cardStep(-1)" aria-label="Previous">←</button>
+                    <button type="button" class="hero-card__arrow" @click.stop="cardStep(1)" aria-label="Next">→</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-partners" data-reveal data-delay="550">
+            <p class="hero-partners__label">Worked with</p>
+            <div class="hero-partners__list">
+              <template x-for="p in partners" :key="p.name">
+                <span class="partner-pill">
+                  <img :src="p.logo" :alt="p.name" width="18" height="18" loading="lazy">
+                  <span x-text="p.name"></span>
+                </span>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-status shell" data-reveal="fade" data-delay="900">
+        <span><span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><img :src="iconSrc('rocket')" class="ui-icon" alt="" width="12" height="12" decoding="async"></span> <span x-text="profile.heroStatusShipping"></span></span>
+        <span><span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><img :src="iconSrc('pin')" class="ui-icon" alt="" width="12" height="12" decoding="async"></span> <span x-text="profile.heroStatusLocation"></span></span>
+        <span class="hero-status__scroll">Scroll to explore <span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><img :src="iconSrc('chevronDown')" class="ui-icon" alt="" width="12" height="12" decoding="async"></span></span>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="sec py-20 lg:py-28">
+      <div class="shell about-grid grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+        <div class="relative min-h-[14rem] lg:min-h-[20rem]">
+          <svg class="absolute -left-4 top-1/2 -translate-y-1/2 text-[12rem] text-ink/10 sm:text-[16rem] lg:text-[20rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="9.25"/><path d="M12 2.75c2.6 2.3 4 5.8 4 9.25s-1.4 6.95-4 9.25c-2.6-2.3-4-5.8-4-9.25s1.4-6.95 4-9.25zM2.75 12h18.5"/></svg>
+          <p class="eyebrow relative" data-reveal>
+            <span class="icon-chip icon-chip--sm" aria-hidden="true"><img :src="iconSrc('engineer')" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+            <span class="eyebrow-dot"></span> The engineer
+          </p>
+        </div>
+        <div class="flex flex-col gap-10">
+          <h2 class="text-2xl font-medium leading-snug tracking-tight sm:text-3xl" data-blur-reveal data-blur-speed="1.2" :data-text="site.aboutHeading" x-text="site.aboutHeading"></h2>
+          <div class="flex flex-wrap items-end justify-between gap-6 border-t border-line pt-6" data-reveal data-delay="200">
+            <div>
+              <p class="text-sm text-ink/45">Find me online</p>
+              <div class="mt-3 flex gap-2">
+                <template x-for="s in socials" :key="s.label">
+                  <a :href="s.href" target="_blank" rel="noopener noreferrer" class="social-link" :aria-label="s.label">
+                    <img :src="iconSrc(s.icon)" class="ui-icon" alt="" width="16" height="16" loading="lazy" decoding="async" aria-hidden="true">
+                  </a>
+                </template>
+              </div>
+            </div>
+            <button type="button" class="pill-btn pill-btn-outline" @click="scrollTo('experience')">
+              My work <img :src="iconSrc('arrow')" class="ui-icon ui-icon--sm" alt="" width="14" height="14" decoding="async" aria-hidden="true">
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Create Band -->
+    <section class="sec pb-10" aria-label="We build better">
+      <ul class="shell create-band">
+        <li class="create-band__tile create-band__tile--light" data-reveal data-delay="0">We</li>
+        <li class="create-band__tile create-band__tile--accent" data-reveal data-delay="120">Build</li>
+        <li class="create-band__tile create-band__tile--dark" data-reveal data-delay="240" aria-hidden="true">
+          <svg class="icon text-4xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </li>
+        <li class="create-band__tile create-band__tile--ghost" data-reveal data-delay="360">Better</li>
+      </ul>
+    </section>
+
+    <!-- Services -->
+    <section id="services" class="sec py-20 lg:py-28">
+      <div class="shell">
+        <p class="eyebrow mb-4" data-reveal>
+          <span class="icon-chip icon-chip--sm" aria-hidden="true"><img :src="iconSrc('layers')" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+          <span class="eyebrow-dot"></span> Services
+        </p>
+        <h2 class="mb-12 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">What I build</h2>
+        <ul class="services-list glass-panel" data-reveal data-delay="180">
+          <template x-for="(s,i) in services" :key="s.n">
+            <li class="service-row" data-reveal :data-delay="i*80">
+              <span class="service-row__icon" aria-hidden="true">
+                <img :src="iconSrc(s.icon)" class="ui-icon" alt="" width="18" height="18" decoding="async">
+              </span>
+              <span class="service-row__n" x-text="s.n"></span>
+              <div class="service-row__body">
+                <h3 class="service-row__title" x-text="s.title"></h3>
+                <p class="service-row__desc" x-text="s.desc"></p>
+              </div>
+              <span class="service-row__arrow" aria-hidden="true"><span class="icon-chip icon-chip--sm icon-chip--muted"><img :src="iconSrc('arrow')" class="ui-icon" alt="" width="12" height="12" decoding="async"></span></span>
+            </li>
+          </template>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Experience -->
+    <section id="experience" class="sec py-20 lg:py-28">
+      <div class="shell">
+        <p class="eyebrow mb-4" data-reveal>
+          <span class="icon-chip icon-chip--sm" aria-hidden="true"><img :src="iconSrc('experience')" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+          <span class="eyebrow-dot"></span> Experience
+        </p>
+        <h2 class="mb-12 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Where I've shipped</h2>
+
+        <div class="exp-timeline">
+          <template x-for="(group,gi) in experienceGroups" :key="group.slug">
+            <article class="exp-company glass-card" data-reveal :data-delay="gi*80">
+              <div class="exp-company__head">
+                <span class="exp-company__logo">
+                  <img :src="group.logo" :alt="group.company" width="28" height="28" loading="lazy">
+                </span>
+                <div>
+                  <h3 class="text-xl font-semibold" x-text="group.company"></h3>
+                  <p class="text-sm text-ink/55" x-text="group.location"></p>
+                </div>
+              </div>
+
+              <template x-for="role in group.roles" :key="role.id">
+                <div class="exp-role">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h4 class="font-semibold" x-text="role.role"></h4>
+                    <span class="popover">
+                      <time class="exp-role__period popover__trigger" tabindex="0" x-text="role.period"></time>
+                      <span class="popover__panel" role="tooltip">
+                        <span class="popover__label" x-text="tenureOf(role.period).label"></span>
+                        <span class="popover__meta" x-text="tenureOf(role.period).totalMonths + ' months'"></span>
+                      </span>
+                    </span>
+                  </div>
+                  <p class="mt-2 text-sm text-ink/70 leading-relaxed" x-text="role.summary"></p>
+
+                  <div class="role-tags" x-show="(role.stacks && role.stacks.length) || (role.aiTools && role.aiTools.length)">
+                    <div class="role-tags__group" x-show="role.stacks && role.stacks.length">
+                      <span class="role-tags__label"><span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><img :src="iconSrc('chip')" class="ui-icon" alt="" width="12" height="12" decoding="async"></span> Stack</span>
+                      <div class="pill-row" data-stagger>
+                        <template x-for="item in role.stacks" :key="role.id + '-s-' + item">
+                          <span class="brand-pill brand-pill--sm spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                            <span class="brand-pill__badge">
+                              <template x-if="brandOf(item).src">
+                                <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
+                              </template>
+                              <template x-if="!brandOf(item).src">
+                                <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
+                              </template>
+                            </span>
+                            <span class="brand-pill__label" x-text="item"></span>
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+                    <div class="role-tags__group" x-show="role.aiTools && role.aiTools.length">
+                      <span class="role-tags__label role-tags__label--ai"><span class="icon-chip icon-chip--sm" aria-hidden="true"><img :src="iconSrc('sparkles')" class="ui-icon" alt="" width="12" height="12" decoding="async"></span> AI</span>
+                      <div class="pill-row" data-stagger>
+                        <template x-for="item in role.aiTools" :key="role.id + '-ai-' + item">
+                          <span class="brand-pill brand-pill--sm brand-pill--ai spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                            <span class="brand-pill__badge">
+                              <template x-if="brandOf(item).src">
+                                <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
+                              </template>
+                              <template x-if="!brandOf(item).src">
+                                <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
+                              </template>
+                            </span>
+                            <span class="brand-pill__label" x-text="item"></span>
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button type="button" class="exp-toggle pill-expand" @click="toggleRole(role.id)" :aria-expanded="isRoleOpen(role.id)">
+                    <span class="pill-expand__label exp-toggle__label" x-text="roleToggleLabel(role.id)"></span>
+                    <img :src="iconSrc('chevronDown')" class="ui-icon ui-icon--sm ui-icon--accent exp-toggle__chev" :class="isRoleOpen(role.id) && 'is-open'" alt="" width="14" height="14" decoding="async" aria-hidden="true">
+                  </button>
+                  <div class="exp-details" :id="'exp-panel-' + role.id" :class="isRoleOpen(role.id) && 'is-open'" :aria-hidden="!isRoleOpen(role.id)">
+                    <div class="exp-details__inner">
+                      <ul>
+                        <template x-for="d in role.details" :key="d">
+                          <li x-text="d"></li>
+                        </template>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </article>
+          </template>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills -->
+    <section id="skills" class="sec py-20 lg:py-28">
+      <div class="shell">
+        <p class="eyebrow mb-4" data-reveal>
+          <span class="icon-chip icon-chip--sm" aria-hidden="true"><img :src="iconSrc('skills')" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+          <span class="eyebrow-dot"></span> Skills
+        </p>
+        <h2 class="mb-12 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Tools &amp; craft</h2>
+        <div class="grid gap-6 md:grid-cols-2">
+          <template x-for="(g,gi) in skills" :key="g.title">
+            <div class="glass-panel" data-reveal :data-delay="gi*80">
+              <div class="skills-panel__head">
+                <span class="icon-chip" aria-hidden="true"><img :src="iconSrc(g.icon)" class="ui-icon" alt="" width="16" height="16" decoding="async"></span>
+                <h3 x-text="g.title"></h3>
+              </div>
+              <div class="pill-row" data-stagger>
+                <template x-for="item in g.items" :key="item">
+                  <span class="brand-pill spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                    <span class="brand-pill__badge">
+                      <template x-if="brandOf(item).src">
+                        <img :src="brandOf(item).src" :alt="item" width="14" height="14" loading="lazy">
+                      </template>
+                      <template x-if="!brandOf(item).src">
+                        <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
+                      </template>
+                    </span>
+                    <span class="brand-pill__label" x-text="item"></span>
+                  </span>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="sec pb-20 lg:pb-28" aria-label="Statistics">
+      <div class="shell">
+        <div class="stats-panel" data-reveal>
+          <p class="eyebrow stats-panel__eyebrow">
+            <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><img :src="iconSrc('chart')" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+            <span class="eyebrow-dot stats-panel__eyebrow-dot"></span>By the numbers
+          </p>
+          <h2 class="stats-panel__title mt-4 max-w-md text-2xl font-medium tracking-tight md:text-3xl" data-blur-reveal data-delay="120">Proof in the work, not the words.</h2>
+          <ul class="mt-14 grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-4">
+            <template x-for="(s,i) in stats" :key="s.label">
+              <li data-reveal :data-delay="i*90">
+                <div class="stats-panel__icon" aria-hidden="true">
+                  <span class="icon-chip icon-chip--sm icon-chip--on-dark"><img :src="iconSrc(s.icon)" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+                </div>
+                <div class="text-4xl font-semibold tracking-tight sm:text-5xl" :data-count="true" :data-value="s.value" :data-suffix="s.suffix">0</div>
+                <p class="mt-3 text-sm text-white/55" x-text="s.label"></p>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Education -->
+    <section id="education" class="sec pb-20 lg:pb-28">
+      <div class="shell">
+        <p class="eyebrow mb-4" data-reveal>
+          <span class="icon-chip icon-chip--sm" aria-hidden="true"><img :src="iconSrc('education')" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+          <span class="eyebrow-dot"></span> Education
+        </p>
+        <h2 class="mb-12 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Foundations</h2>
+        <ul class="grid gap-4">
+          <template x-for="(e,i) in education" :key="e.school">
+            <li class="edu-row glass-card spec" data-reveal :data-delay="i*80">
+              <img :src="e.logo" :alt="e.school" width="48" height="48" loading="lazy" class="h-12 w-12 object-contain">
+              <div>
+                <p class="text-xs font-medium uppercase tracking-wide text-ink/45" x-text="e.years"></p>
+                <h3 class="font-semibold" x-text="e.school"></h3>
+                <p class="text-sm text-ink/70" x-text="e.degree"></p>
+              </div>
+              <p class="edu-place text-sm text-ink/55" x-text="e.place"></p>
+            </li>
+          </template>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="shell relative z-10 py-20 pb-10 lg:pt-24">
+      <div class="flex flex-col gap-8 border-b border-white/10 pb-16 lg:flex-row lg:items-end lg:justify-between">
+        <h2 class="max-w-md text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl" data-blur-reveal>Have a project in mind? Let's get to work.</h2>
+        <button type="button" class="pill-btn bg-surface text-ink py-3.5 px-7" @click="openModal()">
+          Start a project <img :src="iconSrc('arrow')" class="ui-icon ui-icon--sm" alt="" width="14" height="14" decoding="async" aria-hidden="true">
+        </button>
+      </div>
+      <div class="site-footer__cols">
+        <div class="site-footer__col">
+          <div class="flex items-center gap-2 text-lg font-semibold">
+            <svg class="icon text-accent-bright" viewBox="0 0 48 48" width="1.25rem" height="1.25rem"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+            <span x-text="profile.shortName"></span>
+          </div>
+          <p class="mt-4 max-w-xs text-sm text-white/55" x-text="site.footerTagline"></p>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__heading text-xs uppercase tracking-wide text-white/40">Navigate</p>
+          <ul class="site-footer__links text-sm">
+            <template x-for="item in nav" :key="'f-'+item.id">
+              <li><button type="button" @click="navGo(item)" x-text="item.label"></button></li>
+            </template>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__heading text-xs uppercase tracking-wide text-white/40">Contact</p>
+          <ul class="site-footer__links text-sm">
+            <li>
+              <a :href="'mailto:' + profile.email">
+                <img :src="iconSrc('contact')" class="ui-icon site-footer__ico" alt="" width="14" height="14" decoding="async" aria-hidden="true">
+                <span x-text="profile.email"></span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="site-footer__col">
+          <p class="site-footer__heading text-xs uppercase tracking-wide text-white/40">Elsewhere</p>
+          <ul class="site-footer__links text-sm">
+            <template x-for="s in socials" :key="'s-'+s.label">
+              <li>
+                <a :href="s.href" target="_blank" rel="noopener noreferrer">
+                  <img :src="iconSrc(s.icon)" class="ui-icon site-footer__ico" alt="" width="14" height="14" loading="lazy" decoding="async" aria-hidden="true">
+                  <span x-text="s.label"></span>
+                </a>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </div>
+      <div class="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/45 sm:flex-row">
+        <span x-text="'© ' + currentYear + ' ' + profile.name + '.'"></span>
+        <span class="inline-flex items-center gap-2 text-white/55">
+          <svg class="icon" viewBox="0 0 24 24" width="0.95rem" height="0.95rem" aria-hidden="true"><path fill="#F38020" d="M16.5 4.5h-9A3 3 0 004.5 7.5v9a3 3 0 003 3h9a3 3 0 003-3v-9a3 3 0 00-3-3z"/></svg>
+          Edge-delivered on Cloudflare Workers
+        </span>
+      </div>
+    </div>
+    <p class="site-footer__wm" aria-hidden="true" x-text="profile.shortName.toUpperCase()"></p>
+  </footer>
+
+  <!-- Nav overlay -->
+  <div class="nav-overlay" :class="menuOpen && 'is-open'" role="dialog" aria-modal="true" aria-label="Navigation menu" x-show="menuOpen" x-transition>
+    <div class="shell flex items-center justify-between py-6">
+      <div class="flex items-center gap-2 text-lg font-semibold text-white">
+        <svg class="icon text-accent-bright" viewBox="0 0 48 48" width="1.25rem" height="1.25rem"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
+        <span x-text="profile.shortName"></span>
+      </div>
+      <button type="button" class="rounded-control border border-white/15 px-4 py-2 text-xs font-medium uppercase tracking-wide text-white/70" @click="closeMenu()">Close</button>
+    </div>
+    <nav class="shell flex flex-1 flex-col justify-center">
+      <ul class="flex flex-col gap-1">
+        <template x-for="item in nav" :key="'m-'+item.id">
+          <li><button type="button" class="nav-overlay__item" @click="navGo(item)">
+            <span class="nav-overlay__idx" x-text="item.n"></span>
+            <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><img :src="iconSrc(item.icon)" class="ui-icon" alt="" width="14" height="14" decoding="async"></span>
+            <span x-text="item.label"></span>
+          </button></li>
+        </template>
+      </ul>
+    </nav>
+    <div class="shell flex flex-col gap-3 border-t border-white/10 py-6 text-xs uppercase tracking-wide text-white/45 sm:flex-row sm:justify-between">
+      <span>Local time — <span x-text="clockTime"></span></span>
+      <button type="button" class="text-white/70 hover:text-white" @click="closeMenu(); openModal()">Start a project →</button>
+    </div>
+  </div>
+
+  <!-- Request modal -->
+  <div class="modal-backdrop" :class="modalOpen && 'is-open'" role="dialog" aria-modal="true" aria-labelledby="modal-title" @click.self="closeModal()" x-show="modalOpen" x-transition>
+    <div class="modal-panel" @click.stop>
+      <button type="button" class="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-surface text-ink/60" @click="closeModal()" aria-label="Close">✕</button>
+
+      <template x-if="!success">
+        <div>
+          <div class="mb-6">
+            <p class="eyebrow"><span class="eyebrow-dot bg-accent"></span>Get in touch</p>
+            <h2 id="modal-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Tell us what you're building.</h2>
+          </div>
+          <form class="flex flex-col gap-4" @submit="submitForm">
+            <div class="modal-field"><label for="f-name">Name</label><input id="f-name" name="name" type="text" required placeholder="Your name" autocomplete="name"></div>
+            <div class="modal-field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" required placeholder="you@company.com" autocomplete="email"></div>
+            <div class="modal-field"><label for="f-project">Project</label><textarea id="f-project" name="project" rows="4" required placeholder="A few words about your project, timeline, and budget."></textarea></div>
+            <div class="mt-2 flex items-center justify-between gap-4">
+              <p class="text-xs text-ink/45">We reply within one business day.</p>
+              <button type="submit" class="pill-btn pill-btn-dark" :disabled="submitting" x-text="submitting ? 'Sending…' : 'Send request'"></button>
+            </div>
+          </form>
+        </div>
+      </template>
+
+      <template x-if="success">
+        <div class="flex flex-col items-center gap-4 py-8 text-center">
+          <div class="grid h-14 w-14 place-items-center rounded-full bg-ink text-accent-bright text-2xl">✓</div>
+          <h2 class="text-2xl font-semibold">Request received</h2>
+          <p class="max-w-sm text-sm text-ink/60">Thanks for reaching out — I'll get back to you within one business day.</p>
+          <button type="button" class="pill-btn pill-btn-dark mt-2" @click="closeModal()">Close</button>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <script src="/assets/js/data.js" defer></script>
+  <script src="/assets/js/icons.js" defer></script>
+  <script src="/assets/js/loader.js" defer></script>
+  <script src="/assets/js/boot.js" defer></script>
+  <script src="/assets/js/vendor/motion.min.js" defer></script>
+  <script src="/assets/js/reveal.js" defer></script>
+  <script src="/assets/js/blur-reveal.js" defer></script>
+  <script src="/assets/js/liquid-hero.js" defer></script>
+  <script src="/assets/js/motion.js" defer></script>
+</body>
+</html>
