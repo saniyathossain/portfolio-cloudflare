@@ -85,10 +85,31 @@ function _parseMonthYear(str) {
   return new Date(parseInt(m[2], 10), mo, 1);
 }
 
+function _cleanRoleTitle(role) {
+  return String(role || "").replace(/\s*[—–-]?\s*\((Contract|Permanent)\)\s*/gi, "").trim();
+}
+
+function _employmentOf(exp) {
+  const type = exp.employmentType
+    || (/\(Contract\)/i.test(exp.role) ? "contract" : "permanent");
+  if (type === "contract") {
+    return { type: "contract", label: "Contract", icon: "contract" };
+  }
+  return { type: "permanent", label: "Permanent", icon: "permanent" };
+}
+
+function _enrichExperience(exp) {
+  return Object.assign({}, exp, {
+    roleDisplay: _cleanRoleTitle(exp.role),
+    employment: _employmentOf(exp),
+  });
+}
+
 function _groupExperiences(data) {
   const groups = [];
   const map = new Map();
   for (const exp of data.experiences) {
+    const row = _enrichExperience(exp);
     const co = data.companies[exp.companySlug];
     if (!map.has(exp.companySlug)) {
       const g = {
@@ -101,9 +122,23 @@ function _groupExperiences(data) {
       map.set(exp.companySlug, g);
       groups.push(g);
     }
-    map.get(exp.companySlug).roles.push(exp);
+    map.get(exp.companySlug).roles.push(row);
+  }
+  for (const g of groups) {
+    g.companyTenure = _companyTenureOf(g.roles);
   }
   return groups;
+}
+
+function _formatTenureMonths(total) {
+  if (total < 1) total = 1;
+  const years = Math.floor(total / 12);
+  const months = total % 12;
+  const bits = [];
+  if (years) bits.push(years + (years === 1 ? " year" : " years"));
+  if (months) bits.push(months + (months === 1 ? " month" : " months"));
+  if (!bits.length) bits.push("1 month");
+  return { years, months, totalMonths: total, label: bits.join(", ") };
 }
 
 function _tenureOf(period) {
@@ -114,14 +149,16 @@ function _tenureOf(period) {
   const end = /^present$/i.test(endRaw) ? new Date() : _parseMonthYear(endRaw);
   if (!start || !end) return { years: 0, months: 0, totalMonths: 0, label: "—" };
   let total = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-  if (total < 1) total = 1;
-  const years = Math.floor(total / 12);
-  const months = total % 12;
-  const bits = [];
-  if (years) bits.push(years + (years === 1 ? " year" : " years"));
-  if (months) bits.push(months + (months === 1 ? " month" : " months"));
-  if (!bits.length) bits.push("1 month");
-  return { years, months, totalMonths: total, label: bits.join(", ") };
+  return _formatTenureMonths(total);
+}
+
+function _companyTenureOf(roles) {
+  let totalMonths = 0;
+  for (const role of roles || []) {
+    totalMonths += _tenureOf(role.period).totalMonths;
+  }
+  if (!totalMonths) return { years: 0, months: 0, totalMonths: 0, label: "—" };
+  return _formatTenureMonths(totalMonths);
 }
 
 function _setMeta(attr, key, content) {
@@ -218,6 +255,8 @@ function _hydrate(raw) {
     };
   };
   data.tenureOf = _tenureOf;
+  data.companyTenureOf = _companyTenureOf;
+  data.normalizeRole = _enrichExperience;
   data.experienceGroups = _groupExperiences(data);
   data.profile.phoneHref = String(data.profile.phone || "").replace(/[^\d+]/g, "");
   return data;

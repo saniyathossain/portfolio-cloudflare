@@ -3,10 +3,18 @@
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const BRUSH_FRACTION = 0.34;
-  const IMG_POS_X = 0.5;
-  const IMG_POS_Y = 0.12;
   const DECAY = 0.016;
   const IDLE_MAX = 120;
+
+  function readObjectPosition(img) {
+    const raw = getComputedStyle(img).objectPosition.trim().split(/\s+/);
+    const px = parseFloat(raw[0]);
+    const py = parseFloat(raw[1] || raw[0]);
+    return {
+      x: Number.isFinite(px) ? px / 100 : 0.5,
+      y: Number.isFinite(py) ? py / 100 : 0.5,
+    };
+  }
 
   function init() {
     const container = document.getElementById("heroLiquid");
@@ -25,6 +33,7 @@
     let idle = 0;
     let drawing = false;
     let raf = 0;
+    let imgPos = { x: 0.5, y: 0.12 };
 
     function sizeCanvas() {
       const r = container.getBoundingClientRect();
@@ -40,6 +49,7 @@
       const diam = Math.ceil(radius * 2);
       brush.width = diam;
       brush.height = diam;
+      imgPos = readObjectPosition(baseImg);
       drawCover();
     }
 
@@ -54,8 +64,8 @@
       const scale = Math.max(cover.width / iw, cover.height / ih);
       const sw = iw * scale;
       const sh = ih * scale;
-      const sx = (cover.width - sw) * IMG_POS_X;
-      const sy = (cover.height - sh) * IMG_POS_Y;
+      const sx = (cover.width - sw) * imgPos.x;
+      const sy = (cover.height - sh) * imgPos.y;
       cctx.filter = "saturate(1.25) contrast(1.06) brightness(1.03)";
       cctx.drawImage(src, sx, sy, sw, sh);
       cctx.filter = "none";
@@ -104,10 +114,10 @@
       raf = requestAnimationFrame(tick);
     }
 
-    function onPointerMove(e) {
+    function queuePoint(clientX, clientY) {
       const r = canvas.getBoundingClientRect();
-      const x = (e.clientX - r.left) * dpr;
-      const y = (e.clientY - r.top) * dpr;
+      const x = (clientX - r.left) * dpr;
+      const y = (clientY - r.top) * dpr;
       if (x < -radius || y < -radius || x > canvas.width + radius || y > canvas.height + radius) {
         last = null;
         return;
@@ -129,7 +139,21 @@
       last = { x, y };
     }
 
+    function onPointerMove(e) {
+      queuePoint(e.clientX, e.clientY);
+    }
+
+    function onPointerDown(e) {
+      last = null;
+      queuePoint(e.clientX, e.clientY);
+    }
+
+    function onPointerLeave() {
+      last = null;
+    }
+
     function onImagesReady() {
+      imgPos = readObjectPosition(baseImg);
       drawCover();
     }
 
@@ -138,7 +162,9 @@
     if (baseImg.complete && brushImg.complete) onImagesReady();
     sizeCanvas();
     new ResizeObserver(sizeCanvas).observe(container);
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    container.addEventListener("pointermove", onPointerMove, { passive: true });
+    container.addEventListener("pointerdown", onPointerDown, { passive: true });
+    container.addEventListener("pointerleave", onPointerLeave);
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(tick);
   }

@@ -24,9 +24,19 @@ function portfolioApp() {
     site: D.site,
 
     init() {
+      const live = window.PORTFOLIO_DATA;
+      if (live?.experienceGroups) {
+        const normalize = live.normalizeRole || ((role) => role);
+        this.experienceGroups = live.experienceGroups.map((group) => ({
+          ...group,
+          roles: (group.roles || []).map((role) => normalize(role)),
+        }));
+      }
+      if (live?.skills) this.skills = live.skills;
       this.tickClock();
       setInterval(() => this.tickClock(), 1000);
       this.setupHeroGlow();
+      this.setupHeroContrast();
       this._onKey = (e) => {
         if (e.key === "Escape") {
           if (this.modalOpen) this.closeModal();
@@ -49,6 +59,71 @@ function portfolioApp() {
         glow.style.opacity = "1";
       });
       hero.addEventListener("pointerleave", () => { glow.style.opacity = "0"; });
+    },
+
+    setupHeroContrast() {
+      const hero = document.getElementById("home");
+      const copy = hero?.querySelector(".hero__copy");
+      const h1 = copy?.querySelector("h1");
+      const img = document.getElementById("heroBaseImg");
+      const backdrop = hero?.querySelector(".hero__backdrop");
+      if (!hero || !copy || !h1 || !img || !backdrop) return;
+
+      const update = () => {
+        if (!img.complete || !img.naturalWidth) return;
+
+        const h1Rect = h1.getBoundingClientRect();
+        const backdropRect = backdrop.getBoundingClientRect();
+        const sampleX = h1Rect.left + h1Rect.width * 0.5;
+        const sampleY = h1Rect.top + h1Rect.height * 0.42;
+
+        const overlapsBackdrop =
+          sampleY < backdropRect.bottom &&
+          sampleX > backdropRect.left &&
+          sampleX < backdropRect.right;
+
+        if (!overlapsBackdrop) {
+          copy.classList.remove("hero__copy--on-dark");
+          return;
+        }
+
+        const pos = getComputedStyle(img).objectPosition.trim().split(/\s+/);
+        const objectPosX = (parseFloat(pos[0]) || 50) / 100;
+        const objectPosY = (parseFloat(pos[1] || pos[0]) || 50) / 100;
+        const bw = backdropRect.width;
+        const bh = backdropRect.height;
+        const iw = img.naturalWidth;
+        const ih = img.naturalHeight;
+        const scale = Math.max(bw / iw, bh / ih);
+        const sw = iw * scale;
+        const sh = ih * scale;
+        const imgLeft = backdropRect.left + (bw - sw) * objectPosX;
+        const imgTop = backdropRect.top + (bh - sh) * objectPosY;
+        const lx = (sampleX - imgLeft) / scale;
+        const ly = (sampleY - imgTop) / scale;
+
+        if (lx < 0 || ly < 0 || lx > iw || ly > ih) {
+          copy.classList.remove("hero__copy--on-dark");
+          return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 1;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, lx, ly, 1, 1, 0, 0, 1, 1);
+        const d = ctx.getImageData(0, 0, 1, 1).data;
+        const lum = (0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2]) / 255;
+        const onDark = lum < 0.58;
+        copy.classList.toggle("hero__copy--on-dark", onDark);
+      };
+
+      img.addEventListener("load", update);
+      if (img.complete) update();
+      window.addEventListener("resize", update);
+      window.addEventListener("portfolio-ready", () => {
+        requestAnimationFrame(update);
+        setTimeout(update, 120);
+      });
     },
 
     tickClock() {
@@ -113,7 +188,17 @@ function portfolioApp() {
 
     tenureOf(period) { return window.PORTFOLIO_DATA.tenureOf(period); },
 
+    companyTenureOf(roles) { return window.PORTFOLIO_DATA.companyTenureOf(roles); },
+
     iconSrc(name) { return window.iconSrc(name); },
+    iconSvg(name, className) { return window.iconSvg(name, className); },
+
+    roleEmployment(role) {
+      if (role?.employment?.label) return role.employment;
+      const live = window.PORTFOLIO_DATA;
+      const normalized = live?.normalizeRole ? live.normalizeRole(role) : role;
+      return normalized?.employment || { type: "permanent", label: "Permanent", icon: "permanent" };
+    },
 
     toggleRole(id) {
       const opening = !this.openRoles[id];

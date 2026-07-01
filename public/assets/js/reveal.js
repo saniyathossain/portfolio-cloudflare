@@ -12,10 +12,16 @@
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
-            e.target.classList.add("is-visible");
-            const delay = parseInt(e.target.getAttribute("data-delay") || "0", 10);
-            if (delay) e.target.style.transitionDelay = delay + "ms";
-            io.unobserve(e.target);
+            const el = e.target;
+            const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
+            el.style.setProperty("--reveal-delay", delay + "ms");
+            if (delay) el.style.transitionDelay = delay + "ms";
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                el.classList.add("is-visible");
+              });
+            });
+            io.unobserve(el);
           }
         }
       },
@@ -50,6 +56,20 @@
     });
   }
 
+  function revealStaggerRow(row) {
+    const kids = row.children;
+    const step = parseInt(row.getAttribute("data-stagger-step") || "85", 10);
+    const base = parseInt(row.getAttribute("data-stagger-base") || "50", 10);
+    for (let i = 0; i < kids.length; i++) {
+      kids[i].style.setProperty("--reveal-delay", base + i * step + "ms");
+    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        row.classList.add("is-visible");
+      });
+    });
+  }
+
   function initStagger() {
     const rows = document.querySelectorAll("[data-stagger]");
     if (reduced) {
@@ -60,16 +80,11 @@
       (entries) => {
         for (const e of entries) {
           if (!e.isIntersecting) continue;
-          const row = e.target;
-          const kids = row.children;
-          for (let i = 0; i < kids.length; i++) {
-            kids[i].style.transitionDelay = i * 58 + "ms";
-          }
-          row.classList.add("is-visible");
-          io.unobserve(row);
+          revealStaggerRow(e.target);
+          io.unobserve(e.target);
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -6% 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px -4% 0px" }
     );
     rows.forEach((r) => io.observe(r));
   }
