@@ -5,11 +5,12 @@
   if (reduce || !M || typeof M.animate !== "function") return;
   const animate = M.animate;
 
-  const springSnappy = { type: "spring", stiffness: 460, damping: 28, mass: 0.55 };
-  const springSoft = { type: "spring", stiffness: 320, damping: 26, mass: 0.65 };
+  // Soft macOS-Tahoe springs — gentle settle with a whisper of overshoot
+  const springSnappy = { type: "spring", stiffness: 340, damping: 30, mass: 0.6 };
+  const springSoft = { type: "spring", stiffness: 220, damping: 28, mass: 0.7 };
 
   function magnetic(el, strength) {
-    strength = strength || 0.18;
+    strength = strength || 0.14;
     let raf = 0;
     function move(e) {
       if (raf) return;

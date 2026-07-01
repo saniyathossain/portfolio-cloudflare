@@ -82,3 +82,22 @@ Three material layers, Tahoe-style:
 - `public/index.html` — section wrappers, hero layout, experience timeline markup.
 - `public/assets/js/motion.js` — pointer specular tracking + float.
 - `docs/aidlc/01-design-system.md` — token/material reference (follow-up).
+
+## 8. macOS Tahoe polish pass (see `06-tahoe-refinement-plan.md`)
+
+A later refinement pass aligned the motion + material tokens to the authentic Tahoe language
+proven in the `cursor-presentation` deck (light-only, no structural changes):
+
+- **Easing:** `--ease-glass: cubic-bezier(0.32, 0.72, 0, 1)` (Tahoe soft settle, replaces the old
+  `.33,1,.38,1`) + new `--ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1)` for scroll reveals.
+- **Frosted material:** blur retuned to `blur(24px) saturate(200%)` (`--glass-blur`) /
+  `blur(34px) saturate(205%)` (`--glass-blur-lg`); a soft-light top **specular film** (new
+  `--glass-sheen` token) on `.glass-panel` / `.glass-card` / `.glass-pill` / `.hero-card`; GPU
+  hints (`translateZ(0)`, `contain: paint`).
+- **Ambient palette:** aurora hues shifted to the Tahoe system palette (indigo `#6e6cf0`, blue
+  `#0a84ff`, cyan `#64d2ff`, teal `#3fd0e0`, orange `#ff9f0a`, pink `#ff5c8a`). Brand copper
+  `--accent` is unchanged.
+- **Pills:** softer/longer hover+focus settle, stronger brand-colored glow, `:focus-visible`
+  mirrors `:hover` (lift + label expand + glow + ring).
+- **JS springs:** `motion.js` springs softened (lower stiffness, gentle overshoot); `toggleRole`
+  height animation uses the Tahoe curve. All still gated by `prefers-reduced-motion`.

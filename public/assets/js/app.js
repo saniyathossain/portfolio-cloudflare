@@ -230,7 +230,7 @@ function portfolioApp() {
           panel.style.overflow = "hidden";
           panel.style.height = "0px";
           requestAnimationFrame(() => {
-            panel.style.transition = "height 0.2s cubic-bezier(0.22, 1, 0.36, 1)";
+            panel.style.transition = "height 0.42s cubic-bezier(0.32, 0.72, 0, 1)";
             panel.style.height = inner.scrollHeight + "px";
           });
           const onEnd = (e) => {
@@ -246,7 +246,7 @@ function portfolioApp() {
       panel.style.overflow = "hidden";
       panel.style.height = panel.scrollHeight + "px";
       requestAnimationFrame(() => {
-        panel.style.transition = "height 0.16s cubic-bezier(0.4, 0, 0.2, 1)";
+        panel.style.transition = "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)";
         panel.style.height = "0px";
       });
       const onEnd = (e) => {

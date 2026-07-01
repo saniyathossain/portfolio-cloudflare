@@ -344,7 +344,7 @@
                                       <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
                                     </template>
                                   </span>
-                                  <span class="brand-pill__label" x-text="item"></span>
+                                  <span class="brand-pill__label"><span class="brand-pill__label-tx" x-text="item"></span></span>
                                 </span>
                               </template>
                             </div>
@@ -362,7 +362,7 @@
                                       <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
                                     </template>
                                   </span>
-                                  <span class="brand-pill__label" x-text="item"></span>
+                                  <span class="brand-pill__label"><span class="brand-pill__label-tx" x-text="item"></span></span>
                                 </span>
                               </template>
                             </div>
@@ -405,7 +405,7 @@
                         <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
                       </template>
                     </span>
-                    <span class="brand-pill__label" x-text="item"></span>
+                    <span class="brand-pill__label"><span class="brand-pill__label-tx" x-text="item"></span></span>
                   </span>
                 </template>
               </div>
@@ -450,13 +450,13 @@
         <ul class="grid gap-4">
           <template x-for="(e,i) in education" :key="e.school">
             <li class="edu-row glass-card spec" data-reveal :data-delay="i*80">
-              <img :src="e.logo" :alt="e.school" width="48" height="48" loading="lazy" class="h-12 w-12 object-contain">
-              <div>
-                <p class="text-xs font-medium uppercase tracking-wide text-ink/45" x-text="e.years"></p>
-                <h3 class="font-semibold" x-text="e.school"></h3>
-                <p class="text-sm text-ink/70" x-text="e.degree"></p>
+              <span class="edu-row__logo"><img :src="e.logo" :alt="e.school" width="48" height="48" loading="lazy"></span>
+              <div class="edu-row__body">
+                <span class="edu-row__years" x-text="e.years"></span>
+                <h3 class="edu-row__school" x-text="e.school"></h3>
+                <p class="edu-row__degree" x-text="e.degree"></p>
               </div>
-              <p class="edu-place text-sm text-ink/55" x-text="e.place"></p>
+              <span class="edu-place edu-row__place" x-text="e.place"></span>
             </li>
           </template>
         </ul>
