@@ -54,6 +54,7 @@ html:not(.is-loading) .load-scrim { display: none; }
   /* Liquid-glass material */
   --glass-bg: rgba(255,255,255,.2);
   --glass-bg-strong: rgba(255,255,255,.38);
+  --frost-bg: rgba(255,255,255,.74);   /* faux-frost for SCROLLING glass — no backdrop-filter (100/100 on mobile) */
   --glass-border: rgba(255,255,255,.85);
   --glass-blur: blur(26px) saturate(215%);
   --glass-blur-lg: blur(38px) saturate(220%);
@@ -127,13 +128,7 @@ html:not(.is-loading) .load-scrim { display: none; }
   }
 }
 
-@media (max-width: 640px) {
-  .glass-panel,
-  .glass-card {
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-  }
-}
+/* Scrolling glass uses faux-frost (opaque --frost-bg + gradient films), so no mobile blur fallback needed. */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -192,14 +187,21 @@ body::after {
 }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
 
+/* Film-grain overlay — fixed, pointer-events-none; sits above content, below the fixed chrome/overlays */
+.grain {
+  position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  opacity: 0.038; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
 code, kbd, pre, samp { font-family: var(--font-mono); }
 
 /* ── Liquid-glass primitives ─────────────────────────────────────────── */
 .glass-panel {
   position: relative; border-radius: var(--radius-card);
   padding: 1.75rem 1.75rem 2rem;
-  background: var(--glass-bg); backdrop-filter: var(--glass-blur-lg);
-  -webkit-backdrop-filter: var(--glass-blur-lg);
+  background: var(--frost-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow), var(--glass-highlight);
   transform: translateZ(0); contain: paint;
@@ -223,8 +225,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 }
 .glass-card {
   position: relative; overflow: hidden; border-radius: var(--radius-card-sm);
-  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--frost-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow), var(--glass-highlight);
   transform: translateZ(0); contain: paint;
@@ -376,18 +377,10 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
     0 1px 2px rgba(17,17,17,.06);
 }
 
-/* Gradient text — brand highlight (cohesive copper accent, the hero surname) */
+/* Hero surname — solid copper (gradient-text is an AI tell; emphasis via colour + weight, not a gradient) */
 .grad {
-  background: linear-gradient(110deg, var(--grad-warm-from), var(--grad-warm-via), var(--grad-warm-to), var(--grad-warm-from));
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.hero.is-ready .grad { animation: gradflow 9s linear infinite; }
-@keyframes gradflow { to { background-position: 220% 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .hero.is-ready .grad { animation: none; }
+  color: var(--accent);
+  -webkit-text-fill-color: var(--accent);
 }
 
 a { color: inherit; text-decoration: none; }
@@ -845,11 +838,8 @@ html.is-ready .hero__wm {
     0 0 24px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 .hero__copy--on-dark .hero h1 .line-inner.grad {
-  background: linear-gradient(110deg, var(--accent-dark), var(--accent), var(--accent-bright), var(--accent-dark));
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--accent-bright);
+  -webkit-text-fill-color: var(--accent-bright);
 }
 .hero__copy--on-dark .eyebrow { color: rgba(255,255,255,.84); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
 .hero__copy--on-dark .eyebrow-dot { background: rgba(255,255,255,.55); }
@@ -1882,6 +1872,7 @@ html.is-ready .hero__wm {
     transparent 46deg,
     transparent 360deg);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   animation: beam-rotate 7s linear infinite;

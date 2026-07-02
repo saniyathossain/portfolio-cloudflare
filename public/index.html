@@ -60,6 +60,9 @@
   <!-- Progressive blur scrim — site stays painted underneath during load -->
   <div id="load-scrim" class="load-scrim" aria-hidden="true"></div>
 
+  <!-- Film grain — fixed, pointer-events-none texture overlay (no network; breaks digital flatness) -->
+  <div class="grain" aria-hidden="true"></div>
+
   <!-- Page Loader — outside Alpine; glass panel over blurred site -->
   <div id="loader" class="loader" role="status" aria-live="polite" aria-label="Loading">
     <div class="loader__panel">

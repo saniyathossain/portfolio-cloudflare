@@ -271,12 +271,12 @@
   ],
   "companies": {
     "brain-station-23-plc": {
-      "name": "Brain Station 23 PLC",
+      "name": "Brain Station 23",
       "logo": "/assets/img/logos/brainstation-23-official.svg",
       "location": "Dhaka, Bangladesh"
     },
     "grameenphone-limited": {
-      "name": "Grameenphone — Digital Ninja",
+      "name": "Grameenphone",
       "logo": "/assets/img/logos/grameenphone-official.svg",
       "location": "Dhaka, Bangladesh"
     },
