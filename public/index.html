@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- SYNC:HEAD:START -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio</title>
-  <meta name="description" content="">
+  <title>Saniyat Hossain — Staff Software Engineer</title>
+  <meta name="description" content="Staff Software Engineer crafting resilient backends, telco-scale platforms and mobile apps — PHP, Laravel, Node.js and microservices, shipped with quiet precision.">
   <meta name="theme-color" content="#0a0a0a">
-  <meta name="author" content="">
-  <meta name="keywords" content="">
-  <link rel="canonical" href="/">
+  <meta name="author" content="Mohammad Saniyat Hossain">
+  <meta name="keywords" content="Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="canonical" href="https://saniyat.com/">
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/assets/img/saniyat-hossain.jpg">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
-
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="">
-  <meta property="og:title" content="">
-  <meta property="og:description" content="">
-  <meta property="og:image" content="">
+  <meta property="og:url" content="https://saniyat.com/">
+  <meta property="og:title" content="Saniyat Hossain — Staff Software Engineer">
+  <meta property="og:description" content="Backend engineering, shipped with quiet precision. 14+ years building PHP/Laravel and Node.js services at scale.">
+  <meta property="og:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="en_US">
-
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="">
-  <meta name="twitter:description" content="">
-  <meta name="twitter:image" content="">
-
+  <meta name="twitter:title" content="Saniyat Hossain — Staff Software Engineer">
+  <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
+  <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
+  <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
   <link rel="stylesheet" href="/assets/css/tailwind.css">
   <link rel="stylesheet" href="/assets/css/styles.css">
+  <!-- SYNC:HEAD:END -->
 </head>
 
 <body x-data="portfolioApp()" x-cloak>
@@ -101,8 +106,11 @@
     <section id="home" class="hero">
       <div class="hero__backdrop" aria-hidden="true">
         <div id="heroLiquid" class="hero__backdrop-liquid">
-          <img id="heroBaseImg" :src="profile.avatar" :alt="profile.name" width="900" height="1200" fetchpriority="high" decoding="async">
-          <img id="heroBrushImg" :src="profile.avatar" alt="" width="900" height="1200" hidden decoding="async">
+          <picture>
+            <source id="heroWebpSource" srcset="/assets/img/saniyat-hossain.webp" type="image/webp">
+            <img id="heroBaseImg" src="/assets/img/saniyat-hossain.jpg" alt="Mohammad Saniyat Hossain" width="900" height="1200" fetchpriority="high" decoding="async">
+          </picture>
+          <img id="heroBrushImg" src="/assets/img/saniyat-hossain.jpg" alt="" width="900" height="1200" hidden decoding="async">
           <canvas id="heroCanvas"></canvas>
         </div>
         <div class="hero__backdrop-scrim"></div>
@@ -116,11 +124,17 @@
             <span class="eyebrow-dot"></span><span x-text="profile.eyebrow"></span>
           </p>
           <h1>
-            <template x-for="(line, i) in profile.nameLines" :key="'name-' + i">
+            <!-- SYNC:H1:START -->
               <span class="line-wrap">
-                <span class="line-inner" :class="i === profile.nameLines.length - 1 && 'accent grad'" x-text="line"></span>
+                <span class="line-inner" x-text="profile.nameLines[0]">Mohammad</span>
               </span>
-            </template>
+              <span class="line-wrap">
+                <span class="line-inner" x-text="profile.nameLines[1]">Saniyat</span>
+              </span>
+              <span class="line-wrap">
+                <span class="line-inner accent grad" x-text="profile.nameLines[2]">Hossain</span>
+              </span>
+  <!-- SYNC:H1:END -->
           </h1>
           <div class="hero-rating" data-reveal data-delay="650">
             <span class="hero-stars" aria-hidden="true">
@@ -241,7 +255,7 @@
         <h2 class="mb-12 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">What I build</h2>
         <ul class="services-list glass-panel" data-reveal data-delay="180">
           <template x-for="(s,i) in services" :key="s.title">
-            <li class="service-row" data-reveal :data-delay="i*80">
+            <li class="service-row" data-reveal :data-delay="i*80" :data-ci="['blue','teal','purple','orange'][i]">
               <span class="service-row__icon" aria-hidden="true">
                 <span x-html="iconSvg(s.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span>
               </span>
@@ -389,7 +403,7 @@
         <h2 class="mb-12 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Tools &amp; craft</h2>
         <div class="grid gap-6 md:grid-cols-2">
           <template x-for="(g,gi) in skills" :key="g.title">
-            <div class="glass-panel" data-reveal :data-delay="gi*80">
+            <div class="glass-panel" data-reveal :data-delay="gi*80" :data-ci="['blue','teal','purple','orange','cyan'][gi]">
               <div class="skills-panel__head">
                 <span class="icon-chip" aria-hidden="true"><span x-html="iconSvg(g.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span></span>
                 <h3 x-text="g.title"></h3>
@@ -426,11 +440,11 @@
           <h2 class="stats-panel__title mt-4 max-w-md text-2xl font-medium tracking-tight md:text-3xl" data-blur-reveal data-delay="120">Proof in the work, not the words.</h2>
           <ul class="mt-14 grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-4">
             <template x-for="(s,i) in stats" :key="s.label">
-              <li data-reveal :data-delay="i*90">
+              <li data-reveal :data-delay="i*90" :data-ci="['cyan','teal','green','orange'][i]">
                 <div class="stats-panel__icon" aria-hidden="true">
                   <span class="icon-chip icon-chip--sm icon-chip--on-dark"><span x-html="iconSvg(s.icon, 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
                 </div>
-                <div class="text-4xl font-semibold tracking-tight sm:text-5xl" :data-count="true" :data-value="s.value" :data-suffix="s.suffix">0</div>
+                <div class="stats-panel__value" :data-count="true" :data-value="s.value" :data-suffix="s.suffix">0</div>
                 <p class="mt-3 text-sm text-white/55" x-text="s.label"></p>
               </li>
             </template>
@@ -449,7 +463,7 @@
         <h2 class="mb-12 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Foundations</h2>
         <ul class="grid gap-4">
           <template x-for="(e,i) in education" :key="e.school">
-            <li class="edu-row glass-card spec" data-reveal :data-delay="i*80">
+            <li class="edu-row glass-card spec" data-reveal :data-delay="i*80" :data-ci="['blue','teal','purple'][i]">
               <span class="edu-row__logo"><img :src="e.logo" :alt="e.school" width="48" height="48" loading="lazy"></span>
               <div class="edu-row__body">
                 <span class="edu-row__years" x-text="e.years"></span>
@@ -517,10 +531,6 @@
       </div>
       <div class="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/45 sm:flex-row">
         <span x-text="'© ' + currentYear + ' ' + profile.name + '.'"></span>
-        <span class="inline-flex items-center gap-2 text-white/55">
-          <svg class="icon" viewBox="0 0 24 24" width="0.95rem" height="0.95rem" aria-hidden="true"><path fill="#F38020" d="M16.5 4.5h-9A3 3 0 004.5 7.5v9a3 3 0 003 3h9a3 3 0 003-3v-9a3 3 0 00-3-3z"/></svg>
-          Edge-delivered on Cloudflare Workers
-        </span>
       </div>
     </div>
     <p class="site-footer__wm" aria-hidden="true" x-text="profile.shortName.toUpperCase()"></p>
@@ -590,10 +600,5 @@
   <script src="/assets/js/icons.js" defer></script>
   <script src="/assets/js/loader.js" defer></script>
   <script src="/assets/js/boot.js" defer></script>
-  <script src="/assets/js/vendor/motion.min.js" defer></script>
-  <script src="/assets/js/reveal.js" defer></script>
-  <script src="/assets/js/blur-reveal.js" defer></script>
-  <script src="/assets/js/liquid-hero.js" defer></script>
-  <script src="/assets/js/motion.js" defer></script>
 </body>
 </html>

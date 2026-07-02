@@ -13,7 +13,9 @@
 | Real contact form backend | Stubbed modal submit |
 | Devicon stack icons | Real Simple Icons brand SVGs (local, brand-coloured) + monogram fallback |
 | Magnetic CTAs / card tilt | Added via Motion One (`motion.js`) |
-| Font | SF Pro / SF Mono system stack (macOS Tahoe-native, no web-font request) |
+| Font | Self-hosted Inter woff2 (cross-platform); system stack as instant fallback |
+| Static SEO meta | Prebuild `scripts/sync-head.js` from `portfolio.json` |
+| PWA installable | `manifest.webmanifest` + `sw.js` + icon set |
 
 ## Current section order (DOM)
 

@@ -1,6 +1,7 @@
 /** Hero liquid cursor-reveal canvas (Lumora after base + before brush) */
 (function () {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!window.matchMedia("(pointer: fine)").matches) return;
 
   const BRUSH_FRACTION = 0.34;
   const DECAY = 0.016;

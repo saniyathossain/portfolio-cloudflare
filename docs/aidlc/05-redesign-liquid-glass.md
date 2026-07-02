@@ -115,3 +115,28 @@ proven in the `cursor-presentation` deck (light-only, no structural changes):
   icon-chip, hairlines and hover fills. Section overrides (by id): Hero=azure (default), About/Education=teal,
   Services=copper, Experience=blue, Skills=cyan. Text uses the readable `-deep` variants (AA on white).
 - Constraints unchanged: no external requests, no inline styles, CSP/Worker/PageSpeed untouched.
+
+## 10. Shadow depth + slide-13 multi-hue cards
+
+A final polish pass borrowed from `cursor-presentation` slide 13 (multi-hue Tahoe cards) and
+its shadow tokens:
+
+- **Text shadows:** `--text-sh-sm` on secondary copy over light glass (service/exp descriptions,
+  edu degree, hero card title, hero status, role-tag labels). New `--text-sh-dark` on ink surfaces
+  (stats labels, footer copy, nav overlay items).
+- **Accent glows (sparing):** hero surname gradient gets a cool azure/cyan drop-shadow (not warm
+  copper); brand spark icons (header, loader, footer) keep a copper glow; stats counts and nav
+  overlay hover pick up hue-matched glows.
+- **`[data-ci]` hue map:** eight Tahoe hues (`blue`, `teal`, `purple`, `orange`, `cyan`, `green`,
+  `pink`, `indigo`) each set `--tint` + `--tint-deep` on the element. Alpine `:data-ci` cycles on
+  loop items:
+  - Skills (5): blue · teal · purple · orange · cyan
+  - Services (4): blue · teal · purple · orange
+  - Education (3): blue · teal · purple
+  - Stats (4): cyan · teal · green · orange
+- **Coloured accents:** skills glass panels and education rows get `border-top: 2px solid
+  var(--tint)`; stats icon-chips and count gradients inherit each item's vivid `--tint` on the dark
+  panel. Section-level tints (hero/about/services/experience/skills) remain as the ambient driver;
+  per-item `[data-ci]` only overrides inside the loop item.
+- No Tailwind rebuild; CSS + small Alpine bindings only; light-only; AA contrast preserved via
+  `--tint-deep` on readable text.

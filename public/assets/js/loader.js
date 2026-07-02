@@ -2,6 +2,7 @@
 (function () {
   const FILL_MS = 1300;
   const REVEAL_AT = 0.28;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let ready = false;
 
   function easeInOutCubic(t) {
@@ -27,11 +28,50 @@
     window.dispatchEvent(new Event("portfolio-ready"));
   }
 
+  function finishLoader(loader) {
+    if (loader) {
+      loader.classList.add("is-fade-center");
+      loader.classList.add("is-exit");
+      setTimeout(() => {
+        startScroll();
+        loader.remove();
+      }, reduced ? 0 : 720);
+    } else {
+      startScroll();
+    }
+    setReady();
+    try {
+      sessionStorage.setItem("portfolio-visited", "1");
+    } catch (_) {}
+  }
+
+  function skipLoader() {
+    const loader = document.getElementById("loader");
+    if (loader) loader.remove();
+    startScroll();
+    setReady();
+  }
+
   function runLoader() {
+    if (reduced) {
+      skipLoader();
+      return;
+    }
+    try {
+      if (sessionStorage.getItem("portfolio-visited")) {
+        skipLoader();
+        return;
+      }
+    } catch (_) {}
+
     const loader = document.getElementById("loader");
     const fill = document.getElementById("loadFill");
     const num = document.getElementById("loadNum");
-    if (!loader) { setReady(); startScroll(); return; }
+    if (!loader) {
+      setReady();
+      startScroll();
+      return;
+    }
 
     stopScroll();
     const start = performance.now();
@@ -50,13 +90,7 @@
       if (t < 1) {
         requestAnimationFrame(step);
       } else {
-        loader.classList.add("is-fade-center");
-        loader.classList.add("is-exit");
-        setReady();
-        setTimeout(() => {
-          startScroll();
-          loader.remove();
-        }, 720);
+        finishLoader(loader);
       }
     }
     requestAnimationFrame(step);

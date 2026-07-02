@@ -226,16 +226,24 @@ function _applyLoaderCopy(data) {
   if (tagline) tagline.textContent = data.profile.tagline;
 }
 
+function _webpPath(imagePath) {
+  if (!imagePath) return "";
+  return String(imagePath).replace(/\.(jpe?g|png)$/i, ".webp");
+}
+
 function _applyHeroImages(data) {
   const src = data.profile.avatar;
   const alt = data.profile.name;
+  const webp = _webpPath(src);
   const base = document.getElementById("heroBaseImg");
   const brush = document.getElementById("heroBrushImg");
+  const webpSource = document.getElementById("heroWebpSource");
   if (base) {
     base.src = src;
     base.alt = alt;
   }
   if (brush) brush.src = src;
+  if (webpSource && webp) webpSource.srcset = webp;
 }
 
 function _hydrate(raw) {

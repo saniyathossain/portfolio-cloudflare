@@ -10,7 +10,8 @@ Static portfolio for Mohammad Saniyat Hossain — Staff Software Engineer. Built
 - Real CV content: experience (including four Brain Station 23 roles with individual expand), skills, education, projects
 - No runtime npm dependencies — Alpine.js and Motion are vendored locally
 - Precompiled Tailwind CSS via standalone CLI (no `node_modules`)
-- SEO: Open Graph, Twitter cards, JSON-LD `Person`, sitemap, web manifest
+- SEO: static meta prebuild, Open Graph, Twitter cards, JSON-LD `Person`, sitemap, PWA manifest + service worker
+- Typography: self-hosted Inter woff2 (identical on all platforms)
 - Security: CSP, HSTS, and related headers applied by the Worker
 
 ## Tech stack
@@ -21,7 +22,7 @@ Static portfolio for Mohammad Saniyat Hossain — Staff Software Engineer. Built
 | Styles | `styles.css` (design tokens) + `tailwind.css` (utilities) |
 | Interactivity | Alpine.js 3, vanilla JS modules |
 | Hosting | Cloudflare Workers + Static Assets |
-| Build | Tailwind standalone CLI (`build-css.sh`) |
+| Build | `./build.sh` (Tailwind + fonts + images + SEO sync + SW hash) |
 
 ## Project structure
 
@@ -32,15 +33,18 @@ portfolio-cloudflare/
 │   ├── _headers               # Cache rules for /assets/*
 │   ├── robots.txt
 │   ├── sitemap.xml
-│   ├── site.webmanifest
+│   ├── sw.js                    # Service worker (PWA)
 │   └── assets/
 │       ├── css/               # styles.css + tailwind.css
-│       ├── js/                # data.js, app.js, loader.js, reveal.js, liquid-hero.js
+│       ├── fonts/             # inter-latin.woff2 (self-hosted)
+│       ├── data/              # portfolio.json + manifest.webmanifest
 │       ├── js/vendor/         # alpine.min.js, motion.min.js
 │       └── img/               # profile, logos, favicon, og-image
 ├── src/index.js               # Worker — security headers on every response
 ├── wrangler.toml              # Cloudflare Workers config
-├── build-css.sh               # Compile Tailwind (downloads CLI to bin/ on first run)
+├── build-css.sh               # Compile Tailwind only
+├── build.sh                   # Full pre-deploy build
+├── deploy.sh                  # build + wrangler deploy
 ├── tailwind.input.css         # Tailwind source
 ├── tailwind.config.js
 ├── legacy/                    # Archived dc-runtime site (do not deploy)
@@ -55,15 +59,23 @@ portfolio-cloudflare/
 
 ## Local development
 
-### 1. Build CSS
+### 1. Build
 
-Run after any change to `tailwind.input.css`, `tailwind.config.js`, or Tailwind classes in HTML:
+Run before deploy (and after content/CSS changes):
+
+```bash
+./build.sh
+```
+
+This runs Tailwind, vendors Inter font, optimizes images, syncs SEO meta from `portfolio.json`, and stamps the service worker cache version.
+
+CSS only (faster during style iteration):
 
 ```bash
 ./build-css.sh
 ```
 
-On first run this downloads the Tailwind standalone binary into `bin/` (gitignored).
+On first run `build-css.sh` downloads the Tailwind standalone binary into `bin/` (gitignored).
 
 ### 2. Preview locally
 
@@ -84,8 +96,12 @@ Then open [http://localhost:8080](http://localhost:8080) (or the port Wrangler p
 ## Deploy to Cloudflare
 
 ```bash
-npx wrangler deploy
+./deploy.sh
 ```
+
+Or manually: `./build.sh && npx wrangler deploy`
+
+Full runbook: [docs/aidlc/08-cloudflare-deploy.md](docs/aidlc/08-cloudflare-deploy.md)
 
 After deploy, attach the custom domain **saniyat.com** in the Cloudflare dashboard:
 
@@ -142,7 +158,7 @@ Canonical and OG URLs use `https://saniyat.com`. After deploy, verify:
 
 - [https://saniyat.com/robots.txt](https://saniyat.com/robots.txt)
 - [https://saniyat.com/sitemap.xml](https://saniyat.com/sitemap.xml)
-- [https://saniyat.com/site.webmanifest](https://saniyat.com/site.webmanifest)
+- [https://saniyat.com/assets/data/manifest.webmanifest](https://saniyat.com/assets/data/manifest.webmanifest)
 
 ## Legacy
 
