@@ -1,5 +1,8 @@
 # 13 — Partner round avatars (hover-expand) + Tahoe frosted splash
 
+> **Superseded (partners UI):** Current hero uses `.partner-pill` (logo + visible name). See
+> `15-agent-context-partner-pill-revert.md`. Loader splash section below remains valid.
+
 Two hero/splash refinements.
 
 ## 1. Hero "Worked with" partners — round glossy avatars, hover-expand name

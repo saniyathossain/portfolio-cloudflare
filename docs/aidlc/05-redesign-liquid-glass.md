@@ -243,3 +243,8 @@ Full plan in `docs/aidlc/11-hero-loader-subtitles-plan.md`. Summary:
   per-role `--tint` from `.exp-item[data-ci]`; replaces CSS-drawn `::before`/`::after` checks.
 - **Section subtitles:** `portfolio.json` `sections` map + `.sec-sub` under Services/Experience/Skills/
   Education H2s; `text-shadow: var(--text-sh-sm)` — the designed subtitle shadow now has a real element.
+
+## 14. Agent context + partner-pill revert
+
+See `docs/aidlc/15-agent-context-partner-pill-revert.md`. Hero partners back to `.partner-pill`; liquid-glass chip
+layer experiments on icons/partners **not** shipped. Cursor rules + portfolio skill committed; `.gitignore` updated.

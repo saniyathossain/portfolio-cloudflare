@@ -5,7 +5,7 @@
 - Ink cards: `#0a0a0a`
 - Accent: `#b15f2c`, bright `#cf8047`, dark `#97501f`
 - Surfaces: `#f1f0ee`, `#e3e2df`, line `#e6e5e2`
-- Hero: `#ecebe9` → `#c9c9c9`
+- Hero: `#f1f0ee` → `#e3e2df` (`--hero-from` / `--hero-to`)
 
 ## Typography
 - Body/UI: **SF Pro system-first** — `-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
@@ -39,6 +39,10 @@
   `--tint` rim + inset highlight + soft coloured shadow; diagonal `::before` gloss streak + hover
   brighten. Propagated to hero-status chips, service arrows, education logo rims; experience point
   markers use `.point-chip` — glossy tinted chip + inlined `check` SVG (inherits `.exp-item[data-ci]` hue)
+- **Hero partners:** `.partner-pill` — frosted blur pill with logo + company name visible (simple Lumora strip;
+  not icon-only `.partner-tile` — see `15-agent-context-partner-pill-revert.md`)
+- **Brand pills:** `.brand-pill` — gradient pill + brand-coloured mono badge + sheen; stack/AI groups under
+  `.role-tags`
 - `.beam`: animated `conic-gradient` border-beam (masked ring, `@property --beam-angle`) — hero card
   + primary CTA only
 - `.spec` / `.spec--panel`: pointer-tracked radial spotlight (`motion.js` sets `--px`/`--py`);

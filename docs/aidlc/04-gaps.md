@@ -20,6 +20,8 @@
 | Shiny tinted chip system | Gloss streak + per-context `--tint` on icon tiles, service/exp icons, hero-status chips, edu logo rims, per-role `.point-chip` check markers (see `05-redesign-liquid-glass.md` §12–13) |
 | Hero brand watermark | `.hero__wm` — large translucent `profile.shortName` behind hero grid (Lumora signature element) |
 | Section subtitles | `.sec-sub` under Services/Experience/Skills/Education H2s; copy from `portfolio.json` `sections` map |
+| Hero partners strip | `.partner-pill` — frosted logo + name pills (see `15-agent-context-partner-pill-revert.md`) |
+| Agent / Cursor context | `.cursor/skills/portfolio/SKILL.md`, `.cursor/rules/*`, `CLAUDE.md` |
 
 ## Current section order (DOM)
 

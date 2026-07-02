@@ -1,5 +1,8 @@
 # 12 — Hero "Worked with" partner pills + designation eyebrow
 
+> **Current partners UI (Jul 2026):** `.partner-pill` frosted chips with logo + visible name — see
+> `15-agent-context-partner-pill-revert.md`. Eyebrow decisions below remain in effect.
+
 Polish pass on two hero details after the doc-11 hero refresh.
 
 ## Problem

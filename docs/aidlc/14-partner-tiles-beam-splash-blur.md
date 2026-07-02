@@ -1,5 +1,8 @@
 # 14 — Partner tile juggle fix + beam on View experience + splash blur-reveal
 
+> **Superseded (partners UI):** Hero partners are back to `.partner-pill` (logo + label frosted pills). See
+> `15-agent-context-partner-pill-revert.md`. Loader blur-reveal + hero CTA `beam` below remain accurate.
+
 ## 1. Hero partners — fix hover "juggle" + match the "What I build" icon design
 - **Cause of the juggle:** the previous partner pill hover-*expanded* its width (grid `0fr→1fr`), which reflowed
   the wrapping row and made siblings jump.
