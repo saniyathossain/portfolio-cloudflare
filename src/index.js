@@ -10,7 +10,6 @@ const SECURITY_HEADERS = {
 };
 
 const EARLY_HINTS = [
-  "</assets/fonts/inter-latin.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
   "</assets/img/saniyat-hossain.webp>; rel=preload; as=image; type=image/webp",
   "</assets/css/styles.css>; rel=preload; as=style",
 ].join(", ");

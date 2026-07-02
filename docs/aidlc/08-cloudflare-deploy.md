@@ -70,6 +70,8 @@ Configured in `public/_headers` and supplemented by `src/index.js`:
 - [ ] [PageSpeed Insights](https://pagespeed.web.dev/analysis?url=https://saniyat.com)
 - [ ] [Rich Results Test](https://search.google.com/test/rich-results) for Person schema
 - [ ] OG preview (opengraph.xyz or LinkedIn debugger)
+- [ ] Toggle OS "Reduce Motion" → border-beam/spotlight/aurora-parallax/sheen all disabled, content
+      fully visible (see `07-pagespeed-seo-pwa-plan.md` Phase 6 — motion perf budget)
 
 ## Local preview (production-like)
 

@@ -11,6 +11,12 @@
     "twitterDescription": "Backend engineering, shipped with quiet precision.",
     "ogImage": "/assets/img/og-image.jpg"
   },
+  "sections": {
+    "services": "Backend, architecture, APIs, and AI-assisted delivery.",
+    "experience": "14+ years · 8 roles across 5 companies.",
+    "skills": "Languages, frameworks, data, platform, and AI in the flow.",
+    "education": "Electronics & Telecommunication Engineering — Dhaka."
+  },
   "profile": {
     "name": "Mohammad Saniyat Hossain",
     "shortName": "Saniyat",

@@ -16,6 +16,10 @@
 | Font | Self-hosted Inter woff2 (cross-platform); system stack as instant fallback |
 | Static SEO meta | Prebuild `scripts/sync-head.js` from `portfolio.json` |
 | PWA installable | `manifest.webmanifest` + `sw.js` + icon set |
+| Signature motion touches | Gradient border-beam (hero card + CTA), panel cursor spotlight, aurora scroll-parallax, sheen sweep — all reduced-motion-gated (see `05-redesign-liquid-glass.md` §11) |
+| Shiny tinted chip system | Gloss streak + per-context `--tint` on icon tiles, service/exp icons, hero-status chips, edu logo rims, per-role `.point-chip` check markers (see `05-redesign-liquid-glass.md` §12–13) |
+| Hero brand watermark | `.hero__wm` — large translucent `profile.shortName` behind hero grid (Lumora signature element) |
+| Section subtitles | `.sec-sub` under Services/Experience/Skills/Education H2s; copy from `portfolio.json` `sections` map |
 
 ## Current section order (DOM)
 

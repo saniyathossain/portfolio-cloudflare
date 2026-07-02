@@ -16,7 +16,6 @@
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
-  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://saniyat.com/">
@@ -32,16 +31,38 @@
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
   <link rel="stylesheet" href="/assets/css/tailwind.css">
-  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=loader-fix-2">
+  <style>
+    html.is-loading .app-root {
+      filter: blur(var(--load-blur, 16px));
+      transform: scale(var(--load-scale, 1.012));
+      transform-origin: center top;
+    }
+    html.is-loading .load-scrim { display: block; }
+  </style>
   <!-- SYNC:HEAD:END -->
 </head>
 
-<body x-data="portfolioApp()" x-cloak>
+<body>
+  <script>
+    (function () {
+      var r = document.documentElement;
+      r.classList.remove("is-ready");
+      r.classList.add("is-loading");
+      r.style.setProperty("--load-blur", "16px");
+      r.style.setProperty("--load-dim", "0.48");
+      r.style.setProperty("--load-scale", "1.012");
+    })();
+  </script>
 
   <a href="#main" class="skip-link">Skip to content</a>
 
-  <!-- Page Loader -->
+  <!-- Progressive blur scrim — site stays painted underneath during load -->
+  <div id="load-scrim" class="load-scrim" aria-hidden="true"></div>
+
+  <!-- Page Loader — outside Alpine; glass panel over blurred site -->
   <div id="loader" class="loader" role="status" aria-live="polite" aria-label="Loading">
+    <div class="loader__panel">
     <div class="loader__center">
       <div class="loader__skeleton" aria-hidden="true">
         <span class="loader__sk loader__sk--brand"></span>
@@ -64,7 +85,10 @@
       </div>
       <div class="loader__meta"><span>Loading</span><span id="loadNum" class="loader__num">000</span></div>
     </div>
+    </div>
   </div>
+
+  <div id="app" class="app-root" x-data="portfolioApp()">
 
   <!-- Header -->
   <header class="site-header">
@@ -116,11 +140,11 @@
         <div class="hero__backdrop-scrim"></div>
       </div>
       <div id="heroGlow" class="hero__glow" aria-hidden="true"></div>
+      <p class="hero__wm" aria-hidden="true" x-text="profile.shortName.toUpperCase()"></p>
 
       <div class="shell hero__grid">
         <div class="hero__copy">
           <p class="eyebrow" data-reveal data-delay="200">
-            <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('engineer', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
             <span class="eyebrow-dot"></span><span x-text="profile.eyebrow"></span>
           </p>
           <h1>
@@ -147,16 +171,16 @@
             <span class="hero-rating__text" x-text="profile.heroRating"></span>
           </div>
           <div class="hero__actions" data-reveal data-delay="750">
-            <button type="button" class="pill-btn pill-btn-dark" data-magnetic @click="openModal()">
+            <button type="button" class="pill-btn pill-btn-dark beam sheen" data-magnetic @click="openModal()">
               Get in touch
-              <span class="pill-btn__icon"><span x-html="iconSvg('arrow', 'ui-icon ui-icon--on-ink ui-icon--md')" aria-hidden="true"></span></span>
+              <span class="pill-btn__icon" aria-hidden="true"><span x-html="iconSvg('arrow', 'ui-icon ui-icon--md')"></span></span>
             </button>
-            <button type="button" class="pill-btn pill-btn-glass" data-magnetic @click="scrollTo('experience')">View experience</button>
+            <button type="button" class="pill-btn pill-btn-glass beam sheen" data-magnetic @click="scrollTo('experience')">View experience</button>
           </div>
         </div>
 
         <div class="hero__aside">
-          <div class="hero-card" data-reveal="scale" data-delay="400" @click="cardStep(1)">
+          <div class="hero-card beam sheen" data-reveal="scale" data-delay="400" @click="cardStep(1)">
             <div class="hero-card__inner">
               <div class="hero-card__badge">
                 <svg class="icon" viewBox="0 0 48 48" width="1.5rem" height="1.5rem"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
@@ -196,9 +220,9 @@
       </div>
 
       <div class="hero-status shell" data-reveal="fade" data-delay="900">
-        <span><span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><span x-html="iconSvg('rocket', 'ui-icon')" aria-hidden="true"></span></span> <span x-text="profile.heroStatusShipping"></span></span>
-        <span><span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><span x-html="iconSvg('pin', 'ui-icon')" aria-hidden="true"></span></span> <span x-text="profile.heroStatusLocation"></span></span>
-        <span class="hero-status__scroll">Scroll to explore <span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><span x-html="iconSvg('chevronDown', 'ui-icon')" aria-hidden="true"></span></span></span>
+        <span><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('rocket', 'ui-icon')" aria-hidden="true"></span></span> <span x-text="profile.heroStatusShipping"></span></span>
+        <span><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('pin', 'ui-icon')" aria-hidden="true"></span></span> <span x-text="profile.heroStatusLocation"></span></span>
+        <span class="hero-status__scroll">Scroll to explore <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('chevronDown', 'ui-icon')" aria-hidden="true"></span></span></span>
       </div>
     </section>
 
@@ -252,8 +276,9 @@
           <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('layers', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
           <span class="eyebrow-dot"></span> Services
         </p>
-        <h2 class="mb-12 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">What I build</h2>
-        <ul class="services-list glass-panel" data-reveal data-delay="180">
+        <h2 class="mb-2 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">What I build</h2>
+        <p class="sec-sub" data-sec-sub="services"></p>
+        <ul class="services-list glass-panel spec spec--panel" data-reveal data-delay="180">
           <template x-for="(s,i) in services" :key="s.title">
             <li class="service-row" data-reveal :data-delay="i*80" :data-ci="['blue','teal','purple','orange'][i]">
               <span class="service-row__icon" aria-hidden="true">
@@ -264,7 +289,7 @@
                 <h3 class="service-row__title" x-text="s.title"></h3>
                 <p class="service-row__desc" x-text="s.desc"></p>
               </div>
-              <span class="service-row__arrow" aria-hidden="true"><span class="icon-chip icon-chip--sm icon-chip--muted"><span x-html="iconSvg('arrow', 'ui-icon')" aria-hidden="true"></span></span></span>
+              <span class="service-row__arrow" aria-hidden="true"><span class="icon-chip icon-chip--sm"><span x-html="iconSvg('arrow', 'ui-icon')" aria-hidden="true"></span></span></span>
             </li>
           </template>
         </ul>
@@ -278,7 +303,8 @@
           <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('experience', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
           <span class="eyebrow-dot"></span> Experience
         </p>
-        <h2 class="mb-12 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Where I've shipped</h2>
+        <h2 class="mb-2 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Where I've shipped</h2>
+        <p class="sec-sub" data-sec-sub="experience"></p>
 
         <ul class="exp-list glass-panel" data-reveal data-delay="180">
           <template x-for="(group, gi) in experienceGroups" :key="group.slug">
@@ -302,7 +328,7 @@
 
               <ul class="exp-group__roles">
                 <template x-for="(role, ri) in group.roles" :key="role.id">
-                  <li class="exp-item">
+                  <li class="exp-item" :data-ci="['blue','purple','teal','orange','cyan','pink','indigo','green'][(gi + ri) % 8]">
                     <button type="button" class="exp-row" @click="toggleRole(role.id)" :aria-expanded="isRoleOpen(role.id)">
                       <span class="exp-row__gutter" aria-hidden="true"></span>
                       <span class="exp-row__icon" aria-hidden="true">
@@ -330,7 +356,7 @@
                         <p class="exp-row__desc" x-text="role.summary"></p>
                       </div>
                       <span class="exp-row__arrow" aria-hidden="true">
-                        <span class="icon-chip icon-chip--sm icon-chip--muted">
+                        <span class="icon-chip icon-chip--sm">
                           <span x-html="iconSvg('chevronDown', isRoleOpen(role.id) ? 'ui-icon exp-row__chev is-open' : 'ui-icon exp-row__chev')" aria-hidden="true"></span>
                         </span>
                       </span>
@@ -340,16 +366,19 @@
                       <div class="exp-details__inner">
                         <ul class="exp-details__list">
                           <template x-for="d in role.details" :key="d">
-                            <li x-text="d"></li>
+                            <li>
+                              <span class="point-chip" aria-hidden="true" x-html="iconSvg('check', 'ui-icon ui-icon--sm')"></span>
+                              <span x-text="d"></span>
+                            </li>
                           </template>
                         </ul>
 
                         <div class="role-tags" x-show="(role.stacks && role.stacks.length) || (role.aiTools && role.aiTools.length)">
                           <div class="role-tags__group" x-show="role.stacks && role.stacks.length">
-                            <span class="role-tags__label"><span class="icon-chip icon-chip--sm icon-chip--muted" aria-hidden="true"><span x-html="iconSvg('chip', 'ui-icon')" aria-hidden="true"></span></span> Stack</span>
+                            <span class="role-tags__label role-tags__label--stack"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('chip', 'ui-icon')" aria-hidden="true"></span></span> Stack</span>
                             <div class="pill-row" data-stagger>
                               <template x-for="item in role.stacks" :key="role.id + '-s-' + item">
-                                <span class="brand-pill brand-pill--sm spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                                <span class="brand-pill brand-pill--stack spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
                                   <span class="brand-pill__badge">
                                     <template x-if="brandOf(item).src">
                                       <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
@@ -364,10 +393,10 @@
                             </div>
                           </div>
                           <div class="role-tags__group" x-show="role.aiTools && role.aiTools.length">
-                            <span class="role-tags__label role-tags__label--ai"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('sparkles', 'ui-icon')" aria-hidden="true"></span></span> AI</span>
+                            <span class="role-tags__label role-tags__label--ai"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('sparkles', 'ui-icon')" aria-hidden="true"></span></span> AI tools</span>
                             <div class="pill-row" data-stagger>
                               <template x-for="item in role.aiTools" :key="role.id + '-ai-' + item">
-                                <span class="brand-pill brand-pill--sm brand-pill--ai spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                                <span class="brand-pill brand-pill--ai spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
                                   <span class="brand-pill__badge">
                                     <template x-if="brandOf(item).src">
                                       <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
@@ -400,10 +429,11 @@
           <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('skills', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
           <span class="eyebrow-dot"></span> Skills
         </p>
-        <h2 class="mb-12 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Tools &amp; craft</h2>
+        <h2 class="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Tools &amp; craft</h2>
+        <p class="sec-sub" data-sec-sub="skills"></p>
         <div class="grid gap-6 md:grid-cols-2">
           <template x-for="(g,gi) in skills" :key="g.title">
-            <div class="glass-panel" data-reveal :data-delay="gi*80" :data-ci="['blue','teal','purple','orange','cyan'][gi]">
+            <div class="glass-panel spec spec--panel" data-reveal :data-delay="gi*80" :data-ci="['blue','teal','purple','orange','cyan'][gi]">
               <div class="skills-panel__head">
                 <span class="icon-chip" aria-hidden="true"><span x-html="iconSvg(g.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span></span>
                 <h3 x-text="g.title"></h3>
@@ -432,7 +462,7 @@
     <!-- Stats -->
     <section class="sec pb-20 lg:pb-28" aria-label="Statistics">
       <div class="shell">
-        <div class="stats-panel" data-reveal>
+        <div class="stats-panel spec spec--panel" data-reveal>
           <p class="eyebrow stats-panel__eyebrow">
             <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><span x-html="iconSvg('chart', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
             <span class="eyebrow-dot stats-panel__eyebrow-dot"></span>By the numbers
@@ -460,10 +490,11 @@
           <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('education', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
           <span class="eyebrow-dot"></span> Education
         </p>
-        <h2 class="mb-12 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Foundations</h2>
+        <h2 class="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Foundations</h2>
+        <p class="sec-sub" data-sec-sub="education"></p>
         <ul class="grid gap-4">
           <template x-for="(e,i) in education" :key="e.school">
-            <li class="edu-row glass-card spec" data-reveal :data-delay="i*80" :data-ci="['blue','teal','purple'][i]">
+            <li class="edu-row glass-card spec sheen" data-reveal :data-delay="i*80" :data-ci="['teal','green','indigo'][i]">
               <span class="edu-row__logo"><img :src="e.logo" :alt="e.school" width="48" height="48" loading="lazy"></span>
               <div class="edu-row__body">
                 <span class="edu-row__years" x-text="e.years"></span>
@@ -596,9 +627,11 @@
     </div>
   </div>
 
-  <script src="/assets/js/data.js" defer></script>
+  </div><!-- /#app -->
+
+  <script src="/assets/js/data.js?v=loader-fix-2" defer></script>
   <script src="/assets/js/icons.js" defer></script>
-  <script src="/assets/js/loader.js" defer></script>
-  <script src="/assets/js/boot.js" defer></script>
+  <script src="/assets/js/loader.js?v=loader-fix-2" defer></script>
+  <script src="/assets/js/boot.js?v=loader-fix-2" defer></script>
 </body>
 </html>

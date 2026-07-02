@@ -48,6 +48,14 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  if (url.pathname.startsWith("/assets/js/") && url.pathname.endsWith(".js") && !url.pathname.includes("/vendor/")) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
+  if (url.pathname.startsWith("/assets/css/")) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
   if (url.pathname.startsWith("/assets/")) {
     event.respondWith(cacheFirst(event.request));
     return;

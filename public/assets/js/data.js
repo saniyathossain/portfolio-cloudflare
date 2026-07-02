@@ -219,11 +219,54 @@ function _applySiteMeta(data) {
   script.textContent = JSON.stringify(ld);
 }
 
+function _partnersFromExperience(data) {
+  // Each organisation's core brand colour (sampled from logos where possible; others best-effort).
+  const brandColors = {
+    "brain-station-23-plc": "#0088cc",
+    "grameenphone-limited": "#0ea5e9",
+    "icddr-b": "#be123c",
+    "optimum-solution-services-ltd": "#0d9488",
+    "runner-cyberlink-limited": "#dc2626",
+  };
+  const hues = ["#b15f2c", "#6e6cf0", "#30d158", "#ff9f0a", "#2b8c9a"];
+  const seen = new Set();
+  const partners = [];
+  let i = 0;
+  for (const group of data.experienceGroups || []) {
+    if (seen.has(group.slug)) continue;
+    seen.add(group.slug);
+    partners.push({
+      name: group.company,
+      logo: group.logo,
+      slug: group.slug,
+      color: brandColors[group.slug] || hues[i % hues.length],
+    });
+    i += 1;
+  }
+  return partners.length ? partners : data.partners || [];
+}
+
 function _applyLoaderCopy(data) {
   const brand = document.getElementById("loader-brand-name");
   const tagline = document.getElementById("loader-tagline");
   if (brand) brand.textContent = data.profile.shortName;
   if (tagline) tagline.textContent = data.profile.tagline;
+}
+
+const DEFAULT_SECTIONS = {
+  services: "Backend, architecture, APIs, and AI-assisted delivery.",
+  experience: "14+ years · 8 roles across 5 companies.",
+  skills: "Languages, frameworks, data, platform, and AI in the flow.",
+  education: "Electronics & Telecommunication Engineering — Dhaka.",
+};
+
+function _applySectionSubs(data) {
+  const sections = data.sections || DEFAULT_SECTIONS;
+  document.querySelectorAll("[data-sec-sub]").forEach((el) => {
+    const key = el.getAttribute("data-sec-sub");
+    const copy = sections[key] || DEFAULT_SECTIONS[key] || "";
+    if (copy) el.textContent = copy;
+  });
 }
 
 function _webpPath(imagePath) {
@@ -267,6 +310,8 @@ function _hydrate(raw) {
   data.normalizeRole = _enrichExperience;
   data.experienceGroups = _groupExperiences(data);
   data.profile.phoneHref = String(data.profile.phone || "").replace(/[^\d+]/g, "");
+  data.sections = Object.assign({}, DEFAULT_SECTIONS, raw.sections || {});
+  data.partners = _partnersFromExperience(data);
   return data;
 }
 
@@ -281,6 +326,7 @@ window.portfolioDataReady = fetch("/assets/data/portfolio.json")
     window.PORTFOLIO_DATA = _hydrate(raw);
     _applySiteMeta(window.PORTFOLIO_DATA);
     _applyLoaderCopy(window.PORTFOLIO_DATA);
+    _applySectionSubs(window.PORTFOLIO_DATA);
     _applyHeroImages(window.PORTFOLIO_DATA);
     window.dispatchEvent(new Event("portfolio-data-ready"));
     return window.PORTFOLIO_DATA;

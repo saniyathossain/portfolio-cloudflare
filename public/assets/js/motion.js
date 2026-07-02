@@ -72,11 +72,31 @@
     );
   }
 
+  // Aurora parallax — throttled scroll drift for the ambient aurora field + hero glow (transform-only).
+  function auroraParallax() {
+    const glow = document.getElementById("heroGlow");
+    let raf = 0;
+    function apply() {
+      raf = 0;
+      const y = Math.min(window.scrollY * 0.06, 40);
+      document.body.style.setProperty("--aurora-y", y.toFixed(1) + "px");
+      if (glow) glow.style.setProperty("--glow-y", (y * 1.4).toFixed(1) + "px");
+    }
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!raf) raf = requestAnimationFrame(apply);
+      },
+      { passive: true }
+    );
+  }
+
   function boot() {
     document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
     const card = document.querySelector(".hero-card");
     if (card) tilt(card);
     specular();
+    auroraParallax();
   }
 
   window.addEventListener("portfolio-ready", boot);

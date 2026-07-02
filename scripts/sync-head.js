@@ -58,7 +58,6 @@ function buildHead(data) {
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
-  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 ${heroWebpLink}  <meta property="og:type" content="website">
   <meta property="og:url" content="${esc(absUrl(site.url, "/"))}">
   <meta property="og:title" content="${esc(site.title)}">

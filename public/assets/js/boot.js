@@ -43,7 +43,7 @@
   async function boot() {
     registerSw();
     await window.portfolioDataReady;
-    await loadScript("/assets/js/app.js");
+    await loadScript("/assets/js/app.js?v=loader-fix-2");
     await loadScript("/assets/js/vendor/alpine.min.js");
     await loadDeferredScripts();
     scheduleIdle();

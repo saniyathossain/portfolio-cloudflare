@@ -1,6 +1,12 @@
 /** Alpine.js portfolio app — nav, modal, clock, carousel, experience toggles */
 function portfolioApp() {
-  const D = window.PORTFOLIO_DATA;
+  const D = window.PORTFOLIO_DATA || {};
+  const sections = D.sections || {
+    services: "Backend, architecture, APIs, and AI-assisted delivery.",
+    experience: "14+ years · 8 roles across 5 companies.",
+    skills: "Languages, frameworks, data, platform, and AI in the flow.",
+    education: "Electronics & Telecommunication Engineering — Dhaka.",
+  };
   return {
     menuOpen: false,
     modalOpen: false,
@@ -22,9 +28,11 @@ function portfolioApp() {
     experienceGroups: D.experienceGroups,
     profile: D.profile,
     site: D.site,
+    sections,
 
     init() {
       const live = window.PORTFOLIO_DATA;
+      if (live?.sections) this.sections = live.sections;
       if (live?.experienceGroups) {
         const normalize = live.normalizeRole || ((role) => role);
         this.experienceGroups = live.experienceGroups.map((group) => ({
