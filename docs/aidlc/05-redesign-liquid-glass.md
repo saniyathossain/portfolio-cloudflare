@@ -101,3 +101,17 @@ proven in the `cursor-presentation` deck (light-only, no structural changes):
   mirrors `:hover` (lift + label expand + glow + ring).
 - **JS springs:** `motion.js` springs softened (lower stiffness, gentle overshoot); `toggleRole`
   height animation uses the Tahoe curve. All still gated by `prefers-reduced-motion`.
+
+## 9. Typography + photo-driven colour harmony
+
+- **Type:** kept the SF Pro **system** stack (no web font — Tahoe-native, zero network cost).
+  Antialiasing is global (`*`/`html`/`body`); added `text-wrap: balance` on headings and
+  `text-wrap: pretty` on body copy, and softened the light-mode `--text-sh` for crisper text.
+- **Palette (teal-and-orange from the portrait):** new cool-primary tokens sampled from the photo —
+  `--primary #2f9fd6` (azure shirt) / `--primary-deep #1a6f96` (ink) and `--teal #2b8c9a` / `--teal-deep`.
+  Copper `--accent` stays as the **warm** accent. The hero surname gradient is now azure→cyan→teal;
+  the hero glow shifted to azure/cyan with a copper whisper.
+- **Per-section tints:** a single `--tint` / `--tint-deep` driver powers each section's eyebrow,
+  icon-chip, hairlines and hover fills. Section overrides (by id): Hero=azure (default), About/Education=teal,
+  Services=copper, Experience=blue, Skills=cyan. Text uses the readable `-deep` variants (AA on white).
+- Constraints unchanged: no external requests, no inline styles, CSP/Worker/PageSpeed untouched.
