@@ -10,7 +10,7 @@ const SECURITY_HEADERS = {
 };
 
 const EARLY_HINTS = [
-  "</assets/img/saniyat-hossain.webp>; rel=preload; as=image; type=image/webp",
+  "</assets/img/saniyat-hossain.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high",
   "</assets/css/styles.css>; rel=preload; as=style",
 ].join(", ");
 
@@ -32,6 +32,8 @@ export default {
     const path = new URL(url).pathname;
     if (path.startsWith("/assets/data/") && path.endsWith(".json")) {
       headers.set("Cache-Control", "public, max-age=3600");
+    } else if (path.startsWith("/assets/")) {
+      headers.set("Cache-Control", "public, max-age=31536000, immutable");
     } else if (path === "/" || path.endsWith(".html")) {
       headers.set("Cache-Control", "public, max-age=0, must-revalidate");
     }

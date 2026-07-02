@@ -16,7 +16,7 @@
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
-  <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp">
+  <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp" fetchpriority="high">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://saniyat.com/">
   <meta property="og:title" content="Saniyat Hossain — Staff Software Engineer">
@@ -32,14 +32,6 @@
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
   <link rel="stylesheet" href="/assets/css/tailwind.css">
   <link rel="stylesheet" href="/assets/css/styles.css?v=loader-fix-2">
-  <style>
-    html.is-loading .app-root {
-      filter: blur(var(--load-blur, 16px));
-      transform: scale(var(--load-scale, 1.012));
-      transform-origin: center top;
-    }
-    html.is-loading .load-scrim { display: block; }
-  </style>
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -97,7 +89,7 @@
   <header class="site-header">
     <div class="shell">
       <div class="glass-pill">
-        <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Go to home">
+        <button type="button" class="brand-btn" @click="scrollTo('home')">
           <svg class="icon" viewBox="0 0 48 48" width="1.25rem" height="1.25rem" aria-hidden="true"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>
           <span x-text="profile.shortName"></span>
         </button>
@@ -135,7 +127,7 @@
         <div id="heroLiquid" class="hero__backdrop-liquid">
           <picture>
             <source id="heroWebpSource" srcset="/assets/img/saniyat-hossain.webp" type="image/webp">
-            <img id="heroBaseImg" src="/assets/img/saniyat-hossain.jpg" alt="Mohammad Saniyat Hossain" width="900" height="1200" fetchpriority="high" decoding="async">
+            <img id="heroBaseImg" src="/assets/img/saniyat-hossain.webp" alt="Mohammad Saniyat Hossain" width="900" height="1200" fetchpriority="high" decoding="async">
           </picture>
           <img id="heroBrushImg" src="/assets/img/saniyat-hossain.jpg" alt="" width="900" height="1200" hidden decoding="async">
           <canvas id="heroCanvas"></canvas>
@@ -365,7 +357,7 @@
                       </span>
                     </button>
 
-                    <div class="exp-details" :id="'exp-panel-' + role.id" :class="isRoleOpen(role.id) && 'is-open'" :aria-hidden="!isRoleOpen(role.id)">
+                    <div class="exp-details" :id="'exp-panel-' + role.id" :class="isRoleOpen(role.id) && 'is-open'" :inert="!isRoleOpen(role.id) ? '' : null">
                       <div class="exp-details__inner">
                         <ul class="exp-details__list">
                           <template x-for="d in role.details" :key="d">
@@ -381,7 +373,7 @@
                             <span class="role-tags__label role-tags__label--stack"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('chip', 'ui-icon')" aria-hidden="true"></span></span> Stack</span>
                             <div class="pill-row" data-stagger>
                               <template x-for="item in role.stacks" :key="role.id + '-s-' + item">
-                                <span class="brand-pill brand-pill--stack spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                                <span class="brand-pill brand-pill--stack spec" :style="'--brand:' + brandOf(item).color">
                                   <span class="brand-pill__badge">
                                     <template x-if="brandOf(item).src">
                                       <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
@@ -399,7 +391,7 @@
                             <span class="role-tags__label role-tags__label--ai"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('sparkles', 'ui-icon')" aria-hidden="true"></span></span> AI tools</span>
                             <div class="pill-row" data-stagger>
                               <template x-for="item in role.aiTools" :key="role.id + '-ai-' + item">
-                                <span class="brand-pill brand-pill--ai spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                                <span class="brand-pill brand-pill--ai spec" :style="'--brand:' + brandOf(item).color">
                                   <span class="brand-pill__badge">
                                     <template x-if="brandOf(item).src">
                                       <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
@@ -531,7 +523,7 @@
           <p class="mt-4 max-w-xs text-sm text-white/55" x-text="site.footerTagline"></p>
         </div>
         <div class="site-footer__col">
-          <p class="site-footer__heading text-xs uppercase tracking-wide text-white/40">Navigate</p>
+          <p class="site-footer__heading text-xs uppercase tracking-wide">Navigate</p>
           <ul class="site-footer__links text-sm">
             <template x-for="item in nav" :key="'f-'+item.id">
               <li><button type="button" @click="navGo(item)" x-text="item.label"></button></li>
@@ -539,7 +531,7 @@
           </ul>
         </div>
         <div class="site-footer__col">
-          <p class="site-footer__heading text-xs uppercase tracking-wide text-white/40">Contact</p>
+          <p class="site-footer__heading text-xs uppercase tracking-wide">Contact</p>
           <ul class="site-footer__links text-sm">
             <li>
               <a :href="'mailto:' + profile.email">
@@ -550,7 +542,7 @@
           </ul>
         </div>
         <div class="site-footer__col">
-          <p class="site-footer__heading text-xs uppercase tracking-wide text-white/40">Elsewhere</p>
+          <p class="site-footer__heading text-xs uppercase tracking-wide">Elsewhere</p>
           <ul class="site-footer__links text-sm">
             <template x-for="s in socials" :key="'s-'+s.label">
               <li>
@@ -563,7 +555,7 @@
           </ul>
         </div>
       </div>
-      <div class="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/45 sm:flex-row">
+      <div class="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs site-footer__meta sm:flex-row">
         <span x-text="'© ' + currentYear + ' ' + profile.name + '.'"></span>
       </div>
     </div>

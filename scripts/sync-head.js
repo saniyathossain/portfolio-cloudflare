@@ -30,7 +30,7 @@ function buildHead(data) {
   const ogImage = absUrl(site.url, site.ogImage || "/assets/img/og-image.jpg");
   const heroWebp = path.join(ROOT, "public/assets/img/saniyat-hossain.webp");
   const heroWebpLink = fs.existsSync(heroWebp)
-    ? '  <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp">\n'
+    ? '  <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp" fetchpriority="high">\n'
     : "";
   const ld = {
     "@context": "https://schema.org",
