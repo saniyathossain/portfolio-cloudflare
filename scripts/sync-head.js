@@ -28,9 +28,9 @@ function esc(s) {
 function buildHead(data) {
   const { site, profile, socials } = data;
   const ogImage = absUrl(site.url, site.ogImage || "/assets/img/og-image.jpg");
-  const heroWebp = path.join(ROOT, "public/assets/img/saniyat-hossain.webp");
-  const heroWebpLink = fs.existsSync(heroWebp)
-    ? '  <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp" fetchpriority="high">\n'
+  const heroWebp480 = path.join(ROOT, "public/assets/img/saniyat-hossain-480.webp");
+  const heroWebpLink = fs.existsSync(heroWebp480)
+    ? '  <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">\n'
     : "";
   const ld = {
     "@context": "https://schema.org",
@@ -72,8 +72,8 @@ ${heroWebpLink}  <meta property="og:type" content="website">
   <meta name="twitter:description" content="${esc(site.twitterDescription || site.description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
   <script type="application/ld+json" id="ld-person">${JSON.stringify(ld)}</script>
-  <link rel="stylesheet" href="/assets/css/tailwind.css">
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-2">`;
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-3" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-3"></noscript>`;
 }
 
 function buildH1(profile) {

@@ -23,6 +23,9 @@
     const brushImg = document.getElementById("heroBrushImg");
     const canvas = document.getElementById("heroCanvas");
     if (!container || !baseImg || !brushImg || !canvas) return;
+    // Loaded lazily here (not a static <img src>) so mobile/no-JS/reduced-motion loads never pay
+    // for this desktop-only brush asset — reuses the largest hero webp variant, no extra file.
+    if (!brushImg.src) brushImg.src = "/assets/img/saniyat-hossain-1800.webp";
 
     const ctx = canvas.getContext("2d");
     const dpr = Math.min(window.devicePixelRatio || 1, 2);

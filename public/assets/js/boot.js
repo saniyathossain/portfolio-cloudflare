@@ -3,7 +3,7 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
 
-  const ASSET_V = "uplift-2"; // bump on deploy to cache-bust every boot-loaded JS module
+  const ASSET_V = "uplift-3"; // bump on deploy to cache-bust every boot-loaded JS module
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {

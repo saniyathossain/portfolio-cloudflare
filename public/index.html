@@ -17,7 +17,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
-  <link rel="preload" href="/assets/img/saniyat-hossain.webp" as="image" type="image/webp" fetchpriority="high">
+  <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://saniyat.com/">
   <meta property="og:title" content="Saniyat Hossain — Staff Software Engineer">
@@ -31,8 +31,8 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/tailwind.css">
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-2">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-3" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-3"></noscript>
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -130,10 +130,12 @@
       <div class="hero__backdrop" aria-hidden="true">
         <div id="heroLiquid" class="hero__backdrop-liquid">
           <picture>
-            <source id="heroWebpSource" srcset="/assets/img/saniyat-hossain.webp" type="image/webp">
+            <source id="heroWebpSource"
+              srcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"
+              sizes="(min-width: 1024px) 62vw, 100vw" type="image/webp">
             <img id="heroBaseImg" src="/assets/img/saniyat-hossain.webp" alt="Mohammad Saniyat Hossain" width="900" height="1200" fetchpriority="high" decoding="async">
           </picture>
-          <img id="heroBrushImg" src="/assets/img/saniyat-hossain.jpg" alt="" width="900" height="1200" hidden decoding="async">
+          <img id="heroBrushImg" alt="" width="900" height="1200" hidden decoding="async">
           <canvas id="heroCanvas"></canvas>
         </div>
         <div class="hero__backdrop-scrim"></div>
@@ -612,9 +614,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.js?v=uplift-2" defer></script>
-  <script src="/assets/js/icons.js?v=uplift-2" defer></script>
-  <script src="/assets/js/loader.js?v=uplift-2" defer></script>
-  <script src="/assets/js/boot.js?v=uplift-2" defer></script>
+  <script src="/assets/js/data.js?v=uplift-3" defer></script>
+  <script src="/assets/js/icons.js?v=uplift-3" defer></script>
+  <script src="/assets/js/loader.js?v=uplift-3" defer></script>
+  <script src="/assets/js/boot.js?v=uplift-3" defer></script>
 </body>
 </html>

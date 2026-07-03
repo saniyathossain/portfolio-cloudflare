@@ -269,24 +269,14 @@ function _applySectionSubs(data) {
   });
 }
 
-function _webpPath(imagePath) {
-  if (!imagePath) return "";
-  return String(imagePath).replace(/\.(jpe?g|png)$/i, ".webp");
-}
-
 function _applyHeroImages(data) {
-  const src = data.profile.avatar;
+  // The hero <picture> markup already ships the correct responsive srcset (built by
+  // scripts/optimize-images.js) hard-coded in index.html — this only needs to sync `alt` from the
+  // data source. Overwriting src/srcset here would replace the responsive set with a single
+  // full-size fallback and reintroduce the mobile LCP regression that fix was for.
   const alt = data.profile.name;
-  const webp = _webpPath(src);
   const base = document.getElementById("heroBaseImg");
-  const brush = document.getElementById("heroBrushImg");
-  const webpSource = document.getElementById("heroWebpSource");
-  if (base) {
-    base.src = src;
-    base.alt = alt;
-  }
-  if (brush) brush.src = src;
-  if (webpSource && webp) webpSource.srcset = webp;
+  if (base) base.alt = alt;
 }
 
 function _hydrate(raw) {

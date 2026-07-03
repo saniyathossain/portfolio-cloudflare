@@ -59,6 +59,11 @@ portfolio-cloudflare/
 - [Node.js](https://nodejs.org/) (for `npx wrangler` only — not required at runtime)
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) — installed via `npx` or globally
 - Cloudflare account with Workers enabled (for deploy)
+- macOS build tools: `sips` (built in), `cwebp` (`brew install webp`), `ImageMagick`
+  (`brew install imagemagick`) — used by `scripts/optimize-images.js` for the responsive hero
+  srcset and the favicon/icon duotone pipeline. `magick` is required for the face-centered crop
+  (`sips` has no reliable arbitrary-offset crop); without it, `optimize-images.js` regenerates the
+  hero srcset but skips favicon/icon regeneration with a warning.
 
 ## Local development
 
