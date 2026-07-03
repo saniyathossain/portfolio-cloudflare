@@ -28,3 +28,6 @@ legacy/
 # Skills tooling — .agents/skills + skills-lock.json are committed; ignore per-machine state
 .impeccable/config.local.json
 *.local.json
+
+# generated image build cache (idempotency guard)
+scripts/.img-cache.json
