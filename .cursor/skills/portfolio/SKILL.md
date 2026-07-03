@@ -20,7 +20,7 @@ description: Extend, build, and deploy the Saniyat static portfolio (Lumora + Ta
 | Tailwind utilities | `public/assets/css/tailwind.css` (prebuilt) |
 | Service worker | `public/sw.js` |
 
-**Boot order:** `data.js` → `loader.js` → `boot.js` → `app.js` + Alpine → `reveal.js` / `blur-reveal.js` → idle: `motion.js`, `liquid-hero.js` (desktop/fine-pointer only).
+**Boot order:** `data.js` → `icons.js` → `loader.js` → `boot.js` → `app.js` + Alpine → `reveal.js` / `blur-reveal.js` → idle: `motion.js`, and (desktop/fine-pointer only) `liquid-hero.js` + `aurora.js`.
 
 ## Build & deploy
 
@@ -50,7 +50,7 @@ npx wrangler dev    # local preview
 - **Shiny chips:** `.icon-chip`, `.service-row__icon`, `.exp-row__icon`, `.point-chip` — tinted gradient fill + inset highlight + soft `--tint` shadow + diagonal `::before` gloss. **Do not** replace with neutral backdrop-filter-only “liquid glass” layers (user rejected).
 - **Brand pills:** `.brand-pill` — gradient surface, brand-coloured mono badge, sheen sweep `::before`, `.spec` pointer glow; stack/AI variants `--stack` / `--ai`.
 - **Loader:** `html.is-loading` blurs `#app` via inline critical CSS + `loader.js`; splash uses `.loader` backdrop blur; gates `html.is-ready` for hero watermark / header.
-- **Motion:** `[data-reveal]`, `.blur-reveal`, CSS aurora (`body::before`), native scroll + lightweight hero parallax in `motion.js`; `liquid-hero.js` desktop only; `prefers-reduced-motion` gates everywhere.
+- **Motion:** `[data-reveal]`, `.blur-reveal`, aurora (CSS `body::before` fallback + real canvas field in `aurora.js`, desktop/fine-pointer; whisper-rebalanced + sun-glare, see `18-…`), native scroll + lightweight hero parallax in `motion.js`; `liquid-hero.js` desktop only; `prefers-reduced-motion` gates everywhere.
 
 ## HTML / CSS conventions
 
@@ -67,7 +67,7 @@ npx wrangler dev    # local preview
 
 ## Docs & skills
 
-- **Architecture / history:** `docs/aidlc/` (00–15), especially `01-design-system.md`, `05-redesign-liquid-glass.md`, `08-cloudflare-deploy.md`, `11-hero-loader-subtitles-plan.md`.
+- **Architecture / history:** `docs/aidlc/` (00–18), especially `01-design-system.md`, `05-redesign-liquid-glass.md`, `08-cloudflare-deploy.md`, `17-aurora-canvas-smoothscroll-parallax.md`, `18-signature-uplift-whisper-aurora-motion.md`.
 - **Design taste (installed):** `.agents/skills/` + `skills-lock.json` — use for large visual passes, not for overriding established chip/pill patterns above.
 - **PageSpeed / SEO / PWA:** `docs/aidlc/07-pagespeed-seo-pwa-plan.md` — keep CSP, no new runtime network deps, SW network-first for `/assets/js/*` and `/assets/css/*`.
 

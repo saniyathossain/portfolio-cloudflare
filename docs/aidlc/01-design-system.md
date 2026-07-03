@@ -53,10 +53,11 @@
 ## Motion
 - Loader: 1300ms easeInOutCubic count, slide-up exit — plays on **every** load (not gated on `sessionStorage`)
 - Reveals: IntersectionObserver + CSS transitions
-- Hero liquid canvas: brush radius 143px, decay 0.016
-- Aurora field: ambient `body::before` drift, now with a throttled scroll-parallax offset
-  (`--aurora-y`/`--glow-y`, transform-only) layered on top
+- Hero liquid canvas: brush radius = `BRUSH_FRACTION 0.34` × min(w,h) (frame-relative, not a fixed 143px), decay 0.016
+- Aurora field: ambient `body::before` drift + real canvas field (`aurora.js`, desktop/fine-pointer),
+  with a throttled scroll-parallax offset (`--aurora-y`/`--glow-y`, transform-only) layered on top;
+  whisper-subtle rebalance (red/pink pulled back) + a warm sun-glare bloom (see `18`)
 - `prefers-reduced-motion`: disable canvas + animations + border-beam/sheen/spotlight/parallax
 
 ## Sections (DOM order)
-Loader → Header → Hero → About → CreateBand → Portfolio → Experience → Skills → Stats → Education → Footer → NavMenu → RequestModal
+Loader → Header → Hero → About → CreateBand → Services → Experience → Skills → Stats → Education → Footer → NavMenu → RequestModal

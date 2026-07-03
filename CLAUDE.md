@@ -7,11 +7,11 @@ system **SF Pro** fonts. No runtime build step.
 
 ## Layout
 - `public/` — the deployed site. Entry `public/index.html`; JS in `public/assets/js/` (`data.js`, `app.js`,
-  `loader.js`, `motion.js`, `reveal.js`, `blur-reveal.js`, `liquid-hero.js`, `boot.js`); CSS in
+  `boot.js`, `icons.js`, `loader.js`, `motion.js`, `reveal.js`, `blur-reveal.js`, `liquid-hero.js`, `aurora.js`); CSS in
   `public/assets/css/` (`styles.css` = the design system, `tailwind.css` = precompiled utilities).
 - `src/index.js` — Cloudflare Worker: serves `public/`, sets security headers + **CSP**, early-hint preloads.
 - `scripts/` — `sync-head.js` (generates `<head>` + h1 from data), `optimize-images.js`, `hash-sw.js`.
-- `docs/aidlc/` — **design history & rationale** (00–15). Read these before large design changes.
+- `docs/aidlc/` — **design history & rationale** (00–18). Read these before large design changes.
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it
@@ -31,7 +31,7 @@ system **SF Pro** fonts. No runtime build step.
 ## Skills (design / frontend)
 
 - **Project skill (read first for this repo):** `.cursor/skills/portfolio/SKILL.md`
-- **Design taste (installed):** `.agents/skills/` (locked in `skills-lock.json`) — `design-taste-frontend`, `high-end-visual-design`, `impeccable`, etc.
+- **Design taste (installed):** `.agents/skills/` — 16 locked in `skills-lock.json` (`design-taste-frontend`, `high-end-visual-design`, etc.); `impeccable` is vendored **unlocked** (its `scripts/` power the hook below).
 - **Cursor rules:** `.cursor/rules/` — architecture, design-system, content-source
-- **PostToolUse hook:** `.codex/hooks.json` → impeccable UI check after Edit/Write (optional local)
+- **PostToolUse hook:** `.codex/hooks.json` → impeccable UI check after Edit/Write (committed — runs for every clone)
 - **Local only (gitignored):** `.impeccable/config.local.json`, `.cursor/hooks.json`, `.cursor/debug-*.log`

@@ -72,7 +72,7 @@ ${heroWebpLink}  <meta property="og:type" content="website">
   <meta name="twitter:image" content="${esc(ogImage)}">
   <script type="application/ld+json" id="ld-person">${JSON.stringify(ld)}</script>
   <link rel="stylesheet" href="/assets/css/tailwind.css">
-  <link rel="stylesheet" href="/assets/css/styles.css">`;
+  <link rel="stylesheet" href="/assets/css/styles.css?v=uplift-1">`;
 }
 
 function buildH1(profile) {

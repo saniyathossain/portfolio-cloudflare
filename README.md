@@ -38,7 +38,7 @@ portfolio-cloudflare/
 │       ├── css/               # styles.css + tailwind.css
 │       ├── fonts/             # inter-latin.woff2 (self-hosted)
 │       ├── data/              # portfolio.json + manifest.webmanifest
-│       ├── js/vendor/         # alpine.min.js, motion.min.js
+│       ├── js/               # data.js, boot.js, aurora.js, … + vendor/ (alpine, motion)
 │       └── img/               # profile, logos, favicon, og-image
 ├── src/index.js               # Worker — security headers on every response
 ├── wrangler.toml              # Cloudflare Workers config
@@ -47,7 +47,10 @@ portfolio-cloudflare/
 ├── deploy.sh                  # build + wrangler deploy
 ├── tailwind.input.css         # Tailwind source
 ├── tailwind.config.js
-├── legacy/                    # Archived dc-runtime site (do not deploy)
+├── scripts/                   # sync-head.js, optimize-images.js, hash-sw.js
+├── skills-lock.json           # locked design-taste skills
+├── .agents/ .codex/ .cursor/  # agent skills, impeccable hook, Cursor rules
+├── shots/                     # screenshots
 └── docs/aidlc/                # Design system + content mapping notes
 ```
 
@@ -112,19 +115,15 @@ Ensure DNS for `saniyat.com` points to Cloudflare.
 
 ## Editing content
 
-All page copy lives in one file:
+All page content lives in one JSON file — the single source of truth, loaded at runtime by `data.js`:
 
 ```
-public/assets/js/data.js
+public/assets/data/portfolio.json
 ```
 
-Authoritative source when syncing updates:
+CV truth for that JSON is `docs/cv-modern-template.md` (do not invent employers, dates, or titles). When syncing from the legacy seed data, the source is `portfolio-v2/codes/database/seeders/data/` in the sibling docker repo.
 
-```
-/Users/bs01616/app/docker/www/p/portfolio-v2/codes/database/seeders/data/
-```
-
-Key sections in `data.js`: `profile`, `experiences`, `experienceGroups`, `projects`, `skills`, `education`, `socials`, `stats`.
+Key sections in `portfolio.json`: `site`, `profile`, `nav`, `services`, `experiences`, `companies`, `skills`, `education`, `socials`, `stats`, `sections`.
 
 Site URL constant:
 
@@ -162,7 +161,7 @@ Canonical and OG URLs use `https://saniyat.com`. After deploy, verify:
 
 ## Legacy
 
-The previous dc-runtime site (`support.js` + inline styles) is archived in `legacy/`. Do not extend or deploy it.
+An earlier dc-runtime site (`support.js` + inline styles) predated this rebuild. It is **not** in this repo (gitignored) — there is nothing here to extend or deploy.
 
 ## License
 
