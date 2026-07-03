@@ -6,6 +6,9 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const JSON_PATH = path.join(ROOT, "public/assets/data/portfolio.json");
 const HTML_PATH = path.join(ROOT, "public/index.html");
+// Bump on deploy — matches ASSET_V in boot.js. Applied to favicon/icon links too: browsers cache
+// favicons very aggressively per-origin and otherwise won't pick up a regenerated icon on refresh.
+const ASSET_V = "uplift-3";
 
 function absUrl(siteUrl, p) {
   if (!p) return "";
@@ -55,9 +58,9 @@ function buildHead(data) {
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="${esc(absUrl(site.url, "/"))}">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=${ASSET_V}">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=${ASSET_V}">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=${ASSET_V}">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
 ${heroWebpLink}  <meta property="og:type" content="website">
   <meta property="og:url" content="${esc(absUrl(site.url, "/"))}">
@@ -72,8 +75,7 @@ ${heroWebpLink}  <meta property="og:type" content="website">
   <meta name="twitter:description" content="${esc(site.twitterDescription || site.description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
   <script type="application/ld+json" id="ld-person">${JSON.stringify(ld)}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-3" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-3"></noscript>`;
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=${ASSET_V}">`;
 }
 
 function buildH1(profile) {
