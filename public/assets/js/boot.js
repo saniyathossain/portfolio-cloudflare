@@ -3,13 +3,15 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
 
+  const ASSET_V = "uplift-2"; // bump on deploy to cache-bust every boot-loaded JS module
   function loadScript(src) {
+    const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
       const s = document.createElement("script");
-      s.src = src;
+      s.src = url;
       s.async = false;
       s.onload = () => resolve();
-      s.onerror = () => reject(new Error("Failed to load " + src));
+      s.onerror = () => reject(new Error("Failed to load " + url));
       document.body.appendChild(s);
     });
   }
@@ -21,7 +23,6 @@
 
   function loadDeferredScripts() {
     const readyScripts = [
-      "/assets/js/vendor/motion.min.js",
       "/assets/js/reveal.js",
       "/assets/js/blur-reveal.js",
     ];
@@ -29,7 +30,12 @@
   }
 
   function loadIdleScripts() {
-    const idleScripts = ["/assets/js/motion.js"];
+    // Motion One drives magnetic CTAs + hero tilt — desktop/fine-pointer only. Gating it here keeps
+    // its 22 KB (gz) off touch devices, where motion.js no-ops (→ zero unused bytes on mobile).
+    // Ordered before motion.js so window.Motion is defined when motion.js runs (loadScript is async=false).
+    const idleScripts = [];
+    if (finePointer && !reduced) idleScripts.push("/assets/js/vendor/motion.min.js");
+    idleScripts.push("/assets/js/motion.js");
     if (finePointer && !reduced) {
       idleScripts.push("/assets/js/liquid-hero.js");
       idleScripts.push("/assets/js/aurora.js");
@@ -46,7 +52,7 @@
   async function boot() {
     registerSw();
     await window.portfolioDataReady;
-    await loadScript("/assets/js/app.js?v=loader-fix-2");
+    await loadScript("/assets/js/app.js");
     await loadScript("/assets/js/vendor/alpine.min.js");
     await loadDeferredScripts();
     scheduleIdle();

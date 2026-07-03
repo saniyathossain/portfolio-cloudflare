@@ -31,7 +31,7 @@
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
   <link rel="stylesheet" href="/assets/css/tailwind.css">
-  <link rel="stylesheet" href="/assets/css/styles.css?v=uplift-1">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=uplift-2">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -54,6 +54,9 @@
 
   <!-- Film grain — fixed, pointer-events-none texture overlay (no network; breaks digital flatness) -->
   <div class="grain" aria-hidden="true"></div>
+
+  <!-- Scroll progress hairline -->
+  <div class="scroll-progress" aria-hidden="true"></div>
 
   <!-- Page Loader — outside Alpine; glass panel over blurred site -->
   <div id="loader" class="loader" role="status" aria-live="polite" aria-label="Loading">
@@ -543,7 +546,7 @@
         <span x-text="'© ' + currentYear + ' ' + profile.name + '.'"></span>
       </div>
     </div>
-    <p class="site-footer__wm" aria-hidden="true" x-text="profile.shortName.toUpperCase()"></p>
+    <p class="site-footer__wm" aria-hidden="true" data-parallax data-parallax-speed="0.16" x-text="profile.shortName.toUpperCase()"></p>
   </footer>
 
   <!-- Nav overlay -->
@@ -608,9 +611,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.js?v=loader-fix-2" defer></script>
-  <script src="/assets/js/icons.js" defer></script>
-  <script src="/assets/js/loader.js?v=loader-fix-2" defer></script>
-  <script src="/assets/js/boot.js?v=loader-fix-2" defer></script>
+  <script src="/assets/js/data.js?v=uplift-2" defer></script>
+  <script src="/assets/js/icons.js?v=uplift-2" defer></script>
+  <script src="/assets/js/loader.js?v=uplift-2" defer></script>
+  <script src="/assets/js/boot.js?v=uplift-2" defer></script>
 </body>
 </html>

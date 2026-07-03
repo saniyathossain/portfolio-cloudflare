@@ -7,14 +7,14 @@
     el.textContent = "";
     el.classList.add("blur-reveal");
     const speed = parseFloat(el.getAttribute("data-blur-speed") || "1");
-    const seg = parseFloat(el.getAttribute("data-blur-segment") || "0.07");
+    const seg = parseFloat(el.getAttribute("data-blur-segment") || "0.06");
     const words = raw.trim().split(/\s+/);
     words.forEach((w, i) => {
       const s = document.createElement("span");
       s.className = "blur-reveal__word";
       s.textContent = w;
-      s.style.transitionDuration = seg * speed + "s";
-      s.style.transitionDelay = i * seg * speed + "s";
+      s.style.transitionDuration = (seg * 6 * speed).toFixed(3) + "s";        // smooth per-word fade (~0.36s)
+      s.style.transitionDelay = Math.min(i * seg * speed, 0.5).toFixed(3) + "s"; // cap stagger so long copy isn't sluggish
       el.appendChild(s);
       if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
     });

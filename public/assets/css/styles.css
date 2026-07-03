@@ -84,7 +84,9 @@ html:not(.is-loading) .load-scrim { display: none; }
   --ease-pill-reveal: cubic-bezier(0.22, 0.61, 0.36, 1);
   --dur-pill-expand: 0.4s;
   --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Inter-first on every platform → identical look on Mac/iOS/Windows/Android/Linux (see doc 19).
+     "Inter Fallback" is metric-matched so there's no CLS before Inter loads. */
+  --font-sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
   --text-sh: 0 1px 2px rgba(17,17,17,.08), 0 1px 0 rgba(255,255,255,.55);
   --text-sh-sm: 0 1px 1px rgba(255,255,255,.55), 0 1px 2px rgba(17,17,17,.06);
@@ -117,6 +119,17 @@ html:not(.is-loading) .load-scrim { display: none; }
   font-display: swap;
   src: url("/assets/fonts/inter-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Metric-matched fallback (Arial tuned to Inter's metrics) → the swap to Inter causes no layout shift (CLS-safe).
+   Result: identical type across Mac / iOS / Windows / Android / Linux once Inter (self-hosted, same-origin) loads. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.06%;
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -232,6 +245,16 @@ body::after {
   background-size: 160px 160px;
 }
 
+/* Scroll-progress hairline — reflects page scroll; hidden under reduced motion */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 130;
+  transform: scaleX(var(--sp, 0)); transform-origin: left center;
+  background: linear-gradient(90deg, var(--accent), var(--primary) 55%, var(--c-cyan));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent);
+  pointer-events: none; will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) { .scroll-progress { display: none; } }
+
 code, kbd, pre, samp { font-family: var(--font-mono); }
 
 /* ── Liquid-glass primitives ─────────────────────────────────────────── */
@@ -239,8 +262,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   position: relative; border-radius: var(--radius-card);
   padding: 1.75rem 1.75rem 2rem;
   background: var(--frost-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  box-shadow: var(--glass-shadow), 0 26px 60px -30px color-mix(in srgb, var(--tint) 32%, transparent), var(--glass-highlight);
   transform: translateZ(0); contain: paint;
 }
 /* Tinted inner glow — each panel faintly picks up its section/[data-ci] hue through the frost */
@@ -263,8 +285,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .glass-card {
   position: relative; overflow: hidden; border-radius: var(--radius-card-sm);
   background: var(--frost-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  box-shadow: var(--glass-shadow), 0 20px 44px -26px color-mix(in srgb, var(--tint) 30%, transparent), var(--glass-highlight);
   transform: translateZ(0); contain: paint;
   transition: transform 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass),
               border-color 0.5s var(--ease-glass);
@@ -396,7 +417,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   font-size: clamp(1rem, 1.45vw, 1.125rem);
   font-weight: 500;
   letter-spacing: -0.012em;
-  color: rgba(17,17,17,.72);
+  color: color-mix(in srgb, var(--tint-deep) 26%, rgba(17,17,17,.64));
   max-width: 48ch;
   margin-top: 0.65rem;
   margin-bottom: clamp(3rem, 5vw, 4rem);
@@ -672,10 +693,18 @@ html.is-loading .site-header {
 .nav-desktop { display: none; align-items: center; gap: 1.75rem; font-size: 0.875rem; font-weight: 500; }
 @media (min-width: 1024px) { .nav-desktop { display: flex; } }
 .nav-desktop button {
+  position: relative;
   display: inline-flex; align-items: center; gap: 0.4rem;
   color: rgba(17,17,17,.75); opacity: 0.85;
   transition: transform var(--dur-mid) var(--ease-hover), opacity var(--dur-mid) ease;
 }
+.nav-desktop button::after {
+  content: ""; position: absolute; left: 0.4rem; right: 0.4rem; bottom: -3px; height: 1.5px;
+  background: var(--accent); border-radius: 2px;
+  transform: scaleX(0); transform-origin: left center; opacity: 0;
+  transition: transform 0.32s var(--ease-glass), opacity 0.28s ease;
+}
+.nav-desktop button:hover::after { transform: scaleX(1); opacity: 1; }
 .nav-desktop button .ui-icon { width: 0.72rem; height: 0.72rem; opacity: 0.55; }
 .nav-desktop button:hover { opacity: 1; transform: translateY(-1px); }
 
@@ -852,7 +881,7 @@ html.is-ready .hero__wm {
   display: inline-flex; align-items: center; gap: 0.75rem;
   border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
   background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
-  border: 1px solid rgba(255,255,255,.72); color: #111; padding: 0.875rem 1.75rem;
+  color: #111; padding: 0.875rem 1.75rem;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px -7px rgba(17,17,17,.14);
   transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
 }
@@ -938,11 +967,10 @@ html.is-ready .hero__wm {
   width: 100%; max-width: 22rem; border-radius: 1.35rem;
   background: rgba(255, 255, 255, 0.82);
   padding: 0.5rem; cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.88);
   box-shadow:
-    0 0 0 1px rgba(255,255,255,.95),
-    0 0 0 2px rgba(230,229,226,.55),
-    0 16px 42px rgba(17, 17, 17, 0.1);
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 0 0 1px rgba(230,229,226,.4),
+    0 18px 46px -10px rgba(17, 17, 17, 0.14);
   transition: transform var(--dur-mid) var(--ease-glass), box-shadow var(--dur-mid) var(--ease-glass);
 }
 @media (min-width: 1024px) {
@@ -1003,7 +1031,8 @@ html.is-ready .hero__wm {
 .partner-pill {
   display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap;
   background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.62));
-  border: 1px solid rgba(255,255,255,.72); border-radius: var(--radius-pill);
+  border-radius: var(--radius-pill);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 1px 4px -2px rgba(17,17,17,.12);
   padding: 0.35rem 0.8rem 0.35rem 0.4rem; font-size: 0.75rem; color: rgba(17,17,17,.75);
   transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
 }
@@ -1165,7 +1194,7 @@ html.is-ready .hero__wm {
     box-shadow 0.45s var(--ease-glass);
 }
 @media (min-width: 640px) { .create-band__tile { height: 10rem; font-size: 2.25rem; } }
-.create-band__tile--light { background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.6)); border: 1px solid var(--glass-border); color: var(--fg); box-shadow: inset 0 1px 0 rgba(255,255,255,.85); }
+.create-band__tile--light { background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.6)); color: var(--fg); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 22px -10px rgba(17,17,17,.12); }
 .create-band__tile--accent {
   background: linear-gradient(145deg, var(--accent-dark) 0%, var(--accent) 42%, var(--accent-bright) 100%);
   color: #fff;
@@ -1178,7 +1207,7 @@ html.is-ready .hero__wm {
 .create-band__tile--dark .create-band__arrow-ico { width: 2.25rem; height: 2.25rem; color: #fff; }
 .create-band__tile--ghost {
   background: var(--grad-soft);
-  border: 1px solid rgba(255,255,255,.55); color: rgba(17,17,17,.42);
+  color: rgba(17,17,17,.42); box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
 }
 
 /* Services rows — Lumora hover-fill inside faux-frost panel */
@@ -1223,6 +1252,7 @@ html.is-ready .hero__wm {
   .service-row:hover { background: var(--surface); }
   .service-row:hover .service-row__index { color: rgba(17,17,17,.52); transform: translateX(6px); }
   .service-row:hover .service-row__body { transform: translateX(6px); }
+  .service-row:hover .service-row__title { color: var(--tint-deep); }
   .service-row:hover .service-row__arrow { opacity: 1; transform: translateX(5px); }
 }
 .service-row:hover::before, .service-row:hover + .service-row::before { opacity: 0; }
@@ -1230,7 +1260,7 @@ html.is-ready .hero__wm {
   min-width: 0;
   transition: transform 0.35s var(--ease-glass);
 }
-.service-row__title { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+.service-row__title { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; transition: color 0.3s var(--ease-glass); }
 .service-row__desc { margin-top: 0.35rem; font-size: 0.875rem; color: rgba(17,17,17,.62); line-height: 1.5; }
 .service-row__arrow {
   flex: none; opacity: 0; transform: translateX(-6px);
@@ -1429,7 +1459,9 @@ html.is-ready .hero__wm {
 .exp-row__type--contract { --chip: #0a84ff; }
 .exp-row__type--permanent { --chip: #12a8c4; }
 .exp-row__type-icon { color: var(--chip); }
-.exp-row__title { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+.exp-row__title { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.3s var(--ease-glass); }
+.exp-row:hover .exp-row__title,
+.exp-row[aria-expanded="true"] .exp-row__title { color: var(--tint-deep); }
 .exp-row__period {
   display: inline-flex; align-items: center; border-radius: var(--radius-pill);
   color: rgba(17,17,17,.64);

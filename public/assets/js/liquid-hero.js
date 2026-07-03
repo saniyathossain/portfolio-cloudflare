@@ -100,7 +100,7 @@
       }
       if (idle > IDLE_MAX && !points.length) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        raf = requestAnimationFrame(tick);
+        raf = 0; // fully idle — stop the loop (restarts on the next pointer move) so we don't burn frames
         return;
       }
       const fade = drawing ? DECAY : Math.min(DECAY + idle * 0.004, 0.5);
@@ -142,11 +142,13 @@
 
     function onPointerMove(e) {
       queuePoint(e.clientX, e.clientY);
+      if (!raf) raf = requestAnimationFrame(tick);
     }
 
     function onPointerDown(e) {
       last = null;
       queuePoint(e.clientX, e.clientY);
+      if (!raf) raf = requestAnimationFrame(tick);
     }
 
     function onPointerLeave() {

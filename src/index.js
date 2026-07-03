@@ -11,7 +11,7 @@ const SECURITY_HEADERS = {
 
 const EARLY_HINTS = [
   "</assets/img/saniyat-hossain.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high",
-  "</assets/css/styles.css?v=uplift-1>; rel=preload; as=style",
+  "</assets/css/styles.min.css?v=uplift-2>; rel=preload; as=style",
 ].join(", ");
 
 function isHtmlResponse(url, response) {

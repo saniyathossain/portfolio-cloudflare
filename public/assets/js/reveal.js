@@ -132,11 +132,28 @@
     else document.documentElement.style.removeProperty("font-size");
   }
 
+  function initScrollProgress() {
+    const bar = document.querySelector(".scroll-progress");
+    if (!bar || reduced) return;
+    const h = document.documentElement;
+    let raf = 0;
+    function update() {
+      raf = 0;
+      const max = h.scrollHeight - h.clientHeight;
+      const p = max > 0 ? Math.min(h.scrollTop / max, 1) : 0;
+      bar.style.setProperty("--sp", p.toFixed(4));
+    }
+    window.addEventListener("scroll", function () { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+  }
+
   function boot() {
     initReveals();
     initWordReveal();
     initStagger();
     initCountUp();
+    initScrollProgress();
     applyAdaptiveGrid();
     window.addEventListener("resize", applyAdaptiveGrid);
   }
