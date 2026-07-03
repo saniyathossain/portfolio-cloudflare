@@ -44,23 +44,12 @@ function webpResized(src, dest, width, q) {
   console.warn("WARN: cwebp not found — skip", dest);
 }
 
-// Squircle (superellipse) tile path in a 100×100 box, R≈47, and an inner highlight at R≈44.
-const SQ = "M50,3 C83,3 97,17 97,50 C97,83 83,97 50,97 C17,97 3,83 3,50 C3,17 17,3 50,3 Z";
-const SQ_IN = "M50,6 C81,6 94,19 94,50 C94,81 81,94 50,94 C19,94 6,81 6,50 C6,19 19,6 50,6 Z";
-
-// Duotone map for the favicon/icon portrait — shadows → --ink, highlights → a warm copper-cream
-// lifted from --accent-bright, so tab-icon size reads as a bold silhouette instead of photographic
-// noise, on-palette with the copper ring below. Posterized to 3 flat bands (not a smooth gradient):
-// a continuous photographic gradient turns to mud at 16-32px, but 3 hard-edged tone regions (hair
-// mass, mid, highlight) still read as a graphic mark at favicon size.
-const DUOTONE_SHADOW = "#0a0a0a";
-const DUOTONE_HIGHLIGHT = "#f7ddb6";
 const RING_COLOR = "#b15f2c";
 
-/** Face-centered square crop + posterized duotone silhouette treatment via ImageMagick.
+/** Face-centered square crop (full color — no duotone/silhouette treatment) via ImageMagick.
  *  Crop rect is expressed as fractions of the source so it stays correct if the master photo
  *  changes: the head (profile, facing right) sits left-of-center in the 3000x4000 source. */
-function duotoneCrop(src, dest) {
+function faceCrop(src, dest) {
   if (!fs.existsSync(src) || !has("magick")) return null;
   const dims = execSync(`magick identify -format "%w %h" "${src}"`).toString().trim().split(/\s+/);
   const w = parseInt(dims[0], 10);
@@ -68,35 +57,31 @@ function duotoneCrop(src, dest) {
   const side = Math.round(w * 0.693);
   const x = Math.round(w * 0.067);
   const y = Math.round(h * 0.13);
-  execSync(
-    `magick "${src}" -crop ${side}x${side}+${x}+${y} +repage ` +
-      `-colorspace Gray -level 10%,80% -posterize 3 +level-colors "${DUOTONE_SHADOW},${DUOTONE_HIGHLIGHT}" "${dest}"`,
-    { stdio: "ignore" }
-  );
-  console.log("Duotone crop:", dest, `(${side}x${side} @ ${x},${y})`);
+  execSync(`magick "${src}" -crop ${side}x${side}+${x}+${y} +repage "${dest}"`, { stdio: "ignore" });
+  console.log("Face crop:", dest, `(${side}x${side} @ ${x},${y})`);
   return dest;
 }
 
-/** Square PNG favicon fallback, resized from the duotone crop (OS applies its own icon rounding —
- *  no squircle baked in here, matching platform convention for apple-touch/PWA icons). */
-function favicon(duotoneSrc, dest, size) {
-  if (!duotoneSrc || !fs.existsSync(duotoneSrc)) return;
+/** Square PNG favicon fallback, resized from the face crop (OS applies its own icon rounding —
+ *  no circle baked in here, matching platform convention for apple-touch/PWA icons). */
+function favicon(cropSrc, dest, size) {
+  if (!cropSrc || !fs.existsSync(cropSrc)) return;
   if (has("sips")) {
-    execSync(`sips -z ${size} ${size} "${duotoneSrc}" --out "${dest}"`, { stdio: "ignore" });
+    execSync(`sips -z ${size} ${size} "${cropSrc}" --out "${dest}"`, { stdio: "ignore" });
   } else if (has("magick")) {
-    execSync(`magick "${duotoneSrc}" -resize ${size}x${size} "${dest}"`, { stdio: "ignore" });
+    execSync(`magick "${cropSrc}" -resize ${size}x${size} "${dest}"`, { stdio: "ignore" });
   }
   console.log("Favicon:", dest, `(${size}px)`);
 }
 
-/** Primary favicon: the duotone silhouette masked into a Tahoe squircle with a copper ring. */
-function faviconSvg(duotoneSrc, dest) {
-  if (!duotoneSrc || !fs.existsSync(duotoneSrc)) return;
-  const tmp = dest + ".src.png";
+/** Primary favicon: the face-centered portrait masked into a true circle with a thin copper ring. */
+function faviconSvg(cropSrc, dest) {
+  if (!cropSrc || !fs.existsSync(cropSrc)) return;
+  const tmp = dest + ".src.jpg";
   if (has("sips")) {
-    execSync(`sips -Z 200 -s format png "${duotoneSrc}" --out "${tmp}"`, { stdio: "ignore" });
+    execSync(`sips -Z 200 -s format jpeg "${cropSrc}" --out "${tmp}"`, { stdio: "ignore" });
   } else if (has("magick")) {
-    execSync(`magick "${duotoneSrc}" -resize 200x200 "${tmp}"`, { stdio: "ignore" });
+    execSync(`magick "${cropSrc}" -resize 200x200 "${tmp}"`, { stdio: "ignore" });
   } else {
     return;
   }
@@ -104,11 +89,10 @@ function faviconSvg(duotoneSrc, dest) {
   fs.rmSync(tmp, { force: true });
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
-    `<defs><clipPath id="sq"><path d="${SQ}"/></clipPath></defs>` +
-    `<image href="data:image/png;base64,${b64}" x="0" y="0" width="100" height="100" ` +
-    `preserveAspectRatio="xMidYMid slice" clip-path="url(#sq)"/>` +
-    `<path d="${SQ_IN}" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>` +
-    `<path d="${SQ}" fill="none" stroke="${RING_COLOR}" stroke-width="5.5"/>` +
+    `<defs><clipPath id="c"><circle cx="50" cy="50" r="46"/></clipPath></defs>` +
+    `<image href="data:image/jpeg;base64,${b64}" x="0" y="0" width="100" height="100" ` +
+    `preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>` +
+    `<circle cx="50" cy="50" r="46" fill="none" stroke="${RING_COLOR}" stroke-width="2"/>` +
     `</svg>\n`;
   fs.writeFileSync(dest, svg);
   console.log("Favicon SVG:", dest);
@@ -148,7 +132,7 @@ const i192 = path.join(IMG, "icon-192.png");
 const i512 = path.join(IMG, "icon-512.png");
 const fav32 = path.join(IMG, "favicon-32.png");
 const favSvg = path.join(IMG, "favicon.svg");
-const duotoneTmp = path.join(IMG, ".duotone-tmp.png");
+const faceCropTmp = path.join(IMG, ".face-crop-tmp.jpg");
 if (needsGen(HERO, [...heroSrcset, heroWebp, apple, i192, i512, fav32, favSvg])) {
   for (const w of HERO_WIDTHS) {
     webpResized(HERO, path.join(IMG, `saniyat-hossain-${w}.webp`), w, 82);
@@ -156,17 +140,17 @@ if (needsGen(HERO, [...heroSrcset, heroWebp, apple, i192, i512, fav32, favSvg]))
   fs.copyFileSync(path.join(IMG, "saniyat-hossain-900.webp"), heroWebp);
   console.log("WebP:", heroWebp, "(900w alias)");
 
-  const duotone = duotoneCrop(HERO, duotoneTmp);
-  if (duotone) {
-    favicon(duotone, fav32, 32);
-    favicon(duotone, apple, 180);
-    favicon(duotone, i192, 192);
-    favicon(duotone, i512, 512);
-    faviconSvg(duotone, favSvg);
-    fs.rmSync(duotone, { force: true });
+  const crop = faceCrop(HERO, faceCropTmp);
+  if (crop) {
+    favicon(crop, fav32, 32);
+    favicon(crop, apple, 180);
+    favicon(crop, i192, 192);
+    favicon(crop, i512, 512);
+    faviconSvg(crop, favSvg);
+    fs.rmSync(crop, { force: true });
   } else {
     console.warn("WARN: ImageMagick (`magick`) not found — skipping favicon/icon regeneration.");
-    console.warn("       Install with `brew install imagemagick` for the duotone crop pipeline.");
+    console.warn("       Install with `brew install imagemagick` for the face-centered crop.");
   }
   record(HERO);
 } else {
