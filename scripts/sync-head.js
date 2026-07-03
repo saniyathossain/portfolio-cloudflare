@@ -8,7 +8,7 @@ const JSON_PATH = path.join(ROOT, "public/assets/data/portfolio.json");
 const HTML_PATH = path.join(ROOT, "public/index.html");
 // Bump on deploy — matches ASSET_V in boot.js. Applied to favicon/icon links too: browsers cache
 // favicons very aggressively per-origin and otherwise won't pick up a regenerated icon on refresh.
-const ASSET_V = "uplift-3";
+const ASSET_V = "uplift-4";
 
 function absUrl(siteUrl, p) {
   if (!p) return "";
