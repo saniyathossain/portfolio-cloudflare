@@ -691,11 +691,17 @@ html.is-loading .site-header {
 }
 .brand-btn .brand-bismillah {
   display: block;
-  height: clamp(1.3rem, 3.4vw, 1.65rem);
+  height: clamp(1.35rem, 3.5vw, 1.7rem);
   width: auto;
-  max-width: min(9rem, 44vw);   /* never crowds the clock chip + Menu at 360px */
-  color: var(--ink);
-  filter: drop-shadow(0 1px 6px color-mix(in srgb, var(--accent) 30%, transparent));
+  max-width: min(9.5rem, 46vw);   /* never crowds the clock chip + Menu at 360px */
+  /* No shadow — the shine is the SVG metallic gradient; the sheen animates the light. */
+}
+@media (prefers-reduced-motion: no-preference) {
+  .brand-btn .brand-bismillah { animation: bismSheen 5.5s ease-in-out infinite; }
+}
+@keyframes bismSheen {
+  0%, 100% { filter: brightness(1) saturate(1.02); }
+  50%      { filter: brightness(1.22) saturate(1.16); }
 }
 
 .nav-desktop { display: none; align-items: center; gap: 1.75rem; font-size: 0.875rem; font-weight: 500; }
@@ -716,7 +722,7 @@ html.is-loading .site-header {
 .nav-desktop button .ui-icon { width: 0.72rem; height: 0.72rem; opacity: 0.55; }
 .nav-desktop button:hover { opacity: 1; transform: translateY(-1px); }
 
-.header-right { display: flex; align-items: center; gap: 0.85rem; }
+.header-right { display: flex; align-items: center; gap: 0.65rem; }
 .clock-chip { display: none; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
 @media (min-width: 768px) { .clock-chip { display: flex; } }
 .clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
@@ -726,43 +732,53 @@ html.is-loading .site-header {
    60s CSS sweep (re-synced every tick via a negative animation-delay) so it glides, never jumps. */
 .clock-face {
   position: relative; flex: none;
-  width: 0.95rem; height: 0.95rem;
+  width: 1.1rem; height: 1.1rem;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 28%, rgba(255,255,255,.9), rgba(255,255,255,0) 55%),
-    linear-gradient(160deg, rgba(255,255,255,.75), rgba(241,240,238,.35));
-  border: 1px solid rgba(17,17,17,.28);
-  box-shadow: inset 0 1px 1px rgba(255,255,255,.8), inset 0 -1px 2px rgba(17,17,17,.06);
+    radial-gradient(circle at 33% 26%, rgba(255,255,255,.96), rgba(255,255,255,0) 50%),
+    linear-gradient(155deg, rgba(255,255,255,.82), rgba(238,236,233,.42));
+  border: 1px solid rgba(17,17,17,.2);
+  box-shadow:
+    inset 0 1px 1.5px rgba(255,255,255,.92),
+    inset 0 -1px 2px rgba(17,17,17,.06),
+    0 1px 2px rgba(17,17,17,.09);
 }
+/* Hands pivot at the face centre and point UP at 0deg (12 o'clock). */
 .clock-hand {
-  position: absolute; left: 50%; top: 50%;
-  transform-origin: 0 50%;
+  position: absolute; left: 50%; bottom: 50%;
+  transform-origin: 50% 100%;
   border-radius: 999px;
-  background: rgba(17,17,17,.62);
+  background: rgba(17,17,17,.74);
 }
 .clock-hand--h {
-  width: 26%; height: 1.3px;
+  width: 1.7px; height: 26%; margin-left: -0.85px;
   transform: rotate(var(--clock-h, 0deg));
-  transition: transform 0.9s linear;
+  transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
 }
 .clock-hand--m {
-  width: 37%; height: 1.1px;
+  width: 1.4px; height: 35%; margin-left: -0.7px;
   transform: rotate(var(--clock-m, 0deg));
-  transition: transform 0.9s linear;
+  transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
 }
+/* Second hand: continuous 60s sweep (macOS Tahoe-style glide), phase-locked each tick
+   via the negative animation-delay so it never ticks or jumps. */
 .clock-hand--s {
-  width: 40%; height: 0.9px;
+  width: 1px; height: 38%; margin-left: -0.5px;
   background: var(--accent);
-  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent) 55%, transparent));
   transform: rotate(var(--clock-s, 0deg));
   animation: clock-sweep 60s linear infinite;
   animation-delay: var(--clock-s-delay, 0s);
 }
+.clock-hand--s::after {         /* Apple-style counterbalance tail behind the pivot */
+  content: ""; position: absolute; left: 50%; bottom: -24%;
+  width: 1px; height: 24%; margin-left: -0.5px;
+  border-radius: 999px; background: var(--accent);
+}
 .clock-pin {
   position: absolute; left: 50%; top: 50%;
-  width: 2.5px; height: 2.5px; margin: -1.25px 0 0 -1.25px;
+  width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px;
   border-radius: 50%; background: var(--accent);
-  box-shadow: 0 0 0 1px rgba(255,255,255,.7);
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,.9);
 }
 @keyframes clock-sweep {
   from { transform: rotate(0deg); }
@@ -778,9 +794,9 @@ html.is-loading .site-header {
   box-shadow: 0 6px 18px rgba(17,17,17,.18);
 }
 .menu-btn span {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  padding: 0.55rem 1.05rem; font-size: 0.75rem; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.05em; color: #fff;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.48rem 0.85rem; font-size: 0.6875rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
 }
 
 /* Hero */
