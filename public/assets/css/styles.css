@@ -163,10 +163,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Aurora field — soft, slowly drifting colour behind everything */
+/* Aurora field — CSS fallback + conic mesh (mobile / reduced-motion baseline) */
 body::before {
   content: ""; position: fixed; inset: -25vmax; z-index: -2; pointer-events: none;
   background:
+    conic-gradient(from 210deg at 50% 42%,
+      rgba(110,108,240,.08), rgba(10,132,255,.06) 22%,
+      rgba(63,208,224,.07) 44%, rgba(255,159,10,.05) 66%,
+      rgba(255,92,138,.06) 82%, rgba(177,95,44,.05) 100%),
     radial-gradient(40vmax 40vmax at 12% 4%, rgba(110,108,240,.17), transparent 58%),
     radial-gradient(36vmax 36vmax at 88% 0%, rgba(10,132,255,.13), transparent 58%),
     radial-gradient(46vmax 46vmax at 84% 82%, rgba(63,208,224,.15), transparent 60%),
@@ -174,11 +178,15 @@ body::before {
     radial-gradient(32vmax 32vmax at 48% 48%, rgba(255,92,138,.09), transparent 62%),
     radial-gradient(28vmax 28vmax at 72% 38%, rgba(177,95,44,.08), transparent 65%);
   filter: blur(28px) saturate(135%);
-  animation: auroraDrift 32s ease-in-out infinite alternate;
+  animation: auroraDrift 32s ease-in-out infinite alternate, auroraHue 48s ease-in-out infinite alternate;
 }
 body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(180deg, rgba(241,240,238,.06), rgba(241,240,238,.22));
+}
+@keyframes auroraHue {
+  0%   { filter: blur(28px) saturate(135%) hue-rotate(0deg); }
+  100% { filter: blur(28px) saturate(135%) hue-rotate(12deg); }
 }
 @keyframes auroraDrift {
   0%   { transform: translate3d(0, var(--aurora-y, 0px), 0) scale(1); }
@@ -186,6 +194,19 @@ body::after {
   100% { transform: translate3d(2%, calc(-1.5% + var(--aurora-y, 0px)), 0) scale(1.03); }
 }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+
+/* Aurora canvas — real flowing gradient field (desktop/fine-pointer only, injected by aurora.js).
+   Paints on top of the ::before orbs (same z-layer, later in DOM), under the ::after veil. Low-res
+   buffer upscaled + CSS-blurred so it reads as soft liquid light. */
+#auroraCanvas {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: -2; pointer-events: none;
+  opacity: 0; transition: opacity 1.4s var(--ease-glass, ease);
+  filter: blur(54px) saturate(132%);
+  transform: translate3d(0, var(--aurora-y, 0px), 0);
+  will-change: transform, opacity;
+}
+#auroraCanvas.is-ready { opacity: 0.92; }
 
 /* Film-grain overlay — fixed, pointer-events-none; sits above content, below the fixed chrome/overlays */
 .grain {
@@ -665,7 +686,7 @@ html.is-loading .site-header {
   background:
     linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0) 38%),
     linear-gradient(160deg, var(--hero-from) 0%, var(--hero-to) 100%);
-  min-height: 100lvh;
+  min-height: 100dvh;
 }
 
 /* Portrait spread — full-height banner on the right, face-safe crop */
@@ -677,6 +698,8 @@ html.is-loading .site-header {
   position: absolute; inset: 0;
   pointer-events: auto;
   touch-action: none;
+  transform: translate3d(0, var(--hero-liquid-y, 0px), 0);
+  will-change: transform;
 }
 .hero__backdrop-liquid img {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -728,12 +751,16 @@ html.is-loading .site-header {
   font-size: clamp(5.5rem, 16vw, var(--watermark));
   color: color-mix(in srgb, var(--ink) 6%, transparent);
   opacity: 0;
-  transform: translateY(20px);
+  transform: translate3d(0, calc(20px + var(--wm-parallax-y, 0px)), 0);
 }
 html.is-ready .hero__wm {
   opacity: 1;
-  transform: none;
+  transform: translate3d(0, var(--wm-parallax-y, 0px), 0);
   transition: opacity 0.9s var(--ease-spring) 0.3s, transform 0.9s var(--ease-spring) 0.3s;
+}
+[data-parallax] {
+  transform: translate3d(0, var(--parallax-y, 0px), 0);
+  will-change: transform;
 }
 @media (min-width: 1024px) {
   .hero__wm {
@@ -745,11 +772,27 @@ html.is-ready .hero__wm {
 .hero__grid {
   position: relative; z-index: 20; display: grid; gap: 2.5rem;
   padding-block: 9rem 4rem;
-  align-items: center; min-height: calc(100lvh - 4rem);
+  align-items: center; min-height: calc(100dvh - 4rem);
   pointer-events: none;
 }
 .hero__grid > * { pointer-events: auto; }
-@media (min-width: 1024px) { .hero__grid { grid-template-columns: 1.15fr 0.85fr; } }
+@media (min-width: 1024px) {
+  .hero__grid {
+    grid-template-columns: 1.22fr 0.78fr;
+    gap: 3rem;
+    align-items: end;
+    padding-block: clamp(7.5rem, 10vw, 9rem) 4.5rem;
+  }
+  .hero__copy { max-width: 42rem; }
+  .hero h1 {
+    font-size: clamp(3.15rem, 5.4vw, 5.15rem);
+    max-width: 11ch;
+  }
+  .hero__aside {
+    margin-top: -2.5rem;
+    align-items: flex-end;
+  }
+}
 
 .hero__copy {
   position: relative; z-index: 3;
@@ -876,11 +919,17 @@ html.is-ready .hero__wm {
   width: 100%; max-width: 22rem; border-radius: 1.35rem;
   background: rgba(255, 255, 255, 0.72);
   padding: 0.5rem; cursor: pointer;
-  box-shadow: 0 10px 28px rgba(17, 17, 17, 0.08), inset 0 0 0 1px rgba(230, 229, 226, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.95),
+    0 0 0 2px rgba(230,229,226,.55),
+    0 16px 42px rgba(17, 17, 17, 0.1);
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   transition: transform var(--dur-mid) var(--ease-glass), box-shadow var(--dur-mid) var(--ease-glass);
+}
+@media (min-width: 1024px) {
+  .hero-card { max-width: 24rem; }
 }
 .hero-card::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
@@ -1115,12 +1164,20 @@ html.is-ready .hero__wm {
   border: 1px solid rgba(255,255,255,.55); color: rgba(17,17,17,.42);
 }
 
-/* Services rows — inside a glass panel */
+/* Services rows — Lumora hover-fill inside faux-frost panel */
 .services-list { padding: 0.5rem; }
 .service-row {
-  display: flex; align-items: center; gap: 1rem; border-radius: var(--radius-card-sm);
-  padding: 1.35rem 1rem; position: relative;
-  transition: background 0.5s var(--ease-glass), transform 0.5s var(--ease-glass);
+  display: grid; grid-template-columns: auto auto 1fr auto;
+  align-items: center; gap: 0.75rem 1rem;
+  border-radius: var(--radius-card-sm);
+  padding: 1.35rem 1rem 1.35rem 0.65rem; position: relative;
+  transition: background 0.35s var(--ease-glass);
+}
+.service-row__index {
+  flex: none; width: 2.25rem; text-align: center;
+  font-size: 0.72rem; font-weight: 650; letter-spacing: 0.06em;
+  color: rgba(17,17,17,.36); font-variant-numeric: tabular-nums;
+  transition: transform 0.35s var(--ease-glass), color 0.25s ease;
 }
 .service-row__icon {
   flex: none; width: 2.5rem; height: 2.5rem; display: grid; place-items: center;
@@ -1134,7 +1191,9 @@ html.is-ready .hero__wm {
     0 3px 10px -3px color-mix(in srgb, var(--tint) 42%, transparent);
   transition: transform 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass);
 }
-.service-row:hover .service-row__icon { transform: scale(1.06); }
+@media (hover: hover) and (pointer: fine) {
+  .service-row:hover .service-row__icon { transform: scale(1.06) translateX(4px); }
+}
 .service-row__icon .ui-icon { width: 1.05rem; height: 1.05rem; }
 .service-row__gutter {
   flex: none; min-width: 2rem;
@@ -1143,19 +1202,24 @@ html.is-ready .hero__wm {
   content: ""; position: absolute; top: 0; left: 1rem; right: 1rem; height: 1px;
   background: rgba(24,30,56,.08);
 }
-.service-row:hover {
-  background: linear-gradient(100deg, color-mix(in srgb, var(--tint) 12%, rgba(255,255,255,.5)), rgba(255,255,255,.35));
-  transform: translateX(4px);
+@media (hover: hover) and (pointer: fine) {
+  .service-row:hover { background: var(--surface); }
+  .service-row:hover .service-row__index { color: rgba(17,17,17,.52); transform: translateX(6px); }
+  .service-row:hover .service-row__body { transform: translateX(6px); }
+  .service-row:hover .service-row__arrow { opacity: 1; transform: translateX(5px); }
 }
 .service-row:hover::before, .service-row:hover + .service-row::before { opacity: 0; }
-.service-row__body { flex: 1; min-width: 0; }
+.service-row__body {
+  min-width: 0;
+  transition: transform 0.35s var(--ease-glass);
+}
 .service-row__title { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
 .service-row__desc { margin-top: 0.35rem; font-size: 0.875rem; color: rgba(17,17,17,.62); line-height: 1.5; }
 .service-row__arrow {
-  flex: none; opacity: 0; transform: translateX(-8px);
-  font-size: 1.25rem; color: var(--tint-deep); transition: opacity 0.3s, transform 0.3s var(--ease-spring);
+  flex: none; opacity: 0; transform: translateX(-6px);
+  font-size: 1.25rem; color: var(--tint-deep);
+  transition: opacity 0.28s ease, transform 0.32s var(--ease-glass);
 }
-.service-row:hover .service-row__arrow { opacity: 1; transform: none; }
 
 /* Stats panel */
 .stats-panel {
@@ -1598,7 +1662,7 @@ html.is-ready .hero__wm {
 .brand-pill:hover .brand-pill__label-in,
 .brand-pill:focus-visible .brand-pill__label-in { color: #0a0a0a; text-shadow: none; }
 
-/* Smooth icon→label reveal via grid 0fr→1fr (no janky max-width) */
+/* Smooth icon→label reveal via grid 0fr→1fr */
 .brand-pill__label {
   position: relative; z-index: 1;
   display: grid;
@@ -1608,11 +1672,9 @@ html.is-ready .hero__wm {
     grid-template-columns 0.4s cubic-bezier(0.22, 0.9, 0.3, 1),
     opacity 0.26s ease;
 }
-/* the collapsing grid item — must reach 0 width, so NO padding/box here */
 .brand-pill__label-tx {
   display: block; overflow: hidden; min-width: 0;
 }
-/* the clipped, padded text — padding lives here so it can't floor the 0fr track */
 .brand-pill__label-in {
   display: block; white-space: nowrap;
   padding: 0 0.55rem 0 0.44rem;

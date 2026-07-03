@@ -30,7 +30,10 @@
 
   function loadIdleScripts() {
     const idleScripts = ["/assets/js/motion.js"];
-    if (finePointer && !reduced) idleScripts.push("/assets/js/liquid-hero.js");
+    if (finePointer && !reduced) {
+      idleScripts.push("/assets/js/liquid-hero.js");
+      idleScripts.push("/assets/js/aurora.js");
+    }
     return Promise.all(idleScripts.map(loadScript));
   }
 

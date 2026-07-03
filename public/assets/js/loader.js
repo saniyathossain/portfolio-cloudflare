@@ -85,21 +85,22 @@
 
   function finishLoader(loader) {
     setLoadVisuals(1);
+    const complete = () => {
+      endLoading();
+      startScroll();
+      running = false;
+      setReady();
+    };
     if (loader) {
       loader.classList.add("is-fade-center");
       loader.classList.add("is-exit");
       setTimeout(() => {
-        endLoading();
-        startScroll();
         loader.remove();
-        running = false;
+        complete();
       }, reduced ? 0 : 720);
     } else {
-      endLoading();
-      startScroll();
-      running = false;
+      complete();
     }
-    setReady();
     try {
       sessionStorage.setItem("portfolio-visited", "1");
     } catch (_) {}

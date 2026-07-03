@@ -1,11 +1,13 @@
-/** Motion One — magnetic CTAs, hero tilt, pointer specular */
+/** Motion One — magnetic CTAs, hero tilt, pointer specular, scroll parallax */
 (function () {
   const M = window.Motion;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = window.matchMedia("(pointer: fine)").matches;
+  const canEnhance = finePointer && !reduce;
+
   if (reduce || !M || typeof M.animate !== "function") return;
   const animate = M.animate;
 
-  // Soft macOS-Tahoe springs — gentle settle with a whisper of overshoot
   const springSnappy = { type: "spring", stiffness: 340, damping: 30, mass: 0.6 };
   const springSoft = { type: "spring", stiffness: 220, damping: 28, mass: 0.7 };
 
@@ -50,7 +52,10 @@
   }
 
   function specular() {
-    let raf = 0, pending = null, current = null;
+    if (!canEnhance) return;
+    let raf = 0;
+    let pending = null;
+    let current = null;
     function apply() {
       raf = 0;
       if (!pending || !current) return;
@@ -65,27 +70,57 @@
       (e) => {
         const el = e.target.closest && e.target.closest(".spec");
         if (!el) return;
-        current = el; pending = e;
+        current = el;
+        pending = e;
         if (!raf) raf = requestAnimationFrame(apply);
       },
       { passive: true }
     );
   }
 
-  // Aurora parallax — throttled scroll drift for the ambient aurora field + hero glow (transform-only).
-  function auroraParallax() {
+  let heroInView = true;
+  let parallaxRaf = 0;
+
+  function applyParallax(scrollY) {
+    if (!canEnhance || !heroInView) return;
+    const y = Math.min(scrollY * 0.06, 40);
+    const wm = Math.min(scrollY * 0.035, 24);
+    const liquid = Math.min(scrollY * 0.045, 32);
+    document.documentElement.style.setProperty("--aurora-y", y.toFixed(1) + "px");
+    document.documentElement.style.setProperty("--wm-parallax-y", wm.toFixed(1) + "px");
+    document.documentElement.style.setProperty("--hero-liquid-y", liquid.toFixed(1) + "px");
     const glow = document.getElementById("heroGlow");
-    let raf = 0;
-    function apply() {
-      raf = 0;
-      const y = Math.min(window.scrollY * 0.06, 40);
-      document.body.style.setProperty("--aurora-y", y.toFixed(1) + "px");
-      if (glow) glow.style.setProperty("--glow-y", (y * 1.4).toFixed(1) + "px");
+    if (glow) glow.style.setProperty("--glow-y", (y * 1.4).toFixed(1) + "px");
+  }
+
+  function scrollParallax() {
+    if (!canEnhance) return;
+
+    const hero = document.getElementById("home");
+    if (hero && "IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          heroInView = entries.some((e) => e.isIntersecting);
+          if (!heroInView) {
+            document.documentElement.style.setProperty("--aurora-y", "0px");
+            document.documentElement.style.setProperty("--wm-parallax-y", "0px");
+            document.documentElement.style.setProperty("--hero-liquid-y", "0px");
+          }
+        },
+        { root: null, threshold: 0, rootMargin: "0px 0px -20% 0px" }
+      );
+      io.observe(hero);
     }
+
     window.addEventListener(
       "scroll",
       () => {
-        if (!raf) raf = requestAnimationFrame(apply);
+        if (!parallaxRaf) {
+          parallaxRaf = requestAnimationFrame(() => {
+            parallaxRaf = 0;
+            applyParallax(window.scrollY);
+          });
+        }
       },
       { passive: true }
     );
@@ -94,9 +129,10 @@
   function boot() {
     document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
     const card = document.querySelector(".hero-card");
-    if (card) tilt(card);
+    if (card && canEnhance) tilt(card);
     specular();
-    auroraParallax();
+    scrollParallax();
+    if (canEnhance) applyParallax(window.scrollY || 0);
   }
 
   window.addEventListener("portfolio-ready", boot);

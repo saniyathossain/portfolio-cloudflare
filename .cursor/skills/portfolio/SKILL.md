@@ -20,7 +20,7 @@ description: Extend, build, and deploy the Saniyat static portfolio (Lumora + Ta
 | Tailwind utilities | `public/assets/css/tailwind.css` (prebuilt) |
 | Service worker | `public/sw.js` |
 
-**Boot order:** `data.js` → `loader.js` → `boot.js` → `app.js` + Alpine → `reveal.js` / `blur-reveal.js` → idle: `motion.js`, `liquid-hero.js`.
+**Boot order:** `data.js` → `loader.js` → `boot.js` → `app.js` + Alpine → `reveal.js` / `blur-reveal.js` → idle: `motion.js`, `liquid-hero.js` (desktop/fine-pointer only).
 
 ## Build & deploy
 
@@ -50,7 +50,7 @@ npx wrangler dev    # local preview
 - **Shiny chips:** `.icon-chip`, `.service-row__icon`, `.exp-row__icon`, `.point-chip` — tinted gradient fill + inset highlight + soft `--tint` shadow + diagonal `::before` gloss. **Do not** replace with neutral backdrop-filter-only “liquid glass” layers (user rejected).
 - **Brand pills:** `.brand-pill` — gradient surface, brand-coloured mono badge, sheen sweep `::before`, `.spec` pointer glow; stack/AI variants `--stack` / `--ai`.
 - **Loader:** `html.is-loading` blurs `#app` via inline critical CSS + `loader.js`; splash uses `.loader` backdrop blur; gates `html.is-ready` for hero watermark / header.
-- **Motion:** `[data-reveal]`, `.blur-reveal`, `prefers-reduced-motion` gates everywhere; `--ease-glass` for Tahoe settle.
+- **Motion:** `[data-reveal]`, `.blur-reveal`, CSS aurora (`body::before`), native scroll + lightweight hero parallax in `motion.js`; `liquid-hero.js` desktop only; `prefers-reduced-motion` gates everywhere.
 
 ## HTML / CSS conventions
 

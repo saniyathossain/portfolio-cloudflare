@@ -19,7 +19,7 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | `wrangler.toml` | Cloudflare config |
 | `.cursor/skills/portfolio/SKILL.md` | Agent project skill |
 | `.cursor/rules/` | Architecture, design-system, content-source rules |
-| `docs/aidlc/` | Design history & rationale (00–15) |
+| `docs/aidlc/` | Design history & rationale (00–17) |
 | `legacy/` | Old dc-runtime site (archived) |
 
 ## Doc index (recent)
@@ -29,3 +29,4 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | 12 | Hero eyebrow + partner strip (evolved → doc 15) |
 | 14 | Partner tiles experiment, loader blur, beam CTA |
 | **15** | **Agent context, gitignore, partner-pill revert** |
+| **17** | **Aurora canvas, Lenis smooth-scroll, layered parallax, Lumora hover-fill** |

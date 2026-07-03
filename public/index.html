@@ -31,7 +31,7 @@
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
   <link rel="stylesheet" href="/assets/css/tailwind.css">
-  <link rel="stylesheet" href="/assets/css/styles.css?v=loader-fix-2">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=scroll-fix-1">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -267,19 +267,15 @@
     <!-- Services -->
     <section id="services" class="sec py-20 lg:py-28">
       <div class="shell">
-        <p class="eyebrow mb-4" data-reveal>
-          <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('layers', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
-          <span class="eyebrow-dot"></span> Services
-        </p>
         <h2 class="mb-2 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">What I build</h2>
         <p class="sec-sub" data-sec-sub="services"></p>
         <ul class="services-list glass-panel spec spec--panel" data-reveal data-delay="180">
           <template x-for="(s,i) in services" :key="s.title">
             <li class="service-row" data-reveal :data-delay="i*80" :data-ci="['blue','teal','purple','orange'][i]">
+              <span class="service-row__index" aria-hidden="true" x-text="String(i + 1).padStart(2, '0')"></span>
               <span class="service-row__icon" aria-hidden="true">
                 <span x-html="iconSvg(s.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span>
               </span>
-              <span class="service-row__gutter" aria-hidden="true"></span>
               <div class="service-row__body">
                 <h3 class="service-row__title" x-text="s.title"></h3>
                 <p class="service-row__desc" x-text="s.desc"></p>
@@ -294,10 +290,6 @@
     <!-- Experience -->
     <section id="experience" class="sec py-20 lg:py-28">
       <div class="shell">
-        <p class="eyebrow mb-4" data-reveal>
-          <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('experience', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
-          <span class="eyebrow-dot"></span> Experience
-        </p>
         <h2 class="mb-2 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Where I've shipped</h2>
         <p class="sec-sub" data-sec-sub="experience"></p>
 
@@ -420,10 +412,6 @@
     <!-- Skills -->
     <section id="skills" class="sec py-20 lg:py-28">
       <div class="shell">
-        <p class="eyebrow mb-4" data-reveal>
-          <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('skills', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
-          <span class="eyebrow-dot"></span> Skills
-        </p>
         <h2 class="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Tools &amp; craft</h2>
         <p class="sec-sub" data-sec-sub="skills"></p>
         <div class="grid gap-6 md:grid-cols-2">
@@ -481,10 +469,6 @@
     <!-- Education -->
     <section id="education" class="sec pb-20 lg:pb-28">
       <div class="shell">
-        <p class="eyebrow mb-4" data-reveal>
-          <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('education', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
-          <span class="eyebrow-dot"></span> Education
-        </p>
         <h2 class="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Foundations</h2>
         <p class="sec-sub" data-sec-sub="education"></p>
         <ul class="grid gap-4">
