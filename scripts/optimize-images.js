@@ -49,13 +49,15 @@ const SQ = "M50,3 C83,3 97,17 97,50 C97,83 83,97 50,97 C17,97 3,83 3,50 C3,17 17
 const SQ_IN = "M50,6 C81,6 94,19 94,50 C94,81 81,94 50,94 C19,94 6,81 6,50 C6,19 19,6 50,6 Z";
 
 // Duotone map for the favicon/icon portrait — shadows → --ink, highlights → a warm copper-cream
-// lifted from --accent-bright, so tab-icon size reads as a bold two-tone silhouette instead of
-// photographic noise, on-palette with the copper ring below.
+// lifted from --accent-bright, so tab-icon size reads as a bold silhouette instead of photographic
+// noise, on-palette with the copper ring below. Posterized to 3 flat bands (not a smooth gradient):
+// a continuous photographic gradient turns to mud at 16-32px, but 3 hard-edged tone regions (hair
+// mass, mid, highlight) still read as a graphic mark at favicon size.
 const DUOTONE_SHADOW = "#0a0a0a";
-const DUOTONE_HIGHLIGHT = "#f3d9b8";
+const DUOTONE_HIGHLIGHT = "#f7ddb6";
 const RING_COLOR = "#b15f2c";
 
-/** Face-centered square crop + duotone silhouette treatment via ImageMagick.
+/** Face-centered square crop + posterized duotone silhouette treatment via ImageMagick.
  *  Crop rect is expressed as fractions of the source so it stays correct if the master photo
  *  changes: the head (profile, facing right) sits left-of-center in the 3000x4000 source. */
 function duotoneCrop(src, dest) {
@@ -68,7 +70,7 @@ function duotoneCrop(src, dest) {
   const y = Math.round(h * 0.13);
   execSync(
     `magick "${src}" -crop ${side}x${side}+${x}+${y} +repage ` +
-      `-colorspace Gray -level 12%,88% +level-colors "${DUOTONE_SHADOW},${DUOTONE_HIGHLIGHT}" "${dest}"`,
+      `-colorspace Gray -level 10%,80% -posterize 3 +level-colors "${DUOTONE_SHADOW},${DUOTONE_HIGHLIGHT}" "${dest}"`,
     { stdio: "ignore" }
   );
   console.log("Duotone crop:", dest, `(${side}x${side} @ ${x},${y})`);
@@ -105,8 +107,8 @@ function faviconSvg(duotoneSrc, dest) {
     `<defs><clipPath id="sq"><path d="${SQ}"/></clipPath></defs>` +
     `<image href="data:image/png;base64,${b64}" x="0" y="0" width="100" height="100" ` +
     `preserveAspectRatio="xMidYMid slice" clip-path="url(#sq)"/>` +
-    `<path d="${SQ_IN}" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="1.5"/>` +
-    `<path d="${SQ}" fill="none" stroke="${RING_COLOR}" stroke-width="5"/>` +
+    `<path d="${SQ_IN}" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>` +
+    `<path d="${SQ}" fill="none" stroke="${RING_COLOR}" stroke-width="5.5"/>` +
     `</svg>\n`;
   fs.writeFileSync(dest, svg);
   console.log("Favicon SVG:", dest);
