@@ -106,7 +106,12 @@
         </nav>
         <div class="header-right">
           <div class="clock-chip" aria-label="Local time">
-            <span x-html="iconSvg('clock', 'ui-icon ui-icon--sm')" aria-hidden="true"></span>
+            <span class="clock-face" aria-hidden="true" :style="'--clock-h:' + clockAngleH + 'deg; --clock-m:' + clockAngleM + 'deg; --clock-s:' + clockAngleS + 'deg; --clock-s-delay:' + clockSecondDelay">
+              <span class="clock-hand clock-hand--h"></span>
+              <span class="clock-hand clock-hand--m"></span>
+              <span class="clock-hand clock-hand--s"></span>
+              <span class="clock-pin"></span>
+            </span>
             <span class="clock-time" x-text="clockTime"></span>
             <span class="clock-sep">•</span>
             <span x-text="clockDate"></span>

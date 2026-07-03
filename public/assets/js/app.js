@@ -15,6 +15,10 @@ function portfolioApp() {
     cardIndex: 0,
     clockTime: "9:41am",
     clockDate: "12 March, 2025",
+    clockAngleH: 0,
+    clockAngleM: 0,
+    clockAngleS: 0,
+    clockSecondDelay: "0s",
     openRoles: {},
     currentYear: new Date().getFullYear(),
     heroCards: D.heroCards,
@@ -143,6 +147,18 @@ function portfolioApp() {
       this.clockTime = h + ":" + m + mer;
       const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
       this.clockDate = now.getDate() + " " + months[now.getMonth()] + ", " + now.getFullYear();
+
+      // Analog hands: hour/minute set directly (they barely move between ticks); the second hand
+      // is a CSS `animation: sweep 60s linear infinite` — re-syncing its negative animation-delay
+      // to the real seconds-into-minute every tick keeps it phase-locked (self-corrects any drift
+      // from tab throttling) while the sweep itself stays a smooth 60s rotation, not a per-second jump.
+      const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours12 = (now.getHours() % 12) + minutes / 60;
+      this.clockAngleH = hours12 * 30;
+      this.clockAngleM = minutes * 6;
+      this.clockAngleS = seconds * 6;
+      this.clockSecondDelay = "-" + seconds.toFixed(3) + "s";
     },
 
     scrollLock(on) {
