@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=4d1188be9622">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=4d1188be9622">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=4d1188be9622">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=7fb5ddb3dec6">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=7fb5ddb3dec6">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=7fb5ddb3dec6">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=4d1188be9622">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=7fb5ddb3dec6">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -49,11 +49,10 @@
 
   <a href="#main" class="skip-link">Skip to content</a>
 
-  <!-- Shared icon defs — reused via <use> so repeated glyphs (brand mark, rating stars) ship once
-       instead of duplicating path data at every call site. No extra request: it's inline. -->
+  <!-- Shared icon defs — reused via <use> so repeated glyphs (brand mark) ship once instead of
+       duplicating path data at every call site. No extra request: it's inline. -->
   <svg class="svg-sprite" aria-hidden="true">
     <symbol id="ico-spark" viewBox="0 0 48 48"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></symbol>
-    <symbol id="ico-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.1-6.46-4.69-4.58 6.49-.94L12 2.5z"/></symbol>
   </svg>
 
   <!-- Progressive blur scrim — site stays painted underneath during load -->
@@ -75,7 +74,6 @@
       </div>
       <div class="loader__content">
         <div class="loader__brand">
-          <svg class="icon" width="1.875rem" height="1.875rem" aria-hidden="true"><use href="#ico-spark"/></svg>
           <span id="loader-brand-name"></span>
         </div>
         <p id="loader-tagline" class="loader__tagline"></p>
@@ -100,7 +98,9 @@
     <div class="shell">
       <div class="glass-pill">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
-          <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=4d1188be9622" width="509" height="100" alt="" aria-hidden="true">
+          <span class="brand-bismillah-wrap">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=7fb5ddb3dec6" width="509" height="100" alt="" aria-hidden="true">
+          </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
         <nav class="nav-desktop" aria-label="Primary">
@@ -182,13 +182,6 @@
   <!-- SYNC:H1:END -->
           </h1>
           <div class="hero-rating" data-reveal data-delay="650">
-            <span class="hero-stars" aria-hidden="true">
-              <svg width="1em" height="1em" fill="currentColor"><use href="#ico-star"/></svg>
-              <svg width="1em" height="1em" fill="currentColor"><use href="#ico-star"/></svg>
-              <svg width="1em" height="1em" fill="currentColor"><use href="#ico-star"/></svg>
-              <svg width="1em" height="1em" fill="currentColor"><use href="#ico-star"/></svg>
-              <svg width="1em" height="1em" fill="currentColor"><use href="#ico-star"/></svg>
-            </span>
             <span class="hero-rating__text" x-text="profile.heroRating"></span>
           </div>
           <div class="hero__actions" data-reveal data-delay="750">
@@ -256,6 +249,7 @@
     <!-- About -->
     <section id="about" class="sec py-20 lg:py-28">
       <div class="shell">
+        <div class="about-card__backdrop" aria-hidden="true"></div>
         <div class="about-card glass-card spec spec--panel" data-reveal="scale">
           <svg class="about-card__globe" data-reveal="fade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><circle class="about-card__globe-path" cx="12" cy="12" r="9.25"/><path class="about-card__globe-path" d="M12 2.75c2.6 2.3 4 5.8 4 9.25s-1.4 6.95-4 9.25c-2.6-2.3-4-5.8-4-9.25s1.4-6.95 4-9.25zM2.75 12h18.5"/></svg>
           <span class="about-card__quote" aria-hidden="true">&ldquo;</span>
@@ -613,12 +607,15 @@
             <h2 id="modal-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Tell us what you're building.</h2>
           </div>
           <form class="flex flex-col gap-4" @submit="submitForm">
-            <div class="modal-field"><label for="f-name">Name</label><input id="f-name" name="name" type="text" required placeholder="Your name" autocomplete="name"></div>
-            <div class="modal-field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" required placeholder="you@company.com" autocomplete="email"></div>
-            <div class="modal-field"><label for="f-project">Project</label><textarea id="f-project" name="project" rows="4" required placeholder="A few words about your project, timeline, and budget."></textarea></div>
-            <div class="mt-2 flex items-center justify-between gap-4">
+            <div class="modal-field"><label for="f-name"><span x-html="iconSvg('users', 'ui-icon ui-icon--sm')" aria-hidden="true"></span>Name</label><input id="f-name" name="name" type="text" required placeholder="Your name" autocomplete="name"></div>
+            <div class="modal-field"><label for="f-email"><span x-html="iconSvg('contact', 'ui-icon ui-icon--sm')" aria-hidden="true"></span>Email</label><input id="f-email" name="email" type="email" required placeholder="you@company.com" autocomplete="email"></div>
+            <div class="modal-field"><label for="f-project"><span x-html="iconSvg('rocket', 'ui-icon ui-icon--sm')" aria-hidden="true"></span>Project</label><textarea id="f-project" name="project" rows="4" required placeholder="A few words about your project, timeline, and budget."></textarea></div>
+            <div class="modal-footer-row mt-2">
               <p class="text-xs text-ink/45">We reply within one business day.</p>
-              <button type="submit" class="pill-btn pill-btn-dark" :disabled="submitting" x-text="submitting ? 'Sending…' : 'Send request'"></button>
+              <button type="submit" class="pill-btn pill-btn-dark" :disabled="submitting">
+                <span x-text="submitting ? 'Sending…' : 'Send request'"></span>
+                <span class="pill-btn__icon" aria-hidden="true"><span x-html="iconSvg('arrow', 'ui-icon ui-icon--sm')"></span></span>
+              </button>
             </div>
           </form>
         </div>
@@ -637,9 +634,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=4d1188be9622" defer></script>
-  <script src="/assets/js/icons.min.js?v=4d1188be9622" defer></script>
-  <script src="/assets/js/loader.min.js?v=4d1188be9622" defer></script>
-  <script src="/assets/js/boot.min.js?v=4d1188be9622" defer></script>
+  <script src="/assets/js/data.min.js?v=7fb5ddb3dec6" defer></script>
+  <script src="/assets/js/icons.min.js?v=7fb5ddb3dec6" defer></script>
+  <script src="/assets/js/loader.min.js?v=7fb5ddb3dec6" defer></script>
+  <script src="/assets/js/boot.min.js?v=7fb5ddb3dec6" defer></script>
 </body>
 </html>
