@@ -141,3 +141,25 @@ hands (charcoal `#2a2f38` hour/minute, slate `#5b6472` second) — no bright col
 makes the seamless 6°/sec second-hand sweep actually readable (the earlier "second hand didn't move"
 was just imperceptible motion on a 1.4rem face; the sweep itself was verified running). Second-hand
 `--clock-s-delay` phase-lock mechanism unchanged.
+
+## Revision 2 (post-review) — clock size/hover fix, nav pill shine, hero-card overlap
+- **Clock**: bumped further (1.85rem → 2.2rem) and navbar height grown (`.glass-pill` padding-block
+  0.55rem → 0.7rem) to fit it. Backdrop-filter blur pushed to an "extremely liquid glass" 18px/220%
+  saturate (was 6px/150%). Fixed a real bug: hover-scale used a centered `transform-origin`, so
+  growing the face visually covered the adjacent digital time text — now the hover rule switches
+  `transform-origin` to the right edge, so the enlarged face expands left/up/down and away from the
+  time text instead. Added 4 cardinal tick marks (12/3/6/9), hidden at rest, fading in only on hover
+  to aid reading hour/minute at the larger hover size — reuses the "spans center→edge but only the
+  outer segment is painted" gradient technique (avoids the earlier squircle-favicon bug where naive
+  center-rooted ticks crossed through the pivot instead of sitting at the rim).
+- **Nav pill**: given the same "shiny tile" treatment as `.icon-chip` (used in the Services/"What I
+  do" section) — diagonal tinted gradient background + a diagonal specular gloss `::before` overlay,
+  instead of the flatter tinted-glass fill it had.
+- **Hero card**: confirmed via screenshot it was sitting directly over the mouth/beard. Pushed
+  `.hero__aside` further down AND right at 1024px+ (`translateY(2.5rem)` → `translate(1.5rem,
+  6.5rem)`), shrunk the card's desktop max-width (24rem → 20rem), and lowered its background opacity
+  (0.82 → 0.68, faux-frost — no `backdrop-filter` added since this card scrolls with the page,
+  keeping within the "backdrop-filter only on fixed chrome" perf guardrail). Re-screenshotted:
+  the mouth/beard area is now fully clear, the card sits over the shoulder/collar.
+- All changes re-verified: braces balanced, `app.js` syntax-checked, `prefers-reduced-motion`
+  re-confirmed (face/tick transitions off, second hand static) after these additions.
