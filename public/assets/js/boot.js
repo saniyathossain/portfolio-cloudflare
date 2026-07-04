@@ -3,7 +3,7 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
 
-  const ASSET_V = "e2f7212a1e6c"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "84eebea28abc"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {

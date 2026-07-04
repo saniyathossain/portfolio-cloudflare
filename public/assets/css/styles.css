@@ -1209,6 +1209,38 @@ html.is-ready .hero__wm {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 1px 3px rgba(17,17,17,.12);
 }
 .pill-btn__icon .ui-icon { width: 1rem; height: 1rem; color: var(--ink); stroke-width: 2.25; }
+/* "View experience" — a leaf that unfurls (rotate + scale from its own base, not the button's
+   center) and a thin stem that grows along the button's underside on hover, both driven by
+   transform only (never width/height) per this file's GPU-only animation convention. --c-green is
+   an existing Aurora token (already used for Education elsewhere), not a new hue — scoped to this
+   one nature-themed icon rather than adopted as a second sitewide accent. */
+.grow-btn { position: relative; }
+.grow-btn__icon {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--c-green) 30%, #fff), color-mix(in srgb, var(--c-green) 10%, #fff));
+  color: #146b29;
+  transform-origin: 50% 100%;
+  transition: transform 0.4s var(--ease-glass);
+}
+.grow-btn__icon .ui-icon { color: #146b29; }
+@media (hover: hover) and (pointer: fine) {
+  .grow-btn:hover .grow-btn__icon { transform: rotate(-10deg) scale(1.12); }
+}
+/* A real child element, not ::after — .beam already claims ::before (rotating conic border) and
+   .pill-btn-glass already claims ::after (gloss overlay) on this same button, so there's no free
+   pseudo-element slot left. Two-class selector (.grow-btn > .grow-btn__stem) so it reliably wins
+   position:absolute back from .pill-btn-glass > * (which promotes every direct child to
+   position:relative for its own z-index stacking) regardless of source order. */
+.grow-btn > .grow-btn__stem {
+  position: absolute; z-index: 2; left: 1.5rem; right: 2.75rem; bottom: 0.6rem; height: 2px;
+  background: color-mix(in srgb, var(--c-green) 65%, transparent);
+  border-radius: 2px;
+  transform: scaleX(0); transform-origin: 0% 50%;
+  transition: transform 0.45s var(--ease-glass);
+}
+.grow-btn:hover > .grow-btn__stem { transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) {
+  .grow-btn__icon, .grow-btn__stem { transition: none; }
+}
 /* Both CTAs below add the icon-chip "shiny tile" gloss via ::after (not ::before — .beam already
    claims that pseudo-element for its rotating conic border on these same buttons). */
 .pill-btn-dark {
@@ -1234,7 +1266,7 @@ html.is-ready .hero__wm {
   display: inline-flex; align-items: center; gap: 0.75rem;
   border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
   background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
-  color: #111; padding: 0.875rem 1.75rem;
+  color: #111; padding: 0.875rem 0.375rem 0.875rem 1.5rem;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px -7px rgba(17,17,17,.14);
   transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
 }
@@ -1324,9 +1356,14 @@ html.is-ready .hero__wm {
 }
 
 .hero-card {
+  /* Faux-frost, not real backdrop-filter: this card scrolls with the page (it isn't fixed/sticky),
+     and backdrop-filter on scrolling content repaints every frame while it's in view — the exact
+     mobile-performance cost this file's own --frost-bg token was already created to avoid ("faux-
+     frost for SCROLLING glass — no backdrop-filter (100/100 on mobile)"). More translucency here
+     instead of a live blur gets the frosted *read* without spending the PageSpeed budget on it. */
   position: relative; overflow: hidden;
   width: 100%; max-width: 22rem; border-radius: 1.35rem;
-  background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.7) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,.8) 0%, rgba(255,255,255,.52) 100%);
   padding: 0.5rem; cursor: pointer;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.9),
@@ -1768,17 +1805,12 @@ html.is-ready .hero__wm {
      of animating in, matching every other reduced-motion override in this file. */
   .blur-reveal__word { transition: none; }
 }
-/* Keyword emphasis, reserved for short accent phrases only — never a full paragraph, where a
-   heavy shadow/glow hurts legibility instead of adding punch. Each color gets a layered shadow (a
-   crisp 1px offset in a darker shade of the same hue, plus a soft color-matched glow) instead of a
-   flat color swap, reading as embossed/lit rather than just recolored text. */
-.blur-reveal__word--hl-copper {
-  color: var(--accent-dark); font-weight: 700;
-  text-shadow: 1px 1px 0 color-mix(in srgb, var(--accent) 70%, black), 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
-}
-.blur-reveal__word--hl-rose {
-  color: #c4214f; font-weight: 700;
-  text-shadow: 1px 1px 0 #8a1638, 0 6px 18px rgba(196, 33, 79, .35);
+/* Keyword emphasis — weight only, no color and no shadow. Picked after two rounds of colored-text
+   treatments (a shadow-on-color emboss+glow, then inline chip badges) were both rejected; this is
+   the most disciplined reading of "one locked accent" — the phrase stands out purely through
+   contrast against the surrounding lighter body weight, nothing else competes with the ink color. */
+.blur-reveal__word--hl {
+  color: var(--ink); font-weight: 800;
 }
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }
@@ -2622,13 +2654,14 @@ html.is-ready .hero__wm {
    *title*'s wrap width, never the actual mispositioned button. Fixed with an explicit two-class
    selector that decisively outranks .modal-panel > * regardless of source order. */
 .modal-panel > .modal-close {
-  position: absolute; top: 1rem; right: 1rem; z-index: 2;
+  position: absolute; top: 1rem; left: 1rem; z-index: 2;
   width: 2.25rem; height: 2.25rem;
 }
-/* Close button sits at right:1rem, width:2.25rem — its left edge is 3.25rem from the panel's right
-   edge, inside the panel's own 1.5rem padding. Without this, the title/eyebrow text runs the full
-   padded width and collides with the button on any line long enough to reach it, at every size. */
-.modal-header { padding-right: 2.25rem; }
+/* Close button sits at left:1rem, width:2.25rem — its right edge is 3.25rem from the panel's left
+   edge, inside the panel's own 1.5rem padding — macOS puts window controls on the left, not the
+   right. Without this, the title/eyebrow text runs the full padded width and collides with the
+   button on any line long enough to reach it, at every size. */
+.modal-header { padding-left: 2.25rem; }
 .modal-field label {
   display: flex; align-items: center; gap: 0.35rem;
   font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em;
