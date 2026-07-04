@@ -1778,22 +1778,32 @@ html.is-ready .hero__wm {
   color: color-mix(in srgb, var(--tint-deep) 82%, var(--ink));
   font-weight: 800;
 }
-/* Named multi-color highlight variants — each phrase gets its own hue AND its own distinguishing
-   treatment (not just a palette swap): copper reads technical (tight tracking), rose matches the
-   About section's own identity color, violet is the "surprise" pop via small-caps. Every variant
-   carries a soft color-matched glow shadow layered under the shared emboss, so the distinction
-   reads as considered material/light, not just a flat color change. */
+/* Named multi-color highlight variants — inline "chip" treatment, picked from 4 real rendered
+   options (mono-copper, underline, gradient-shimmer, chips). Each phrase sits inside its own soft
+   rounded pill instead of just changing text color, echoing the .icon-chip/.brand-pill badge
+   language already used elsewhere on the site rather than inventing a new visual vocabulary. Text
+   stays dark ink (readable against any of the three tints) — the color lives in the pill, not the
+   glyph. Multi-word phrases render as adjacent same-colored pills (one per word-span, since
+   blur-reveal.js wraps each word individually) rather than one seamless merged shape — intentional,
+   not a bug: verified in the rendered options before this was picked. */
+.blur-reveal__word--hl-copper,
+.blur-reveal__word--hl-rose,
+.blur-reveal__word--hl-violet {
+  color: var(--ink); font-weight: 600; text-shadow: none;
+  padding: 0.08em 0.5em; border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 4px 14px -6px rgba(17,17,17,.22);
+}
 .blur-reveal__word--hl-copper {
-  color: var(--accent-dark); font-weight: 800; letter-spacing: -0.01em;
-  text-shadow: var(--text-sh-emboss), 0 3px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 24%, white);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .blur-reveal__word--hl-rose {
-  color: #c4214f; font-weight: 800;
-  text-shadow: var(--text-sh-emboss), 0 3px 16px rgba(196, 33, 79, .28);
+  background: color-mix(in srgb, #c4214f 20%, white);
+  border: 1px solid color-mix(in srgb, #c4214f 28%, transparent);
 }
 .blur-reveal__word--hl-violet {
-  color: #4a48a8; font-weight: 800; font-variant-caps: small-caps; letter-spacing: 0.02em;
-  text-shadow: var(--text-sh-emboss), 0 3px 16px rgba(74, 72, 168, .28);
+  background: color-mix(in srgb, #4a48a8 20%, white);
+  border: 1px solid color-mix(in srgb, #4a48a8 28%, transparent);
 }
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }
