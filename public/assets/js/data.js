@@ -223,19 +223,18 @@ function _applySiteMeta(data) {
 }
 
 function _partnersFromExperience(data) {
-  // Each organisation's core brand colour (best-effort, not authoritative — see note below).
-  // Reassigned from the site's own Aurora hue palette so adjacent orbs in the rendered row read as
-  // genuinely distinct: the previous values clustered two near-identical blues (Brain Station 23 +
-  // Grameenphone, 1.4° apart) and two near-identical reds (icddr,b + Runner Cyberlink, 14.7° apart).
-  // This ordering keeps every adjacent pair 100°+ apart on the hue wheel.
+  // Monochrome by design: every partner orb shares one neutral (matches --muted in styles.css) so
+  // the row reads as a calm, premium dock — differentiation comes from each company's own logo, not
+  // from assigning it an arbitrary color. (A prior hue-spread palette was technically distinct but
+  // read as a "rainbow of bubbles," mismatched with the site's restrained accent-color discipline.)
   const brandColors = {
-    "brain-station-23-plc": "#6e6cf0",
-    "grameenphone-limited": "#b15f2c",
-    "icddr-b": "#3fd0e0",
-    "optimum-solution-services-ltd": "#ff5c8a",
-    "runner-cyberlink-limited": "#30d158",
+    "brain-station-23-plc": "#8d8d8d",
+    "grameenphone-limited": "#8d8d8d",
+    "icddr-b": "#8d8d8d",
+    "optimum-solution-services-ltd": "#8d8d8d",
+    "runner-cyberlink-limited": "#8d8d8d",
   };
-  const hues = ["#b15f2c", "#6e6cf0", "#30d158", "#ff9f0a", "#2b8c9a"];
+  const hues = ["#8d8d8d"]; // matches the monochrome brandColors above for any future, unmapped slug
   const seen = new Set();
   const partners = [];
   let i = 0;

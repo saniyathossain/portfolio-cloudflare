@@ -390,14 +390,20 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   margin-bottom: -1.25rem;
 }
 .about-card__icon { position: relative; z-index: 4; margin-bottom: 1.5rem; }
-.about-card__statement {
+/* Variable-weight emphasis: light body text lets the bold .blur-reveal__word--hl phrases (below)
+   carry the punch, instead of the whole statement competing at one uniform weight.
+   Selector is `.about-card .about-card__statement` (not just the class alone) to decisively outrank
+   the generic `.sec h2` rule below (0,1,1 — class+element) — a single-class selector here would lose
+   that fight and silently fall back to .sec h2's bold weight/size/tracking, since this h2 lives
+   inside a `.sec` section like any other. */
+.about-card .about-card__statement {
   position: relative; z-index: 4;
   max-width: 42rem;
-  font-size: 1.5rem; font-weight: 500; line-height: 1.42; letter-spacing: -0.01em;
+  font-size: 1.5rem; font-weight: 350; line-height: 1.42; letter-spacing: -0.01em;
   color: var(--ink);
   text-shadow: var(--text-sh-emboss);
 }
-@media (min-width: 640px) { .about-card__statement { font-size: 1.875rem; } }
+@media (min-width: 640px) { .about-card .about-card__statement { font-size: 1.95rem; } }
 .about-card__footer {
   position: relative; z-index: 4;
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
@@ -906,8 +912,8 @@ html.is-loading .site-header {
 .clock-face {
   --hand: #2a2f38;          /* charcoal hour/minute hands */
   --hand-second: #5b6472;   /* slate second hand — understated, no bright color */
-  position: relative; flex: none;
-  width: 2.2rem; height: 2.2rem;
+  position: relative; flex: none; overflow: hidden;
+  width: 2.6rem; height: 2.6rem; /* was 2.2rem — bigger by default */
   border-radius: 50%;
   background:
     radial-gradient(circle at 34% 26%, rgba(255,255,255,.6), rgba(255,255,255,.1) 72%),
@@ -918,9 +924,19 @@ html.is-loading .site-header {
   box-shadow:
     inset 0 1px 1.5px rgba(255,255,255,.95),
     inset 0 0 0 0.5px rgba(17,17,17,.04),
-    0 2px 8px rgba(17,17,17,.1);
+    0 3px 10px -2px rgba(17,17,17,.16);
   transform-origin: 50% 50%;
   transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass);
+}
+/* Diagonal specular gloss — same recipe .icon-chip::before uses ("shinier like the icons"), kept as
+   its own rule rather than joining that shared selector since the clock's hover trigger is the
+   ancestor .clock-chip, not the face itself. */
+.clock-face::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, rgba(255,255,255,.68) 0%, rgba(255,255,255,.2) 30%, transparent 54%);
+  opacity: 0.8;
+  transition: opacity 0.35s var(--ease-glass);
 }
 @media (hover: hover) and (pointer: fine) {
   .clock-chip:hover .clock-face {
@@ -930,6 +946,7 @@ html.is-loading .site-header {
       inset 0 1px 1.5px rgba(255,255,255,.98),
       0 8px 22px rgba(17,17,17,.2);
   }
+  .clock-chip:hover .clock-face::before { opacity: 1; }
   .clock-chip:hover .clock-tick { opacity: 1; }
 }
 .clock-tick {
@@ -995,7 +1012,10 @@ html.is-loading .site-header {
   border: none; background: var(--ink); border-radius: var(--radius-pill);
   box-shadow: 0 6px 18px rgba(17,17,17,.18);
 }
-.menu-btn span {
+/* Direct-child combinator, not a bare descendant selector: this must only style the one wrapper
+   span, not the .menu-btn__icon/.menu-btn__bar spans nested inside it below (a bare `.menu-btn
+   span` matched those too, inflating each 1.5px bar into a full padded flex box). */
+.menu-btn > span {
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.48rem 0.85rem; font-size: 0.6875rem; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
@@ -1688,7 +1708,7 @@ html.is-ready .hero__wm {
    for tinted body text elsewhere, not a hand-picked new color. */
 .blur-reveal__word--hl {
   color: color-mix(in srgb, var(--tint-deep) 82%, var(--ink));
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }

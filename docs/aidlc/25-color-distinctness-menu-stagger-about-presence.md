@@ -90,3 +90,43 @@ full opacity; highlighted words confirmed matching including the punctuation edg
 `prefers-reduced-motion` confirmed instant for menu stagger, hamburger bars, and globe draw. Zero
 console/page errors at 360/768/1440. Bundle delta: `app.min.js` +154B, `styles.min.css` ≈+2KB,
 `blur-reveal.min.js` +468B — all additive CSS/JS, no new assets, no new network requests.
+
+## Revision — hamburger regression, clock, and re-picked color/typography via real options
+
+Immediate user feedback after the above shipped: the header's hamburger icon rendered broken, the
+clock felt too small/flat, and the partner-orb colors still didn't feel right despite being
+measurably more distinct. Fixed in order:
+
+1. **Hamburger icon bug (real regression, not a false alarm)**: `.menu-btn span` was a bare
+   descendant selector, so it matched every nested `<span>` inside `.menu-btn` — including the new
+   `.menu-btn__icon`/`.menu-btn__bar` spans added in the prior round. Its `padding: 0.48rem 0.85rem`
+   and `display: inline-flex` bled onto each 1.5px bar, inflating them into giant padded boxes.
+   Fixed at the root: changed to `.menu-btn > span` (direct-child combinator) so it only ever matches
+   the one intended wrapper span, not arbitrarily-nested descendants.
+2. **Clock**: `.clock-face` grown 2.2rem → 2.6rem, and given the same diagonal specular-gloss
+   `::before` recipe `.icon-chip` already uses ("shinier like the icons"), as its own rule (not
+   joined to the shared icon-chip selector, since the clock's hover trigger is the ancestor
+   `.clock-chip`, not the face itself). Verified the gloss doesn't wash out the thin hands at the
+   1.9× hover scale — same layering the icon-chip recipe already relies on elsewhere.
+3. **Partner colors, re-decided via real options instead of more theory**: the prior hue-distance-math
+   reassignment was measurably distinct (142° adjacent gaps) but still read as an off-vibe "rainbow of
+   bubbles" against the site's restrained accent discipline. Rather than guess a third palette,
+   rendered 3 real alternatives (muted/desaturated family, monochrome neutral, brand-family-only) and
+   let the user pick from actual screenshots — chose **monochrome**: all 5 orbs now share one neutral
+   (`#8d8d8d`, matching the existing `--muted` token), differentiated by logo only, not color.
+4. **About statement typography, same real-options approach**: built 3 concrete treatments (editorial
+   serif with underlined highlights, variable-weight sans with bold emphasis, kicker-label + refined
+   body) and let the user choose — picked **variable weight**: body text dropped to `font-weight:350`,
+   highlighted phrases raised to `800` (from 700), for contrast within the sentence itself rather than
+   one uniform weight.
+   - **Caught a second real cascade bug while implementing the choice**: `.about-card__statement` is
+     an `<h2>` inside a `.sec` section, and a generic `.sec h2 { font-weight: 700; ... }` rule (class+
+     element, specificity 0,1,1) was quietly outranking the single-class `.about-card__statement`
+     rule (0,1,0) for every property they both set (weight, size, letter-spacing, line-height) — the
+     computed weight was 700 regardless of what `.about-card__statement` declared. Fixed by
+     rescoping the selector to `.about-card .about-card__statement` (0,2,0), decisively above the
+     generic rule, verified via direct rule-matching inspection (not assumed) before and after.
+
+Both re-picks used the same method going forward for subjective "does this feel right" calls: build
+the real thing, screenshot it, let the user choose from actual renders — not additional rounds of
+reasoning about what "should" look premium.
