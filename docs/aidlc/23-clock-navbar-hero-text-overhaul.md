@@ -132,3 +132,12 @@ PageSpeed 100 (transform/opacity/color/shadow only — no layout-animating, no n
 only. `backdrop-filter` stays confined to the fixed navbar. All motion `prefers-reduced-motion`-gated.
 No inline `style=""` — Alpine `:style` + CSS custom properties only. Responsive verified 360/768/1024/1440.
 `styles.css` is the source of truth; `styles.min.css` and `<head>` are generated.
+
+## Revision (post-review) — clock redesign
+User rejected the copper-accent clock. Rebuilt as a **frosted translucent glass disc**
+(`backdrop-filter: blur(6px) saturate(150%)` — permitted since the navbar is fixed chrome),
+**bigger** (1.4rem → 1.85rem), **bigger hover** (1.5× → 1.8×), with **understated graphite**
+hands (charcoal `#2a2f38` hour/minute, slate `#5b6472` second) — no bright color. The larger face
+makes the seamless 6°/sec second-hand sweep actually readable (the earlier "second hand didn't move"
+was just imperceptible motion on a 1.4rem face; the sweep itself was verified running). Second-hand
+`--clock-s-delay` phase-lock mechanism unchanged.
