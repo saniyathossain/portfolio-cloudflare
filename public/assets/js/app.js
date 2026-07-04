@@ -46,6 +46,7 @@ function portfolioApp() {
       }
       if (live?.skills) this.skills = live.skills;
       this.tickClock();
+      this.initClockSweep();
       setInterval(() => this.tickClock(), 1000);
       this.setupHeroGlow();
       this.setupHeroContrast();
@@ -148,16 +149,23 @@ function portfolioApp() {
       const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
       this.clockDate = now.getDate() + " " + months[now.getMonth()] + ", " + now.getFullYear();
 
-      // Analog hands: hour/minute set directly (they barely move between ticks); the second hand
-      // is a CSS `animation: sweep 60s linear infinite` — re-syncing its negative animation-delay
-      // to the real seconds-into-minute every tick keeps it phase-locked (self-corrects any drift
-      // from tab throttling) while the sweep itself stays a smooth 60s rotation, not a per-second jump.
+      // Analog hour/minute hands: set directly each tick (they barely move between ticks, and ease
+      // via CSS transition). clockAngleS only matters as the reduced-motion static fallback below —
+      // the live second hand is driven purely by CSS (see initClockSweep), never touched per tick,
+      // so its 60s linear sweep has zero JS-driven jumps and is genuinely seamless.
       const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
       const minutes = now.getMinutes() + seconds / 60;
       const hours12 = (now.getHours() % 12) + minutes / 60;
       this.clockAngleH = hours12 * 30;
       this.clockAngleM = minutes * 6;
       this.clockAngleS = seconds * 6;
+    },
+
+    // Sets the second hand's CSS animation-delay exactly once, from the real time at load, so its
+    // 60s linear-infinite sweep is phase-correct from the start — then never touches it again.
+    initClockSweep() {
+      const now = new Date();
+      const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
       this.clockSecondDelay = "-" + seconds.toFixed(3) + "s";
     },
 

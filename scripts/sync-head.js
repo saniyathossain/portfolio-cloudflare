@@ -2,13 +2,16 @@
 /** Sync <head> SEO, preloads, JSON-LD, and h1 fallbacks from portfolio.json */
 const fs = require("fs");
 const path = require("path");
+const { computeHash } = require("./lib/build-hash");
 
 const ROOT = path.join(__dirname, "..");
 const JSON_PATH = path.join(ROOT, "public/assets/data/portfolio.json");
 const HTML_PATH = path.join(ROOT, "public/index.html");
-// Bump on deploy — matches ASSET_V in boot.js. Applied to favicon/icon links too: browsers cache
-// favicons very aggressively per-origin and otherwise won't pick up a regenerated icon on refresh.
-const ASSET_V = "uplift-4";
+// Same content hash set-asset-version.js stamps into boot.js — computed independently here (both
+// exclude index.html/boot.js/sw.js from the hash, so this always matches without file-read order
+// dependence). Applied to favicon/icon links too: browsers cache favicons very aggressively
+// per-origin and otherwise won't pick up a regenerated icon on refresh.
+const ASSET_V = computeHash(["index.html", "assets/js/boot.js", "sw.js"]);
 
 function absUrl(siteUrl, p) {
   if (!p) return "";
@@ -101,5 +104,10 @@ const data = JSON.parse(fs.readFileSync(JSON_PATH, "utf8"));
 let html = fs.readFileSync(HTML_PATH, "utf8");
 html = replaceBlock(html, "<!-- SYNC:HEAD:START -->", "<!-- SYNC:HEAD:END -->", buildHead(data));
 html = replaceBlock(html, "<!-- SYNC:H1:START -->", "<!-- SYNC:H1:END -->", buildH1(data.profile));
+// Boot-loaded body scripts (data.js/icons.js/loader.js/boot.js) carry the same ?v= as the head links.
+html = html.replace(
+  /(\/assets\/js\/(?:data|icons|loader|boot)\.js)\?v=[^"]+/g,
+  (_, src) => `${src}?v=${ASSET_V}`
+);
 fs.writeFileSync(HTML_PATH, html);
-console.log("Synced head + h1 from portfolio.json");
+console.log("Synced head + h1 from portfolio.json — asset version:", ASSET_V);

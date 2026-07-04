@@ -7,6 +7,7 @@ node scripts/minify-css.js
 chmod +x scripts/setup-fonts.sh 2>/dev/null || true
 ./scripts/setup-fonts.sh
 node scripts/optimize-images.js
+node scripts/set-asset-version.js
 node scripts/sync-head.js
 node scripts/hash-sw.js
 echo "Build complete."

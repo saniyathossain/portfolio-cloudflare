@@ -2,33 +2,13 @@
 /** Inject build hash into service worker for cache busting */
 const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
+const { computeHash, PUBLIC } = require("./lib/build-hash");
 
-const ROOT = path.join(__dirname, "..");
-const SW = path.join(ROOT, "public/sw.js");
-const PUBLIC = path.join(ROOT, "public");
+const SW = path.join(PUBLIC, "sw.js");
 
-/** Deterministic hash over all shipped assets — changes only when a served asset changes.
- *  Skips sw.js itself and sourcemaps so the hash doesn't depend on its own output. */
-function hashPublic() {
-  const files = [];
-  (function walk(dir) {
-    for (const name of fs.readdirSync(dir).sort()) {
-      const full = path.join(dir, name);
-      const rel = path.relative(PUBLIC, full);
-      if (fs.statSync(full).isDirectory()) walk(full);
-      else if (rel !== "sw.js" && !full.endsWith(".map")) files.push(full);
-    }
-  })(PUBLIC);
-  const h = crypto.createHash("sha256");
-  for (const f of files) {
-    h.update(path.relative(PUBLIC, f).replace(/\\/g, "/"));
-    h.update(fs.readFileSync(f));
-  }
-  return h.digest("hex").slice(0, 12);
-}
-
-const hash = hashPublic();
+// Excludes only itself — the SW cache version must change whenever ANY other shipped asset
+// changes (that's its whole purpose), so nothing else is excluded here.
+const hash = computeHash(["sw.js"]);
 let sw = fs.readFileSync(SW, "utf8");
 if (sw.includes("__BUILD_HASH__")) {
   sw = sw.replace(/__BUILD_HASH__/g, hash);
