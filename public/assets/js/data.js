@@ -120,6 +120,7 @@ function _groupExperiences(data) {
         company: co?.name || exp.companySlug,
         logo: co?.logo,
         location: co?.location,
+        color: co?.color,
         roles: [],
       };
       map.set(exp.companySlug, g);
@@ -223,21 +224,15 @@ function _applySiteMeta(data) {
 }
 
 function _partnersFromExperience(data) {
-  // Monochrome by design: every partner orb shares one neutral (matches --muted in styles.css) so
+  // Color now lives on each company entry in portfolio.json (data.companies[slug].color), not a
+  // hardcoded map here — editing a partner's color is a JSON change, not a code change. Monochrome
+  // by design (every company currently set to the same neutral, matching --muted in styles.css) so
   // the row reads as a calm, premium dock — differentiation comes from each company's own logo, not
   // from assigning it an arbitrary color. (A prior hue-spread palette was technically distinct but
   // read as a "rainbow of bubbles," mismatched with the site's restrained accent-color discipline.)
-  const brandColors = {
-    "brain-station-23-plc": "#8d8d8d",
-    "grameenphone-limited": "#8d8d8d",
-    "icddr-b": "#8d8d8d",
-    "optimum-solution-services-ltd": "#8d8d8d",
-    "runner-cyberlink-limited": "#8d8d8d",
-  };
-  const hues = ["#8d8d8d"]; // matches the monochrome brandColors above for any future, unmapped slug
+  // Falls back to the same neutral for any company entry that omits "color".
   const seen = new Set();
   const partners = [];
-  let i = 0;
   for (const group of data.experienceGroups || []) {
     if (seen.has(group.slug)) continue;
     seen.add(group.slug);
@@ -245,9 +240,8 @@ function _partnersFromExperience(data) {
       name: group.company,
       logo: group.logo,
       slug: group.slug,
-      color: brandColors[group.slug] || hues[i % hues.length],
+      color: group.color || "#8d8d8d",
     });
-    i += 1;
   }
   return partners.length ? partners : data.partners || [];
 }

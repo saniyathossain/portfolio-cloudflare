@@ -6,6 +6,10 @@
     "themeColor": "#0a0a0a",
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
     "aboutHeading": "Fourteen years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
+    "aboutHighlights": [
+      { "phrase": "telco-scale", "color": "copper" },
+      { "phrase": "quiet precision", "color": "rose" }
+    ],
     "footerTagline": "Staff Software Engineer crafting backends, products, and the systems that connect them.",
     "ogDescription": "Backend engineering, shipped with quiet precision. 14+ years building PHP/Laravel and Node.js services at scale.",
     "twitterDescription": "Backend engineering, shipped with quiet precision.",
@@ -277,27 +281,32 @@
     "brain-station-23-plc": {
       "name": "Brain Station 23",
       "logo": "/assets/img/logos/brainstation-23-official.svg",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d"
     },
     "grameenphone-limited": {
       "name": "Grameenphone",
       "logo": "/assets/img/logos/grameenphone-official.svg",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d"
     },
     "icddr-b": {
       "name": "icddr,b",
       "logo": "/assets/img/logos/icddrb-official.webp",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d"
     },
     "optimum-solution-services-ltd": {
       "name": "Optimum Solution & Services",
       "logo": "/assets/img/logos/oss-official-transparent.webp",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d"
     },
     "runner-cyberlink-limited": {
       "name": "Runner Cyberlink",
       "logo": "/assets/img/logos/runnercyberlink-official.svg",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d"
     }
   },
   "experiences": [

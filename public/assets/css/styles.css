@@ -348,53 +348,31 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   .edu-row .edu-place { display: inline-flex; }
 }
 
-/* About — "Cascade": two real physical cards overlapping at opposing angles, not a color sliver or
-   a single flat panel. Fourth distinct About direction this project has shipped (stacked glass
-   card, an asymmetric bled card, a cardless flowing paragraph, now this) — picked from 3
-   structurally different options (this, a nested "double-bezel" single card, and a sharp
-   brutalist/blueprint grid), each pulling from a different design-skill archetype rather than
-   another color/decoration variant of the same flat paragraph. The stat card's "14+" carries the
-   sole accent color in the section — emphasis now comes from genuine scale contrast + real card
-   depth, not from coloring individual words inline. */
+/* About — cardless again, but unlike the earlier cardless attempt (doc 30), this one carries real
+   visual weight through colored/shadowed key-phrase emphasis instead of shipping with no accent at
+   all — that first attempt read as "empty and unfinished" per redesign-existing-projects' own
+   anti-pattern list specifically because it had neither a card NOR any color. Picked from 3
+   structurally distinct card/cardless options shown together (this, the two-card Cascade with the
+   same color treatment added back, and a single nested double-bezel card) — going cardless was a
+   deliberate choice this time, not a default. */
 #about .shell { position: relative; }
-.about-cascade { position: relative; padding-block: 3rem 1rem; }
-@media (min-width: 640px) { .about-cascade { padding-block: 3.5rem 1rem; } }
-.about-cascade__stat-card {
-  position: relative; z-index: 1; width: fit-content;
-  background: #fff; border: 1px solid var(--line); border-radius: 1.25rem;
-  padding: 1.25rem 1.75rem 2.5rem; margin-left: 1rem; margin-bottom: -1.25rem;
-  box-shadow: 0 16px 40px -18px rgba(17,17,17,.22);
-  transform: rotate(-3deg);
-  display: flex; align-items: baseline; gap: 1rem;
+.about-plain { padding-block: 2rem 1rem; }
+@media (min-width: 640px) { .about-plain { padding-block: 2.5rem 1rem; } }
+.about-plain__kicker {
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--accent-dark); margin-bottom: 1.25rem;
 }
-.about-cascade__num {
-  font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1; white-space: nowrap;
-  color: var(--accent-dark);
-  text-shadow: 0 3px 14px color-mix(in srgb, var(--accent) 30%, transparent);
-}
-@media (min-width: 640px) { .about-cascade__num { font-size: 2.75rem; } }
-.about-cascade__kicker {
-  font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em;
-  color: rgba(17,17,17,.5); line-height: 1.35; white-space: nowrap;
-}
-.about-cascade__main-card {
-  position: relative; z-index: 2;
-  background: #fff; border: 1px solid var(--line); border-radius: 1.5rem;
-  padding: 3.5rem 1.5rem 2rem;
-  box-shadow: 0 30px 70px -24px rgba(17,17,17,.2);
-  transform: rotate(1.5deg);
-  margin-right: -0.75rem;
-}
-@media (min-width: 640px) { .about-cascade__main-card { padding: 3.5rem 2.5rem 2.25rem; } }
-@media (min-width: 1024px) { .about-cascade__main-card { padding: 4rem 3rem 2.5rem; } }
-.about-cascade__statement {
-  max-width: 42rem;
-  font-size: 1.35rem; font-weight: 380; line-height: 1.5; letter-spacing: -0.01em;
+.about-plain .about-plain__statement {
+  /* Two-class selector, not the bare class alone — .sec h2 (class+element, 0,1,1) already
+     outranked a single-class .about-card__statement rule once before (doc 27); scoping this the
+     same way it was fixed there from the start, rather than waiting to hit the same bug again. */
+  max-width: 44rem;
+  font-size: 1.65rem; font-weight: 380; line-height: 1.4; letter-spacing: -0.01em;
   color: var(--ink);
   text-shadow: var(--text-sh-emboss);
 }
-@media (min-width: 640px) { .about-cascade__statement { font-size: 1.6rem; } }
-@media (min-width: 1024px) { .about-cascade__statement { font-size: 1.8rem; } }
+@media (min-width: 640px) { .about-plain .about-plain__statement { font-size: 2rem; } }
+@media (min-width: 1024px) { .about-plain .about-plain__statement { font-size: 2.2rem; } }
 .about-card__footer {
   position: relative; z-index: 4;
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
@@ -1790,10 +1768,18 @@ html.is-ready .hero__wm {
      of animating in, matching every other reduced-motion override in this file. */
   .blur-reveal__word { transition: none; }
 }
-/* blur-reveal.js can still tag words with .blur-reveal__word--hl(-<key>) via data-blur-highlight
-   (see the JS for the parsing logic) — no page content currently uses that attribute, so there is
-   intentionally no styling for those classes here right now. Add it back only alongside a caller
-   that actually sets data-blur-highlight again. */
+/* Keyword emphasis, reserved for short accent phrases only — never a full paragraph, where a
+   heavy shadow/glow hurts legibility instead of adding punch. Each color gets a layered shadow (a
+   crisp 1px offset in a darker shade of the same hue, plus a soft color-matched glow) instead of a
+   flat color swap, reading as embossed/lit rather than just recolored text. */
+.blur-reveal__word--hl-copper {
+  color: var(--accent-dark); font-weight: 700;
+  text-shadow: 1px 1px 0 color-mix(in srgb, var(--accent) 70%, black), 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.blur-reveal__word--hl-rose {
+  color: #c4214f; font-weight: 700;
+  text-shadow: 1px 1px 0 #8a1638, 0 6px 18px rgba(196, 33, 79, .35);
+}
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }
 .word-reveal.is-visible span.word {
@@ -1805,7 +1791,8 @@ html.is-ready .hero__wm {
 .create-band { display: flex; flex-direction: column; gap: 0.75rem; padding-block: 2.5rem; }
 @media (min-width: 640px) { .create-band { flex-direction: row; gap: 1rem; } }
 .create-band__tile {
-  flex: 1; display: grid; place-items: center; height: 6rem; border-radius: var(--radius-pill);
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.6rem; height: 6rem; border-radius: var(--radius-pill);
   font-size: 1.875rem; font-weight: 500;
   backface-visibility: hidden;
   transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
@@ -1873,6 +1860,13 @@ html.is-ready .hero__wm {
     inset 0 1px 0 rgba(255,255,255,.85),
     0 8px 22px -10px color-mix(in srgb, var(--teal) 30%, transparent);
 }
+/* Icon buttons — the exact "What I build" .service-row__icon shiny-tile recipe (shared gloss
+   ::before, gradient + border + layered shadow), just re-tinted per tile so each icon reads in its
+   own tile's hue instead of the section-default tint .icon-chip would otherwise pick up. Ship's
+   icon uses icon-chip--on-dark (translucent white) instead of a tint, since the tile itself is a
+   solid copper fill — a tinted-light chip would barely register against it. */
+.create-band__tile--code .create-band__icon { --tint: var(--c-violet); --tint-deep: #4a48a8; }
+.create-band__tile--scale .create-band__icon { --tint: var(--teal); --tint-deep: var(--teal-deep); }
 
 /* Services rows — Lumora hover-fill inside faux-frost panel */
 .services-list { padding: 0.5rem; }
@@ -2619,9 +2613,21 @@ html.is-ready .hero__wm {
   opacity: 0.8;
 }
 .modal-panel > * { position: relative; z-index: 1; }
-/* Close button is absolute right-4/top-4 (1rem) at h-9/w-9 (2.25rem) — its left edge sits 3.25rem
-   from the panel's right edge, inside the panel's own 1.5rem padding. Without this, the title text
-   runs the full padded width and collides with the button on any line long enough to reach it. */
+/* The close button used to rely on Tailwind's `absolute right-4 top-4` utilities — but this rule
+   (.modal-panel > *, equal specificity, and later in the cascade since tailwind.css is concatenated
+   BEFORE styles.css in minify-css.js) was silently winning `position` back to `relative`, so the
+   button was actually rendering in normal document flow the whole time, not floating in the corner
+   — confirmed via computed style, not assumed. That's what let it drift into the eyebrow line at
+   every viewport width regardless of the padding-right fix below, which only ever addressed the
+   *title*'s wrap width, never the actual mispositioned button. Fixed with an explicit two-class
+   selector that decisively outranks .modal-panel > * regardless of source order. */
+.modal-panel > .modal-close {
+  position: absolute; top: 1rem; right: 1rem; z-index: 2;
+  width: 2.25rem; height: 2.25rem;
+}
+/* Close button sits at right:1rem, width:2.25rem — its left edge is 3.25rem from the panel's right
+   edge, inside the panel's own 1.5rem padding. Without this, the title/eyebrow text runs the full
+   padded width and collides with the button on any line long enough to reach it, at every size. */
 .modal-header { padding-right: 2.25rem; }
 .modal-field label {
   display: flex; align-items: center; gap: 0.35rem;

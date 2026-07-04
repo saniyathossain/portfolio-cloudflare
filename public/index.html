@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=4bbc604ef748">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=4bbc604ef748">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=4bbc604ef748">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=fcb028d90cf6">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=fcb028d90cf6">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=fcb028d90cf6">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=4bbc604ef748">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=fcb028d90cf6">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -99,7 +99,7 @@
       <div class="glass-pill">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
           <span class="brand-bismillah-wrap">
-            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=4bbc604ef748" width="509" height="100" alt="" aria-hidden="true">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=fcb028d90cf6" width="509" height="100" alt="" aria-hidden="true">
           </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
@@ -249,28 +249,23 @@
     <!-- About -->
     <section id="about" class="sec py-20 lg:py-28">
       <div class="shell">
-        <div class="about-cascade">
-          <div class="about-cascade__stat-card" data-reveal="scale">
-            <span class="about-cascade__num" x-text="profile.years"></span>
-            <span class="about-cascade__kicker">Years shipping<br>backends at scale</span>
-          </div>
-          <div class="about-cascade__main-card" data-reveal="scale" data-delay="120">
-            <h2 class="about-cascade__statement" data-blur-reveal data-blur-speed="1.2" :data-text="site.aboutHeading" x-text="site.aboutHeading"></h2>
-            <div class="about-card__footer" data-reveal data-delay="260">
-              <div>
-                <p class="about-card__label">Find me online</p>
-                <div class="mt-3 flex gap-2">
-                  <template x-for="s in socials" :key="s.label">
-                    <a :href="s.href" target="_blank" rel="noopener noreferrer" class="social-link" :aria-label="s.label">
-                      <span x-html="iconSvg(s.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span>
-                    </a>
-                  </template>
-                </div>
+        <div class="about-plain">
+          <p class="about-plain__kicker"><span x-text="profile.years"></span> years shipping backends at scale</p>
+          <h2 class="about-plain__statement" data-blur-reveal data-blur-speed="1.2" :data-blur-highlight="site.aboutHighlights.map(h => h.phrase + ':' + h.color).join('|')" :data-text="site.aboutHeading" x-text="site.aboutHeading"></h2>
+          <div class="about-card__footer" data-reveal data-delay="200">
+            <div>
+              <p class="about-card__label">Find me online</p>
+              <div class="mt-3 flex gap-2">
+                <template x-for="s in socials" :key="s.label">
+                  <a :href="s.href" target="_blank" rel="noopener noreferrer" class="social-link" :aria-label="s.label">
+                    <span x-html="iconSvg(s.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span>
+                  </a>
+                </template>
               </div>
-              <button type="button" class="pill-btn pill-btn-outline" @click="scrollTo('experience')">
-                My work <span x-html="iconSvg('arrow', 'ui-icon ui-icon--sm')" aria-hidden="true"></span>
-              </button>
             </div>
+            <button type="button" class="pill-btn pill-btn-outline" @click="scrollTo('experience')">
+              My work <span x-html="iconSvg('arrow', 'ui-icon ui-icon--sm')" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -280,12 +275,21 @@
     <!-- Create Band -->
     <section class="sec pb-10" aria-label="Code, ship, scale">
       <ul class="shell create-band" data-stagger data-stagger-step="120" data-stagger-base="0">
-        <li class="create-band__tile create-band__tile--code">Code</li>
-        <li class="create-band__tile create-band__tile--accent">Ship</li>
+        <li class="create-band__tile create-band__tile--code">
+          <span class="icon-chip icon-chip--md create-band__icon" aria-hidden="true"><span x-html="iconSvg('code', 'ui-icon')" aria-hidden="true"></span></span>
+          Code
+        </li>
+        <li class="create-band__tile create-band__tile--accent">
+          <span class="icon-chip icon-chip--md icon-chip--on-dark create-band__icon" aria-hidden="true"><span x-html="iconSvg('rocket', 'ui-icon')" aria-hidden="true"></span></span>
+          Ship
+        </li>
         <li class="create-band__tile create-band__tile--dark" aria-hidden="true">
           <span x-html="iconSvg('arrow', 'ui-icon create-band__arrow-ico')" aria-hidden="true"></span>
         </li>
-        <li class="create-band__tile create-band__tile--scale">Scale</li>
+        <li class="create-band__tile create-band__tile--scale">
+          <span class="icon-chip icon-chip--md create-band__icon" aria-hidden="true"><span x-html="iconSvg('layers', 'ui-icon')" aria-hidden="true"></span></span>
+          Scale
+        </li>
       </ul>
     </section>
 
@@ -600,7 +604,7 @@
   <!-- Request modal -->
   <div class="modal-backdrop" :class="modalOpen && 'is-open'" role="dialog" aria-modal="true" aria-labelledby="modal-title" @click.self="closeModal()" x-show="modalOpen" x-transition>
     <div class="modal-panel" @click.stop>
-      <button type="button" class="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-surface text-ink/60" @click="closeModal()" aria-label="Close">✕</button>
+      <button type="button" class="modal-close grid place-items-center rounded-full bg-surface text-ink/60" @click="closeModal()" aria-label="Close">✕</button>
 
       <template x-if="!success">
         <div>
@@ -636,9 +640,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=4bbc604ef748" defer></script>
-  <script src="/assets/js/icons.min.js?v=4bbc604ef748" defer></script>
-  <script src="/assets/js/loader.min.js?v=4bbc604ef748" defer></script>
-  <script src="/assets/js/boot.min.js?v=4bbc604ef748" defer></script>
+  <script src="/assets/js/data.min.js?v=fcb028d90cf6" defer></script>
+  <script src="/assets/js/icons.min.js?v=fcb028d90cf6" defer></script>
+  <script src="/assets/js/loader.min.js?v=fcb028d90cf6" defer></script>
+  <script src="/assets/js/boot.min.js?v=fcb028d90cf6" defer></script>
 </body>
 </html>
