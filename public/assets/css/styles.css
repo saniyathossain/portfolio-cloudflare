@@ -48,13 +48,17 @@ html:not(.is-loading) .app-root.is-liquid-warp {
   --line: #e6e5e2;
   --surface: #f1f0ee;
   --surface2: #e3e2df;
-  --accent: #b15f2c;
-  --accent-bright: #cf8047;
-  --accent-dark: #97501f;
-  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1, harmonises with copper) */
-  /* Cool primary drawn from the portrait (azure shirt + teal sea), Tahoe-aligned */
-  --primary: #2f9fd6;        /* azure — shirt */
-  --primary-deep: #1a6f96;   /* readable azure ink (AA on white) */
+  /* Graphite — macOS Tahoe's own accent-picker ships one neutral option alongside its named hues
+     (Blue/Purple/Pink/Red/Orange/Yellow/Green/Graphite); picked here via rendered options (see
+     docs/aidlc/27) over Indigo/Teal single-accent alternatives — "one locked accent, no hue" reads
+     as the most restrained, and the design-taste skills independently flag multi-hue accents as a
+     named anti-pattern, not just a preference. */
+  --accent: #48484a;
+  --accent-bright: #6e6e73;
+  --accent-dark: #2c2c2e;
+  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1), untouched by the graphite pick */
+  --primary: #57575c;
+  --primary-deep: #333336;   /* readable graphite ink (AA on white) */
   --teal: #2b8c9a;           /* sea */
   --teal-deep: #1a6773;
   /* per-section accent driver (sections override --tint) */
@@ -344,25 +348,41 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   .edu-row .edu-place { display: inline-flex; }
 }
 
-/* About — one unified glass card (was a decorative-icon-column + text-column split) carrying the
-   statement, a subtle globe watermark, and a decorative pull-quote mark. Generous padding (macro
-   whitespace) so it reads as a single considered statement rather than a form-filled layout.
+/* About — one unified glass card carrying the statement, a decorative pull-quote mark, and (at
+   1024px+) an asymmetric "bled" composition: the card shifts to one side of the shell, the quote
+   mark + icon-chip overlap its top corners, and a large, pale initials watermark (derived from the
+   real profile name, not invented text) fills the resulting negative space — reusing the same
+   very-low-opacity giant-text motif .hero__wm already establishes elsewhere on this page, so the
+   callback reads as a deliberate site-wide device rather than a one-off. Below 1024px there's no
+   room for asymmetry, so the card stays full-width/centered and the quote+icon sit in normal flow.
    Layered-depth composition: .about-card__backdrop (a tinted, rotated panel) peeks out from behind
    the main card via a negative z-index — .glass-card's own `transform: translateZ(0)` already gives
    .about-card a stacking context, so the negative z-index sibling reliably paints behind it without
    needing an explicit z-index on the card itself. */
 #about .shell { position: relative; }
+@media (min-width: 1024px) {
+  #about .shell { display: flex; justify-content: flex-end; }
+}
 .about-card__backdrop {
   position: absolute; inset: 0.9rem -0.9rem -0.9rem 0.9rem; z-index: -1;
   background: color-mix(in srgb, var(--tint) 12%, white);
   border-radius: var(--radius-card-sm);
   transform: rotate(1.2deg);
 }
+@media (min-width: 1024px) {
+  .about-card__backdrop {
+    inset: 1.6rem -1.6rem -1.6rem 3.2rem;
+    border: 1px solid color-mix(in srgb, var(--tint) 30%, transparent);
+    background: color-mix(in srgb, var(--tint) 16%, white);
+    transform: rotate(2deg);
+  }
+}
 .about-card {
   /* Same specificity as .glass-card's own `transform: translateZ(0)` (line ~320), declared later —
      must repeat translateZ(0) here (chained with the rotate) instead of just `rotate(-0.6deg)`, or
      this rule would silently discard .glass-card's transform entirely rather than combining with it,
      losing the stacking context the backdrop above depends on. */
+  position: relative; overflow: hidden;
   transform: translateZ(0) rotate(-0.6deg);
   padding: 3rem 1.75rem 2.25rem;
 }
@@ -373,32 +393,19 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   transform: translateZ(0) translateY(-3px) rotate(-0.6deg);
 }
 @media (min-width: 640px) { .about-card { padding: 3.5rem 3rem 2.5rem; } }
-@media (min-width: 1024px) { .about-card { padding: 4.5rem 4.5rem 3rem; } }
-.about-card__globe {
-  position: absolute; z-index: 0; pointer-events: none;
-  top: -3rem; right: -2.5rem; width: 14rem; height: 14rem;
-  color: color-mix(in srgb, var(--tint) 16%, transparent);
-  opacity: 1; /* [data-reveal="fade"]'s own opacity:0 base state is overridden here — the watermark
-                 itself is always visible at rest; only its stroke draws in below, so it never fully
-                 disappears pre-reveal the way a normal [data-reveal] element does. */
+@media (min-width: 1024px) {
+  .about-card { width: 66%; padding: 4.5rem 4.5rem 3rem; transform: translateZ(0) rotate(-1deg); }
+  .about-card.glass-card:hover { transform: translateZ(0) translateY(-3px) rotate(-1deg); }
 }
-@media (min-width: 1024px) { .about-card__globe { width: 20rem; height: 20rem; top: -4.5rem; right: -3.5rem; } }
-/* Path-draw — stroke-dasharray set comfortably longer than either child path's real length (circle
-   r=9.25 is ~58 units circumference; the meridian+equator path is shorter), so animating
-   dashoffset from that same length (fully retracted) to 0 (fully drawn) via a CSS *transition* (not
-   @keyframes, consistent with this file's transition-first convention) reveals it once, the first
-   time reveal.js adds .is-visible (same [data-reveal] IntersectionObserver every other reveal here
-   already uses — no new JS). */
-.about-card__globe-path {
-  stroke-dasharray: 62;
-  stroke-dashoffset: 62;
-  transition: stroke-dashoffset 1.6s var(--ease-smooth);
+.about-card__wm {
+  display: none;
 }
-.about-card__globe[data-reveal].is-visible .about-card__globe-path {
-  stroke-dashoffset: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .about-card__globe-path { transition: none; stroke-dashoffset: 0; }
+@media (min-width: 1024px) {
+  .about-card__wm {
+    display: block; position: absolute; z-index: 1; right: 0.5rem; top: 1.5rem; pointer-events: none;
+    font-weight: 800; font-size: 6rem; letter-spacing: 0.04em; line-height: 1;
+    color: color-mix(in srgb, var(--tint-deep) 8%, transparent);
+  }
 }
 .about-card__quote {
   /* z-index:4, not the usual 1 — must clear .spec::after's cursor-spotlight overlay (z-index:3,
@@ -411,7 +418,26 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   color: color-mix(in srgb, var(--tint-deep) 55%, transparent);
   margin-bottom: -1.25rem;
 }
+@media (min-width: 1024px) {
+  /* Bleeds over the card's own top-left corner — .about-card's overflow:hidden (above) clips the
+     portion that would extend past the card's own padding-box, which is deliberate: only the lower
+     slice of the glyph shows, reading as tucked behind the rounded corner rather than floating free. */
+  .about-card__quote {
+    position: absolute; top: -1.6rem; left: -0.5rem; z-index: 5;
+    font-size: 7rem; opacity: .9; margin-bottom: 0;
+  }
+}
 .about-card__icon { position: relative; z-index: 4; margin-bottom: 1.5rem; }
+@media (min-width: 1024px) {
+  /* Descendant selector (0,2,0), not the bare class alone — .icon-chip's own base rule (line ~1738)
+     also sets `position: relative` at equal specificity (0,1,0) and sits later in the file, so it
+     would otherwise win that one property back after this override, same bug class as every other
+     same-specificity cascade collision this file has already hit. */
+  .about-card .about-card__icon {
+    position: absolute; top: -1.1rem; right: 1.5rem; z-index: 5; margin-bottom: 0;
+    box-shadow: 0 10px 26px -6px color-mix(in srgb, var(--tint) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.8);
+  }
+}
 /* Variable-weight emphasis: light body text lets the bold .blur-reveal__word--hl phrases (below)
    carry the punch, instead of the whole statement competing at one uniform weight.
    Selector is `.about-card .about-card__statement` (not just the class alone) to decisively outrank
@@ -426,6 +452,12 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   text-shadow: var(--text-sh-emboss);
 }
 @media (min-width: 640px) { .about-card .about-card__statement { font-size: 1.95rem; } }
+@media (min-width: 1024px) {
+  /* Quote/icon go absolute above (bled over the corners), so the statement no longer needs to clear
+     them via normal-flow order — but does need its own top margin now that nothing pushes it down,
+     plus a narrower measure so it doesn't run into the watermark sitting in the card's right void. */
+  .about-card .about-card__statement { margin-top: 2.5rem; max-width: 30rem; }
+}
 .about-card__footer {
   position: relative; z-index: 4;
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
@@ -1060,6 +1092,7 @@ html.is-loading .site-header {
    pill's polish without introducing a color into the header's dark control. */
 .menu-btn {
   position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid rgba(255,255,255,.1);
   background: linear-gradient(145deg, #2b2b2b, #060606);
   border-radius: var(--radius-pill);
@@ -2528,7 +2561,18 @@ html.is-ready .hero__wm {
    (Escape mid-transition, fast re-click) retargets smoothly instead of restarting from zero. */
 .nav-overlay {
   position: fixed; inset: 0; z-index: 115;
-  display: flex; flex-direction: column; background: var(--ink); color: #fff;
+  display: flex; flex-direction: column; color: #fff;
+  /* Frosted Liquid Glass: translucent ink tint (not opaque) so the section you were on shows
+     through, blurred + saturated — same backdrop-filter mechanism .modal-backdrop already ships,
+     just a deeper blur since this covers the full viewport instead of sitting on a white panel.
+     The tint alpha alone (no blur) is still dark enough to keep white nav text legible as a
+     graceful no-backdrop-filter fallback. Radial highlight is a second background layer, not a
+     pseudo-element, so it can't collide with or need z-index above the nav items/close button. */
+  background:
+    radial-gradient(120% 55% at 50% -8%, rgba(255,255,255,.12), transparent 60%),
+    color-mix(in srgb, var(--ink) 72%, transparent);
+  backdrop-filter: blur(32px) saturate(170%);
+  -webkit-backdrop-filter: blur(32px) saturate(170%);
   opacity: 0; pointer-events: none; transition: opacity 0.45s var(--ease-glass);
 }
 .nav-overlay.is-open { opacity: 1; pointer-events: auto; transition: opacity 0.55s var(--ease-smooth); }
@@ -2760,3 +2804,33 @@ html.is-ready .hero__wm {
   background-position: -40% -40%;
 }
 .hero-card.sheen:hover, .hero-card.sheen:focus-visible { background-position: 140% 140%; }
+/* .pill-btn-dark/.pill-btn-glass paint their own color via the `background` shorthand, which sets
+   background-image too — .sheen's bare `background-image` (equal specificity, later in source)
+   was fully replacing that gradient instead of layering over it, leaving the button looking blank/
+   white. Same collision already solved above for .hero-card.sheen; two-class selectors here also
+   outrank both single-class rules on specificity, not just source order, so this holds regardless
+   of where .sheen is declared. */
+.pill-btn-dark.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 50%, transparent 58%),
+    linear-gradient(145deg, #2b2b2b, #060606);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+.pill-btn-dark.sheen:hover, .pill-btn-dark.sheen:focus-visible { background-position: 140% 140%, 0 0; }
+.pill-btn-glass.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 50%, transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+.pill-btn-glass.sheen:hover, .pill-btn-glass.sheen:focus-visible {
+  background-image:
+    linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 50%, transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
+  background-position: 140% 140%, 0 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill-btn-dark.sheen, .pill-btn-glass.sheen { background-position: -40% -40%, 0 0; }
+}
