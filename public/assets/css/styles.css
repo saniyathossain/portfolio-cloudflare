@@ -1180,35 +1180,66 @@ html.is-ready .hero__wm {
 }
 .hero-card__arrow:hover { color: #111; }
 
-/* Collapsed-badge → hover-expand drawer. The card's box sits flush against the aside column's right
-   edge (align-items:flex-end on .hero__aside) at every width — at rest the badge is reversed to the
-   front of the row so it's the part that's actually visible, flush right, same edge the "Worked with"
-   icons line up against. Hovering/focusing opens the drawer to the LEFT, sliding the body panel out
-   from behind the badge. Desktop/fine-pointer only — touch devices have no hover, so the card stays
-   fully expanded there (unchanged from before), which is also the safe fallback under reduced-motion
-   and print.
-   The card's own box NEVER changes size (fixed height, always laid out at full width) — motion is
-   done entirely with `clip-path` (visually hides everything left of the badge) plus a fade+slide on
-   the revealed text. Both are compositor-only (no width/height layout reflow, which is what made the
-   earlier version feel janky), so this glides the way macOS Tahoe panels do — no stutter. */
+/* Collapsed-badge → hover-expand drawer. At rest the card is clipped down to exactly the badge's own
+   footprint (tight top/bottom/left insets, zero right padding) so the collapsed pill IS the badge —
+   no white card margin showing around it, flush against the same right edge the "Worked with" icons
+   line up against. The badge's own border/shadow are hidden at rest (nothing to separate it from,
+   since it fully occupies the visible area) and fade in once the card opens, once it's a distinct
+   tile again. Hovering/focusing slides the badge left (`translateX` back to its natural flex slot)
+   while the drawer opens to reveal the body panel; the badge slides back right on hover-out — same
+   transition, both directions, so open/close feel identical. Desktop/fine-pointer only — touch
+   devices have no hover, so the card stays fully expanded there (unchanged), the safe fallback under
+   reduced-motion and print too.
+   The card's own box never changes size (fixed height, laid out at full width) — motion is done
+   entirely with `clip-path` + `transform` (compositor-only, no width/height reflow, which is what
+   made the earlier version feel janky), so this glides the way macOS Tahoe panels do — no stutter. */
 @media (hover: hover) and (pointer: fine) {
   .hero-card {
     height: 8rem;
-    clip-path: inset(0 0 0 calc(100% - 7rem) round 1.35rem);
-    /* Calm drawer glide — no spring/overshoot, just a clean decelerate-and-stop like a real drawer. */
-    transition: clip-path 0.55s var(--ease-smooth), box-shadow var(--dur-mid) var(--ease-glass);
+    padding: 0.5rem 0 0.5rem 0.5rem;
+    clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
+    transition:
+      clip-path 0.55s var(--ease-smooth),
+      padding-right 0.55s var(--ease-smooth),
+      box-shadow var(--dur-mid) var(--ease-glass);
   }
-  .hero-card__inner { height: 100%; align-items: center; flex-direction: row-reverse; }
+  .hero-card__inner { height: 100%; align-items: center; }
+  .hero-card__badge {
+    border-color: transparent;
+    box-shadow: none;
+    /* Shifted to sit flush at the card's true right edge at rest; returns to its natural
+       left-of-body flex position on hover/focus. Value accounts for the card's max-width, which
+       differs by breakpoint (see the 1024px override below). */
+    transform: translateX(15.5rem);
+    transition:
+      transform 0.55s var(--ease-smooth),
+      border-color 0.4s var(--ease-glass),
+      box-shadow 0.4s var(--ease-glass);
+  }
+  @media (min-width: 1024px) {
+    .hero-card__badge { transform: translateX(13.5rem); }
+  }
   .hero-card__body {
-    opacity: 0; transform: translateX(6px);
+    opacity: 0; transform: translateX(-6px);
     transition: opacity 0.3s ease, transform 0.45s var(--ease-smooth);
   }
   .hero-card:hover,
-  .hero-card:focus-within { clip-path: inset(0 0 0 0 round 1.35rem); }
+  .hero-card:focus-within {
+    padding-right: 0.5rem;
+    clip-path: inset(0 0 0 0 round 1.35rem);
+  }
+  .hero-card:hover .hero-card__badge,
+  .hero-card:focus-within .hero-card__badge {
+    transform: translateX(0);
+    border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.7),
+      0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
+  }
   .hero-card:hover .hero-card__body,
   .hero-card:focus-within .hero-card__body { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) {
-    .hero-card, .hero-card__body { transition: none; }
+    .hero-card, .hero-card__body, .hero-card__badge { transition: none; }
   }
 }
 

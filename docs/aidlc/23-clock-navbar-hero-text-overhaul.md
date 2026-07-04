@@ -286,3 +286,27 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
   `rgba(255,255,255,.68)` fill.
 - Re-verified: brace balance (602/602), full-hero screenshots at rest/hover (1440px), reduced-motion
   transition duration ≈0, real iPhone 13 emulation (mobile unaffected).
+
+## Revision 7 (post-review) — true merge (no border), symmetric slide, icon direction
+- **"No white border" fix**: Revision 6's clip-path only cropped horizontally, leaving the card's
+  full 8rem height always visible — since the 6rem badge sat centered inside that with
+  `align-items:center`, a ~1rem margin of white/glass card showed above and below it at rest. Fixed
+  by clipping all four sides down to the badge's exact footprint (`inset(1rem 0 1rem calc(100% -
+  6rem) round 0.9rem)`), and zeroing `padding-right` at rest so the collapsed clip window sits flush
+  against the card's true right edge — same edge the "Worked with" icons align to. Verified via
+  `getBoundingClientRect()`: badge rect and the visible clip window are now identical, not just close.
+- **Badge border/shadow hidden at rest, faded in on hover** (`border-color`/`box-shadow` from
+  transparent/none → the icon-chip values) — since at rest the badge fully occupies the visible
+  area, there's nothing for a border to separate it from; the border only earns its keep once the
+  card opens and the badge becomes a distinct tile again. Kept out of the base rule so mobile (always
+  expanded, no merge concept) keeps its border permanently, as before.
+- **Actual sliding icon, not just clip-reveal**: `.hero-card__badge` now animates `transform:
+  translateX(...)` between its collapsed (flush-right) and natural (flex-start, left-of-body)
+  positions, rather than staying static while clip-path alone reveals/hides content. Opening moves
+  the badge from `translateX(15.5rem/13.5rem)` → `translateX(0)` (visually leftward); closing
+  reverses the same transition (rightward) — one shared `transition` declaration drives both
+  directions, so open and close are provably identical, not just visually similar.
+- Re-verified: brace balance (606/606), `getBoundingClientRect()` showing badge flush against the
+  card's true right edge at rest and the card's left edge at hover, reduced-motion (transition
+  duration ≈0 on card/body/badge), real iPhone 13 emulation (mobile card unaffected, border/shadow
+  still present there).
