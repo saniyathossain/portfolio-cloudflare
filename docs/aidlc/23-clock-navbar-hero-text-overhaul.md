@@ -233,3 +233,30 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
   Playwright's `.hover()`), `prefers-reduced-motion` (clip-path state still applies, transitions
   reduced to near-zero duration), and real touch-device emulation (mobile has no `clip-path` at all,
   fully expanded as before).
+
+## Revision 5 (post-review) — fix partner-icon jiggle, remove blur, dock tooltips, contrast
+- **Root cause of the "Worked with" icon jiggle**: the pills lived in a wrapping flex row reusing
+  `.brand-pill`'s inline max-width-expand technique — when one pill's width grew on hover, it
+  physically pushed every pill after it sideways (real reflow). This is inherent to that technique
+  when multiple instances share a row; harmless for `.brand-pill`'s other uses (Skills/Experience,
+  where it wasn't flagged) but wrong for a tight row of small icons.
+- **Rebuilt hero-partners as new `.partner-orb` component** (independent of `.brand-pill`, so Skills/
+  Experience are untouched): fixed-size circular icons that never change dimensions. The company
+  name now floats up in a small tooltip bubble above the icon on hover (macOS Dock-style), which is
+  purely an absolutely-positioned overlay with zero effect on layout. Verified programmatically —
+  read every icon's `getBoundingClientRect().left` before and after hovering one: **identical
+  array, byte-for-byte** — structurally guarantees no jiggle, not just "looks fine in a screenshot."
+- **Removed the backdrop-filter blur** from the hero-card badge per explicit feedback ("not looking
+  nice") — reverted to the solid opaque copper gradient, keeping the `.icon-chip`-style diagonal
+  gloss overlay (the "shine," which wasn't the complaint).
+- **Hero-card easing swapped from `--ease-spring` to `--ease-smooth`** — a calm decelerate-and-stop
+  curve with no overshoot, closer to a real drawer gliding open than a bouncy spring.
+- **Fixed `.hero-partners__label` ("Worked with") contrast** — was `rgba(17,17,17,.45)` with a
+  white-highlight shadow meant for solid backgrounds, nearly invisible over the variable-toned photo
+  behind it. Bumped to `rgba(17,17,17,.72)`, semibold, with a stronger white glow shadow for
+  legibility against the photo.
+- Confirmed with the user that hero-card's existing right-anchored / expand-toward-left behavior
+  (already in place since Revision 4's clip-path rebuild) was correct as-is — no change needed there
+  beyond the easing swap.
+- Re-verified: braces balanced, `app.js` syntax-checked, `prefers-reduced-motion` (orb/tooltip
+  transitions off), real touch-device emulation (mobile unaffected, card still fully expanded).
