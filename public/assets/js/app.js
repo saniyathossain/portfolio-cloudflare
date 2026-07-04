@@ -96,7 +96,16 @@ function portfolioApp() {
         nav.style.setProperty("--pill-h", btn.offsetHeight + "px");
         nav.style.setProperty("--pill-o", "1");
       };
-      const render = () => place(hoverIdx >= 0 ? hoverIdx : activeIdx);
+      // Coalesced into a single rAF: several triggers can fire in the same tick (e.g. every
+      // intersecting section reporting at once on load) — each `place()` reads layout
+      // (offsetWidth/Left/Height) right after a previous call's style write, which would force a
+      // synchronous layout recalc per call otherwise. One shared rAF collapses any same-tick burst
+      // into a single read+write pair on the next frame.
+      let raf = 0;
+      const render = () => {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => place(hoverIdx >= 0 ? hoverIdx : activeIdx));
+      };
       const setActive = (idx) => {
         activeIdx = idx;
         btns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
@@ -129,14 +138,9 @@ function portfolioApp() {
         targets.forEach((t) => io.observe(t.el));
       }
 
-      let raf = 0;
-      window.addEventListener("resize", () => {
-        cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(render);
-      });
+      window.addEventListener("resize", render);
 
       setActive(0);
-      requestAnimationFrame(render);
     },
 
     setupHeroContrast() {
@@ -244,7 +248,25 @@ function portfolioApp() {
       const el = document.getElementById(id);
       if (!el) return;
       const y = el.getBoundingClientRect().top + window.scrollY - 12;
+      this._liquidWarp();
       window.scrollTo({ top: y, behavior: "smooth" });
+    },
+
+    // Brief "liquid glass" blur/refraction pulse across the whole app while a nav-triggered smooth
+    // scroll is in flight — purely filter/transform (compositor-only). Cleared on the native
+    // `scrollend` event where supported, with a timeout fallback (Safari/short scrolls that never
+    // fire it) so it can never get stuck on.
+    _liquidWarp() {
+      const root = document.getElementById("app");
+      if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      root.classList.add("is-liquid-warp");
+      clearTimeout(this._warpTimer);
+      const done = () => {
+        root.classList.remove("is-liquid-warp");
+        window.removeEventListener("scrollend", done);
+      };
+      window.addEventListener("scrollend", done, { once: true });
+      this._warpTimer = setTimeout(done, 700);
     },
 
     navGo(item) {

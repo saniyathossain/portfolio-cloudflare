@@ -166,5 +166,45 @@ if (needsGen(OG, [ogWebp])) {
   console.log("OG derivative up to date — skipped.");
 }
 
+// ── Company/school logos → resized WebP ───────────────────────────────────────
+// Several master PNGs (exported at arbitrary source resolution) were shipped as-is and rendered at
+// 28-48px — e.g. a 512x512 st-joseph.png for a 48px <img>, and a 211x211 motijheel-school.png that
+// happened to be a very poorly-compressed PNG (100KB for 211px). Resize to the largest actual
+// on-page size (48px @ education rows) at 2x retina (96px), with margin, then re-encode as WebP.
+// SVG logos (brainstation-23, grameenphone, runnercyberlink) are already vector — left alone.
+// portfolio.json references the .webp output directly; the PNG masters stay as the source of truth.
+const LOGOS_DIR = path.join(IMG, "logos");
+const LOGO_MAX_WIDTH = 192; // covers 48px @2x with headroom; oss/east-west sources are already ≤ this
+const LOGO_PNGS = [
+  "icddrb-official.png",
+  "oss-official-transparent.png",
+  "east-west-university.png",
+  "st-joseph.png",
+  "motijheel-school.png",
+];
+for (const name of LOGO_PNGS) {
+  const src = path.join(LOGOS_DIR, name);
+  const dest = path.join(LOGOS_DIR, name.replace(/\.png$/, ".webp"));
+  if (!needsGen(src, [dest])) {
+    console.log("Logo derivative up to date — skipped:", name);
+    continue;
+  }
+  if (!fs.existsSync(src)) continue;
+  if (has("cwebp")) {
+    // Only pass -resize when the source is actually wider than the target — cwebp will upscale
+    // otherwise, which is strictly worse (blurrier AND bigger than just re-encoding at native size).
+    const dims = has("magick")
+      ? execSync(`magick identify -format "%w" "${src}"`).toString().trim()
+      : null;
+    const srcWidth = dims ? parseInt(dims, 10) : Infinity; // unknown → assume resize is safe
+    const resizeArg = srcWidth > LOGO_MAX_WIDTH ? `-resize ${LOGO_MAX_WIDTH} 0` : "";
+    execSync(`cwebp -q 88 ${resizeArg} "${src}" -o "${dest}"`, { stdio: "ignore" });
+    console.log("Logo WebP:", dest, resizeArg ? `(≤${LOGO_MAX_WIDTH}w)` : "(native size)");
+    record(src);
+  } else {
+    console.warn("WARN: cwebp not found — skip logo resize for", name);
+  }
+}
+
 fs.writeFileSync(CACHE, JSON.stringify(cache, null, 2) + "\n");
 console.log("Image optimization done.");

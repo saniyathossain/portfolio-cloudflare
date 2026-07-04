@@ -88,11 +88,11 @@
     },
     {
       "name": "icddr,b",
-      "logo": "/assets/img/logos/icddrb-official.png"
+      "logo": "/assets/img/logos/icddrb-official.webp"
     },
     {
       "name": "Optimum Solution",
-      "logo": "/assets/img/logos/oss-official-transparent.png"
+      "logo": "/assets/img/logos/oss-official-transparent.webp"
     },
     {
       "name": "Runner Cyberlink",
@@ -228,21 +228,21 @@
       "school": "East West University",
       "degree": "BSc, Electronics & Telecommunication Engineering",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/east-west-university.png"
+      "logo": "/assets/img/logos/east-west-university.webp"
     },
     {
       "years": "2005 — 2007",
       "school": "St. Joseph Higher Secondary",
       "degree": "HSC in Science",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/st-joseph.png"
+      "logo": "/assets/img/logos/st-joseph.webp"
     },
     {
       "years": "2003 — 2005",
       "school": "Motijheel Govt. Boys' High School",
       "degree": "SSC in Science",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/motijheel-school.png"
+      "logo": "/assets/img/logos/motijheel-school.webp"
     }
   ],
   "socials": [
@@ -280,12 +280,12 @@
     },
     "icddr-b": {
       "name": "icddr,b",
-      "logo": "/assets/img/logos/icddrb-official.png",
+      "logo": "/assets/img/logos/icddrb-official.webp",
       "location": "Dhaka, Bangladesh"
     },
     "optimum-solution-services-ltd": {
       "name": "Optimum Solution & Services",
-      "logo": "/assets/img/logos/oss-official-transparent.png",
+      "logo": "/assets/img/logos/oss-official-transparent.webp",
       "location": "Dhaka, Bangladesh"
     },
     "runner-cyberlink-limited": {

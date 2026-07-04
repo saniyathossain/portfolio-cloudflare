@@ -104,9 +104,10 @@ const data = JSON.parse(fs.readFileSync(JSON_PATH, "utf8"));
 let html = fs.readFileSync(HTML_PATH, "utf8");
 html = replaceBlock(html, "<!-- SYNC:HEAD:START -->", "<!-- SYNC:HEAD:END -->", buildHead(data));
 html = replaceBlock(html, "<!-- SYNC:H1:START -->", "<!-- SYNC:H1:END -->", buildH1(data.profile));
-// Boot-loaded body scripts (data.js/icons.js/loader.js/boot.js) carry the same ?v= as the head links.
+// Boot-loaded body scripts (data/icons/loader/boot .min.js) and the bismillah SVG carry the
+// same ?v= as the head links.
 html = html.replace(
-  /(\/assets\/js\/(?:data|icons|loader|boot)\.js)\?v=[^"]+/g,
+  /(\/assets\/js\/(?:data|icons|loader|boot)\.min\.js|\/assets\/img\/bismillah\.svg)\?v=[^"]+/g,
   (_, src) => `${src}?v=${ASSET_V}`
 );
 fs.writeFileSync(HTML_PATH, html);

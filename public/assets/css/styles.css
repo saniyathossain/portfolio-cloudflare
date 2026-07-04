@@ -1,4 +1,5 @@
 [x-cloak] { display: none !important; }
+.svg-sprite { display: none; }
 
 /* Loader stage — site painted + progressively unblurred during splash */
 html.is-loading .app-root {
@@ -14,6 +15,27 @@ html.is-loading .app-root {
   transition: background-color 80ms linear;
 }
 html:not(.is-loading) .load-scrim { display: none; }
+
+/* Liquid-glass "warp" — a brief blur/refraction pulse across the whole app while a nav click's
+   smooth scroll is in flight (see scrollTo()/_liquidWarp() in app.js), echoing iOS's fluid screen
+   transitions. Scoped to html:not(.is-loading) so it never fights the loader's own rAF-driven
+   filter/transform reveal (which runs unconditionally on .app-root during .is-loading and has no
+   CSS transition of its own — adding one here would make it lag behind the loader's per-frame
+   values). Quick blur-in, slower glide back to clear — asymmetric via .is-liquid-warp's own
+   (faster) transition overriding the base (slower) one only while the class is present.
+   NOTE: the `.is-liquid-warp` override selector below repeats the `html:not(.is-loading)` prefix
+   on purpose — without it, the base rule's `html` element selector actually out-specifies a plain
+   `.app-root.is-liquid-warp` (an extra element point beats an extra one it doesn't have), so the
+   "fast entry" transition would silently never apply and everything would run at the slow (exit)
+   speed both ways. Same class of specificity bug as the hero-card's reveal-system conflict. */
+html:not(.is-loading) .app-root {
+  transition: filter 0.5s var(--ease-glass), transform 0.5s var(--ease-glass);
+}
+html:not(.is-loading) .app-root.is-liquid-warp {
+  transition: filter 0.18s var(--ease-glass), transform 0.18s var(--ease-glass);
+  filter: blur(6px) saturate(165%);
+  transform: scale(1.008);
+}
 
 /* Saniyat Portfolio — Lumora design system + cursor-presentation polish */
 
@@ -76,6 +98,9 @@ html:not(.is-loading) .load-scrim { display: none; }
   /* macOS Tahoe deceleration — soft, fluid settle (from cursor-presentation) */
   --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Pronounced "back-out" overshoot — a liquid tile that stretches past its target then settles,
+     like iOS's fluid tab-bar indicator. Only for small, bounded UI (nav pill) — never large panels. */
+  --ease-liquid: cubic-bezier(0.3, 1.9, 0.6, 1);
   --dur-fast: 0.45s;
   --dur-mid: 0.7s;
   --dur-slow: 1.05s;
@@ -685,7 +710,7 @@ html.is-loading .site-header {
 
 .brand-btn { display: flex; align-items: center; gap: 0.5rem; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; transition: transform var(--dur-mid) var(--ease-hover); }
 .brand-btn:hover { transform: scale(1.03); }
-.brand-btn svg {
+.brand-btn svg, .brand-btn img {
   font-size: 1.25rem; color: var(--accent);
   filter: drop-shadow(0 1px 6px color-mix(in srgb, var(--accent) 42%, transparent));
 }
@@ -726,7 +751,10 @@ html.is-loading .site-header {
     0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
   opacity: var(--pill-o, 0);
   pointer-events: none;
-  transition: transform 0.42s var(--ease-glass), width 0.42s var(--ease-glass),
+  /* Liquid morph: position and width overshoot on a "back-out" curve (slightly staggered
+     durations) before settling, so the pill reads as a fluid glass blob stretching toward the
+     destination rather than a rigid slide — same idea as iOS's tab-bar indicator. */
+  transition: transform 0.48s var(--ease-liquid), width 0.7s var(--ease-liquid),
     opacity 0.3s ease, box-shadow 0.35s var(--ease-glass);
 }
 .nav-desktop:hover .nav-desktop__pill,
@@ -1294,7 +1322,10 @@ html.is-ready .hero__wm {
   text-align: left;
 }
 @media (min-width: 1024px) { .hero-partners__label { text-align: right; } }
-.hero-partners__list { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: flex-start; }
+/* min-height reserves the row's footprint before Alpine populates it from the async-loaded JSON
+   (an empty flex container has zero height otherwise) — avoids a layout shift once the 5 partner
+   icons render in. */
+.hero-partners__list { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: flex-start; min-height: 2.35rem; }
 @media (min-width: 1024px) { .hero-partners__list { justify-content: flex-end; } }
 
 /* Partner "dock" icons — a fixed-size, never-shifting row (each icon's own box never changes

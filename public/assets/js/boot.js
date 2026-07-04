@@ -3,7 +3,7 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
 
-  const ASSET_V = "26482958340b"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "ce58b83e711c"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
@@ -23,8 +23,8 @@
 
   function loadDeferredScripts() {
     const readyScripts = [
-      "/assets/js/reveal.js",
-      "/assets/js/blur-reveal.js",
+      "/assets/js/reveal.min.js",
+      "/assets/js/blur-reveal.min.js",
     ];
     return Promise.all(readyScripts.map(loadScript));
   }
@@ -35,10 +35,10 @@
     // Ordered before motion.js so window.Motion is defined when motion.js runs (loadScript is async=false).
     const idleScripts = [];
     if (finePointer && !reduced) idleScripts.push("/assets/js/vendor/motion.min.js");
-    idleScripts.push("/assets/js/motion.js");
+    idleScripts.push("/assets/js/motion.min.js");
     if (finePointer && !reduced) {
-      idleScripts.push("/assets/js/liquid-hero.js");
-      idleScripts.push("/assets/js/aurora.js");
+      idleScripts.push("/assets/js/liquid-hero.min.js");
+      idleScripts.push("/assets/js/aurora.min.js");
     }
     return Promise.all(idleScripts.map(loadScript));
   }
@@ -52,7 +52,7 @@
   async function boot() {
     registerSw();
     await window.portfolioDataReady;
-    await loadScript("/assets/js/app.js");
+    await loadScript("/assets/js/app.min.js");
     await loadScript("/assets/js/vendor/alpine.min.js");
     await loadDeferredScripts();
     scheduleIdle();

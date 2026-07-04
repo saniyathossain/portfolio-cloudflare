@@ -364,3 +364,90 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
 - Re-verified: brace balance, native `transitionend` timing confirms faster durations landed, real
   iPhone 13 emulation (arrows render correctly as shiny circular icon tiles on mobile's permanently-
   expanded card), reduced-motion unaffected.
+
+## Revision 10 — liquid nav transitions, SVG sprite/externalization, JS minification, PageSpeed pass
+- **Liquid nav-pill morph**: new `--ease-liquid: cubic-bezier(0.3, 1.9, 0.6, 1)` (a "back-out"
+  overshoot curve) drives `.nav-desktop__pill`'s `transform`/`width` transitions with staggered
+  durations (0.48s / 0.7s), so the pill visibly stretches past its target width before settling —
+  confirmed via a single in-page rAF sampling loop (external per-sample polling was too laggy to
+  catch the overshoot; batching all samples into one `evaluate()` call fixed that) showing a 122.3px
+  peak against a 116px final width.
+- **Liquid "warp" on nav-triggered scroll**: `scrollTo()` now calls `_liquidWarp()`, which toggles
+  `.is-liquid-warp` on `#app`, applying `filter: blur(6px) saturate(165%)` + a slight `scale(1.008)`
+  for the duration of the smooth-scroll (cleared on `scrollend`, with a 700ms timeout fallback for
+  browsers/cases where it never fires). Hit the **exact same specificity bug class as the hero-card**
+  from Revision 8: the base rule `html:not(.is-loading) .app-root` out-specifies a plain
+  `.app-root.is-liquid-warp` (`html`'s element-selector point beats the extra class point), so the
+  "fast blur-in" transition silently never applied until the override selector repeated the
+  `html:not(.is-loading)` prefix. Worth remembering as a recurring pattern: any state-toggle rule
+  layered on top of a rule that also has an element-selector prefix needs to match or exceed that
+  prefix, not just add one more class.
+- **SVG sprite + externalization** (the user asked to check whether inline SVGs could be referenced
+  instead of duplicated): added a `<symbol>`-based sprite (`#ico-spark`, `#ico-star`) near the top of
+  `<body>`, referenced via `<use>` at all 5 call sites (3× brand spark logo, 5× hero rating star) —
+  zero added network requests, just de-duplicated inline markup. The one-off, much larger Bismillah
+  calligraphy SVG (~14KB, appears once) went the other way — extracted to
+  `public/assets/img/bismillah.svg` and loaded via `<img>`, since it's large enough that moving it
+  out of the *non-cacheable* HTML into an *immutable-cached* asset is worth the one extra request
+  (added to the Worker's Early Hints preload list so there's no visible delay). Both `sync-head.js`
+  and `set-asset-version.js` extended to keep its `?v=` in sync with the rest of the pipeline.
+- **JS minification pipeline added** (`scripts/minify-js.js`, wired into `build.sh` after
+  `set-asset-version.js`): unlike CSS (hand-rolled whitespace/comment stripper in `minify-css.js` —
+  safe because CSS has no regex literals or string/comment ambiguity), several JS files contain real
+  regex literals and string literals with `//` inside them (`data.js`'s date/URL parsing, `icons.js`'s
+  SVG `xmlns` strings) — naively stripping `//`/`/* */` by regex risks corrupting those, so this uses
+  `esbuild` via `npx` (network at build time only, mirrors how `build-css.sh` already downloads the
+  Tailwind CLI). Source `.js` files stay as the hand-edited, fully-commented originals;
+  `index.html`/`boot.js` now load the generated `.min.js` twins (37% smaller in aggregate:
+  70,308B → 44,166B). `boot.min.js` uniquely bakes in a copy of `ASSET_V`, so it needed the same
+  hash-exclusion treatment as `boot.js` itself in `set-asset-version.js` (same non-convergence
+  reasoning already documented there).
+- **Oversized logo images fixed**: Lighthouse flagged `icddrb-official.png` — a 57KB PNG rendered at
+  24px — plus four more company/school logos shipped at arbitrary source resolution (up to 512×512)
+  despite only ever rendering at 28-48px. Extended `optimize-images.js` with a logo pass (resize to
+  ≤192px — 48px @2x retina with headroom — convert to WebP via `cwebp`, skip resizing when the
+  source is already smaller to avoid upscaling) and regenerated the 5 affected logos by hand this
+  round via `sharp` (not available as a CLI here; `cwebp`/`magick` are macOS-only tools this repo's
+  build already assumes, same as `build-css.sh`'s Tailwind binary — the *build script* now exists for
+  the next real run, today's output was produced with an equivalent tool). 60-82% smaller per file;
+  `portfolio.json`'s `logo` fields updated to the new `.webp` paths, PNG masters kept as source (same
+  "immutable master → generated derivative" pattern as the hero photo).
+- **CLS fix**: `.hero-partners__list` is an empty flex container until Alpine renders the 5 partner
+  icons from the async-loaded JSON — an empty flex container has zero height, so the row's real
+  height (2.35rem) popping in after data loads shifted `.hero__aside` beneath it. Added
+  `min-height: 2.35rem` to reserve the space upfront. Measured CLS 0.115 → 0.085 (crosses Google's
+  "good" 0.1 threshold).
+- **PageSpeed investigation (mobile, local sandbox — honest caveats below)**: ran real Lighthouse
+  (not guessed) via `npx lighthouse` against `chromium`'s bundled headless binary. Baseline mobile
+  Performance was 52/100 (Accessibility/Best-Practices/SEO already 100/100, unaffected by anything
+  this round). Root-caused via trace analysis (`RunTask`/`EvaluateScript`/`UpdateLayoutTree`
+  aggregation, not guesswork) rather than reactively tweaking: isolating network throttling from CPU
+  throttling showed removing *network* simulation alone jumps the score to ~70-72 — meaning the
+  dominant factor for the 52 baseline is Lighthouse's simulated slow-4G network compounding with this
+  local sandbox's single-threaded, uncompressed `python -m http.server` origin (no HTTP/2, no
+  Brotli/gzip, no keep-alive) — none of which represents the real Cloudflare Worker + edge CDN
+  deployment (Brotli/HTTP3 always-on, global edge caching, sub-10ms origin latency). That gap should
+  close substantially in production and can't be faithfully reproduced in this sandbox.
+  - What *did* move independent of network: fixed a forced-reflow pattern in `setupNavPill()`
+    (`app.js`) — `place()` reads `offsetWidth/Left/Height` right after a previous call's style
+    write, and multiple triggers (IntersectionObserver scroll-spy, hover, resize) could fire in the
+    same tick, each forcing a synchronous layout recalc off the last one's write. Coalesced into a
+    single shared `requestAnimationFrame` so a same-tick burst collapses into one read+write pair.
+  - Confirmed the JS bloat findings (`unminified-javascript`, `unused-css-rules` for Tailwind) and
+    fixed what was fixable (minification, above); `unused-css-rules`'s ~38KB is largely `:hover`/
+    `:focus`/breakpoint/modal-open rules Lighthouse's single-page-load coverage can't see as "used"
+    — not real dead code for an interactive, responsive site.
+  - Tested whether the idle-loaded desktop effects (aurora/liquid-hero/motion canvas & tilt) were the
+    TBT driver by blocking their requests entirely — CPU-only score barely moved (70→70, TBT
+    3010ms→2900ms), so they are **not** the bottleneck; reverted nothing since they weren't at fault.
+  - Remaining gap (mobile lab score, CPU-throttle-isolated, still ~70-ish) is dominated by
+    `UpdateLayoutTree`/style-recalculation cost tied to real content richness (2,342 DOM elements —
+    8 experience roles × stack/AI-tool pill lists, 5 skill categories, etc.) hydrated client-side by
+    Alpine. Reducing this further would mean either trimming real content or pre-rendering sections
+    to static HTML at build time (eliminating client-side hydration cost entirely) — a materially
+    bigger architectural change than this round's scope, flagged for the user rather than
+    unilaterally decided.
+- Re-verified: brace balance, full JS syntax check across all 10 source files + `minify-js.js`/
+  `optimize-images.js`, JSON validity, zero console/page errors on desktop and real iPhone 13
+  emulation, all logo/bismillah/sprite images loading correctly, experience-accordion interaction
+  still works with the minified JS.
