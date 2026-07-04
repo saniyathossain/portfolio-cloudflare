@@ -5,9 +5,12 @@
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (!window.matchMedia("(pointer: fine)").matches) return;
 
-  // Desaturated Tahoe palette blobs. Each drifts on its own layered sines.
+  // Desaturated Tahoe palette blobs. Each drifts on its own layered sines (see draw(), below).
   // Whisper-subtle Tahoe field: cool-led, red/pink pulled back, one warm "sun blare" focal.
-  // k = per-blob alpha multiplier applied to the global low stops in draw().
+  // Field legend — h: "r,g,b" color; k: alpha multiplier on the gradient stops; x/y: base center
+  // (fraction of canvas W/H); ax/ay: drift amplitude around that center (same fraction units);
+  // sx/sy: drift angular speed (radians per ms — how fast it oscillates, not how far); ph: phase
+  // offset (radians) so blobs don't all swing in lockstep; r: base radius (fraction of min(W,H)).
   const BLOBS = [
     { h: "110,108,240", k: 1.00, ax: 0.15, ay: 0.10, sx: 0.010, sy: 0.015, ph: 0.0, x: 0.14, y: 0.10, r: 0.60 },
     { h: "10,132,255",  k: 0.95, ax: 0.13, ay: 0.11, sx: 0.012, sy: 0.008, ph: 1.7, x: 0.86, y: 0.08, r: 0.56 },

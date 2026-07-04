@@ -62,6 +62,9 @@ const BRANDS = {
   antigravity: { icon: "antigravity", color: "#3186ff" },
 };
 
+// WCAG relative luminance → pick a readable foreground for a brand color chip. app.js's
+// setupHeroContrast samples a hero photo pixel with the same 0.2126/0.7152/0.0722 weights, minus
+// the gamma-linearization step below (not worth the cost for a per-frame heuristic there).
 function _readableFg(hex) {
   const h = hex.replace("#", "");
   const r = parseInt(h.substring(0, 2), 16) / 255;

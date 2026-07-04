@@ -148,8 +148,4 @@
     const id = typeof entry === "string" ? entry : "code";
     return LUCIDE_BASE + id + ".svg";
   };
-
-  window.iconImg = function (name, className) {
-    return window.iconSvg(name, className);
-  };
 })();

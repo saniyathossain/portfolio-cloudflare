@@ -247,7 +247,7 @@ desktop pill nav, hero switches to a 2-column grid, hover-only interactions beco
   → node scripts/optimize-images.js → node scripts/set-asset-version.js
   → node scripts/minify-js.js → node scripts/sync-head.js → node scripts/hash-sw.js
   ```
-  `build-css.sh` downloads the pinned **Tailwind standalone CLI v3.4.17** to `bin/` and compiles
+  `build-css.sh` downloads the pinned **Tailwind standalone CLI v3.4.19** to `bin/` and compiles
   `tailwind.input.css` → `public/assets/css/tailwind.css`. `minify-css.js` bundles
   `tailwind.css` + `styles.css` → `styles.min.css` (what `index.html` actually links). Only run
   `build-css.sh` when you've added a **new Tailwind utility class** to markup; for everything else,

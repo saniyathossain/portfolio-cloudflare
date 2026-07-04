@@ -3,7 +3,7 @@
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
 
-  const ASSET_V = "d4312b300f84"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "f1dace9f2f07"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
@@ -51,7 +51,12 @@
 
   async function boot() {
     registerSw();
-    await window.portfolioDataReady;
+    // portfolio.json is same-origin but still a real network request — a transient failure here
+    // (offline load, CDN hiccup) must not cascade into skipping Alpine/app.js entirely, since that
+    // would leave the whole site inert with unevaluated x-data markup. app.js's `window.PORTFOLIO_DATA
+    // || {}` fallback already tolerates a missing data set, so swallow the rejection and continue —
+    // the page degrades to empty data-driven sections instead of a totally dead interactive layer.
+    await window.portfolioDataReady.catch((err) => console.error("portfolio.json failed to load:", err));
     await loadScript("/assets/js/app.min.js");
     await loadScript("/assets/js/vendor/alpine.min.js");
     await loadDeferredScripts();

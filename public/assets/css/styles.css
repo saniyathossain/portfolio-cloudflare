@@ -95,6 +95,9 @@ html:not(.is-loading) .app-root.is-liquid-warp {
   --ease-reveal: cubic-bezier(0.22, 1, 0.28, 1);
   --ease-word: cubic-bezier(0.2, 0.85, 0.32, 1);
   --ease-hover: cubic-bezier(0.25, 0.9, 0.35, 1);
+  /* Small tile/logo hover lift — snappier settle than --ease-hover, used across the tenure badges,
+     logo tiles, and role-tag chips (previously hand-repeated as a raw cubic-bezier in 6 places). */
+  --ease-tile: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* macOS Tahoe deceleration — soft, fluid settle (from cursor-presentation) */
   --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -378,14 +381,18 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.5rem;
 }
 .about-card__label { font-size: 0.875rem; color: rgba(17,17,17,.45); }
-.edu-row__logo {
-  flex: none; width: 3rem; height: 3rem; display: grid; place-items: center;
+/* Shared "logo badge" recipe with .exp-group__logo below — same white-gradient tile + inset
+   top-highlight, parameterized by size/border/shadow-tint per call site via --logo-badge-shadow. */
+.edu-row__logo, .exp-group__logo {
+  flex: none; display: grid; place-items: center;
   border-radius: 0.85rem;
   background: linear-gradient(150deg, #ffffff 0%, #eceef2 100%);
+  box-shadow: inset 0 1px 0 #ffffff, 0 3px 10px -3px var(--logo-badge-shadow, rgba(24,30,56,.2));
+}
+.edu-row__logo {
+  width: 3rem; height: 3rem;
   border: 1px solid color-mix(in srgb, var(--tint) 22%, rgba(255,255,255,.95));
-  box-shadow:
-    inset 0 1px 0 #ffffff,
-    0 3px 10px -3px color-mix(in srgb, var(--tint) 35%, rgba(24,30,56,.18));
+  --logo-badge-shadow: color-mix(in srgb, var(--tint) 35%, rgba(24,30,56,.18));
 }
 .edu-row__logo img { width: 2rem; height: 2rem; object-fit: contain; }
 .edu-row__body { min-width: 0; }
@@ -1163,10 +1170,6 @@ html.is-ready .hero__wm {
 .hero.is-ready h1 .line-inner:nth-child(3) { transition-delay: 560ms; }
 .hero h1 .accent { color: var(--accent); }
 
-.hero__copy--on-dark::before {
-  content: none;
-  display: none;
-}
 .hero__copy--on-dark .hero h1 .line-inner:not(.grad) {
   color: #fff;
   text-shadow:
@@ -1202,7 +1205,9 @@ html.is-ready .hero__wm {
     drop-shadow(0 0 16px color-mix(in srgb, var(--accent-bright) 30%, transparent));
 }
 
-/* Hero name — clean ink + copper accent (Hossain .grad) */
+/* Hero name (3 lines: "Mohammad" / "Saniyat" / "Hossain") — first 2 lines stay plain ink; only the
+   surname on line 3 carries the .grad copper-accent treatment. :where() zeroes out the specificity
+   of the :nth-of-type selectors so this can't outrank the on-dark/contrast overrides above. */
 .hero h1 :where(.line-wrap:nth-of-type(1)) .line-inner:not(.grad),
 .hero h1 :where(.line-wrap:nth-of-type(2)) .line-inner:not(.grad) {
   color: var(--ink);
@@ -1779,11 +1784,11 @@ html.is-ready .hero__wm {
 }
 @media (min-width: 640px) { .stats-panel { padding: 4rem 2.5rem; } }
 .stats-panel__eyebrow {
-  color: rgba(255,255,255,.72) !important;
+  color: rgba(255,255,255,.72);
   text-shadow: var(--text-sh-dark);
 }
 .stats-panel__eyebrow-dot {
-  background: rgba(255,255,255,.62) !important;
+  background: rgba(255,255,255,.62);
 }
 .stats-panel__title {
   color: #fff;
@@ -1847,14 +1852,9 @@ html.is-ready .hero__wm {
   padding: 0.85rem 1rem 0.65rem;
 }
 .exp-group__logo {
-  flex: none; width: 2.75rem; height: 2.75rem; display: grid; place-items: center;
-  border-radius: 0.85rem;
-  background: linear-gradient(150deg, #ffffff 0%, #eceef2 100%);
+  width: 2.75rem; height: 2.75rem;
   border: 1px solid rgba(255,255,255,.95);
-  box-shadow:
-    inset 0 1px 0 #ffffff,
-    0 3px 10px -3px rgba(24,30,56,.2);
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.28s var(--ease-tile);
 }
 .exp-group:hover .exp-group__logo { transform: scale(1.06); }
 .exp-group__logo img { width: 1.6rem; height: 1.6rem; object-fit: contain; }
@@ -1875,7 +1875,7 @@ html.is-ready .hero__wm {
     inset 0 1px 0 rgba(255,255,255,.98),
     0 2px 8px -3px color-mix(in srgb, var(--chip) 46%, transparent);
   cursor: default; outline: none;
-  transition: transform 0.24s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.24s cubic-bezier(0.2,0.8,0.2,1);
+  transition: transform 0.24s var(--ease-tile), box-shadow 0.24s var(--ease-tile);
 }
 .exp-group__tenure:hover .exp-group__tenure-badge,
 .exp-group__tenure:focus-within .exp-group__tenure-badge {
@@ -2121,8 +2121,8 @@ html.is-ready .hero__wm {
     var(--shadow-outset-sm);
   cursor: default; outline: none;
   transition:
-    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform 0.22s var(--ease-tile),
+    box-shadow 0.22s var(--ease-tile);
 }
 .brand-pill--sm { padding: 0.26rem; }
 .brand-pill--stack { --pill-top: #f8fafc; --pill-bot: #eef2f6; }
@@ -2168,7 +2168,7 @@ html.is-ready .hero__wm {
 }
 .brand-pill__badge img {
   width: 1.2rem; height: 1.2rem; object-fit: contain;
-  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.22s ease;
+  transition: transform 0.22s var(--ease-tile), filter 0.22s ease;
 }
 .brand-pill--sm .brand-pill__badge img { width: 1rem; height: 1rem; }
 
@@ -2272,8 +2272,8 @@ html.is-ready .hero__wm {
 .pill-row[data-stagger].is-visible .brand-pill:hover {
   transform: translate3d(0, -2px, 0) scale(1);
   transition:
-    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform 0.24s var(--ease-tile),
+    box-shadow 0.24s var(--ease-tile);
 }
 
 /* Role stacks / AI groups */
@@ -2425,6 +2425,8 @@ html.is-ready .hero__wm {
 
 /* Utilities */
 .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; }
+/* !important: must beat body's own overflow-x rule and any other layout rule regardless of load
+   order — this is toggled from JS whenever a modal/menu opens, so it has to win unconditionally. */
 .scroll-lock { overflow: hidden !important; height: 100%; }
 
 @media (max-width: 1023px) {
@@ -2469,7 +2471,6 @@ html.is-ready .hero__wm {
   .hero__backdrop { height: clamp(18rem, 68vw, 27rem); }
   .hero h1 { font-size: clamp(2.35rem, 10vw, 3rem); }
   .hero-card, .hero-partners { max-width: 100%; }
-  .hero__copy--on-dark::before { display: none; }
 }
 
 /* ── Signature motion (Tahoe refinement pass) ────────────────────────────
@@ -2519,9 +2520,12 @@ html.is-ready .hero__wm {
 }
 
 /* 3) Aurora parallax — motion.js writes --aurora-y (body) / --glow-y (#heroGlow) from a
-   throttled rAF scroll handler; the drift keyframes above fold them in (transform-only). */
+   throttled rAF scroll handler; the drift keyframes above fold them in (transform-only).
+   motion.js only ever inline-sets the --glow-y *custom property*, never `transform` itself, so the
+   id selector below (0,1,0,0) already outranks .hero__glow's class rule (0,0,1,0) on its own —
+   no !important needed to drop the var(--glow-y) term under reduced motion. */
 @media (prefers-reduced-motion: reduce) {
-  #heroGlow { transform: translate(-50%, -50%) !important; }
+  #heroGlow { transform: translate(-50%, -50%); }
 }
 
 /* 4) Sheen sweep — a diagonal light glides across on hover/focus. Implemented as an extra

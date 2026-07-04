@@ -143,8 +143,9 @@
       const p = max > 0 ? Math.min(h.scrollTop / max, 1) : 0;
       bar.style.setProperty("--sp", p.toFixed(4));
     }
-    window.addEventListener("scroll", function () { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
-    window.addEventListener("resize", update, { passive: true });
+    const schedule = function () { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
     update();
   }
 
@@ -155,7 +156,13 @@
     initCountUp();
     initScrollProgress();
     applyAdaptiveGrid();
-    window.addEventListener("resize", applyAdaptiveGrid);
+    // rAF-coalesced: writes documentElement's own font-size, which cascades a size recalc through
+    // every rem-based rule in the document — a resize-drag must collapse to one write per frame,
+    // not one per event.
+    let gridRaf = 0;
+    window.addEventListener("resize", function () {
+      if (!gridRaf) gridRaf = requestAnimationFrame(() => { gridRaf = 0; applyAdaptiveGrid(); });
+    });
   }
 
   window.addEventListener("portfolio-ready", boot);

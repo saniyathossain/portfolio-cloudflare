@@ -194,14 +194,27 @@ function portfolioApp() {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, lx, ly, 1, 1, 0, 0, 1, 1);
         const d = ctx.getImageData(0, 0, 1, 1).data;
+        // Same Rec. 709 luma weights as data.js's _readableFg, but applied directly to the raw
+        // sampled pixel (no gamma-linearization step — good enough for a quick per-frame heuristic,
+        // where _readableFg computes a one-time AA-contrast decision for a hex color). Threshold is
+        // tuned above the standard 0.5 midpoint — 0.58 — because the hero text also carries its own
+        // drop-shadow, which reads as legible "on-dark" slightly earlier than raw luminance suggests.
         const lum = (0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2]) / 255;
         const onDark = lum < 0.58;
         copy.classList.toggle("hero__copy--on-dark", onDark);
       };
 
+      // rAF-coalesced: `update()` forces a canvas pixel readback (drawImage + getImageData), the
+      // most expensive line in this function — resize-drag storms must not run it once per event.
+      let raf = 0;
+      const scheduleUpdate = () => {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(update);
+      };
+
       img.addEventListener("load", update);
       if (img.complete) update();
-      window.addEventListener("resize", update);
+      window.addEventListener("resize", scheduleUpdate);
       window.addEventListener("portfolio-ready", () => {
         requestAnimationFrame(update);
         setTimeout(update, 120);
@@ -372,7 +385,6 @@ function portfolioApp() {
 
     companyTenureOf(roles) { return window.PORTFOLIO_DATA.companyTenureOf(roles); },
 
-    iconSrc(name) { return window.iconSrc(name); },
     iconSvg(name, className) { return window.iconSvg(name, className); },
 
     roleEmployment(role) {
@@ -380,6 +392,31 @@ function portfolioApp() {
       const live = window.PORTFOLIO_DATA;
       const normalized = live?.normalizeRole ? live.normalizeRole(role) : role;
       return normalized?.employment || { type: "permanent", label: "Permanent", icon: "permanent" };
+    },
+
+    // Shared open/close height-transition driver — used by toggleRole() below for both directions.
+    // transitionend + a setTimeout fallback (same idiom as _liquidWarp) guarantees `onDone` always
+    // fires even if the panel is hidden or the transition is otherwise interrupted before it can
+    // complete naturally; without the fallback, a missed event would leave the panel's inline
+    // height/overflow/transition styles stuck instead of cleared. Timer/listener are stashed
+    // directly on the element so concurrent panels (different accordion rows) never share state.
+    _animateHeight(panel, toHeight, durationMs, onDone) {
+      clearTimeout(panel._heightTimer);
+      panel.removeEventListener("transitionend", panel._heightOnEnd);
+
+      const finish = () => {
+        clearTimeout(panel._heightTimer);
+        panel.removeEventListener("transitionend", panel._heightOnEnd);
+        onDone();
+      };
+      panel._heightOnEnd = (e) => { if (e.propertyName === "height") finish(); };
+      panel.addEventListener("transitionend", panel._heightOnEnd);
+      panel._heightTimer = setTimeout(finish, durationMs + 80);
+
+      requestAnimationFrame(() => {
+        panel.style.transition = "height " + durationMs + "ms cubic-bezier(0.32, 0.72, 0, 1)";
+        panel.style.height = toHeight;
+      });
     },
 
     toggleRole(id) {
@@ -390,20 +427,16 @@ function portfolioApp() {
       }
 
       const panel = document.getElementById("exp-panel-" + id);
-      if (!panel) {
-        this.openRoles[id] = opening;
-        return;
-      }
-      const inner = panel.querySelector(".exp-details__inner");
-      if (!inner) {
+      const inner = panel?.querySelector(".exp-details__inner");
+      if (!panel || !inner) {
         this.openRoles[id] = opening;
         return;
       }
 
-      const finish = (el) => {
-        el.style.height = "";
-        el.style.overflow = "";
-        el.style.transition = "";
+      const finish = () => {
+        panel.style.height = "";
+        panel.style.overflow = "";
+        panel.style.transition = "";
       };
 
       if (opening) {
@@ -411,33 +444,17 @@ function portfolioApp() {
         this.$nextTick(() => {
           panel.style.overflow = "hidden";
           panel.style.height = "0px";
-          requestAnimationFrame(() => {
-            panel.style.transition = "height 0.42s cubic-bezier(0.32, 0.72, 0, 1)";
-            panel.style.height = inner.scrollHeight + "px";
-          });
-          const onEnd = (e) => {
-            if (e.propertyName !== "height") return;
-            finish(panel);
-            panel.removeEventListener("transitionend", onEnd);
-          };
-          panel.addEventListener("transitionend", onEnd);
+          this._animateHeight(panel, inner.scrollHeight + "px", 420, finish);
         });
         return;
       }
 
       panel.style.overflow = "hidden";
       panel.style.height = panel.scrollHeight + "px";
-      requestAnimationFrame(() => {
-        panel.style.transition = "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)";
-        panel.style.height = "0px";
-      });
-      const onEnd = (e) => {
-        if (e.propertyName !== "height") return;
+      this._animateHeight(panel, "0px", 300, () => {
         this.openRoles[id] = false;
-        finish(panel);
-        panel.removeEventListener("transitionend", onEnd);
-      };
-      panel.addEventListener("transitionend", onEnd);
+        finish();
+      });
     },
 
     isRoleOpen(id) { return !!this.openRoles[id]; },

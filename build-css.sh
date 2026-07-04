@@ -9,9 +9,9 @@ if [[ ! -x "$BIN" ]]; then
   ARCH="$(uname -m)"
   mkdir -p "$ROOT/bin"
   if [[ "$ARCH" == "arm64" ]]; then
-    curl -fsSL -o "$BIN" "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-macos-arm64"
+    curl -fsSL -o "$BIN" "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/tailwindcss-macos-arm64"
   else
-    curl -fsSL -o "$BIN" "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-macos-x64"
+    curl -fsSL -o "$BIN" "https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/tailwindcss-macos-x64"
   fi
   chmod +x "$BIN"
 fi
