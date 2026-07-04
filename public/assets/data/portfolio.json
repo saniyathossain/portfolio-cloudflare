@@ -5,7 +5,7 @@
     "url": "https://saniyat.com",
     "themeColor": "#0a0a0a",
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
-    "aboutHeading": "I partner with product teams to ship resilient backends, telco-scale platforms and mobile apps — from monoliths to microservices, held together with quiet precision.",
+    "aboutHeading": "Fourteen years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
     "footerTagline": "Staff Software Engineer crafting backends, products, and the systems that connect them.",
     "ogDescription": "Backend engineering, shipped with quiet precision. 14+ years building PHP/Laravel and Node.js services at scale.",
     "twitterDescription": "Backend engineering, shipped with quiet precision.",
@@ -101,11 +101,11 @@
   ],
   "createBand": [
     {
-      "text": "We",
-      "variant": "light"
+      "text": "Code",
+      "variant": "code"
     },
     {
-      "text": "Build",
+      "text": "Ship",
       "variant": "accent"
     },
     {
@@ -113,8 +113,8 @@
       "variant": "dark"
     },
     {
-      "text": "Better",
-      "variant": "ghost"
+      "text": "Scale",
+      "variant": "scale"
     }
   ],
   "services": [
