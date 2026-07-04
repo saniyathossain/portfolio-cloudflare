@@ -342,3 +342,25 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
   ~909ms against a 950ms declaration, badge border/shadow ~457ms against 600ms, body opacity ~690ms
   against 700ms — all converging correctly), reduced-motion (duration ≈0), real iPhone 13 emulation
   (mobile unaffected).
+
+## Revision 9 (post-review) — faster glide, remove residual container ring, shiny arrows
+- **Sped up** the synchronized drawer properties from ~0.95s → 0.7s (badge translateX, clip-path,
+  padding-right) and proportionally shortened the border/shadow/opacity fades — still smooth, less
+  leisurely.
+- **Removed a residual "container" ring at rest**: `.hero-card`'s base rule (the "View experience"-
+  glass surface) carries a permanent `box-shadow` — an inner white top highlight plus a
+  `0 0 0 1px rgba(230,229,226,.35)` outer stroke — meant for the expanded card. That box-shadow was
+  never overridden for the rest state, so it was still painting (clipped to the collapsed window,
+  but still visible) around the merged badge — the leftover "container" the user flagged. Fixed by
+  giving rest its own minimal shadow (matching the badge's own soft accent shadow) and restoring the
+  full glass-card shadow only on `:hover`/`:focus-within`. Also hid `.hero-card::after`'s glass-sheen
+  overlay (another always-on layer meant for the expanded surface) at rest, fading it in on hover.
+- **Prev/next controls redesigned**: were flat white circles with literal `←`/`→` text glyphs (looked
+  dated, inconsistent with the rest of the icon system). Replaced with real SVG icons (`arrow-left`
+  added to `icons.js`'s Lucide set/MAP alongside the existing `arrow-right`) rendered on the *exact*
+  icon-chip shine recipe (same gradient/border/box-shadow/gloss formulas as the badge and services
+  icons), pinned to `--accent`, added to the shared gloss selector list in `styles.css` alongside
+  `.icon-chip`/`.service-row__icon`/`.exp-row__icon`/`.point-chip`.
+- Re-verified: brace balance, native `transitionend` timing confirms faster durations landed, real
+  iPhone 13 emulation (arrows render correctly as shiny circular icon tiles on mobile's permanently-
+  expanded card), reduced-motion unaffected.

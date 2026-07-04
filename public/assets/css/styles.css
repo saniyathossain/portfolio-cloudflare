@@ -1173,12 +1173,28 @@ html.is-ready .hero__wm {
 }
 .hero-card__dot.is-active { width: 1rem; background: rgba(17,17,17,.7); }
 .hero-card__nav { display: flex; gap: 0.35rem; }
+/* Prev/next controls — the exact icon-chip shine recipe (was a flat white circle with a plain
+   text "←"/"→" glyph; now a real SVG arrow on the same tinted-glass tile as the badge/services
+   icons), pinned to --accent so it stays on-brand with the rest of the card. */
 .hero-card__arrow {
   width: 1.75rem; height: 1.75rem; display: grid; place-items: center;
-  border-radius: var(--radius-pill); background: #fff; color: rgba(17,17,17,.7);
-  box-shadow: 0 0 0 1px var(--line); line-height: 0; transition: color 0.2s;
+  border-radius: var(--radius-pill); color: var(--accent-dark);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 32%, #fff),
+    color-mix(in srgb, var(--accent) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+  line-height: 0;
+  transition: box-shadow 0.35s var(--ease-glass);
 }
-.hero-card__arrow:hover { color: #111; }
+.hero-card__arrow .ui-icon { width: 0.7rem; height: 0.7rem; }
+.hero-card__arrow:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
+}
 
 /* Collapsed-badge → hover-expand drawer, "genie"-style: the visible pill grows out of the badge and
    shrinks back into it, right-anchored the whole time (the clip-path's right inset never moves —
@@ -1211,12 +1227,19 @@ html.is-ready .hero__wm {
     height: 8rem;
     padding: 0.5rem 0 0.5rem 0.5rem;
     clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
+    /* No white ring/inner-highlight at rest (that's the "glass card" chrome — a leftover container
+       hint around the merged badge); just a soft shadow matching the badge's own. Restored in full
+       once the card opens. */
+    box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
     transition:
-      clip-path 0.95s var(--ease-smooth),
-      padding-right 0.95s var(--ease-smooth),
-      box-shadow var(--dur-mid) var(--ease-glass);
+      clip-path 0.7s var(--ease-smooth),
+      padding-right 0.7s var(--ease-smooth),
+      box-shadow 0.5s var(--ease-glass);
   }
   .hero-card__inner { height: 100%; align-items: center; }
+  /* The glass-sheen top highlight is styling for the expanded "card" surface — hide it while
+     collapsed so nothing washes over the merged badge, fade in once expanded. */
+  .hero__aside .hero-card[data-reveal]::after { opacity: 0; transition: opacity 0.5s var(--ease-glass); }
   .hero-card__badge {
     border-color: transparent;
     box-shadow: none;
@@ -1225,22 +1248,28 @@ html.is-ready .hero__wm {
        differs by breakpoint (see the 1024px override below). */
     transform: translateX(15.5rem);
     transition:
-      transform 0.95s var(--ease-smooth),
-      border-color 0.6s var(--ease-glass),
-      box-shadow 0.6s var(--ease-glass);
+      transform 0.7s var(--ease-smooth),
+      border-color 0.45s var(--ease-glass),
+      box-shadow 0.45s var(--ease-glass);
   }
   @media (min-width: 1024px) {
     .hero-card__badge { transform: translateX(13.5rem); }
   }
   .hero-card__body {
     opacity: 0; transform: translateX(-8px);
-    transition: opacity 0.7s var(--ease-glass), transform 0.95s var(--ease-smooth);
+    transition: opacity 0.5s var(--ease-glass), transform 0.7s var(--ease-smooth);
   }
   .hero__aside .hero-card[data-reveal]:hover,
   .hero__aside .hero-card[data-reveal]:focus-within {
     padding-right: 0.5rem;
     clip-path: inset(0 0 0 0 round 1.35rem);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 0 0 1px rgba(230,229,226,.35),
+      0 18px 46px -10px rgba(17, 17, 17, 0.14);
   }
+  .hero__aside .hero-card[data-reveal]:hover::after,
+  .hero__aside .hero-card[data-reveal]:focus-within::after { opacity: 0.5; }
   .hero-card:hover .hero-card__badge,
   .hero-card:focus-within .hero-card__badge {
     transform: translateX(0);
@@ -1390,14 +1419,16 @@ html.is-ready .hero__wm {
 .icon-chip,
 .service-row__icon,
 .exp-row__icon,
-.point-chip {
+.point-chip,
+.hero-card__arrow {
   position: relative;
   overflow: hidden;
 }
 .icon-chip::before,
 .service-row__icon::before,
 .exp-row__icon::before,
-.point-chip::before {
+.point-chip::before,
+.hero-card__arrow::before {
   content: "";
   position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
   background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
@@ -1409,7 +1440,8 @@ html.is-ready .hero__wm {
 .exp-row[aria-expanded="true"] .exp-row__icon::before,
 .point-chip:hover::before,
 .icon-chip:hover::before,
-.icon-chip:focus-within::before {
+.icon-chip:focus-within::before,
+.hero-card__arrow:hover::before {
   opacity: 1;
 }
 .icon-chip--sm { width: 1.28rem; height: 1.28rem; border-radius: 0.36rem; }
