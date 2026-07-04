@@ -88,11 +88,11 @@ html:not(.is-loading) .load-scrim { display: none; }
      "Inter Fallback" is metric-matched so there's no CLS before Inter loads. */
   --font-sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-  --text-sh: 0 1px 2px rgba(17,17,17,.08), 0 1px 0 rgba(255,255,255,.55);
-  --text-sh-sm: 0 1px 1px rgba(255,255,255,.55), 0 1px 2px rgba(17,17,17,.06);
+  --text-sh: 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(17,17,17,.1), 0 2px 10px rgba(17,17,17,.05);
+  --text-sh-sm: 0 1px 0 rgba(255,255,255,.7), 0 1px 2px rgba(17,17,17,.07);
   --text-sh-dark: 0 1px 2px rgba(0,0,0,.35), 0 1px 12px rgba(0,0,0,.18);
-  --text-sh-emboss: 0 1px 0 rgba(255,255,255,.88), 0 -1px 0 rgba(17,17,17,.05);
-  --text-sh-tint: 0 1px 2px color-mix(in srgb, var(--tint) 14%, transparent), 0 2px 14px color-mix(in srgb, var(--tint) 9%, transparent);
+  --text-sh-emboss: 0 1px 0 rgba(255,255,255,.95), 0 -1px 0 rgba(17,17,17,.06), 0 2px 7px rgba(17,17,17,.05);
+  --text-sh-tint: 0 1px 0 rgba(255,255,255,.72), 0 1px 2px color-mix(in srgb, var(--tint) 16%, transparent), 0 2px 16px color-mix(in srgb, var(--tint) 10%, transparent);
   /* cool blend — azure → cyan → teal, echoing the portrait (ambient wash, see --grad-soft) */
   --grad-from: var(--primary-deep);
   --grad-via: var(--c-cyan);
@@ -704,23 +704,41 @@ html.is-loading .site-header {
   50%      { filter: brightness(1.22) saturate(1.16); }
 }
 
-.nav-desktop { display: none; align-items: center; gap: 1.75rem; font-size: 0.875rem; font-weight: 500; }
+/* Primary nav with a sliding "liquid" pill (see setupNavPill in app.js). The pill sits BEHIND the
+   buttons (z-0) and glides via its own CSS transition on transform/width — JS only writes the
+   --pill-* custom props. Buttons stay crisp on top (z-1). */
+.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.875rem; font-weight: 500; }
 @media (min-width: 1024px) { .nav-desktop { display: flex; } }
+.nav-desktop__pill {
+  position: absolute; top: 50%; left: 0; z-index: 0;
+  height: var(--pill-h, 2rem); width: var(--pill-w, 0);
+  transform: translate(var(--pill-x, 0), -50%);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 15%, rgba(255,255,255,.6));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.75),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 2px 9px rgba(17,17,17,.07);
+  opacity: var(--pill-o, 0);
+  pointer-events: none;
+  transition: transform 0.42s var(--ease-glass), width 0.42s var(--ease-glass), opacity 0.3s ease;
+}
 .nav-desktop button {
-  position: relative;
+  position: relative; z-index: 1;
   display: inline-flex; align-items: center; gap: 0.4rem;
-  color: rgba(17,17,17,.75); opacity: 0.85;
-  transition: transform var(--dur-mid) var(--ease-hover), opacity var(--dur-mid) ease;
+  padding: 0.42rem 0.85rem; border-radius: var(--radius-pill);
+  color: rgba(17,17,17,.72); opacity: 0.9;
+  transition: color var(--dur-mid) var(--ease-hover), opacity var(--dur-mid) ease;
 }
-.nav-desktop button::after {
-  content: ""; position: absolute; left: 0.4rem; right: 0.4rem; bottom: -3px; height: 1.5px;
-  background: var(--accent); border-radius: 2px;
-  transform: scaleX(0); transform-origin: left center; opacity: 0;
-  transition: transform 0.32s var(--ease-glass), opacity 0.28s ease;
+.nav-desktop button:hover,
+.nav-desktop button:focus-visible { opacity: 1; color: var(--accent-dark); }
+.nav-desktop button.is-active { opacity: 1; color: var(--accent-dark); font-weight: 600; }
+.nav-desktop button .ui-icon { width: 0.72rem; height: 0.72rem; opacity: 0.6; transition: opacity var(--dur-mid) ease; }
+.nav-desktop button.is-active .ui-icon,
+.nav-desktop button:hover .ui-icon { opacity: 0.9; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-desktop__pill { transition: opacity 0.3s ease; }
 }
-.nav-desktop button:hover::after { transform: scaleX(1); opacity: 1; }
-.nav-desktop button .ui-icon { width: 0.72rem; height: 0.72rem; opacity: 0.55; }
-.nav-desktop button:hover { opacity: 1; transform: translateY(-1px); }
 
 .header-right { display: flex; align-items: center; gap: 0.65rem; }
 .clock-chip { display: none; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
@@ -728,49 +746,59 @@ html.is-loading .site-header {
 .clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
 .clock-sep { color: rgba(17,17,17,.3); }
 
-/* Live analog clock — frameless, 3 hands only (no face ring, no tick marks). The second hand's
-   animation-delay is set once on load (never re-touched), so the 60s linear sweep runs entirely
-   on its own compositor timeline with zero JS-driven correction jumps — a genuinely seamless glide. */
+/* Live analog clock — themed on the copper accent: graphite hour/minute hands, copper second hand +
+   pin, inside a light airy glass ring. The second hand's animation-delay is set once on load (never
+   re-touched), so the 60s linear sweep runs entirely on its own compositor timeline with zero
+   JS-driven correction jumps — a genuinely seamless glide. */
 .clock-face {
+  --hand: #2a2a2a;                 /* graphite hour/minute hands */
+  --hand-accent: var(--accent);    /* copper second hand + pin — ties to the brand accent */
   position: relative; flex: none;
   width: 1.4rem; height: 1.4rem;
-  transition: transform 0.35s var(--ease-glass);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, rgba(255,255,255,.92), rgba(255,255,255,.55));
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, rgba(255,255,255,.6));
+  box-shadow: inset 0 1px 1.5px rgba(255,255,255,.9), 0 1px 2px rgba(17,17,17,.08);
+  transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass);
 }
 @media (hover: hover) and (pointer: fine) {
-  .clock-chip:hover .clock-face { transform: scale(1.22); }
+  .clock-chip:hover .clock-face {
+    transform: scale(1.5);
+    box-shadow: inset 0 1px 1.5px rgba(255,255,255,.95), 0 3px 8px rgba(17,17,17,.14);
+  }
 }
 .clock-hand {
   position: absolute; left: 50%; bottom: 50%;
   transform-origin: 50% 100%;
   border-radius: 999px;
-  background: #111;
+  background: var(--hand);
 }
 .clock-hand--h {
-  width: 1.8px; height: 27%; margin-left: -0.9px;
+  width: 1.7px; height: 24%; margin-left: -0.85px;
   transform: rotate(var(--clock-h, 0deg));
   transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
 }
 .clock-hand--m {
-  width: 1.5px; height: 38%; margin-left: -0.75px;
+  width: 1.4px; height: 34%; margin-left: -0.7px;
   transform: rotate(var(--clock-m, 0deg));
   transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
 }
 .clock-hand--s {
-  width: 1px; height: 41%; margin-left: -0.5px;
-  background: #ff3b30;
+  width: 1px; height: 37%; margin-left: -0.5px;
+  background: var(--hand-accent);
   transform: rotate(var(--clock-s, 0deg));
   animation: clock-sweep 60s linear infinite;
   animation-delay: var(--clock-s-delay, 0s);
 }
 .clock-hand--s::after {         /* Apple-style counterbalance tail behind the pivot */
-  content: ""; position: absolute; left: 50%; bottom: -22%;
-  width: 1px; height: 22%; margin-left: -0.5px;
-  border-radius: 999px; background: #ff3b30;
+  content: ""; position: absolute; left: 50%; bottom: -20%;
+  width: 1px; height: 20%; margin-left: -0.5px;
+  border-radius: 999px; background: var(--hand-accent);
 }
 .clock-pin {
   position: absolute; left: 50%; top: 50%;
   width: 2.5px; height: 2.5px; margin: -1.25px 0 0 -1.25px;
-  border-radius: 50%; background: #ff3b30;
+  border-radius: 50%; background: var(--hand-accent);
   box-shadow: 0 0 0 1px rgba(255,255,255,.9);
 }
 @keyframes clock-sweep {
@@ -839,7 +867,7 @@ html.is-loading .site-header {
     mask-image: linear-gradient(90deg, transparent 0%, #000 18%);
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 18%);
   }
-  .hero__backdrop-liquid img { object-position: 50% 12%; }
+  .hero__backdrop-liquid img { object-position: 40% 12%; }
   .hero__backdrop-scrim {
     background:
       linear-gradient(90deg, rgba(241,240,238,.94) 0%, rgba(241,240,238,.5) 22%, transparent 48%),
@@ -904,8 +932,9 @@ html.is-ready .hero__wm {
     max-width: 11ch;
   }
   .hero__aside {
-    margin-top: -2.5rem;
+    margin-top: 0;
     align-items: flex-end;
+    transform: translateY(2.5rem);
   }
 }
 
@@ -1007,12 +1036,15 @@ html.is-ready .hero__wm {
 
 .hero h1 .line-inner:not(.grad) {
   text-shadow:
-    0 1px 2px rgba(255,255,255,.92),
-    0 2px 16px rgba(238,241,246,.6),
-    0 0 1px rgba(17,17,17,.06);
+    0 1px 0 rgba(255,255,255,.95),
+    0 1px 2px rgba(17,17,17,.1),
+    0 2px 18px rgba(238,241,246,.65),
+    0 0 1px rgba(17,17,17,.08);
 }
 .hero h1 .line-inner.grad {
-  filter: drop-shadow(0 1px 2px rgba(255,255,255,.75));
+  filter:
+    drop-shadow(0 1px 1px rgba(255,255,255,.8))
+    drop-shadow(0 2px 10px color-mix(in srgb, var(--accent) 22%, transparent));
   -webkit-font-smoothing: antialiased;
 }
 .hero__copy--on-dark .hero h1 .line-inner.grad {
@@ -2000,16 +2032,16 @@ html.is-ready .hero__wm {
     flex: none;
     inset: auto;
     width: 100%;
-    height: clamp(17rem, 52vw, 28rem);
+    height: clamp(20rem, 64vw, 32rem);
     margin: 0;
-    mask-image: linear-gradient(180deg, transparent 0%, #000 14%);
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 14%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 12%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%);
   }
-  .hero__backdrop-liquid img { object-position: 50% 10%; }
+  .hero__backdrop-liquid img { object-position: 50% 26%; }
   .hero__backdrop-scrim {
     background:
-      linear-gradient(180deg, rgba(238,241,246,.55) 0%, rgba(238,241,246,.2) 28%, transparent 62%),
-      linear-gradient(180deg, rgba(255,255,255,.15), transparent 40%);
+      linear-gradient(180deg, rgba(238,241,246,.4) 0%, rgba(238,241,246,.12) 26%, transparent 58%),
+      linear-gradient(180deg, rgba(255,255,255,.12), transparent 40%);
   }
   .hero__glow { display: none; }
   .hero__grid {
@@ -2031,7 +2063,7 @@ html.is-ready .hero__wm {
     gap: 1.25rem;
     padding-block: 6.5rem 1rem;
   }
-  .hero__backdrop { height: clamp(15rem, 58vw, 22rem); }
+  .hero__backdrop { height: clamp(18rem, 68vw, 27rem); }
   .hero h1 { font-size: clamp(2.35rem, 10vw, 3rem); }
   .hero-card, .hero-partners { max-width: 100%; }
   .hero-status { flex-wrap: wrap; gap: 0.5rem 1rem; }

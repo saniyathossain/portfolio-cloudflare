@@ -50,6 +50,7 @@ function portfolioApp() {
       setInterval(() => this.tickClock(), 1000);
       this.setupHeroGlow();
       this.setupHeroContrast();
+      this.$nextTick(() => this.setupNavPill());
       this._onKey = (e) => {
         if (e.key === "Escape") {
           if (this.modalOpen) this.closeModal();
@@ -72,6 +73,70 @@ function portfolioApp() {
         glow.style.opacity = "1";
       });
       hero.addEventListener("pointerleave", () => { glow.style.opacity = "0"; });
+    },
+
+    /** Sliding "liquid" nav pill: rests under the active section, glides to the hovered/focused item.
+     *  Position is written as CSS custom props via el.style (no inline style="" markup, no per-frame
+     *  JS loop) — the pill's own CSS transition does the gliding on the compositor. */
+    setupNavPill() {
+      const nav = this.$el && this.$el.querySelector(".nav-desktop");
+      if (!nav) return;
+      const pill = nav.querySelector(".nav-desktop__pill");
+      const btns = Array.from(nav.querySelectorAll("button"));
+      if (!pill || !btns.length) return;
+      const ids = (this.nav || []).map((n) => n.id);
+      let activeIdx = 0;
+      let hoverIdx = -1;
+
+      const place = (idx) => {
+        const btn = btns[idx];
+        if (!btn || !btn.offsetWidth) { nav.style.setProperty("--pill-o", "0"); return; }
+        nav.style.setProperty("--pill-x", btn.offsetLeft + "px");
+        nav.style.setProperty("--pill-w", btn.offsetWidth + "px");
+        nav.style.setProperty("--pill-h", btn.offsetHeight + "px");
+        nav.style.setProperty("--pill-o", "1");
+      };
+      const render = () => place(hoverIdx >= 0 ? hoverIdx : activeIdx);
+      const setActive = (idx) => {
+        activeIdx = idx;
+        btns.forEach((b, i) => b.classList.toggle("is-active", i === idx));
+        if (hoverIdx < 0) render();
+      };
+
+      btns.forEach((btn, i) => {
+        btn.addEventListener("mouseenter", () => { hoverIdx = i; render(); });
+        btn.addEventListener("focus", () => { hoverIdx = i; render(); });
+        btn.addEventListener("mouseleave", () => { hoverIdx = -1; render(); });
+        btn.addEventListener("blur", () => { hoverIdx = -1; render(); });
+      });
+
+      // Scroll-spy: mark the section crossing the upper-middle band as active (reuses the
+      // IntersectionObserver pattern from reveal.js). Modal items (no matching section) are skipped.
+      const targets = ids
+        .map((id, i) => { const el = document.getElementById(id); return el ? { el, i } : null; })
+        .filter(Boolean);
+      if ("IntersectionObserver" in window && targets.length) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (!e.isIntersecting) return;
+              const t = targets.find((t) => t.el === e.target);
+              if (t) setActive(t.i);
+            });
+          },
+          { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+        );
+        targets.forEach((t) => io.observe(t.el));
+      }
+
+      let raf = 0;
+      window.addEventListener("resize", () => {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(render);
+      });
+
+      setActive(0);
+      requestAnimationFrame(render);
     },
 
     setupHeroContrast() {
