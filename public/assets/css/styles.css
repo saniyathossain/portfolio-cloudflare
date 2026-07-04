@@ -462,7 +462,7 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); text-wrap: balance; }
 p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { text-wrap: pretty; }
 .eyebrow, .hero-rating__text, .hero-card__caption, .hero-partners__label,
 .exp-row__desc, .service-row__desc, .exp-group__loc, .edu-row__degree,
-.hero-card__title, .hero-status, .role-tags__label {
+.hero-card__title, .role-tags__label {
   text-shadow: var(--text-sh-sm);
 }
 
@@ -1361,18 +1361,6 @@ html.is-ready .hero__wm {
 }
 
 
-.hero-status {
-  position: relative; z-index: 20;
-  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-  border-top: 1px solid rgba(17,17,17,.1);
-  padding-block: 1.25rem 1.5rem;
-  margin-top: 0;
-  font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
-  letter-spacing: 0.025em; color: rgba(17,17,17,.6);
-}
-.hero-status span { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 500; }
-.hero-status__scroll { display: inline-flex; gap: 0.5rem; }
-
 /* Reveals — slower, softer */
 [data-reveal] { opacity: 0; transform: translateY(22px); transition: none; }
 [data-reveal].is-visible {
@@ -1656,7 +1644,6 @@ html.is-ready .hero__wm {
   font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em;
   text-transform: uppercase; color: rgba(17,17,17,.48);
 }
-.hero-status .icon-chip--sm { margin-right: 0.1rem; }
 .role-tags__label .icon-chip--sm { margin-right: 0.15rem; }
 .stats-panel li > p {
   color: rgba(255,255,255,.58);
@@ -2277,10 +2264,6 @@ html.is-ready .hero__wm {
   .hero__aside { align-items: center; }
   .hero-partners__label { text-align: center; }
   .hero-partners__list { justify-content: center; }
-  .hero-status {
-    order: 3;
-    padding-block: 1rem 1.25rem;
-  }
 }
 @media (max-width: 640px) {
   .hero__grid {
@@ -2290,8 +2273,6 @@ html.is-ready .hero__wm {
   .hero__backdrop { height: clamp(18rem, 68vw, 27rem); }
   .hero h1 { font-size: clamp(2.35rem, 10vw, 3rem); }
   .hero-card, .hero-partners { max-width: 100%; }
-  .hero-status { flex-wrap: wrap; gap: 0.5rem 1rem; }
-  .hero-status__scroll { width: 100%; }
   .about-grid { grid-template-columns: 1fr !important; }
   .hero__copy--on-dark::before { display: none; }
 }
