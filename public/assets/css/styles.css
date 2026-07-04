@@ -356,18 +356,42 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   position: absolute; z-index: 0; pointer-events: none;
   top: -3rem; right: -2.5rem; width: 14rem; height: 14rem;
   color: color-mix(in srgb, var(--tint) 16%, transparent);
+  opacity: 1; /* [data-reveal="fade"]'s own opacity:0 base state is overridden here — the watermark
+                 itself is always visible at rest; only its stroke draws in below, so it never fully
+                 disappears pre-reveal the way a normal [data-reveal] element does. */
 }
 @media (min-width: 1024px) { .about-card__globe { width: 20rem; height: 20rem; top: -4.5rem; right: -3.5rem; } }
+/* Path-draw — stroke-dasharray set comfortably longer than either child path's real length (circle
+   r=9.25 is ~58 units circumference; the meridian+equator path is shorter), so animating
+   dashoffset from that same length (fully retracted) to 0 (fully drawn) via a CSS *transition* (not
+   @keyframes, consistent with this file's transition-first convention) reveals it once, the first
+   time reveal.js adds .is-visible (same [data-reveal] IntersectionObserver every other reveal here
+   already uses — no new JS). */
+.about-card__globe-path {
+  stroke-dasharray: 62;
+  stroke-dashoffset: 62;
+  transition: stroke-dashoffset 1.6s var(--ease-smooth);
+}
+.about-card__globe[data-reveal].is-visible .about-card__globe-path {
+  stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-card__globe-path { transition: none; stroke-dashoffset: 0; }
+}
 .about-card__quote {
-  position: relative; z-index: 1; display: block;
+  /* z-index:4, not the usual 1 — must clear .spec::after's cursor-spotlight overlay (z-index:3,
+     added below) so the glow never paints over readable content. Contained entirely within
+     .about-card's own stacking context (.glass-card's transform:translateZ(0) creates one), so this
+     can't affect stacking anywhere else on the page. */
+  position: relative; z-index: 4; display: block;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 4.5rem; line-height: 1; font-weight: 700;
   color: color-mix(in srgb, var(--tint-deep) 55%, transparent);
   margin-bottom: -1.25rem;
 }
-.about-card__icon { position: relative; z-index: 1; margin-bottom: 1.5rem; }
+.about-card__icon { position: relative; z-index: 4; margin-bottom: 1.5rem; }
 .about-card__statement {
-  position: relative; z-index: 1;
+  position: relative; z-index: 4;
   max-width: 42rem;
   font-size: 1.5rem; font-weight: 500; line-height: 1.42; letter-spacing: -0.01em;
   color: var(--ink);
@@ -375,7 +399,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 }
 @media (min-width: 640px) { .about-card__statement { font-size: 1.875rem; } }
 .about-card__footer {
-  position: relative; z-index: 1;
+  position: relative; z-index: 4;
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
   gap: 1.5rem;
   margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.5rem;
@@ -975,6 +999,24 @@ html.is-loading .site-header {
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.48rem 0.85rem; font-size: 0.6875rem; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
+}
+/* Hamburger-to-X morph — 3 plain bars instead of a single SVG (CSS can't interpolate between two
+   path shapes), keyed off :aria-expanded the same way the experience accordion already keys its
+   own open state off an ARIA attribute rather than an ad-hoc class. */
+.menu-btn__icon {
+  display: inline-flex; flex-direction: column; justify-content: center; gap: 0.2rem;
+  width: 0.85rem; height: 0.7rem;
+}
+.menu-btn__bar {
+  display: block; height: 1.5px; width: 100%; border-radius: 1px;
+  background: currentColor;
+  transition: transform 0.35s var(--ease-glass), opacity 0.25s var(--ease-glass);
+}
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(1) { transform: translateY(4.3px) rotate(45deg); }
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(2) { opacity: 0; }
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(3) { transform: translateY(-4.3px) rotate(-45deg); }
+@media (prefers-reduced-motion: reduce) {
+  .menu-btn__bar { transition: none; }
 }
 
 /* Hero */
@@ -1640,6 +1682,13 @@ html.is-ready .hero__wm {
   opacity: 1;
   filter: blur(0);
   transform: none;
+}
+/* Keyword emphasis — the phrase(s) data-blur-highlight marks get the section's own --tint-deep ink
+   instead of a new hue, plus extra weight. Reuses the tint-derived color-mix formula already used
+   for tinted body text elsewhere, not a hand-picked new color. */
+.blur-reveal__word--hl {
+  color: color-mix(in srgb, var(--tint-deep) 82%, var(--ink));
+  font-weight: 700;
 }
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }
@@ -2365,18 +2414,38 @@ html.is-ready .hero__wm {
 }
 
 /* Nav overlay */
+/* Asymmetric open/close (deliberate open, snappier close) — same convention the hero-card
+   hover-drawer already uses. CSS transitions throughout (not @keyframes): a rapid open/close/open
+   (Escape mid-transition, fast re-click) retargets smoothly instead of restarting from zero. */
 .nav-overlay {
   position: fixed; inset: 0; z-index: 115;
   display: flex; flex-direction: column; background: var(--ink); color: #fff;
-  opacity: 0; pointer-events: none; transition: opacity 0.5s var(--ease-spring);
+  opacity: 0; pointer-events: none; transition: opacity 0.45s var(--ease-glass);
 }
-.nav-overlay.is-open { opacity: 1; pointer-events: auto; }
+.nav-overlay.is-open { opacity: 1; pointer-events: auto; transition: opacity 0.55s var(--ease-smooth); }
 .nav-overlay__item {
   display: flex; align-items: center; gap: 0.85rem; padding-block: 0.5rem; text-align: left;
   font-size: clamp(2.25rem, 6vw, 3.75rem); font-weight: 600; letter-spacing: -0.02em;
   color: rgba(255,255,255,.7);
   text-shadow: var(--text-sh-dark);
-  transition: color 0.3s, text-shadow 0.35s var(--ease-glass);
+  opacity: 0; transform: translateY(22px);
+  transition: color 0.3s, text-shadow 0.35s var(--ease-glass), opacity 0s, transform 0s;
+}
+/* Per-item stagger entrance, delay driven by --stagger-i (set inline via Alpine :style in the
+   x-for loop — same custom-property idiom .partner-orb already uses for --brand). Rest state above
+   keeps opacity/transform transition at 0s so closing snaps the item back instantly with no visible
+   reverse-stagger — only the overlay's own opacity fade is visible on close. */
+.nav-overlay.is-open .nav-overlay__item {
+  opacity: 1; transform: none;
+  transition: color 0.3s, text-shadow 0.35s var(--ease-glass),
+              opacity 0.5s var(--ease-smooth), transform 0.5s var(--ease-smooth);
+  transition-delay: calc(var(--stagger-i, 0) * 45ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-overlay, .nav-overlay.is-open { transition: none; }
+  .nav-overlay__item, .nav-overlay.is-open .nav-overlay__item {
+    transition: none; opacity: 1; transform: none;
+  }
 }
 .nav-overlay__item:hover {
   color: #fff;
@@ -2517,6 +2586,12 @@ html.is-ready .hero__wm {
 .stats-panel.spec--panel::after {
   background: radial-gradient(34rem 34rem at var(--px,50%) var(--py,0%),
               rgba(255,255,255,.10), rgba(255,255,255,0) 62%);
+}
+/* .about-card is a *light* glass surface (unlike dark .stats-panel) — a white glow would barely
+   show, so tint it with the section's own --tint instead of inventing a new color. */
+.about-card.spec--panel::after {
+  background: radial-gradient(34rem 34rem at var(--px,50%) var(--py,0%),
+              color-mix(in srgb, var(--tint) 20%, transparent), transparent 62%);
 }
 
 /* 3) Aurora parallax — motion.js writes --aurora-y (body) / --glow-y (#heroGlow) from a

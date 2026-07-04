@@ -310,10 +310,14 @@ function portfolioApp() {
     },
 
     tintVars(tint) {
+      // primary/teal deliberately resolve to violet/green (not --primary/--teal themselves, which
+      // are each used 10-20+ times elsewhere) — the azure/sea-teal pair sits only 12° apart on the
+      // hue wheel and read as near-identical pale-blue badges; violet/green are 106°+ from copper
+      // and each other.
       const map = {
         accent: { tint: "var(--accent)", ink: "var(--accent-dark)" },
-        primary: { tint: "var(--primary)", ink: "var(--primary-deep)" },
-        teal: { tint: "var(--teal)", ink: "var(--teal-deep)" },
+        primary: { tint: "var(--c-violet)", ink: "#4a48a8" },
+        teal: { tint: "var(--c-green)", ink: "#146b29" },
       };
       const v = map[tint] || map.accent;
       return "--tint:" + v.tint + ";--tint-ink:" + v.ink;

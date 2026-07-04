@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=e90b84d87d71">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=e90b84d87d71">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=e90b84d87d71">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=8c22406d655c">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=8c22406d655c">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=8c22406d655c">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=e90b84d87d71">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=8c22406d655c">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -100,7 +100,7 @@
     <div class="shell">
       <div class="glass-pill">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
-          <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=e90b84d87d71" width="509" height="100" alt="" aria-hidden="true">
+          <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=8c22406d655c" width="509" height="100" alt="" aria-hidden="true">
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
         <nav class="nav-desktop" aria-label="Primary">
@@ -128,10 +128,14 @@
             <span class="clock-sep">•</span>
             <span x-text="clockDate"></span>
           </div>
-          <button type="button" class="menu-btn" @click="openMenu()" aria-label="Open menu">
+          <button type="button" class="menu-btn" @click="menuOpen ? closeMenu() : openMenu()" :aria-expanded="menuOpen" :aria-label="menuOpen ? 'Close menu' : 'Open menu'">
             <span>
-              <span x-html="iconSvg('menu', 'ui-icon ui-icon--on-ink ui-icon--sm')" aria-hidden="true"></span>
-              Menu
+              <span class="menu-btn__icon" aria-hidden="true">
+                <span class="menu-btn__bar"></span>
+                <span class="menu-btn__bar"></span>
+                <span class="menu-btn__bar"></span>
+              </span>
+              <span x-text="menuOpen ? 'Close' : 'Menu'"></span>
             </span>
           </button>
         </div>
@@ -252,11 +256,11 @@
     <!-- About -->
     <section id="about" class="sec py-20 lg:py-28">
       <div class="shell">
-        <div class="about-card glass-card" data-reveal="scale">
-          <svg class="about-card__globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><circle cx="12" cy="12" r="9.25"/><path d="M12 2.75c2.6 2.3 4 5.8 4 9.25s-1.4 6.95-4 9.25c-2.6-2.3-4-5.8-4-9.25s1.4-6.95 4-9.25zM2.75 12h18.5"/></svg>
+        <div class="about-card glass-card spec spec--panel" data-reveal="scale">
+          <svg class="about-card__globe" data-reveal="fade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><circle class="about-card__globe-path" cx="12" cy="12" r="9.25"/><path class="about-card__globe-path" d="M12 2.75c2.6 2.3 4 5.8 4 9.25s-1.4 6.95-4 9.25c-2.6-2.3-4-5.8-4-9.25s1.4-6.95 4-9.25zM2.75 12h18.5"/></svg>
           <span class="about-card__quote" aria-hidden="true">&ldquo;</span>
           <span class="icon-chip icon-chip--md about-card__icon" aria-hidden="true"><span x-html="iconSvg('engineer', 'ui-icon')" aria-hidden="true"></span></span>
-          <h2 class="about-card__statement" data-blur-reveal data-blur-speed="1.2" :data-text="site.aboutHeading" x-text="site.aboutHeading"></h2>
+          <h2 class="about-card__statement" data-blur-reveal data-blur-speed="1.2" data-blur-highlight="telco-scale|quiet precision" :data-text="site.aboutHeading" x-text="site.aboutHeading"></h2>
           <div class="about-card__footer" data-reveal data-delay="200">
             <div>
               <p class="about-card__label">Find me online</p>
@@ -582,8 +586,8 @@
     </div>
     <nav class="shell flex flex-1 flex-col justify-center">
       <ul class="flex flex-col gap-1">
-        <template x-for="item in nav" :key="'m-'+item.id">
-          <li><button type="button" class="nav-overlay__item" @click="navGo(item)">
+        <template x-for="(item, i) in nav" :key="'m-'+item.id">
+          <li><button type="button" class="nav-overlay__item" :style="'--stagger-i:' + i" @click="navGo(item)">
             <span class="nav-overlay__gutter" aria-hidden="true"></span>
             <span class="icon-chip icon-chip--md icon-chip--on-dark" aria-hidden="true"><span x-html="iconSvg(item.icon, 'ui-icon')" aria-hidden="true"></span></span>
             <span x-text="item.label"></span>
@@ -633,9 +637,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=e90b84d87d71" defer></script>
-  <script src="/assets/js/icons.min.js?v=e90b84d87d71" defer></script>
-  <script src="/assets/js/loader.min.js?v=e90b84d87d71" defer></script>
-  <script src="/assets/js/boot.min.js?v=e90b84d87d71" defer></script>
+  <script src="/assets/js/data.min.js?v=8c22406d655c" defer></script>
+  <script src="/assets/js/icons.min.js?v=8c22406d655c" defer></script>
+  <script src="/assets/js/loader.min.js?v=8c22406d655c" defer></script>
+  <script src="/assets/js/boot.min.js?v=8c22406d655c" defer></script>
 </body>
 </html>
