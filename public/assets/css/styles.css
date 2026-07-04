@@ -348,33 +348,53 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   .edu-row .edu-place { display: inline-flex; }
 }
 
-/* About — cardless "signature" composition: the statement flows directly on the section background
-   like a large pull-quote (no glass panel), with a rose-tinted drop-cap as its sole visual anchor
-   instead of a literal icon. Third distinct About direction this project has shipped (stacked glass
-   card, then an asymmetric bled card, now no card at all) — picked from real rendered options,
-   informed by the design-taste skills' "kill literal-metaphor icon" and "reach for asymmetry, not
-   another centered/symmetric card" guidance. */
+/* About — "Cascade": two real physical cards overlapping at opposing angles, not a color sliver or
+   a single flat panel. Fourth distinct About direction this project has shipped (stacked glass
+   card, an asymmetric bled card, a cardless flowing paragraph, now this) — picked from 3
+   structurally different options (this, a nested "double-bezel" single card, and a sharp
+   brutalist/blueprint grid), each pulling from a different design-skill archetype rather than
+   another color/decoration variant of the same flat paragraph. The stat card's "14+" carries the
+   sole accent color in the section — emphasis now comes from genuine scale contrast + real card
+   depth, not from coloring individual words inline. */
 #about .shell { position: relative; }
-.about-signature { padding-block: 1rem 2rem; }
-.about-signature__statement {
-  max-width: 46rem;
-  font-size: 1.65rem; font-weight: 340; line-height: 1.38; letter-spacing: -0.012em;
+.about-cascade { position: relative; padding-block: 3rem 1rem; }
+@media (min-width: 640px) { .about-cascade { padding-block: 3.5rem 1rem; } }
+.about-cascade__stat-card {
+  position: relative; z-index: 1; width: fit-content;
+  background: #fff; border: 1px solid var(--line); border-radius: 1.25rem;
+  padding: 1.25rem 1.75rem 2.5rem; margin-left: 1rem; margin-bottom: -1.25rem;
+  box-shadow: 0 16px 40px -18px rgba(17,17,17,.22);
+  transform: rotate(-3deg);
+  display: flex; align-items: baseline; gap: 1rem;
+}
+.about-cascade__num {
+  font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1; white-space: nowrap;
+  color: var(--accent-dark);
+  text-shadow: 0 3px 14px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+@media (min-width: 640px) { .about-cascade__num { font-size: 2.75rem; } }
+.about-cascade__kicker {
+  font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em;
+  color: rgba(17,17,17,.5); line-height: 1.35; white-space: nowrap;
+}
+.about-cascade__main-card {
+  position: relative; z-index: 2;
+  background: #fff; border: 1px solid var(--line); border-radius: 1.5rem;
+  padding: 3.5rem 1.5rem 2rem;
+  box-shadow: 0 30px 70px -24px rgba(17,17,17,.2);
+  transform: rotate(1.5deg);
+  margin-right: -0.75rem;
+}
+@media (min-width: 640px) { .about-cascade__main-card { padding: 3.5rem 2.5rem 2.25rem; } }
+@media (min-width: 1024px) { .about-cascade__main-card { padding: 4rem 3rem 2.5rem; } }
+.about-cascade__statement {
+  max-width: 42rem;
+  font-size: 1.35rem; font-weight: 380; line-height: 1.5; letter-spacing: -0.01em;
   color: var(--ink);
   text-shadow: var(--text-sh-emboss);
 }
-@media (min-width: 640px) { .about-signature__statement { font-size: 2.1rem; } }
-@media (min-width: 1024px) { .about-signature__statement { font-size: 2.35rem; } }
-/* Two selectors, not one: under normal motion blur-reveal.js wraps every word in its own <span> (for
-   the per-word fade-in), so ::first-letter on the parent h2 can't reach through it — confirmed via
-   direct testing, not assumed — it has to target the first word-span's own first letter instead.
-   Under reduced motion blur-reveal.js skips the span-wrapping and leaves plain text directly in the
-   h2, so the first selector is what actually fires in that path. Both verified rendering the drop
-   cap correctly, not just the one that happened to work in a screenshot. */
-.about-signature__statement::first-letter,
-.about-signature__statement .blur-reveal__word:first-of-type::first-letter {
-  font-size: 1.3em; font-weight: 700; color: var(--tint-deep);
-  text-shadow: 0 4px 18px color-mix(in srgb, var(--tint-deep) 35%, transparent);
-}
+@media (min-width: 640px) { .about-cascade__statement { font-size: 1.6rem; } }
+@media (min-width: 1024px) { .about-cascade__statement { font-size: 1.8rem; } }
 .about-card__footer {
   position: relative; z-index: 4;
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
@@ -1770,41 +1790,10 @@ html.is-ready .hero__wm {
      of animating in, matching every other reduced-motion override in this file. */
   .blur-reveal__word { transition: none; }
 }
-/* Keyword emphasis — the phrase(s) data-blur-highlight marks get the section's own --tint-deep ink
-   instead of a new hue, plus extra weight. Reuses the tint-derived color-mix formula already used
-   for tinted body text elsewhere, not a hand-picked new color. Kept as the default/fallback for any
-   phrase without a `:colorkey` suffix — the named variants below are additive, not a replacement. */
-.blur-reveal__word--hl {
-  color: color-mix(in srgb, var(--tint-deep) 82%, var(--ink));
-  font-weight: 800;
-}
-/* Named multi-color highlight variants — inline "chip" treatment, picked from 4 real rendered
-   options (mono-copper, underline, gradient-shimmer, chips). Each phrase sits inside its own soft
-   rounded pill instead of just changing text color, echoing the .icon-chip/.brand-pill badge
-   language already used elsewhere on the site rather than inventing a new visual vocabulary. Text
-   stays dark ink (readable against any of the three tints) — the color lives in the pill, not the
-   glyph. Multi-word phrases render as adjacent same-colored pills (one per word-span, since
-   blur-reveal.js wraps each word individually) rather than one seamless merged shape — intentional,
-   not a bug: verified in the rendered options before this was picked. */
-.blur-reveal__word--hl-copper,
-.blur-reveal__word--hl-rose,
-.blur-reveal__word--hl-violet {
-  color: var(--ink); font-weight: 600; text-shadow: none;
-  padding: 0.08em 0.5em; border-radius: 999px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 4px 14px -6px rgba(17,17,17,.22);
-}
-.blur-reveal__word--hl-copper {
-  background: color-mix(in srgb, var(--accent) 24%, white);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-}
-.blur-reveal__word--hl-rose {
-  background: color-mix(in srgb, #c4214f 20%, white);
-  border: 1px solid color-mix(in srgb, #c4214f 28%, transparent);
-}
-.blur-reveal__word--hl-violet {
-  background: color-mix(in srgb, #4a48a8 20%, white);
-  border: 1px solid color-mix(in srgb, #4a48a8 28%, transparent);
-}
+/* blur-reveal.js can still tag words with .blur-reveal__word--hl(-<key>) via data-blur-highlight
+   (see the JS for the parsing logic) — no page content currently uses that attribute, so there is
+   intentionally no styling for those classes here right now. Add it back only alongside a caller
+   that actually sets data-blur-highlight again. */
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }
 .word-reveal.is-visible span.word {
