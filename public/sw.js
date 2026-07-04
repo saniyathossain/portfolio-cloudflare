@@ -39,7 +39,17 @@ async function networkFirst(request) {
   } catch {
     const cached = await caches.match(request);
     if (cached) return cached;
-    return caches.match("/index.html");
+    const shell = await caches.match("/index.html");
+    if (shell) return shell;
+    // Nothing cached yet (e.g. the very first load happens offline, or this fetch raced a SW
+    // activate() that just wiped old caches on a fresh CACHE_VERSION) — a fetch handler must never
+    // resolve to undefined; Chrome renders that as "This site can't be reached" with no page to
+    // even retry from. An explicit response at least renders as a real, reloadable page.
+    return new Response("Offline and nothing cached yet — reconnect and reload.", {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
 
