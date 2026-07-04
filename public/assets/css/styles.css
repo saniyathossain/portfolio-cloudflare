@@ -709,28 +709,38 @@ html.is-loading .site-header {
    --pill-* custom props. Buttons stay crisp on top (z-1). */
 .nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.875rem; font-weight: 500; }
 @media (min-width: 1024px) { .nav-desktop { display: flex; } }
+/* Shiny tile treatment — the EXACT .icon-chip recipe (same gradient/border/box-shadow formulas,
+   same diagonal specular gloss), just with --tint swapped for --accent so it stays copper/on-brand
+   in the header instead of picking up whatever section happens to be scrolled into view. */
 .nav-desktop__pill {
   position: absolute; top: 50%; left: 0; z-index: 0; overflow: hidden;
   height: var(--pill-h, 2rem); width: var(--pill-w, 0);
   transform: translate(var(--pill-x, 0), -50%);
   border-radius: var(--radius-pill);
-  /* Shiny tile treatment — same diagonal-gradient + specular gloss language as .icon-chip. */
   background: linear-gradient(145deg,
-    color-mix(in srgb, var(--accent) 30%, #fff),
-    color-mix(in srgb, var(--accent) 10%, #fff));
+    color-mix(in srgb, var(--accent) 32%, #fff),
+    color-mix(in srgb, var(--accent) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.8),
-    inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
-    0 2px 9px -2px color-mix(in srgb, var(--accent) 40%, transparent);
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
   opacity: var(--pill-o, 0);
   pointer-events: none;
-  transition: transform 0.42s var(--ease-glass), width 0.42s var(--ease-glass), opacity 0.3s ease;
+  transition: transform 0.42s var(--ease-glass), width 0.42s var(--ease-glass),
+    opacity 0.3s ease, box-shadow 0.35s var(--ease-glass);
+}
+.nav-desktop:hover .nav-desktop__pill,
+.nav-desktop:focus-within .nav-desktop__pill {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
 }
 .nav-desktop__pill::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(125deg, rgba(255,255,255,.65) 0%, rgba(255,255,255,.18) 32%, transparent 56%);
-  opacity: 0.85;
+  background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.72;
 }
+.nav-desktop:hover .nav-desktop__pill::before { opacity: 1; }
 .nav-desktop button {
   position: relative; z-index: 1;
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -1120,14 +1130,29 @@ html.is-ready .hero__wm {
   opacity: 0.5; mix-blend-mode: soft-light;
 }
 .hero-card__inner { position: relative; z-index: 1; display: flex; gap: 0.5rem; border-radius: 0.9rem; }
+/* Liquid-glass badge — frosted/translucent (real backdrop-filter; a small, above-the-fold, bounded
+   tile, not scrolling chrome-wide surface) with the exact .icon-chip shine recipe: same gradient,
+   border and box-shadow formulas, same diagonal specular ::before gloss. */
 .hero-card__badge {
+  position: relative; overflow: hidden;
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
   border-radius: 0.9rem; color: #fff; font-size: 1.875rem; line-height: 0;
-  background: linear-gradient(145deg, var(--accent-dark) 0%, var(--accent) 48%, var(--accent-bright) 100%);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 58%, rgba(255,255,255,.35)),
+    color-mix(in srgb, var(--accent) 32%, rgba(255,255,255,.12)));
+  backdrop-filter: blur(18px) saturate(220%);
+  -webkit-backdrop-filter: blur(18px) saturate(220%);
+  border: 1px solid rgba(255,255,255,.4);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.28),
-    0 6px 18px color-mix(in srgb, var(--accent) 32%, transparent);
+    inset 0 1px 0 rgba(255,255,255,.4),
+    0 6px 18px color-mix(in srgb, var(--accent) 28%, transparent);
 }
+.hero-card__badge::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.72;
+}
+.hero-card__badge .ui-icon { position: relative; z-index: 2; }
 .hero-card__body {
   flex: 1; border-radius: 0.9rem;
   background: rgba(241, 240, 238, 0.72);
@@ -1159,24 +1184,28 @@ html.is-ready .hero__wm {
 
 /* Collapsed-badge → hover-expand, same interaction language as .brand-pill (Skills/Experience tags):
    at rest it's just the icon badge (small footprint, keeps it off the portrait's face); hovering or
-   focusing slides the body panel open to reveal the job status + carousel controls. Desktop/fine-
-   pointer only — touch devices have no hover, so the card stays fully expanded there (unchanged from
-   before), which is also the safe fallback under reduced-motion and print. */
+   focusing reveals the body panel with the job status + carousel controls. Desktop/fine-pointer
+   only — touch devices have no hover, so the card stays fully expanded there (unchanged from before),
+   which is also the safe fallback under reduced-motion and print.
+   The card's own box NEVER changes size (fixed height, always laid out at full width) — motion is
+   done entirely with `clip-path` (visually hides everything past the badge) plus a fade+slide on the
+   revealed text. Both are compositor-only (no width/height layout reflow, which is what made the
+   earlier version feel janky), so this glides the way macOS Tahoe panels do — no stutter. */
 @media (hover: hover) and (pointer: fine) {
   .hero-card {
-    width: 7rem; height: 7rem;
-    transition: width 0.5s var(--ease-glass), height 0.5s var(--ease-glass),
-      transform var(--dur-mid) var(--ease-glass), box-shadow var(--dur-mid) var(--ease-glass);
+    height: 8rem;
+    clip-path: inset(0 calc(100% - 7rem) 0 0 round 1.35rem);
+    transition: clip-path 0.6s var(--ease-spring), box-shadow var(--dur-mid) var(--ease-glass);
   }
-  .hero-card__inner { height: 100%; align-items: stretch; }
+  .hero-card__inner { height: 100%; align-items: center; }
   .hero-card__body {
-    max-width: 0; opacity: 0; padding-inline: 0; overflow: hidden;
-    transition: max-width 0.5s var(--ease-glass), opacity 0.3s ease, padding-inline 0.5s var(--ease-glass);
+    opacity: 0; transform: translateX(-6px);
+    transition: opacity 0.32s ease, transform 0.5s var(--ease-spring);
   }
   .hero-card:hover,
-  .hero-card:focus-within { width: 20rem; height: 8.5rem; }
+  .hero-card:focus-within { clip-path: inset(0 0 0 0 round 1.35rem); }
   .hero-card:hover .hero-card__body,
-  .hero-card:focus-within .hero-card__body { max-width: 16rem; opacity: 1; padding-inline: 0.75rem; }
+  .hero-card:focus-within .hero-card__body { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) {
     .hero-card, .hero-card__body { transition: none; }
   }

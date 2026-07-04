@@ -202,3 +202,34 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
 - All re-verified: braces balanced, `app.js` syntax-checked, screenshots at 360/768/1024/1440,
   real touch-device emulation for the hover-collapse fallback, and `prefers-reduced-motion` (hover
   interactions still function, just without the smooth width/height transition).
+
+## Revision 4 (post-review) — clip-path motion, liquid-glass badge, layers icon, exact nav shine
+- **Rebuilt the hero-card hover-expand from width/height to `clip-path`.** The previous version
+  animated the card's own `width`/`height` (layout properties → full reflow every frame), which is
+  exactly why it felt janky/"horrible." Now the card is ALWAYS laid out at its full final size
+  (fixed `height: 8rem`, never changes) — motion is done entirely with `clip-path: inset(...)`
+  (compositor-only, GPU-accelerated) plus a fade + `translateX(-6px)→none` slide on the revealed
+  body text, eased with `--ease-spring` (`cubic-bezier(0.16, 1, 0.3, 1)`, the token already used
+  elsewhere for macOS-Tahoe-style motion). Confirmed this is genuinely smoother — no more layout
+  thrash — and double-checked a real edge case clip-path introduces: since the element's layout box
+  stays full-width, a naive "hover the element's center" no longer lands on the visible clipped
+  area. Verified via `elementFromPoint` at the actual visible badge location that real interaction
+  (mouse arriving at the visible badge, as any real user would) still hits `.hero-card` correctly —
+  the mismatch only affects test tooling that hovers via bounding-box center, not real usage.
+- **Badge redesigned as liquid glass**: real `backdrop-filter: blur(18px) saturate(220%)` (explicit,
+  deliberate exception to the "no backdrop-filter outside fixed chrome" guardrail — this is a small,
+  bounded, above-the-fold tile, same reasoning already applied to the clock face) over a translucent
+  copper-tinted gradient, plus the exact `.icon-chip` diagonal specular `::before` gloss overlay.
+- **Icon changed from briefcase to `layers`** — stacked-planes shape reads as "layered focus areas"
+  (fits the Now/Focus/Lately cycling content) without being as literal as a briefcase or as
+  unrelated as the original sparkle. `iconSvg('layers', …)` resolves directly (self-mapped key in
+  `icons.js`'s alias table).
+- **Nav pill now uses the literal `.icon-chip` formulas** (not just a similar recipe): identical
+  `linear-gradient(145deg, tint 32%→12%)` background, identical `border`/`box-shadow` values, and the
+  identical gloss `::before` (same gradient stops, same 0.72→1 opacity on hover) — with `--tint`
+  swapped for `--accent` so the header pill stays copper regardless of which section's tint is
+  currently active, matching the rest of the persistent header chrome.
+- Re-verified: braces balanced, `app.js` syntax-checked, real mouse-move interaction (not just
+  Playwright's `.hover()`), `prefers-reduced-motion` (clip-path state still applies, transitions
+  reduced to near-zero duration), and real touch-device emulation (mobile has no `clip-path` at all,
+  fully expanded as before).
