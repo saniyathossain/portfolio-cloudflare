@@ -373,6 +373,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .about-signature__statement::first-letter,
 .about-signature__statement .blur-reveal__word:first-of-type::first-letter {
   font-size: 1.3em; font-weight: 700; color: var(--tint-deep);
+  text-shadow: 0 4px 18px color-mix(in srgb, var(--tint-deep) 35%, transparent);
 }
 .about-card__footer {
   position: relative; z-index: 4;
@@ -1763,12 +1764,36 @@ html.is-ready .hero__wm {
   filter: blur(0);
   transform: none;
 }
+@media (prefers-reduced-motion: reduce) {
+  /* blur-reveal.js now always builds word-spans (needed so highlight coloring applies under
+     reduced motion too, not just the fade-in) — this is what makes them appear instantly instead
+     of animating in, matching every other reduced-motion override in this file. */
+  .blur-reveal__word { transition: none; }
+}
 /* Keyword emphasis — the phrase(s) data-blur-highlight marks get the section's own --tint-deep ink
    instead of a new hue, plus extra weight. Reuses the tint-derived color-mix formula already used
-   for tinted body text elsewhere, not a hand-picked new color. */
+   for tinted body text elsewhere, not a hand-picked new color. Kept as the default/fallback for any
+   phrase without a `:colorkey` suffix — the named variants below are additive, not a replacement. */
 .blur-reveal__word--hl {
   color: color-mix(in srgb, var(--tint-deep) 82%, var(--ink));
   font-weight: 800;
+}
+/* Named multi-color highlight variants — each phrase gets its own hue AND its own distinguishing
+   treatment (not just a palette swap): copper reads technical (tight tracking), rose matches the
+   About section's own identity color, violet is the "surprise" pop via small-caps. Every variant
+   carries a soft color-matched glow shadow layered under the shared emboss, so the distinction
+   reads as considered material/light, not just a flat color change. */
+.blur-reveal__word--hl-copper {
+  color: var(--accent-dark); font-weight: 800; letter-spacing: -0.01em;
+  text-shadow: var(--text-sh-emboss), 0 3px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.blur-reveal__word--hl-rose {
+  color: #c4214f; font-weight: 800;
+  text-shadow: var(--text-sh-emboss), 0 3px 16px rgba(196, 33, 79, .28);
+}
+.blur-reveal__word--hl-violet {
+  color: #4a48a8; font-weight: 800; font-variant-caps: small-caps; letter-spacing: 0.02em;
+  text-shadow: var(--text-sh-emboss), 0 3px 16px rgba(74, 72, 168, .28);
 }
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }

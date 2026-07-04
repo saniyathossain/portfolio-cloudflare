@@ -10,27 +10,34 @@
     const seg = parseFloat(el.getAttribute("data-blur-segment") || "0.06");
     const words = raw.trim().split(/\s+/);
     // Optional keyword emphasis: `|`-delimited literal phrases (plain text only — matched against
-    // the words above, never parsed as HTML, so this can't introduce markup injection). Multi-word
+    // the words above, never parsed as HTML, so this can't introduce markup injection). Each phrase
+    // may carry an optional `:colorkey` suffix (e.g. "quiet precision:rose") selecting a distinct
+    // .blur-reveal__word--hl-<key> treatment; omitting the suffix falls back to the original single
+    // shared --hl class, so a plain phrase with no colon behaves exactly as before. Multi-word
     // phrases are themselves whitespace-split so they can match across consecutive word-spans.
     // Comparison strips leading/trailing punctuation (e.g. the sentence-ending period stuck to a
     // tokenized word like "precision.") — only for matching, never for what's actually displayed.
     const bare = (s) => s.replace(/^[^\w]+|[^\w]+$/g, "");
-    const hlPhrases = (el.getAttribute("data-blur-highlight") || "")
+    const hlSpecs = (el.getAttribute("data-blur-highlight") || "")
       .split("|").map((p) => p.trim()).filter(Boolean)
-      .map((p) => p.split(/\s+/).map(bare));
-    const hlFlags = new Array(words.length).fill(false);
-    hlPhrases.forEach((phrase) => {
+      .map((spec) => {
+        const m = spec.match(/^(.*?)(?::([\w-]+))?$/);
+        return { phrase: (m[1] || spec).trim().split(/\s+/).map(bare), key: m[2] || "" };
+      });
+    const hlFlags = new Array(words.length).fill(null);
+    hlSpecs.forEach(({ phrase, key }) => {
       for (let i = 0; i <= words.length - phrase.length; i++) {
         let match = true;
         for (let j = 0; j < phrase.length; j++) {
           if (bare(words[i + j]).toLowerCase() !== phrase[j].toLowerCase()) { match = false; break; }
         }
-        if (match) for (let j = 0; j < phrase.length; j++) hlFlags[i + j] = true;
+        if (match) for (let j = 0; j < phrase.length; j++) hlFlags[i + j] = key;
       }
     });
     words.forEach((w, i) => {
       const s = document.createElement("span");
-      s.className = "blur-reveal__word" + (hlFlags[i] ? " blur-reveal__word--hl" : "");
+      const hlClass = hlFlags[i] === null ? "" : " blur-reveal__word--hl" + (hlFlags[i] ? "-" + hlFlags[i] : "");
+      s.className = "blur-reveal__word" + hlClass;
       s.textContent = w;
       s.style.transitionDuration = (seg * 6 * speed).toFixed(3) + "s";        // smooth per-word fade (~0.36s)
       s.style.transitionDelay = Math.min(i * seg * speed, 0.5).toFixed(3) + "s"; // cap stagger so long copy isn't sluggish
@@ -43,18 +50,18 @@
     const els = document.querySelectorAll("[data-blur-reveal]");
     if (!els.length) return;
 
+    // Always split into word-spans, even under reduced motion — this used to bail out to plain
+    // textContent instead, which silently dropped keyword-highlight coloring entirely for anyone
+    // with reduced motion on (confirmed via direct DOM inspection, not assumed: the highlighted
+    // phrases rendered as plain unstyled text, not just un-animated). Reduced motion should skip
+    // the *animation*, not the highlight styling itself — the CSS reduced-motion override on
+    // .blur-reveal__word (below) handles making the words appear instantly with no transition.
+    els.forEach(splitWords);
+
     if (reduced) {
-      els.forEach((el) => {
-        if (!el.classList.contains("blur-reveal")) {
-          const t = el.getAttribute("data-blur-reveal") || el.textContent;
-          el.textContent = t;
-        }
-        el.classList.add("is-visible");
-      });
+      els.forEach((el) => el.classList.add("is-visible"));
       return;
     }
-
-    els.forEach(splitWords);
 
     const io = new IntersectionObserver(
       (entries) => {
