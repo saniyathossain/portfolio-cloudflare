@@ -972,7 +972,7 @@ html.is-ready .hero__wm {
   .hero__aside {
     margin-top: 0;
     align-items: flex-end;
-    transform: translate(1.5rem, 6.5rem);
+    transform: translate(1.5rem, 3.25rem);
   }
 }
 
@@ -1157,6 +1157,31 @@ html.is-ready .hero__wm {
 }
 .hero-card__arrow:hover { color: #111; }
 
+/* Collapsed-badge → hover-expand, same interaction language as .brand-pill (Skills/Experience tags):
+   at rest it's just the icon badge (small footprint, keeps it off the portrait's face); hovering or
+   focusing slides the body panel open to reveal the job status + carousel controls. Desktop/fine-
+   pointer only — touch devices have no hover, so the card stays fully expanded there (unchanged from
+   before), which is also the safe fallback under reduced-motion and print. */
+@media (hover: hover) and (pointer: fine) {
+  .hero-card {
+    width: 7rem; height: 7rem;
+    transition: width 0.5s var(--ease-glass), height 0.5s var(--ease-glass),
+      transform var(--dur-mid) var(--ease-glass), box-shadow var(--dur-mid) var(--ease-glass);
+  }
+  .hero-card__inner { height: 100%; align-items: stretch; }
+  .hero-card__body {
+    max-width: 0; opacity: 0; padding-inline: 0; overflow: hidden;
+    transition: max-width 0.5s var(--ease-glass), opacity 0.3s ease, padding-inline 0.5s var(--ease-glass);
+  }
+  .hero-card:hover,
+  .hero-card:focus-within { width: 20rem; height: 8.5rem; }
+  .hero-card:hover .hero-card__body,
+  .hero-card:focus-within .hero-card__body { max-width: 16rem; opacity: 1; padding-inline: 0.75rem; }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-card, .hero-card__body { transition: none; }
+  }
+}
+
 .hero-partners { width: 100%; max-width: 24rem; }
 .hero-partners__label {
   margin-bottom: 0.75rem; font-size: 0.75rem; font-weight: 500;
@@ -1166,20 +1191,6 @@ html.is-ready .hero__wm {
 .hero-partners__list { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-start; }
 @media (min-width: 1024px) { .hero-partners__list { justify-content: flex-end; } }
 
-.partner-pill {
-  display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap;
-  background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.62));
-  border-radius: var(--radius-pill);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 1px 4px -2px rgba(17,17,17,.12);
-  padding: 0.35rem 0.8rem 0.35rem 0.4rem; font-size: 0.75rem; color: rgba(17,17,17,.75);
-  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
-}
-.partner-pill:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.74));
-  box-shadow: 0 8px 20px -4px rgba(17,17,17,.12), inset 0 1px 0 rgba(255,255,255,.85);
-}
-.partner-pill img { width: 1.1rem; height: 1.1rem; object-fit: contain; border-radius: var(--radius-pill); }
 
 .hero-status {
   position: relative; z-index: 20;
@@ -1212,6 +1223,9 @@ html.is-ready .hero__wm {
 .ui-icon--md { width: 1rem; height: 1rem; }
 .ui-icon--lg { width: 1.2rem; height: 1.2rem; }
 .ui-icon--social { fill: currentColor; stroke: none; }
+/* Chevrons render thin/washed-out at default stroke-width — bolder + very slightly bigger so they
+   read with the same confidence as the rest of the icon set instead of looking like an afterthought. */
+.ui-icon--chevron { width: 0.95em; height: 0.95em; stroke-width: 2.75; }
 
 .icon-chip {
   display: inline-grid; place-items: center; flex: none;

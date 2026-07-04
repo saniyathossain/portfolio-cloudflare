@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=ee577f8dd01d">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=ee577f8dd01d">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=ee577f8dd01d">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=646d70c9d76f">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=646d70c9d76f">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=646d70c9d76f">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=ee577f8dd01d">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=646d70c9d76f">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -226,7 +226,7 @@
           <div class="hero-card beam sheen" data-reveal="scale" data-delay="400" @click="cardStep(1)">
             <div class="hero-card__inner">
               <div class="hero-card__badge">
-                <svg class="icon" viewBox="0 0 24 24" width="1.5rem" height="1.5rem" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>
+                <span x-html="iconSvg('experience', 'ui-icon ui-icon--lg')" aria-hidden="true"></span>
               </div>
               <div class="hero-card__body">
                 <div>
@@ -250,11 +250,18 @@
 
           <div class="hero-partners" data-reveal data-delay="550">
             <p class="hero-partners__label">Worked with</p>
-            <div class="hero-partners__list">
+            <div class="pill-row hero-partners__list" data-stagger>
               <template x-for="p in partners" :key="p.name">
-                <span class="partner-pill">
-                  <img :src="p.logo" :alt="p.name" width="18" height="18" loading="lazy">
-                  <span x-text="p.name"></span>
+                <span class="brand-pill brand-pill--sm spec" tabindex="0" :style="'--brand:' + (p.color || '#6b6b6b')">
+                  <span class="brand-pill__badge">
+                    <template x-if="p.logo">
+                      <img :src="p.logo" :alt="p.name" width="14" height="14" loading="lazy">
+                    </template>
+                    <template x-if="!p.logo">
+                      <span class="brand-pill__mono" x-text="p.name.charAt(0)"></span>
+                    </template>
+                  </span>
+                  <span class="brand-pill__label"><span class="brand-pill__label-tx"><span class="brand-pill__label-in" x-text="p.name"></span></span></span>
                 </span>
               </template>
             </div>
@@ -263,9 +270,8 @@
       </div>
 
       <div class="hero-status shell" data-reveal="fade" data-delay="900">
-        <span><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('rocket', 'ui-icon')" aria-hidden="true"></span></span> <span x-text="profile.heroStatusShipping"></span></span>
         <span><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('pin', 'ui-icon')" aria-hidden="true"></span></span> <span x-text="profile.heroStatusLocation"></span></span>
-        <span class="hero-status__scroll">Scroll to explore <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('chevronDown', 'ui-icon')" aria-hidden="true"></span></span></span>
+        <span class="hero-status__scroll">Scroll to explore <span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('chevronDown', 'ui-icon ui-icon--chevron')" aria-hidden="true"></span></span></span>
       </div>
     </section>
 
@@ -392,7 +398,7 @@
                       </div>
                       <span class="exp-row__arrow" aria-hidden="true">
                         <span class="icon-chip icon-chip--sm">
-                          <span x-html="iconSvg('chevronDown', isRoleOpen(role.id) ? 'ui-icon exp-row__chev is-open' : 'ui-icon exp-row__chev')" aria-hidden="true"></span>
+                          <span x-html="iconSvg('chevronDown', isRoleOpen(role.id) ? 'ui-icon ui-icon--chevron exp-row__chev is-open' : 'ui-icon ui-icon--chevron exp-row__chev')" aria-hidden="true"></span>
                         </span>
                       </span>
                     </button>
@@ -656,9 +662,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.js?v=ee577f8dd01d" defer></script>
-  <script src="/assets/js/icons.js?v=ee577f8dd01d" defer></script>
-  <script src="/assets/js/loader.js?v=ee577f8dd01d" defer></script>
-  <script src="/assets/js/boot.js?v=ee577f8dd01d" defer></script>
+  <script src="/assets/js/data.js?v=646d70c9d76f" defer></script>
+  <script src="/assets/js/icons.js?v=646d70c9d76f" defer></script>
+  <script src="/assets/js/loader.js?v=646d70c9d76f" defer></script>
+  <script src="/assets/js/boot.js?v=646d70c9d76f" defer></script>
 </body>
 </html>

@@ -163,3 +163,42 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
   the mouth/beard area is now fully clear, the card sits over the shoulder/collar.
 - All changes re-verified: braces balanced, `app.js` syntax-checked, `prefers-reduced-motion`
   re-confirmed (face/tick transitions off, second hand static) after these additions.
+
+## Revision 3 (post-review) — remove shipping line, expand-on-hover hero widgets, icon fixes
+- **Removed** the "Shipping since 2012" line from `.hero-status` entirely (rocket icon + text span).
+  Bar now shows just location + "Scroll to explore".
+- **Hero-card + hero-partners now use the same collapsed-icon → hover-expand interaction as
+  `.brand-pill`** (used in Skills/Experience tag rows): at rest they're just small icon badges;
+  hovering/focusing (desktop, fine-pointer only) slides them open to reveal the label/content.
+  Mobile/touch has no `hover`, so both stay fully expanded there unchanged — verified with real
+  touch-device emulation (`devices['iPhone 13']`), confirming `(hover:hover)`/`(pointer:fine)`
+  correctly don't match and the card renders full-size, not just a viewport-width check.
+  - `hero-partners`: markup replaced wholesale with `.brand-pill`/`.brand-pill__badge`/
+    `.brand-pill__label` (same classes Skills/Experience already use), fed from `partners[].color`
+    (already computed per-company by `_partnersFromExperience` in data.js — no new data needed).
+    Deleted the now-dead `.partner-pill` CSS.
+  - `hero-card`: added a `@media (hover:hover) and (pointer:fine)` block collapsing
+    `.hero-card` to a 7rem×7rem square (just the badge) and `.hero-card__body` to
+    `max-width:0;opacity:0`, expanding to 20rem×8.5rem with the body revealed on hover/focus-within.
+    Caught and fixed a real layout bug along the way: constraining only `width` let the title text
+    wrap into a tall narrow column before clipping, stretching the flex-stretched badge into a tall
+    rectangle instead of a square — fixed by also constraining `.hero-card` `height` explicitly in
+    both states.
+  - This also fixes the mouth/beard overlap for good: at rest, both widgets are now tiny icon-only
+    badges sitting well clear of the face; only expand (revealing more area) on deliberate hover.
+  - Caught and fixed a real overlap regression from Revision 2: pushing `.hero__aside` down
+    `translate(1.5rem, 6.5rem)` had it collide with `.hero-status` below (confirmed via Playwright:
+    `.hero-status` was literally intercepting pointer events over the partner pills). Reduced to
+    `translate(1.5rem, 3.25rem)` now that the widgets are far more compact — re-verified 18px clear
+    gap between the two.
+- **Icon fixes**: swapped the hero-card badge from a generic inline sparkle/wand SVG to the
+  `briefcase` icon (via the existing `experience` semantic alias — `iconSvg('briefcase', …)` doesn't
+  resolve on its own, since `iconSvg` only accepts semantic keys from `icons.js`'s `MAP`, not raw
+  Lucide ids; this was caught by screenshot, since it silently fell back to the generic "code" `<>`
+  glyph instead of erroring). Bolder chevrons: added a `.ui-icon--chevron` modifier (stroke-width
+  2 → 2.75, slightly larger) applied to both chevron usages (hero-status scroll indicator, experience
+  accordion toggle) — the thin default stroke read as washed-out/low-confidence next to the rest of
+  the icon set.
+- All re-verified: braces balanced, `app.js` syntax-checked, screenshots at 360/768/1024/1440,
+  real touch-device emulation for the hover-collapse fallback, and `prefers-reduced-motion` (hover
+  interactions still function, just without the smooth width/height transition).
