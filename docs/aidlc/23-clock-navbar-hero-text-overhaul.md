@@ -310,3 +310,35 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
   card's true right edge at rest and the card's left edge at hover, reduced-motion (transition
   duration ≈0 on card/body/badge), real iPhone 13 emulation (mobile card unaffected, border/shadow
   still present there).
+
+## Revision 8 (post-review) — root-cause the "still fast" motion; genie-anchored reveal
+- **Root cause found**: `.hero-card` carries `data-reveal="scale"` for its page-load entrance
+  animation. The shared reveal rule `[data-reveal].is-visible { transition: opacity …, transform …; }`
+  has specificity (0,2,0) — strictly higher than a plain `.hero-card { transition: clip-path …; }`
+  rule (0,1,0). Once the reveal completes and `.is-visible` is added (permanently), that rule's
+  `transition` shorthand **won the cascade outright**, which means it silently reset
+  `transition-property` to only `opacity, transform` — `clip-path`, `padding-right`, and `box-shadow`
+  had **no transition at all** and were snapping instantly on every hover in/out, every previous
+  round. This is the actual explanation for "horrible/fast" across every prior revision, not a
+  duration or easing problem — confirmed with native `transitionrun`/`transitionend` event listeners
+  (not polling, which was itself misleading due to round-trip jitter) showing zero events fired for
+  `clip-path` before the fix, and correct ~0.9–0.95s runs after.
+  - **Fix**: raised the card's rest/hover selectors to `.hero__aside .hero-card[data-reveal]` (and
+    `:hover`/`:focus-within` variants), specificity (0,3,0) — decisively above the reveal rule,
+    regardless of source order. Scoped locally; the shared `[data-reveal]` system is untouched.
+- **Slowed every synchronized property** to ~0.9–0.95s (`clip-path`, `padding-right`, badge
+  `transform`) with the same `--ease-smooth` curve so open/close now read as one deliberate,
+  unhurried glide instead of a snap.
+- **Attempted a `transform-origin:right center` + `scale()` "genie" component** so the panel visibly
+  grows out of the badge — reverted. `.hero-card` already has a continuous JS-driven pointer-tilt
+  (`tilt()` in `motion.js`, via Motion One, writing `rotateX`/`rotateY` to the element's inline
+  `transform` on every mousemove) which unconditionally wins over any CSS `transform` value/
+  transition on the same property (inline style always beats stylesheet rules) — our `scale()` was
+  provably never rendering (computed `transform` matched the tilt's rotation matrix, not our scale).
+  The "grows out of the icon" sensation is instead carried by the clip-path itself: its right inset
+  never moves (0 in every state), so the reveal only ever expands away from the badge's fixed edge —
+  genuinely anchored, no scale needed, no conflict with the tilt effect.
+- Re-verified: brace balance, native `transitionrun`/`transitionend` timing (clip-path/padding-right
+  ~909ms against a 950ms declaration, badge border/shadow ~457ms against 600ms, body opacity ~690ms
+  against 700ms — all converging correctly), reduced-motion (duration ≈0), real iPhone 13 emulation
+  (mobile unaffected).

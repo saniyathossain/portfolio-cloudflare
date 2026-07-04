@@ -1180,27 +1180,40 @@ html.is-ready .hero__wm {
 }
 .hero-card__arrow:hover { color: #111; }
 
-/* Collapsed-badge → hover-expand drawer. At rest the card is clipped down to exactly the badge's own
-   footprint (tight top/bottom/left insets, zero right padding) so the collapsed pill IS the badge —
-   no white card margin showing around it, flush against the same right edge the "Worked with" icons
-   line up against. The badge's own border/shadow are hidden at rest (nothing to separate it from,
-   since it fully occupies the visible area) and fade in once the card opens, once it's a distinct
-   tile again. Hovering/focusing slides the badge left (`translateX` back to its natural flex slot)
-   while the drawer opens to reveal the body panel; the badge slides back right on hover-out — same
-   transition, both directions, so open/close feel identical. Desktop/fine-pointer only — touch
+/* Collapsed-badge → hover-expand drawer, "genie"-style: the visible pill grows out of the badge and
+   shrinks back into it, right-anchored the whole time (the clip-path's right inset never moves —
+   only its left/top/bottom insets sweep outward from the badge), rather than unveiling a fixed-size
+   rectangle. At rest the card is clipped down to exactly the badge's own footprint (tight top/
+   bottom/left insets, zero right padding) so the collapsed pill IS the badge — no white card margin
+   showing around it, flush against the same right edge the "Worked with" icons line up against. The
+   badge's own border/shadow are hidden at rest (nothing to separate it from, since it fully occupies
+   the visible area) and fade in once the card opens, once it's a distinct tile again. Hovering/
+   focusing slides the badge left (`translateX` back to its natural flex slot) while the drawer opens
+   out of the anchor; the badge slides back right and the panel shrinks back into it on hover-out —
+   one shared, slow, unhurried transition drives clip-path and the badge's translateX at the same
+   duration+curve, so open and close feel identical and nothing outpaces anything else. (No `scale()`
+   here on purpose — `.hero-card` already has its own JS-driven pointer-tilt via Motion One
+   (`tilt()` in motion.js writes `rotateX`/`rotateY` to its inline `transform` continuously), which
+   would fight a CSS `transform` transition on the same property.) Desktop/fine-pointer only — touch
    devices have no hover, so the card stays fully expanded there (unchanged), the safe fallback under
-   reduced-motion and print too.
+   reduced-motion and print.
    The card's own box never changes size (fixed height, laid out at full width) — motion is done
-   entirely with `clip-path` + `transform` (compositor-only, no width/height reflow, which is what
-   made the earlier version feel janky), so this glides the way macOS Tahoe panels do — no stutter. */
+   entirely with `clip-path` (compositor-only, no width/height reflow, which is what made the earlier
+   version feel janky), so this glides the way macOS Tahoe panels do — no stutter. */
 @media (hover: hover) and (pointer: fine) {
-  .hero-card {
+  /* .hero-card carries data-reveal="scale" for its page-load entrance animation, and
+     `[data-reveal].is-visible` (specificity 0,2,0) sets its own `transition` — beating a plain
+     `.hero-card` rule (0,1,0) outright, which silently discarded our clip-path transition entirely
+     (clip-path had NO transition-property at all once that rule won, so the drawer snapped open/
+     closed instantly — the real cause of the "still very fast" motion, not a duration/easing
+     problem). `.hero__aside .hero-card[data-reveal]` (0,3,0) decisively outranks it. */
+  .hero__aside .hero-card[data-reveal] {
     height: 8rem;
     padding: 0.5rem 0 0.5rem 0.5rem;
     clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
     transition:
-      clip-path 0.55s var(--ease-smooth),
-      padding-right 0.55s var(--ease-smooth),
+      clip-path 0.95s var(--ease-smooth),
+      padding-right 0.95s var(--ease-smooth),
       box-shadow var(--dur-mid) var(--ease-glass);
   }
   .hero-card__inner { height: 100%; align-items: center; }
@@ -1212,19 +1225,19 @@ html.is-ready .hero__wm {
        differs by breakpoint (see the 1024px override below). */
     transform: translateX(15.5rem);
     transition:
-      transform 0.55s var(--ease-smooth),
-      border-color 0.4s var(--ease-glass),
-      box-shadow 0.4s var(--ease-glass);
+      transform 0.95s var(--ease-smooth),
+      border-color 0.6s var(--ease-glass),
+      box-shadow 0.6s var(--ease-glass);
   }
   @media (min-width: 1024px) {
     .hero-card__badge { transform: translateX(13.5rem); }
   }
   .hero-card__body {
-    opacity: 0; transform: translateX(-6px);
-    transition: opacity 0.3s ease, transform 0.45s var(--ease-smooth);
+    opacity: 0; transform: translateX(-8px);
+    transition: opacity 0.7s var(--ease-glass), transform 0.95s var(--ease-smooth);
   }
-  .hero-card:hover,
-  .hero-card:focus-within {
+  .hero__aside .hero-card[data-reveal]:hover,
+  .hero__aside .hero-card[data-reveal]:focus-within {
     padding-right: 0.5rem;
     clip-path: inset(0 0 0 0 round 1.35rem);
   }
