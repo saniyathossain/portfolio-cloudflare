@@ -1113,10 +1113,10 @@ html.is-ready .hero__wm {
 .hero-card {
   position: relative; overflow: hidden;
   width: 100%; max-width: 22rem; border-radius: 1.35rem;
-  background: rgba(255, 255, 255, 0.68);
+  background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.7) 100%);
   padding: 0.5rem; cursor: pointer;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.75),
+    inset 0 1px 0 rgba(255,255,255,.9),
     0 0 0 1px rgba(230,229,226,.35),
     0 18px 46px -10px rgba(17, 17, 17, 0.14);
   transition: transform var(--dur-mid) var(--ease-glass), box-shadow var(--dur-mid) var(--ease-glass);
@@ -1130,24 +1130,27 @@ html.is-ready .hero__wm {
   opacity: 0.5; mix-blend-mode: soft-light;
 }
 .hero-card__inner { position: relative; z-index: 1; display: flex; gap: 0.5rem; border-radius: 0.9rem; }
-/* Liquid-glass badge — frosted/translucent (real backdrop-filter; a small, above-the-fold, bounded
-   tile, not scrolling chrome-wide surface) with the exact .icon-chip shine recipe: same gradient,
-   border and box-shadow formulas, same diagonal specular ::before gloss. */
+/* Badge — the EXACT .icon-chip/.nav-desktop__pill recipe (same gradient/border/box-shadow formulas,
+   same diagonal specular ::before gloss), pinned to --accent so it reads copper/on-brand regardless
+   of the hero section's ambient --tint. No backdrop-filter (flat glass panel, not frosted). */
 .hero-card__badge {
   position: relative; overflow: hidden;
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
-  border-radius: 0.9rem; color: #fff; font-size: 1.875rem; line-height: 0;
-  background: linear-gradient(145deg, var(--accent-dark) 0%, var(--accent) 48%, var(--accent-bright) 100%);
+  border-radius: 0.9rem; color: var(--accent-dark); font-size: 1.875rem; line-height: 0;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 32%, #fff),
+    color-mix(in srgb, var(--accent) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.28),
-    0 6px 18px color-mix(in srgb, var(--accent) 32%, transparent);
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
 }
 .hero-card__badge::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
   background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
   opacity: 0.72;
 }
-.hero-card__badge .ui-icon { position: relative; z-index: 2; }
+.hero-card__badge .ui-icon { position: relative; z-index: 2; opacity: .9; }
 .hero-card__body {
   flex: 1; border-radius: 0.9rem;
   background: rgba(241, 240, 238, 0.72);
@@ -1177,25 +1180,27 @@ html.is-ready .hero__wm {
 }
 .hero-card__arrow:hover { color: #111; }
 
-/* Collapsed-badge → hover-expand, same interaction language as .brand-pill (Skills/Experience tags):
-   at rest it's just the icon badge (small footprint, keeps it off the portrait's face); hovering or
-   focusing reveals the body panel with the job status + carousel controls. Desktop/fine-pointer
-   only — touch devices have no hover, so the card stays fully expanded there (unchanged from before),
-   which is also the safe fallback under reduced-motion and print.
+/* Collapsed-badge → hover-expand drawer. The card's box sits flush against the aside column's right
+   edge (align-items:flex-end on .hero__aside) at every width — at rest the badge is reversed to the
+   front of the row so it's the part that's actually visible, flush right, same edge the "Worked with"
+   icons line up against. Hovering/focusing opens the drawer to the LEFT, sliding the body panel out
+   from behind the badge. Desktop/fine-pointer only — touch devices have no hover, so the card stays
+   fully expanded there (unchanged from before), which is also the safe fallback under reduced-motion
+   and print.
    The card's own box NEVER changes size (fixed height, always laid out at full width) — motion is
-   done entirely with `clip-path` (visually hides everything past the badge) plus a fade+slide on the
-   revealed text. Both are compositor-only (no width/height layout reflow, which is what made the
+   done entirely with `clip-path` (visually hides everything left of the badge) plus a fade+slide on
+   the revealed text. Both are compositor-only (no width/height layout reflow, which is what made the
    earlier version feel janky), so this glides the way macOS Tahoe panels do — no stutter. */
 @media (hover: hover) and (pointer: fine) {
   .hero-card {
     height: 8rem;
-    clip-path: inset(0 calc(100% - 7rem) 0 0 round 1.35rem);
+    clip-path: inset(0 0 0 calc(100% - 7rem) round 1.35rem);
     /* Calm drawer glide — no spring/overshoot, just a clean decelerate-and-stop like a real drawer. */
     transition: clip-path 0.55s var(--ease-smooth), box-shadow var(--dur-mid) var(--ease-glass);
   }
-  .hero-card__inner { height: 100%; align-items: center; }
+  .hero-card__inner { height: 100%; align-items: center; flex-direction: row-reverse; }
   .hero-card__body {
-    opacity: 0; transform: translateX(-6px);
+    opacity: 0; transform: translateX(6px);
     transition: opacity 0.3s ease, transform 0.45s var(--ease-smooth);
   }
   .hero-card:hover,

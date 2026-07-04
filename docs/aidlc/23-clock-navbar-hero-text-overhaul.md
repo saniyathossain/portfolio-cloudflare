@@ -260,3 +260,29 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
   beyond the easing swap.
 - Re-verified: braces balanced, `app.js` syntax-checked, `prefers-reduced-motion` (orb/tooltip
   transitions off), real touch-device emulation (mobile unaffected, card still fully expanded).
+
+## Revision 6 (post-review) — correct right-anchor, badge recipe, premium icon
+- **Correction**: Revision 5 asserted the hero-card was already right-anchored with a leftward
+  reveal. It wasn't — the badge (visible collapsed state) sat at the *left* edge of the card's box
+  while the box's own right edge matched the aside column's right edge, so the collapsed chip
+  visually floated ~13rem short of the actual right edge. Confirmed via `getBoundingClientRect()`
+  before assuming this was fixed.
+- **Fix**: added `flex-direction: row-reverse` to `.hero-card__inner` inside the desktop hover-
+  capable media query only (mobile's always-expanded layout is untouched), and flipped the
+  `clip-path` from `inset(0 calc(100% - 7rem) 0 0)` to `inset(0 0 0 calc(100% - 7rem))` so the
+  visible collapsed slice is the *rightmost* 7rem — i.e. the badge, now flush against the same
+  right edge the "Worked with" icons align to. Hover/focus reveals the body panel sliding out from
+  behind the badge toward the left (`translateX(6px) → none`, mirrored from before). Verified via
+  bounding-box math (badge origin falls inside the visible clip window) and a full-hero screenshot.
+- **Badge recipe replaced**: was a deep saturated copper gradient with a white icon — visually
+  unrelated to the "what I do" (services) icon-chip look the user asked to match. Replaced with the
+  *exact* `.icon-chip` / `.nav-desktop__pill` formula (pastel `color-mix` gradient, tinted border,
+  soft box-shadow, diagonal gloss `::before`), pinned to `--accent` so it stays on-brand regardless
+  of the hero section's ambient `--tint` — same pattern already used for the nav pill.
+- **Icon swapped** `layers` → `sparkles` (already in the icon MAP) for a less generic, more
+  "premium" glyph that suits the tinted-glass badge treatment.
+- **Card container** restyled to match the "View experience" pill button's glass surface (gradient
+  `rgba(255,255,255,.92→.7)` + matching inset highlight) instead of the previous flat
+  `rgba(255,255,255,.68)` fill.
+- Re-verified: brace balance (602/602), full-hero screenshots at rest/hover (1440px), reduced-motion
+  transition duration ≈0, real iPhone 13 emulation (mobile unaffected).
