@@ -249,12 +249,8 @@
     <!-- About -->
     <section id="about" class="sec py-20 lg:py-28">
       <div class="shell">
-        <div class="about-card__backdrop" aria-hidden="true"></div>
-        <div class="about-card glass-card spec spec--panel" data-reveal="scale">
-          <span class="about-card__wm" aria-hidden="true" x-text="profile.nameLines.map(n => n.charAt(0)).join('')"></span>
-          <span class="about-card__quote" aria-hidden="true">&ldquo;</span>
-          <span class="icon-chip icon-chip--md about-card__icon" aria-hidden="true"><span x-html="iconSvg('engineer', 'ui-icon')" aria-hidden="true"></span></span>
-          <h2 class="about-card__statement" data-blur-reveal data-blur-speed="1.2" data-blur-highlight="telco-scale|quiet precision" :data-text="site.aboutHeading" x-text="site.aboutHeading"></h2>
+        <div class="about-signature" data-reveal="fade">
+          <h2 class="about-signature__statement" data-blur-reveal data-blur-speed="1.2" data-blur-highlight="telco-scale|quiet precision" :data-text="site.aboutHeading" x-text="site.aboutHeading"></h2>
           <div class="about-card__footer" data-reveal data-delay="200">
             <div>
               <p class="about-card__label">Find me online</p>
@@ -602,7 +598,7 @@
 
       <template x-if="!success">
         <div>
-          <div class="mb-6">
+          <div class="mb-6 modal-header">
             <p class="eyebrow"><span class="eyebrow-dot bg-accent"></span>Get in touch</p>
             <h2 id="modal-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Tell us what you're building.</h2>
           </div>

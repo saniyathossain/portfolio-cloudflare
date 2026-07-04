@@ -48,17 +48,17 @@ html:not(.is-loading) .app-root.is-liquid-warp {
   --line: #e6e5e2;
   --surface: #f1f0ee;
   --surface2: #e3e2df;
-  /* Graphite — macOS Tahoe's own accent-picker ships one neutral option alongside its named hues
-     (Blue/Purple/Pink/Red/Orange/Yellow/Green/Graphite); picked here via rendered options (see
-     docs/aidlc/27) over Indigo/Teal single-accent alternatives — "one locked accent, no hue" reads
-     as the most restrained, and the design-taste skills independently flag multi-hue accents as a
-     named anti-pattern, not just a preference. */
-  --accent: #48484a;
-  --accent-bright: #6e6e73;
-  --accent-dark: #2c2c2e;
-  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1), untouched by the graphite pick */
-  --primary: #57575c;
-  --primary-deep: #333336;   /* readable graphite ink (AA on white) */
+  /* Copper — reinstated as the single locked accent per explicit instruction (was graphite for one
+     round, see docs/aidlc/27); --primary/--primary-deep alias --accent/--accent-dark directly rather
+     than duplicating the hex, so every root-tint-driven control (nav active state, .beam border glow
+     via var(--tint, var(--primary))) and every --accent-driven control (hero name, CTA icon glow)
+     stay a single source of truth instead of two copper values that could drift apart. */
+  --accent: #b15f2c;
+  --accent-bright: #cf8047;
+  --accent-dark: #97501f;
+  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1, harmonises with copper) */
+  --primary: var(--accent);
+  --primary-deep: var(--accent-dark);
   --teal: #2b8c9a;           /* sea */
   --teal-deep: #1a6773;
   /* per-section accent driver (sections override --tint) */
@@ -348,115 +348,31 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   .edu-row .edu-place { display: inline-flex; }
 }
 
-/* About — one unified glass card carrying the statement, a decorative pull-quote mark, and (at
-   1024px+) an asymmetric "bled" composition: the card shifts to one side of the shell, the quote
-   mark + icon-chip overlap its top corners, and a large, pale initials watermark (derived from the
-   real profile name, not invented text) fills the resulting negative space — reusing the same
-   very-low-opacity giant-text motif .hero__wm already establishes elsewhere on this page, so the
-   callback reads as a deliberate site-wide device rather than a one-off. Below 1024px there's no
-   room for asymmetry, so the card stays full-width/centered and the quote+icon sit in normal flow.
-   Layered-depth composition: .about-card__backdrop (a tinted, rotated panel) peeks out from behind
-   the main card via a negative z-index — .glass-card's own `transform: translateZ(0)` already gives
-   .about-card a stacking context, so the negative z-index sibling reliably paints behind it without
-   needing an explicit z-index on the card itself. */
+/* About — cardless "signature" composition: the statement flows directly on the section background
+   like a large pull-quote (no glass panel), with a rose-tinted drop-cap as its sole visual anchor
+   instead of a literal icon. Third distinct About direction this project has shipped (stacked glass
+   card, then an asymmetric bled card, now no card at all) — picked from real rendered options,
+   informed by the design-taste skills' "kill literal-metaphor icon" and "reach for asymmetry, not
+   another centered/symmetric card" guidance. */
 #about .shell { position: relative; }
-@media (min-width: 1024px) {
-  #about .shell { display: flex; justify-content: flex-end; }
-}
-.about-card__backdrop {
-  position: absolute; inset: 0.9rem -0.9rem -0.9rem 0.9rem; z-index: -1;
-  background: color-mix(in srgb, var(--tint) 12%, white);
-  border-radius: var(--radius-card-sm);
-  transform: rotate(1.2deg);
-}
-@media (min-width: 1024px) {
-  .about-card__backdrop {
-    inset: 1.6rem -1.6rem -1.6rem 3.2rem;
-    border: 1px solid color-mix(in srgb, var(--tint) 30%, transparent);
-    background: color-mix(in srgb, var(--tint) 16%, white);
-    transform: rotate(2deg);
-  }
-}
-.about-card {
-  /* Same specificity as .glass-card's own `transform: translateZ(0)` (line ~320), declared later —
-     must repeat translateZ(0) here (chained with the rotate) instead of just `rotate(-0.6deg)`, or
-     this rule would silently discard .glass-card's transform entirely rather than combining with it,
-     losing the stacking context the backdrop above depends on. */
-  position: relative; overflow: hidden;
-  transform: translateZ(0) rotate(-0.6deg);
-  padding: 3rem 1.75rem 2.25rem;
-}
-/* .glass-card:hover (0,2,0) also sets `transform: translateY(-3px)` alone, which — same collision as
-   above — would strip both the stacking context and the tilt on hover if left unaddressed. Three
-   class-slots (0,3,0) decisively outranks it regardless of source order. */
-.about-card.glass-card:hover {
-  transform: translateZ(0) translateY(-3px) rotate(-0.6deg);
-}
-@media (min-width: 640px) { .about-card { padding: 3.5rem 3rem 2.5rem; } }
-@media (min-width: 1024px) {
-  .about-card { width: 66%; padding: 4.5rem 4.5rem 3rem; transform: translateZ(0) rotate(-1deg); }
-  .about-card.glass-card:hover { transform: translateZ(0) translateY(-3px) rotate(-1deg); }
-}
-.about-card__wm {
-  display: none;
-}
-@media (min-width: 1024px) {
-  .about-card__wm {
-    display: block; position: absolute; z-index: 1; right: 0.5rem; top: 1.5rem; pointer-events: none;
-    font-weight: 800; font-size: 6rem; letter-spacing: 0.04em; line-height: 1;
-    color: color-mix(in srgb, var(--tint-deep) 8%, transparent);
-  }
-}
-.about-card__quote {
-  /* z-index:4, not the usual 1 — must clear .spec::after's cursor-spotlight overlay (z-index:3,
-     added below) so the glow never paints over readable content. Contained entirely within
-     .about-card's own stacking context (.glass-card's transform:translateZ(0) creates one), so this
-     can't affect stacking anywhere else on the page. */
-  position: relative; z-index: 4; display: block;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 4.5rem; line-height: 1; font-weight: 700;
-  color: color-mix(in srgb, var(--tint-deep) 55%, transparent);
-  margin-bottom: -1.25rem;
-}
-@media (min-width: 1024px) {
-  /* Bleeds over the card's own top-left corner — .about-card's overflow:hidden (above) clips the
-     portion that would extend past the card's own padding-box, which is deliberate: only the lower
-     slice of the glyph shows, reading as tucked behind the rounded corner rather than floating free. */
-  .about-card__quote {
-    position: absolute; top: -1.6rem; left: -0.5rem; z-index: 5;
-    font-size: 7rem; opacity: .9; margin-bottom: 0;
-  }
-}
-.about-card__icon { position: relative; z-index: 4; margin-bottom: 1.5rem; }
-@media (min-width: 1024px) {
-  /* Descendant selector (0,2,0), not the bare class alone — .icon-chip's own base rule (line ~1738)
-     also sets `position: relative` at equal specificity (0,1,0) and sits later in the file, so it
-     would otherwise win that one property back after this override, same bug class as every other
-     same-specificity cascade collision this file has already hit. */
-  .about-card .about-card__icon {
-    position: absolute; top: -1.1rem; right: 1.5rem; z-index: 5; margin-bottom: 0;
-    box-shadow: 0 10px 26px -6px color-mix(in srgb, var(--tint) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.8);
-  }
-}
-/* Variable-weight emphasis: light body text lets the bold .blur-reveal__word--hl phrases (below)
-   carry the punch, instead of the whole statement competing at one uniform weight.
-   Selector is `.about-card .about-card__statement` (not just the class alone) to decisively outrank
-   the generic `.sec h2` rule below (0,1,1 — class+element) — a single-class selector here would lose
-   that fight and silently fall back to .sec h2's bold weight/size/tracking, since this h2 lives
-   inside a `.sec` section like any other. */
-.about-card .about-card__statement {
-  position: relative; z-index: 4;
-  max-width: 42rem;
-  font-size: 1.5rem; font-weight: 350; line-height: 1.42; letter-spacing: -0.01em;
+.about-signature { padding-block: 1rem 2rem; }
+.about-signature__statement {
+  max-width: 46rem;
+  font-size: 1.65rem; font-weight: 340; line-height: 1.38; letter-spacing: -0.012em;
   color: var(--ink);
   text-shadow: var(--text-sh-emboss);
 }
-@media (min-width: 640px) { .about-card .about-card__statement { font-size: 1.95rem; } }
-@media (min-width: 1024px) {
-  /* Quote/icon go absolute above (bled over the corners), so the statement no longer needs to clear
-     them via normal-flow order — but does need its own top margin now that nothing pushes it down,
-     plus a narrower measure so it doesn't run into the watermark sitting in the card's right void. */
-  .about-card .about-card__statement { margin-top: 2.5rem; max-width: 30rem; }
+@media (min-width: 640px) { .about-signature__statement { font-size: 2.1rem; } }
+@media (min-width: 1024px) { .about-signature__statement { font-size: 2.35rem; } }
+/* Two selectors, not one: under normal motion blur-reveal.js wraps every word in its own <span> (for
+   the per-word fade-in), so ::first-letter on the parent h2 can't reach through it — confirmed via
+   direct testing, not assumed — it has to target the first word-span's own first letter instead.
+   Under reduced motion blur-reveal.js skips the span-wrapping and leaves plain text directly in the
+   h2, so the first selector is what actually fires in that path. Both verified rendering the drop
+   cap correctly, not just the one that happened to work in a screenshot. */
+.about-signature__statement::first-letter,
+.about-signature__statement .blur-reveal__word:first-of-type::first-letter {
+  font-size: 1.3em; font-weight: 700; color: var(--tint-deep);
 }
 .about-card__footer {
   position: relative; z-index: 4;
@@ -520,7 +436,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 /* Per-section Tahoe tints — drive each section's eyebrow / icon-chip / hairline / hover via --tint.
    Hero (#home) uses the default azure --primary. --tint = light hue for fills, --tint-deep = readable ink.
    Education now owns mint/green (was sharing teal with About) for more distinct section colour. */
-#about { --tint: var(--teal); --tint-deep: var(--teal-deep); }
+#about { --tint: var(--c-rose); --tint-deep: #c4214f; }
 #services { --tint: var(--accent); --tint-deep: var(--accent-dark); }
 #experience { --tint: var(--c-blue); --tint-deep: #1f63ad; }
 #skills { --tint: var(--c-cyan); --tint-deep: #15637f; }
@@ -966,7 +882,7 @@ html.is-loading .site-header {
 .nav-desktop button:hover,
 .nav-desktop button:focus-visible { opacity: 1; color: var(--accent-dark); }
 .nav-desktop button.is-active { opacity: 1; color: var(--accent-dark); font-weight: 600; }
-.nav-desktop button .ui-icon { width: 0.72rem; height: 0.72rem; opacity: 0.6; transition: opacity var(--dur-mid) ease; }
+.nav-desktop button .ui-icon { width: 0.9rem; height: 0.9rem; opacity: 0.6; transition: opacity var(--dur-mid) ease; }
 .nav-desktop button.is-active .ui-icon,
 .nav-desktop button:hover .ui-icon { opacity: 0.9; }
 @media (prefers-reduced-motion: reduce) {
@@ -1005,14 +921,16 @@ html.is-loading .site-header {
   transform-origin: 50% 50%;
   transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass);
 }
-/* Diagonal specular gloss — same recipe .icon-chip::before uses ("shinier like the icons"), kept as
-   its own rule rather than joining that shared selector since the clock's hover trigger is the
-   ancestor .clock-chip, not the face itself. */
+/* Radial "glass orb" highlight, not the shared diagonal icon-chip gloss — a directional linear band
+   reads as a lopsided/non-circular cue on a disc (the eye interprets the asymmetric light/shadow as
+   an uneven edge even though the geometry underneath is a mathematically perfect circle, confirmed
+   via computed width===height at every breakpoint). A radial highlight positioned like a light
+   source hitting a sphere reinforces roundness instead of fighting it. */
 .clock-face::before {
   content: "";
   position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
-  background: linear-gradient(125deg, rgba(255,255,255,.68) 0%, rgba(255,255,255,.2) 30%, transparent 54%);
-  opacity: 0.8;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.9) 0%, rgba(255,255,255,.3) 38%, transparent 68%);
+  opacity: 0.85;
   transition: opacity 0.35s var(--ease-glass);
 }
 @media (hover: hover) and (pointer: fine) {
@@ -1088,33 +1006,39 @@ html.is-loading .site-header {
 }
 
 /* Same shiny-tile recipe as .icon-chip/.nav-desktop__pill (gradient + border + layered shadow +
-   diagonal gloss), in graphite/black instead of a tint — "shiny but black," matching the active nav
-   pill's polish without introducing a color into the header's dark control. */
+   diagonal gloss), black base with a copper edge/glow and copper bars on interaction — "copper,
+   black, and other theme colors" combined in one control rather than flat single-tone black. */
 .menu-btn {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
   background: linear-gradient(145deg, #2b2b2b, #060606);
   border-radius: var(--radius-pill);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.14),
-    0 6px 18px -3px rgba(17,17,17,.4);
-  transition: box-shadow 0.35s var(--ease-glass);
+    0 6px 18px -3px rgba(17,17,17,.4),
+    0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass);
 }
 .menu-btn:hover,
 .menu-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.2));
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.2),
-    0 8px 22px -2px rgba(17,17,17,.48);
+    0 8px 22px -2px rgba(17,17,17,.48),
+    0 4px 16px -4px color-mix(in srgb, var(--accent) 65%, transparent);
 }
 .menu-btn::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
-  background: linear-gradient(125deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 30%, transparent 54%);
-  opacity: 0.85;
+  background: linear-gradient(125deg, color-mix(in srgb, var(--accent-bright) 60%, white) 0%, rgba(255,255,255,.08) 30%, transparent 54%);
+  opacity: 0.6;
   transition: opacity 0.35s var(--ease-glass);
 }
 .menu-btn:hover::before,
 .menu-btn:focus-visible::before { opacity: 1; }
+.menu-btn:hover .menu-btn__bar,
+.menu-btn:focus-visible .menu-btn__bar,
+.menu-btn[aria-expanded="true"] .menu-btn__bar { background: var(--accent-bright); }
 /* Direct-child combinator, not a bare descendant selector: this must only style the one wrapper
    span, not the .menu-btn__icon/.menu-btn__bar spans nested inside it below (a bare `.menu-btn
    span` matched those too, inflating each 1.5px bar into a full padded flex box). */
@@ -1805,6 +1729,20 @@ html.is-ready .hero__wm {
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 2px 8px rgba(0,0,0,.22), 0 1px 0 rgba(255,255,255,.12);
 }
+/* Menu drawer nav icons: copper-tinted (2-class specificity decisively outranks the shared
+   .icon-chip--on-dark/.icon-chip--md rules regardless of source order) and sized up so the glyph
+   actually fills its tile instead of floating small in the middle of it. */
+.nav-overlay__item .icon-chip {
+  color: #fff;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--accent) 55%, white) 0%, color-mix(in srgb, var(--accent-dark) 70%, transparent) 100%);
+  border-color: color-mix(in srgb, var(--accent-bright) 55%, transparent);
+  box-shadow: 0 4px 14px -3px color-mix(in srgb, var(--accent) 60%, transparent), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.nav-overlay__item .icon-chip .ui-icon { width: 1.3rem; height: 1.3rem; opacity: 1; }
+.nav-overlay__item:hover .icon-chip,
+.nav-overlay__item[aria-expanded="true"] .icon-chip {
+  box-shadow: 0 6px 18px -3px color-mix(in srgb, var(--accent) 70%, transparent), inset 0 1px 0 rgba(255,255,255,.45);
+}
 
 .pill-btn__icon { color: #fff; }
 .ui-icon--on-ink { color: #fff; opacity: .92; }
@@ -1868,17 +1806,27 @@ html.is-ready .hero__wm {
     box-shadow 0.45s var(--ease-glass);
 }
 @media (min-width: 640px) { .create-band__tile { height: 10rem; font-size: 2.25rem; } }
-/* "Code · Ship · [→] · Scale" — each tile a distinct brand hue (azure code → copper ship → ink →
-   teal scale) instead of one accent + two flat neutrals, with an embossed text-shadow for depth. */
+/* "Code · Ship · [→] · Scale" — each tile a distinct brand hue (violet code → copper ship → ink →
+   teal scale) instead of one accent + two flat neutrals, with an embossed text-shadow for depth.
+   Code uses --c-violet specifically, not --primary — --primary now aliases --accent (copper) for
+   the sitewide single-accent system, and Code sitting right next to the copper Ship tile needs its
+   own distinct hue or the two tiles silently become the same color. */
+.create-band__tile { position: relative; overflow: hidden; }
+.create-band__tile::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.85;
+}
+.create-band__tile > * { position: relative; z-index: 2; }
 .create-band__tile--code {
   background: linear-gradient(165deg,
-    color-mix(in srgb, var(--primary) 20%, #fff),
-    color-mix(in srgb, var(--primary) 6%, #fff));
-  color: var(--primary-deep);
+    color-mix(in srgb, var(--c-violet) 22%, #fff),
+    color-mix(in srgb, var(--c-violet) 7%, #fff));
+  color: #4a48a8;
   text-shadow: var(--text-sh-emboss);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.85),
-    0 8px 22px -10px color-mix(in srgb, var(--primary) 30%, transparent);
+    0 8px 22px -10px color-mix(in srgb, var(--c-violet) 35%, transparent);
 }
 .create-band__tile--accent {
   background: linear-gradient(145deg, var(--accent-dark) 0%, var(--accent) 42%, var(--accent-bright) 100%);
@@ -1889,7 +1837,7 @@ html.is-ready .hero__wm {
 .create-band__tile--accent:hover {
   box-shadow: 0 16px 40px rgba(151, 80, 31, .34), 0 4px 12px rgba(151, 80, 31, .22);
 }
-.create-band__tile--dark { background: var(--ink); color: #fff; }
+.create-band__tile--dark { background: linear-gradient(165deg, #2b2b2b, #060606); color: #fff; }
 .create-band__tile--dark .create-band__arrow-ico { width: 2.25rem; height: 2.25rem; color: #fff; }
 .create-band__tile--scale {
   background: linear-gradient(165deg,
@@ -2172,8 +2120,10 @@ html.is-ready .hero__wm {
 }
 .exp-row:hover .exp-row__arrow,
 .exp-row[aria-expanded="true"] .exp-row__arrow { opacity: 1; transform: none; }
-.exp-row__chev { transition: transform 0.2s var(--ease-spring); }
-.exp-row__chev.is-open { transform: rotate(180deg); }
+.exp-row__chev { color: var(--accent); opacity: 0.75; transition: transform 0.2s var(--ease-spring), opacity 0.2s ease; }
+.exp-row__chev.is-open { transform: rotate(180deg); opacity: 1; }
+.exp-row:hover .exp-row__chev,
+.exp-row[aria-expanded="true"] .exp-row__chev { opacity: 1; }
 
 .exp-details {
   overflow: hidden; height: 0;
@@ -2645,6 +2595,10 @@ html.is-ready .hero__wm {
   opacity: 0.8;
 }
 .modal-panel > * { position: relative; z-index: 1; }
+/* Close button is absolute right-4/top-4 (1rem) at h-9/w-9 (2.25rem) — its left edge sits 3.25rem
+   from the panel's right edge, inside the panel's own 1.5rem padding. Without this, the title text
+   runs the full padded width and collides with the button on any line long enough to reach it. */
+.modal-header { padding-right: 2.25rem; }
 .modal-field label {
   display: flex; align-items: center; gap: 0.35rem;
   font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em;
@@ -2765,13 +2719,6 @@ html.is-ready .hero__wm {
   background: radial-gradient(34rem 34rem at var(--px,50%) var(--py,0%),
               rgba(255,255,255,.10), rgba(255,255,255,0) 62%);
 }
-/* .about-card is a *light* glass surface (unlike dark .stats-panel) — a white glow would barely
-   show, so tint it with the section's own --tint instead of inventing a new color. */
-.about-card.spec--panel::after {
-  background: radial-gradient(34rem 34rem at var(--px,50%) var(--py,0%),
-              color-mix(in srgb, var(--tint) 20%, transparent), transparent 62%);
-}
-
 /* 3) Aurora parallax — motion.js writes --aurora-y (body) / --glow-y (#heroGlow) from a
    throttled rAF scroll handler; the drift keyframes above fold them in (transform-only).
    motion.js only ever inline-sets the --glow-y *custom property*, never `transform` itself, so the
