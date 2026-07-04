@@ -103,6 +103,9 @@ html:not(.is-loading) .app-root.is-liquid-warp {
   --ease-liquid: cubic-bezier(0.3, 1.9, 0.6, 1);
   --dur-fast: 0.45s;
   --dur-mid: 0.7s;
+  /* Content-swap speed (hero-card carousel) — nothing else in this file sits in the 150-250ms
+     "dropdown/select" range a text-content swap calls for; --dur-fast (450ms) is 2-3x too slow. */
+  --dur-swap: 0.18s;
   --dur-slow: 1.05s;
   --dur-reveal: 0.88s;
   --dur-pill-reveal: 1s;
@@ -1231,29 +1234,64 @@ html.is-ready .hero__wm {
 /* Badge — the EXACT .icon-chip/.nav-desktop__pill recipe (same gradient/border/box-shadow formulas,
    same diagonal specular ::before gloss), pinned to --accent so it reads copper/on-brand regardless
    of the hero section's ambient --tint. No backdrop-filter (flat glass panel, not frosted). */
+/* Badge reads --tint/--tint-ink, set per active heroCards item via tintVars() in app.js (:style
+   binding, same technique .partner-orb already uses for --brand) — pinned to one of the site's 3
+   existing brand hues (accent/primary/teal), never a new color; falls back to the original copper
+   if --tint is ever unset (e.g. before Alpine hydrates). */
 .hero-card__badge {
   position: relative; overflow: hidden;
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
-  border-radius: 0.9rem; color: var(--accent-dark); font-size: 1.875rem; line-height: 0;
+  border-radius: 0.9rem; color: var(--tint-ink, var(--accent-dark)); font-size: 1.875rem; line-height: 0;
   background: linear-gradient(145deg,
-    color-mix(in srgb, var(--accent) 32%, #fff),
-    color-mix(in srgb, var(--accent) 12%, #fff));
-  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+    color-mix(in srgb, var(--tint, var(--accent)) 32%, #fff),
+    color-mix(in srgb, var(--tint, var(--accent)) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--tint, var(--accent)) 26%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.7),
-    0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
+    0 3px 10px -3px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent);
+  transition:
+    background var(--dur-fast) var(--ease-glass),
+    border-color var(--dur-fast) var(--ease-glass),
+    box-shadow var(--dur-fast) var(--ease-glass);
 }
 .hero-card__badge::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
   background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
   opacity: 0.72;
 }
-.hero-card__badge .ui-icon { position: relative; z-index: 2; opacity: .9; }
+/* Icon wrapper — a stable element for the swap-synced pulse, since x-html replaces the SVG root
+   wholesale on each card change (a transform on the SVG itself would be discarded with it). */
+.hero-card__badge-icon {
+  position: relative; z-index: 2; display: inline-flex;
+  transition: transform var(--dur-swap) var(--ease-glass);
+}
+.hero-card__badge-icon.is-pulsing { transform: scale(0.96); }
+.hero-card__badge .ui-icon { opacity: .9; }
 .hero-card__body {
   flex: 1; border-radius: 0.9rem;
   background: rgba(241, 240, 238, 0.72);
   padding: 0.75rem; display: flex; flex-direction: column; justify-content: space-between;
   border: none;
+}
+/* Content swap — direction-aware: "next" exits left/enters from the right (matching the arrow
+   icons' own left/right semantics), "prev" mirrors. Driven by cardStep()/_finishSwap() in app.js via
+   direct classList toggles (not Alpine :class, so the double-rAF timing is exact). Transitions only,
+   never @keyframes, so rapid re-clicking retargets smoothly instead of restarting from zero. */
+.hero-card__swap {
+  transition: opacity var(--dur-swap) var(--ease-glass), transform var(--dur-swap) var(--ease-glass);
+}
+.hero-card__swap.is-swapping-next { opacity: 0; transform: translateX(-10px); }
+.hero-card__swap.is-swapping-prev { opacity: 0; transform: translateX(10px); }
+.hero-card__swap.is-entering-next { transform: translateX(10px); }
+.hero-card__swap.is-entering-prev { transform: translateX(-10px); }
+.hero-card__swap.is-swap-instant { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  /* Swap fires on click, not hover, so it needs its own top-level guard — not nested inside the
+     hover-only drawer block below, which is conditioned on desktop pointer capability. Belt and
+     suspenders alongside cardStep()'s own JS early-return. */
+  .hero-card__swap, .hero-card__badge-icon { transition: none; }
+  .hero-card__swap.is-swapping-next, .hero-card__swap.is-swapping-prev,
+  .hero-card__swap.is-entering-next, .hero-card__swap.is-entering-prev { opacity: 1; transform: none; }
 }
 .hero-card__caption {
   font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
@@ -1267,7 +1305,8 @@ html.is-ready .hero__wm {
 .hero-card__dots { display: flex; align-items: center; gap: 0.3rem; }
 .hero-card__dot {
   height: 0.25rem; width: 0.375rem; border-radius: var(--radius-pill);
-  background: rgba(17,17,17,.2); transition: all 0.3s;
+  background: rgba(17,17,17,.2);
+  transition: width 0.3s var(--ease-glass), background-color 0.3s var(--ease-glass);
 }
 .hero-card__dot.is-active { width: 1rem; background: rgba(17,17,17,.7); }
 .hero-card__nav { display: flex; gap: 0.35rem; }
@@ -1285,9 +1324,13 @@ html.is-ready .hero__wm {
     inset 0 1px 0 rgba(255,255,255,.65),
     0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
   line-height: 0;
-  transition: box-shadow 0.35s var(--ease-glass);
+  transition: box-shadow 0.35s var(--ease-glass), transform 0.16s var(--ease-glass);
 }
 .hero-card__arrow .ui-icon { width: 0.7rem; height: 0.7rem; }
+.hero-card__arrow:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-card__arrow { transition: box-shadow 0.35s var(--ease-glass); }
+}
 .hero-card__arrow:hover {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.82),
@@ -1327,12 +1370,13 @@ html.is-ready .hero__wm {
     clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
     /* No white ring/inner-highlight at rest (that's the "glass card" chrome — a leftover container
        hint around the merged badge); just a soft shadow matching the badge's own. Restored in full
-       once the card opens. */
+       once the card opens. Rest/closing runs a touch faster than the hover-triggered open below
+       (asymmetric timing — system response snaps back quicker than the deliberate open). */
     box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
     transition:
-      clip-path 0.7s var(--ease-smooth),
-      padding-right 0.7s var(--ease-smooth),
-      box-shadow 0.5s var(--ease-glass);
+      clip-path 0.52s var(--ease-smooth),
+      padding-right 0.52s var(--ease-smooth),
+      box-shadow 0.4s var(--ease-glass);
   }
   .hero-card__inner { height: 100%; align-items: center; }
   /* The glass-sheen top highlight is styling for the expanded "card" surface — hide it while
@@ -1343,20 +1387,29 @@ html.is-ready .hero__wm {
     box-shadow: none;
     /* Shifted to sit flush at the card's true right edge at rest; returns to its natural
        left-of-body flex position on hover/focus. Value accounts for the card's max-width, which
-       differs by breakpoint (see the 1024px override below). */
+       differs by breakpoint (see the 1024px override below). background is included here (not just
+       border-color/box-shadow) so the per-card tint swap (cardStep()) still animates smoothly while
+       the drawer is collapsed on desktop — this whole transition list REPLACES the base
+       .hero-card__badge rule's list for hover-capable devices (same-specificity selector, later in
+       the file wins), so anything that rule needs to keep animating must be repeated here too. */
     transform: translateX(15.5rem);
     transition:
-      transform 0.7s var(--ease-smooth),
-      border-color 0.45s var(--ease-glass),
-      box-shadow 0.45s var(--ease-glass);
+      transform 0.52s var(--ease-smooth),
+      background var(--dur-fast) var(--ease-glass),
+      border-color 0.4s var(--ease-glass),
+      box-shadow 0.4s var(--ease-glass);
   }
   @media (min-width: 1024px) {
     .hero-card__badge { transform: translateX(13.5rem); }
   }
   .hero-card__body {
     opacity: 0; transform: translateX(-8px);
-    transition: opacity 0.5s var(--ease-glass), transform 0.7s var(--ease-smooth);
+    transition: opacity 0.4s var(--ease-glass), transform 0.52s var(--ease-smooth);
   }
+  /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
+     enter/exit duration otherwise: the :hover/:focus-within selectors below are what's active while
+     OPENING, so declaring transition here is what actually governs the open half of the animation;
+     the rest-state declarations above govern the close half once the pointer leaves. */
   .hero__aside .hero-card[data-reveal]:hover,
   .hero__aside .hero-card[data-reveal]:focus-within {
     padding-right: 0.5rem;
@@ -1365,6 +1418,10 @@ html.is-ready .hero__wm {
       inset 0 1px 0 rgba(255,255,255,.9),
       0 0 0 1px rgba(230,229,226,.35),
       0 18px 46px -10px rgba(17, 17, 17, 0.14);
+    transition:
+      clip-path 0.6s var(--ease-smooth),
+      padding-right 0.6s var(--ease-smooth),
+      box-shadow 0.45s var(--ease-glass);
   }
   .hero__aside .hero-card[data-reveal]:hover::after,
   .hero__aside .hero-card[data-reveal]:focus-within::after { opacity: 0.5; }
@@ -1375,9 +1432,17 @@ html.is-ready .hero__wm {
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.7),
       0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
+    transition:
+      transform 0.6s var(--ease-smooth),
+      background var(--dur-fast) var(--ease-glass),
+      border-color 0.45s var(--ease-glass),
+      box-shadow 0.45s var(--ease-glass);
   }
   .hero-card:hover .hero-card__body,
-  .hero-card:focus-within .hero-card__body { opacity: 1; transform: none; }
+  .hero-card:focus-within .hero-card__body {
+    opacity: 1; transform: none;
+    transition: opacity 0.45s var(--ease-glass), transform 0.6s var(--ease-smooth);
+  }
   @media (prefers-reduced-motion: reduce) {
     .hero-card, .hero-card__body, .hero-card__badge { transition: none; }
   }

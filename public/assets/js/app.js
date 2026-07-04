@@ -296,9 +296,72 @@ function portfolioApp() {
       setTimeout(() => { this.submitting = false; this.success = true; }, 900);
     },
 
+    tintVars(tint) {
+      const map = {
+        accent: { tint: "var(--accent)", ink: "var(--accent-dark)" },
+        primary: { tint: "var(--primary)", ink: "var(--primary-deep)" },
+        teal: { tint: "var(--teal)", ink: "var(--teal-deep)" },
+      };
+      const v = map[tint] || map.accent;
+      return "--tint:" + v.tint + ";--tint-ink:" + v.ink;
+    },
+
+    // Direction-aware content swap: slide+fade the OLD caption/title out, swap the underlying data
+    // while it's invisible, then slide+fade the NEW content in from the opposite side. Uses CSS
+    // transitions (not @keyframes) throughout so rapid re-clicking retargets smoothly instead of
+    // restarting from zero — mirrors _liquidWarp()'s transitionend+timeout-fallback cleanup and
+    // reveal.js's double-rAF class-add idiom (both already established elsewhere in this file).
     cardStep(dir) {
       const n = this.heroCards.length;
-      this.cardIndex = (this.cardIndex + dir + n) % n;
+      const next = (this.cardIndex + dir + n) % n;
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        this.cardIndex = next;
+        return;
+      }
+
+      const wrap = this._swapEl || (this._swapEl = document.querySelector(".hero-card__swap"));
+      if (!wrap) { this.cardIndex = next; return; }
+
+      const dir_ = dir > 0 ? "next" : "prev";
+      clearTimeout(this._swapTimer);
+      wrap.removeEventListener("transitionend", this._onSwapExitEnd);
+
+      // Exit: slide+fade the CURRENT content out toward dir_. A forced reflow (offsetWidth read)
+      // between remove/add lets rapid re-clicks retarget the transition instead of no-op'ing on an
+      // unchanged class. Also clear any is-swap-instant/is-entering-* left behind by an interrupted
+      // _finishSwap() (its own cleanup runs on the next double-rAF, which a fast-enough repeat click
+      // can pre-empt) — is-swap-instant sets transition:none, so leaving it on would silently disable
+      // the very transition this call is about to trigger.
+      wrap.classList.remove("is-swapping-next", "is-swapping-prev", "is-swap-instant", "is-entering-next", "is-entering-prev");
+      void wrap.offsetWidth;
+      wrap.classList.add("is-swapping-" + dir_);
+      const badgeIcon = this._badgeIconEl || (this._badgeIconEl = document.querySelector(".hero-card__badge-icon"));
+      if (badgeIcon) badgeIcon.classList.remove("is-pulsing"); // same defensive clear as above, cheap insurance
+
+      this._onSwapExitEnd = (e) => {
+        if (e.target !== wrap || e.propertyName !== "opacity") return;
+        wrap.removeEventListener("transitionend", this._onSwapExitEnd);
+        this._finishSwap(wrap, next, dir_);
+      };
+      wrap.addEventListener("transitionend", this._onSwapExitEnd);
+      this._swapTimer = setTimeout(() => this._finishSwap(wrap, next, dir_), 240);
+    },
+
+    _finishSwap(wrap, next, dir_) {
+      clearTimeout(this._swapTimer);
+      this.cardIndex = next; // content updates now, while fully transparent/off-axis — invisible swap
+      const badgeIcon = this._badgeIconEl || (this._badgeIconEl = document.querySelector(".hero-card__badge-icon"));
+      wrap.classList.add("is-swap-instant"); // transitions off for one frame — reposition is a silent jump
+      wrap.classList.remove("is-swapping-next", "is-swapping-prev");
+      wrap.classList.add("is-entering-" + dir_);
+      if (badgeIcon) badgeIcon.classList.add("is-pulsing"); // brief Dynamic-Island-style content-ack pulse
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { // double-rAF: same idiom as reveal.js's is-visible add
+          wrap.classList.remove("is-swap-instant", "is-entering-" + dir_); // now animates back to rest
+          if (badgeIcon) badgeIcon.classList.remove("is-pulsing");
+        });
+      });
     },
 
     activeCard() { return this.heroCards[this.cardIndex]; },

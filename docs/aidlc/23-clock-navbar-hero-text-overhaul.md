@@ -451,3 +451,62 @@ was just imperceptible motion on a 1.4rem face; the sweep itself was verified ru
   `optimize-images.js`, JSON validity, zero console/page errors on desktop and real iPhone 13
   emulation, all logo/bismillah/sprite images loading correctly, experience-accordion interaction
   still works with the minified JS.
+
+## Revision 11 — About/menu/CTA rework, hero-card content-swap + per-item identity
+
+- **About section rebuilt**: removed the "The engineer" eyebrow line and the old 2-column
+  `about-grid`; replaced with a single `.about-card` glass panel — big quote mark, icon-chip, a
+  `data-blur-reveal` statement pulled from a new `site.aboutHeading` copy line, socials + a "My work"
+  CTA in the footer. Copy rewritten from the generic "we build better" framing to a specific,
+  quantified statement (14 years, telco-scale traffic, monoliths→microservices).
+- **CreateBand relabeled**: We/Build/Better → Code/Ship/Scale (`--light`/`--ghost` tile variants
+  renamed to `--code`/`--scale` to match), read as one coherent verb progression instead of a
+  first-person slogan.
+- **Menu splash cleanup**: removed the decorative spark icon beside "Saniyat" (redundant next to the
+  brand mark already in the header), close control changed from bare text to an icon+label
+  (`.nav-overlay__close`), nav-item icon-chips bumped `--sm`→`--md` for better touch/visual
+  proportion. CTA copy ("Start a project" → "Get in touch") changed at both the nav-overlay bottom
+  bar and the footer for a lower-commitment, friendlier ask.
+- **Bismillah tooltip + hover**: added a `.brand-tooltip` (English meaning, "In the name of Allah, the
+  Most Gracious, the Most Merciful") as a sibling of the header's Bismillah image, plus a shinier
+  hover filter treatment — same `role="tooltip"` pattern already used by `.partner-orb__tip`, not a
+  new interaction primitive.
+- **Hero-card ("Now" widget) content-swap + per-item identity** — the actual focus of this round,
+  triggered by the user rejecting a prior pass as "same old card design": the 3 rotating items
+  (Now/Focus/Lately) previously swapped caption/title with zero transition and always showed the same
+  copper `sparkles` badge regardless of which item was active. Added:
+  - `heroCards[].icon`/`.tint` fields in `portfolio.json` (`sparkles`/accent, `architecture`/primary,
+    `ai`/teal — all pre-existing icon keys and color tokens, nothing new).
+  - `tintVars()` in `app.js`, bound via `:style` on `.hero-card__badge` (same per-instance custom-
+    property pattern `.partner-orb`'s `--brand` already established).
+  - `cardStep()`/`_finishSwap()` rewritten from a 2-line index mutation into a direction-aware
+    CSS-transition orchestration (`.hero-card__swap` wrapper gets `is-swapping-*`/`is-entering-*`
+    classes; content updates mid-transition while fully transparent/off-axis; double-`requestAnimationFrame`
+    "silent reposition, then animate back to rest" idiom, reused from `reveal.js`). Transitions, not
+    `@keyframes`, throughout — an in-flight swap retargets cleanly instead of restarting when clicked
+    rapidly.
+  - New `--dur-swap: 0.18s` token; `.hero-card__dot`'s banned `transition: all` replaced with named
+    properties; `.hero-card__arrow` got a `:active` press-scale.
+  - Found and fixed a same-specificity cascade bug (the desktop hover-drawer's own `.hero-card__badge`
+    rule, declared later in the file, was silently dropping the new `background` transition needed
+    for the tint swap to animate smoothly on desktop) — the same bug *class* as Revision 8's
+    `.app-root`/`.is-liquid-warp` issue, caught proactively this time from pattern-recognition rather
+    than a failing test.
+- **Verification note — headless Chromium frame starvation (worth remembering for future work in this
+  repo)**: extensive Playwright debugging this round chased what looked like a real bug — assigned
+  CSS opacity/transform values not showing up in `getComputedStyle`, `_finishSwap`'s cleanup
+  seemingly never firing, the desktop hover-drawer failing to open before a click. Root cause was the
+  *test environment*, not the site: this sandbox's headless Chromium produces compositor frames only
+  on demand (~1-2 real frames per 500ms of wall-clock time when nothing asks for one), so
+  `requestAnimationFrame`, CSS transition progress, and `:hover`-triggered layout all lag far behind
+  real time unless something actively forces frames. Confirmed via `document.getAnimations()`,
+  `elementsFromPoint()`, and cascade/rule-matching dumps that the CSS/JS were correct throughout; the
+  fix for *testing* (not the site) was polling with real `page.screenshot()` calls interleaved
+  (forces genuine compositor frames) rather than trusting `getComputedStyle`/rAF counters sampled
+  after a raw `waitForTimeout`. With forced frames, the swap transition and the hover-drawer both
+  converge reliably and match the intended design. Real browsers render continuously at 60fps and
+  won't hit this — no code changes were needed for either mechanism.
+- Rebuilt the full pipeline (`minify-css.js` → `set-asset-version.js` → `minify-js.js` →
+  `sync-head.js` → `hash-sw.js`); zero console/page errors on desktop (1440), tablet/laptop
+  (768/1024), mobile width (360), and real iPhone 13 touch emulation; reduced-motion verified to skip
+  the swap animation instantly with no intermediate frame.
