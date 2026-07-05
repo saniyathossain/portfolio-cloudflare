@@ -184,6 +184,36 @@
     applyElementParallax();
   }
 
+  // Right-edge shift for the icon→label hover reveal. The label expands out of flow (absolute), so
+  // the flex row never re-wraps (no juggle) — but a pill near the right edge would grow its label off
+  // the viewport. On hover/focus we measure the label's needed width and, if it would overflow, set
+  // --pill-shift to slide the pill left just enough to keep the label on screen (CSS folds it into the
+  // pill's hover transform). Delegated (one listener each), desktop-only via canEnhance, two rect
+  // reads per newly-entered pill — no rAF loop. Touch / reduced-motion never reach here and show the
+  // static in-flow labels from CSS instead.
+  function pillReveal() {
+    if (!canEnhance) return;
+    const MARGIN = 10; // px kept between the grown label and the viewport edge
+    let lastPill = null;
+    function place(pill) {
+      const labelIn = pill.querySelector(".brand-pill__label-in");
+      if (!labelIn) return;
+      const pr = pill.getBoundingClientRect();
+      const need = pr.width + labelIn.scrollWidth + 14; // icon box + label text + padding fudge
+      const overflow = pr.left + need - (window.innerWidth - MARGIN);
+      pill.style.setProperty("--pill-shift", overflow > 0 ? "-" + Math.round(overflow) + "px" : "0px");
+    }
+    function onEnter(e) {
+      const pill = e.target.closest && e.target.closest(".brand-pill");
+      if (!pill || pill === lastPill) return;
+      lastPill = pill;
+      place(pill);
+    }
+    document.addEventListener("pointerover", onEnter, { passive: true });
+    document.addEventListener("focusin", onEnter);
+    window.addEventListener("resize", () => { lastPill = null; }, { passive: true });
+  }
+
   function boot() {
     if (canEnhance && hasMotion) {
       document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
@@ -193,6 +223,7 @@
     specular();
     scrollParallax();
     heroSpatial();
+    pillReveal();
     if (canEnhance) applyParallax(window.scrollY || 0);
   }
 
