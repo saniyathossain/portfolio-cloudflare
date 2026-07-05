@@ -2417,14 +2417,16 @@ html.is-ready .hero__wm {
   border-radius: var(--radius-pill);
   padding: 0.3rem;
   gap: 0;
+  /* The PILL is the single shiny surface — a bright top-left gloss streak over a soft brand-tinted
+     glass base. The icon sits directly on it (the badge is transparent), so there's no inner coin
+     and no ring/seam: one seamless glossy brand tile. */
   background:
-    linear-gradient(180deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.2) 44%, transparent 60%),
-    radial-gradient(130% 170% at 8% 50%, color-mix(in srgb, var(--brand) 22%, var(--pill-top)), transparent 58%),
-    linear-gradient(180deg, var(--pill-top) 0%, var(--pill-bot) 100%);
+    linear-gradient(148deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.3) 27%, transparent 55%),
+    radial-gradient(125% 135% at 30% 16%, color-mix(in srgb, var(--brand) 19%, #fff), color-mix(in srgb, var(--brand) 7%, #fff) 82%);
   border: none;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(17,17,17,.03),
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 -1.5px 2px color-mix(in srgb, var(--brand) 11%, transparent),
     var(--shadow-outset-sm);
   cursor: default; outline: none;
   top: 0;
@@ -2472,30 +2474,12 @@ html.is-ready .hero__wm {
   position: relative; z-index: 1; flex: none;
   width: 2.1rem; height: 2.1rem; aspect-ratio: 1;
   display: grid; place-items: center; margin: 0;
-  border-radius: 50%;
   color: var(--brand);
-  /* Seamless glossy round coin — NO rim/border. A bright top-left specular streak over a soft
-     brand-tinted glass fill, an inner top-light + inner bottom-shade (the sphere gloss), and a soft
-     brand-coloured drop shadow for lift. Reads exactly like the glossy .icon-chip tile beside the
-     hero designation, but round and edge-free. The mono-badge rule below (higher specificity via
-     :has) still wins for lettermark tiles, keeping their solid brand fill. */
-  background:
-    linear-gradient(125deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.28) 30%, transparent 58%),
-    linear-gradient(160deg, color-mix(in srgb, var(--brand) 24%, #fff), color-mix(in srgb, var(--brand) 9%, #fff));
+  /* Transparent — the pill itself is the shiny surface, so the icon merges seamlessly into it with
+     no inner coin, ring or border. */
+  background: none;
   border: none;
-  box-shadow:
-    inset 0 1.5px 1px rgba(255,255,255,.95),
-    inset 0 -2px 3px color-mix(in srgb, var(--brand) 14%, transparent),
-    0 3px 9px -4px color-mix(in srgb, var(--brand) 46%, transparent);
-  transition: box-shadow 0.24s var(--ease-tile);
-}
-.brand-pill:hover .brand-pill__badge,
-.brand-pill:focus-visible .brand-pill__badge,
-.brand-pill.is-open .brand-pill__badge {
-  box-shadow:
-    inset 0 1.5px 1px rgba(255,255,255,1),
-    inset 0 -2px 4px color-mix(in srgb, var(--brand) 20%, transparent),
-    0 6px 15px -4px color-mix(in srgb, var(--brand) 58%, transparent);
+  box-shadow: none;
 }
 .brand-pill--sm .brand-pill__badge {
   width: 1.7rem; height: 1.7rem;
@@ -2506,30 +2490,11 @@ html.is-ready .hero__wm {
 }
 .brand-pill--sm .brand-pill__badge img { width: 1.12rem; height: 1.12rem; }
 
-.brand-pill__badge:has(.brand-pill__mono) {
-  border-radius: var(--radius-pill);
-  background: linear-gradient(155deg,
-    color-mix(in srgb, var(--brand) 68%, #fff 32%),
-    var(--brand) 54%,
-    color-mix(in srgb, var(--brand) 86%, #000 14%));
-  border-color: transparent;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 48%, transparent),
-    inset 0 -1px 2px color-mix(in srgb, #000 18%, transparent);
-}
-.brand-pill:hover .brand-pill__badge:has(.brand-pill__mono),
-.brand-pill:focus-visible .brand-pill__badge:has(.brand-pill__mono),
-.brand-pill.is-open .brand-pill__badge:has(.brand-pill__mono) {
-  background: linear-gradient(155deg,
-    color-mix(in srgb, var(--brand) 74%, #fff 26%),
-    var(--brand) 52%,
-    color-mix(in srgb, var(--brand) 88%, #000 12%));
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 55%, transparent),
-    inset 0 -1px 2px color-mix(in srgb, #000 20%, transparent);
-}
+/* Lettermark tiles (no logo image) sit directly on the pill too — a dark-brand glyph on the pill's
+   own brand-tinted surface, so they're just as seamless as the image icons (no separate coin). */
 .brand-pill__mono {
-  font-size: 0.66rem; font-weight: 800; line-height: 1; color: #fff;
+  font-size: 0.74rem; font-weight: 800; line-height: 1;
+  color: color-mix(in srgb, var(--brand) 62%, #1c1c1c);
 }
 .brand-pill--sm .brand-pill__mono { font-size: 0.56rem; }
 
