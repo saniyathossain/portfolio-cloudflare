@@ -145,14 +145,15 @@ function _formatTenureMonths(total) {
   if (total < 1) total = 1;
   const years = Math.floor(total / 12);
   const months = total % 12;
-  // Years-only once there's at least a full year — "2 years, 3 months" (and, next to it, a
-  // separate "27 months total" meta line) said the same duration twice in two different units.
-  // Genuinely sub-year tenures (a couple of the shorter contract stints run under 12 months) fall
-  // back to a months-only label instead of rounding up to a misleading "1 year", or down to "0
-  // years" which isn't a real duration at all.
+  const yearStr = years + (years === 1 ? " year" : " years");
+  const monthStr = months + (months === 1 ? " month" : " months");
+  // Show the leftover months alongside the years when there is a remainder ("5 years 3 months") so
+  // the duration is precise; an exact multiple of 12 stays years-only ("2 years"); a genuinely
+  // sub-year tenure (some shorter contract stints) shows months only rather than a misleading
+  // "1 year" or a meaningless "0 years".
   const label = years >= 1
-    ? years + (years === 1 ? " year" : " years")
-    : months + (months === 1 ? " month" : " months");
+    ? (months > 0 ? yearStr + " " + monthStr : yearStr)
+    : monthStr;
   return { years, months, totalMonths: total, label };
 }
 

@@ -344,7 +344,15 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   display: grid; align-items: center;
   grid-template-columns: 1fr;
   gap: 1rem 1.15rem;
+  /* The base .glass-card clips its contents (overflow:hidden + contain:paint), which trapped the
+     tenure popover inside the card so it was cut off by the card edge — z-index can't escape a clip.
+     Education rows opt out of the clip (the gloss/sheen still clip to their own border-radius), and
+     the hovered row lifts above its siblings so the popover renders on top, exactly like Experience. */
+  overflow: visible;
+  contain: none;
 }
+.edu-row:has(.popover:hover),
+.edu-row:has(.popover:focus-within) { z-index: 200; }
 /* Logo + years/school/degree wrapped in a link to the institute's site — its own nested grid
    replicates the auto/1fr logo+body split the outer row used to apply directly, since merging
    them into one link changed the outer row from 2-3 direct children down to 2 (link + place). */
