@@ -2394,8 +2394,9 @@ html.is-ready .hero__wm {
     inset 0 -1px 0 rgba(17,17,17,.03),
     var(--shadow-outset-sm);
   cursor: default; outline: none;
+  top: 0;
   transition:
-    transform 0.22s var(--ease-tile),
+    top 0.24s var(--ease-tile),
     box-shadow 0.22s var(--ease-tile);
 }
 .brand-pill--sm { padding: 0.26rem; }
@@ -2411,15 +2412,18 @@ html.is-ready .hero__wm {
   transition: transform 0.7s var(--ease-glass);
 }
 .brand-pill:hover::before,
-.brand-pill:focus-visible::before { transform: translateX(135%); }
+.brand-pill:focus-visible::before,
+.brand-pill.is-open::before { transform: translateX(135%); }
 
 .brand-pill:hover,
-.brand-pill:focus-visible {
-  /* In-flow reveal (see the label block below): the pill grows in flow and pillFlip() glides the
-     neighbours out of the way, so no overlay/overflow escape is needed. A small z-index keeps the
-     active pill crisp above the siblings that slide past it during the FLIP. */
+.brand-pill:focus-visible,
+.brand-pill.is-open {
+  /* Active/open polish is keyed to .is-open (JS-controlled by pillFlip), NOT only :hover — a pill that
+     wraps to a new line loses Chrome's :hover but stays .is-open, so it keeps its full styling. The lift
+     uses `top` (the pill is position:relative) instead of a transform, leaving `transform` entirely to
+     the FLIP so the pill can glide if it wraps. z-index keeps the active pill above sliding neighbours. */
   z-index: 2;
-  transform: translateY(-2px);
+  top: -2px;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
     0 8px 22px -8px color-mix(in srgb, var(--brand) 45%, transparent),
@@ -2427,7 +2431,7 @@ html.is-ready .hero__wm {
 }
 
 .brand-pill:active {
-  transform: translateY(0);
+  top: 0;
   transition-duration: 0.12s;
 }
 
@@ -2462,7 +2466,8 @@ html.is-ready .hero__wm {
     inset 0 -1px 2px color-mix(in srgb, #000 18%, transparent);
 }
 .brand-pill:hover .brand-pill__badge:has(.brand-pill__mono),
-.brand-pill:focus-visible .brand-pill__badge:has(.brand-pill__mono) {
+.brand-pill:focus-visible .brand-pill__badge:has(.brand-pill__mono),
+.brand-pill.is-open .brand-pill__badge:has(.brand-pill__mono) {
   background: linear-gradient(155deg,
     color-mix(in srgb, var(--brand) 74%, #fff 26%),
     var(--brand) 52%,
@@ -2477,12 +2482,14 @@ html.is-ready .hero__wm {
 .brand-pill--sm .brand-pill__mono { font-size: 0.56rem; }
 
 .brand-pill:hover .brand-pill__badge img,
-.brand-pill:focus-visible .brand-pill__badge img {
+.brand-pill:focus-visible .brand-pill__badge img,
+.brand-pill.is-open .brand-pill__badge img {
   transform: scale(1.08);
   filter: brightness(1.05) saturate(1.1);
 }
 .brand-pill:hover .brand-pill__label-in,
-.brand-pill:focus-visible .brand-pill__label-in { color: #0a0a0a; text-shadow: none; }
+.brand-pill:focus-visible .brand-pill__label-in,
+.brand-pill.is-open .brand-pill__label-in { color: #0a0a0a; text-shadow: none; }
 
 /* Icon→label reveal, done IN FLOW so the pill genuinely takes the space its label needs — no absolute
    overlay painting over the neighbour (which left an overlap + a lingering box-shadow). The label is a
@@ -2507,11 +2514,11 @@ html.is-ready .hero__wm {
   padding: 0 0.62rem 0 0.4rem;
   font-size: 0.8125rem; font-weight: 600; color: #14161c;
   letter-spacing: -0.015em; line-height: 1.2;
-  opacity: 0; transform: translateX(-4px);
+  opacity: 0; transform: translateX(-5px);
   transition:
-    opacity 0.26s ease,
-    transform 0.3s var(--ease-glass),
-    color 0.22s ease;
+    opacity 0.34s ease,
+    transform 0.42s var(--ease-glass),
+    color 0.24s ease;
 }
 .brand-pill--sm .brand-pill__label-in {
   font-size: 0.76rem; padding: 0 0.55rem 0 0.34rem;
@@ -2531,7 +2538,8 @@ html.is-ready .hero__wm {
   opacity: 0;
 }
 .brand-pill.spec:hover::after,
-.brand-pill.spec:focus-visible::after { opacity: 0.75; }
+.brand-pill.spec:focus-visible::after,
+.brand-pill.spec.is-open::after { opacity: 0.75; }
 
 .pill-row[data-stagger] .brand-pill {
   opacity: 0;
@@ -2545,13 +2553,6 @@ html.is-ready .hero__wm {
     opacity var(--dur-pill-reveal) var(--ease-pill-reveal),
     transform var(--dur-pill-reveal) var(--ease-pill-reveal);
   transition-delay: var(--reveal-delay, 0ms);
-}
-.pill-row[data-stagger].is-visible .brand-pill:hover {
-  /* re-assert the hover lift so this stagger rule doesn't override it back to the entrance transform. */
-  transform: translateY(-2px);
-  transition:
-    transform 0.24s var(--ease-tile),
-    box-shadow 0.24s var(--ease-tile);
 }
 
 /* Touch / no-hover devices (real phones): no hover to reveal on, so force the label OPEN and in flow —

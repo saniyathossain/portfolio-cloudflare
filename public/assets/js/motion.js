@@ -185,90 +185,133 @@
   }
 
   // Icon→label hover reveal, smoothed with FLIP (First, Last, Invert, Play). The label is an IN-FLOW
-  // grid column that flips from 0fr to 1fr the instant a pill gets .is-open, so the flex row reflows to
-  // its final layout in a single frame (no per-frame line-break juggle). We then animate that reflow:
-  // snapshot every sibling's position First, toggle .is-open and read the Last positions, Invert each
-  // moved sibling back to where it was with a transform, then Play it to identity next frame — so
-  // neighbours glide aside / wrap to the next line and slide back on un-hover, and nothing ever
-  // overlaps in the resting state. The hovered pill's own growth is CSS (width flip + text fade); FLIP
-  // touches ONLY the siblings, so it never fights the pill's :hover lift transform. Delegated listeners,
-  // desktop-pointer-only via canEnhance; touch / reduced-motion show the static in-flow labels from CSS.
+  // grid column that flips 0fr→1fr the instant a pill gets .is-open, so the flex row reflows to its
+  // final layout in a single frame (no per-frame line-break juggle); flipRow() then animates that
+  // reflow — snapshot EVERY pill's position First, toggle .is-open and read Last, Invert each moved
+  // pill back with a transform, and Play to identity next frame, so neighbours (and the opening pill
+  // itself, if it wraps) glide to their new spots instead of teleporting.
+  //
+  // CRITICAL — anti-oscillation. Open/switch is driven ONLY by real pointer *movement* (pointermove),
+  // never by pointerover/pointerout. At narrow widths a growing pill can wrap to the next line and
+  // relocate out from under a STATIONARY cursor; Chromium then fires pointerout on that layout-induced
+  // hit-target change, and a pointerout-driven close would collapse→return→reopen→wrap forever (the
+  // Chrome "juggle"). A relocating pill under a still cursor fires NO pointermove, so it can never open
+  // or close anything — the loop is impossible by construction, in every browser. We close only when the
+  // pointer genuinely leaves the .pill-row. Desktop-pointer-only via canEnhance; touch / reduced-motion
+  // show the static in-flow labels from CSS.
   function pillFlip() {
     if (!canEnhance) return;
-    const DUR = 300;
-    const EASE = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+    const OPEN_MS = 440, CLOSE_MS = 300;
+    const EASE = "cubic-bezier(0.2, 0.68, 0.32, 1)"; // soft ease-out, no overshoot
     const rowTimers = new WeakMap(); // row -> cleanup timeout id
+    let openPill = null;
 
-    function siblingsOf(pill) {
+    function pillsIn(row) {
       const out = [];
-      for (let el = pill.parentElement.firstElementChild; el; el = el.nextElementSibling) {
-        if (el !== pill && el.classList.contains("brand-pill")) out.push(el);
+      for (let el = row.firstElementChild; el; el = el.nextElementSibling) {
+        if (el.classList.contains("brand-pill")) out.push(el);
       }
       return out;
     }
 
-    function flip(pill, open) {
-      const row = pill.parentElement;
-      if (!row) return;
-      const sibs = siblingsOf(pill);
+    // FLIP every pill in `row` across the layout change `mutate()` makes.
+    function flipRow(row, mutate, ms) {
+      const pills = pillsIn(row);
       // FIRST — current visual positions (include any in-flight transforms from a prior interrupt).
-      const first = sibs.map((s) => s.getBoundingClientRect());
-      // Clear in-flight transforms so LAST is measured against the clean, final layout. No paint
-      // happens between here and the Invert below (all synchronous), so this never flashes.
-      sibs.forEach((s) => { s.style.transition = "none"; s.style.transform = "none"; });
-      // Mutate to the final layout INSTANTLY (label width has no CSS transition).
-      pill.classList.toggle("is-open", open);
+      const first = pills.map((p) => p.getBoundingClientRect());
+      // Clear in-flight transforms so LAST is measured against the clean final layout. No paint happens
+      // between here and the Invert below (all synchronous), so this never flashes.
+      pills.forEach((p) => { p.style.transition = "none"; p.style.transform = "none"; });
+      mutate();
       // LAST — reading a rect forces the synchronous layout we need.
-      const last = sibs.map((s) => s.getBoundingClientRect());
-      // INVERT — send each moved sibling back to its old spot (transform only; layout stays final).
+      const last = pills.map((p) => p.getBoundingClientRect());
+      // INVERT — send each moved pill back to its old spot (transform only; layout stays final).
       const movers = [];
-      sibs.forEach((s, i) => {
+      pills.forEach((p, i) => {
         const dx = first[i].left - last[i].left;
         const dy = first[i].top - last[i].top;
         if (dx || dy) {
-          s.style.willChange = "transform";
-          s.style.transform = "translate(" + dx + "px," + dy + "px)";
-          movers.push(s);
+          p.style.willChange = "transform";
+          p.style.transform = "translate(" + dx + "px," + dy + "px)";
+          movers.push(p);
         } else {
-          s.style.transition = "";
-          s.style.transform = "";
+          p.style.transition = "";
+          p.style.transform = "";
         }
       });
       // PLAY — two rAFs guarantee the Invert frame committed before we transition to identity.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          movers.forEach((s) => {
-            s.style.transition = "transform " + DUR + "ms " + EASE;
-            s.style.transform = "";
+          movers.forEach((p) => {
+            p.style.transition = "transform " + ms + "ms " + EASE;
+            p.style.transform = "";
           });
         });
       });
-      // Strip inline transition/will-change once the glide settles so nothing lingers to fight the
-      // next hover (transform is already back to identity from Play).
+      // Strip inline transition/will-change once the glide settles so nothing lingers.
       clearTimeout(rowTimers.get(row));
       rowTimers.set(row, setTimeout(() => {
-        siblingsOf(pill).forEach((s) => { s.style.transition = ""; s.style.willChange = ""; });
-      }, DUR + 90));
+        pillsIn(row).forEach((p) => { p.style.transition = ""; p.style.willChange = ""; });
+      }, ms + 100));
     }
 
-    function onOpen(e) {
-      const pill = e.target.closest && e.target.closest(".brand-pill");
-      if (!pill || pill.__pillOpen) return;
-      pill.__pillOpen = 1;
-      flip(pill, true);
-    }
-    function onClose(e) {
-      const pill = e.target.closest && e.target.closest(".brand-pill");
-      if (!pill || !pill.__pillOpen) return;
-      if (e.relatedTarget && pill.contains(e.relatedTarget)) return; // moved onto a child — still inside
-      pill.__pillOpen = 0;
-      flip(pill, false);
+    function setOpen(pill) {
+      if (pill === openPill) return;
+      const prev = openPill;
+      const prevRow = prev && prev.parentElement;
+      const row = pill.parentElement;
+      if (!row) return;
+      // Different rows: collapse the old row separately (no conflict — disjoint pill sets).
+      if (prev && prevRow && prevRow !== row) {
+        flipRow(prevRow, () => prev.classList.remove("is-open"), CLOSE_MS);
+      }
+      openPill = pill;
+      flipRow(row, () => {
+        if (prev && prevRow === row) prev.classList.remove("is-open");
+        pill.classList.add("is-open");
+      }, OPEN_MS);
     }
 
-    document.addEventListener("pointerover", onOpen, { passive: true });
-    document.addEventListener("pointerout", onClose, { passive: true });
-    document.addEventListener("focusin", onOpen);
-    document.addEventListener("focusout", onClose);
+    function clearOpen() {
+      if (!openPill) return;
+      const pill = openPill, row = pill.parentElement;
+      openPill = null;
+      if (row) flipRow(row, () => pill.classList.remove("is-open"), CLOSE_MS);
+      else pill.classList.remove("is-open");
+    }
+
+    function inPillRow(el) {
+      return el && el.parentElement && el.parentElement.classList.contains("pill-row");
+    }
+
+    // Real-movement-only open/switch; close on leaving the row. rAF-coalesced so a burst of
+    // pointermoves does at most one layout pass per frame.
+    let moveRaf = 0, lastTarget = null;
+    function onMove(e) {
+      lastTarget = e.target;
+      if (moveRaf) return;
+      moveRaf = requestAnimationFrame(() => {
+        moveRaf = 0;
+        const t = lastTarget;
+        const pill = t && t.closest && t.closest(".brand-pill");
+        if (pill && inPillRow(pill)) setOpen(pill);
+        else if (openPill && !(t && t.closest && t.closest(".pill-row"))) clearOpen();
+        // else: within a row but over a gap → keep the current pill open.
+      });
+    }
+    document.addEventListener("pointermove", onMove, { passive: true });
+
+    // Keyboard: focus opens, blur closes. Focus never moves under a stationary cursor, so no loop.
+    document.addEventListener("focusin", (e) => {
+      const pill = e.target.closest && e.target.closest(".brand-pill");
+      if (pill && inPillRow(pill)) setOpen(pill);
+      else clearOpen();
+    });
+    document.addEventListener("focusout", (e) => {
+      if (openPill && e.target.closest && e.target.closest(".brand-pill") === openPill) {
+        if (!e.relatedTarget || !openPill.contains(e.relatedTarget)) clearOpen();
+      }
+    });
   }
 
   function boot() {
