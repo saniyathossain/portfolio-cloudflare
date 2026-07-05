@@ -881,11 +881,16 @@ html.is-loading .site-header {
 .nav-desktop button:hover,
 .nav-desktop button:focus-visible { opacity: 1; color: var(--accent-dark); }
 .nav-desktop button.is-active { opacity: 1; color: var(--accent-dark); font-weight: 600; }
-.nav-desktop button .ui-icon { width: 0.9rem; height: 0.9rem; opacity: 0.6; transition: opacity var(--dur-mid) ease; }
+.nav-desktop button .ui-icon {
+  width: 0.9rem; height: 0.9rem; opacity: 0.6;
+  transition: opacity var(--dur-mid) ease, transform 0.3s var(--ease-spring);
+}
 .nav-desktop button.is-active .ui-icon,
 .nav-desktop button:hover .ui-icon { opacity: 0.9; }
+.nav-desktop button:hover .ui-icon { transform: scale(1.15); }
 @media (prefers-reduced-motion: reduce) {
   .nav-desktop__pill { transition: opacity 0.3s ease; }
+  .nav-desktop button .ui-icon { transition: opacity var(--dur-mid) ease; }
 }
 
 .header-right { display: flex; align-items: center; gap: 0.65rem; }
@@ -1082,11 +1087,18 @@ html.is-loading .site-header {
   position: absolute; inset: 0; z-index: 2;
   pointer-events: none;
 }
+/* --hero-spatial-x/y: pointer-driven depth layer (iOS-style spatial parallax, motion.js's
+   heroSpatial()), composed into the SAME transform as the scroll-linked --hero-liquid-y instead of
+   fighting it — Motion One's animate() writes a competing inline style.transform on elements that
+   already own a CSS transform rule, silently overriding it (the exact class of cascade bug this
+   codebase has hit repeatedly elsewhere), so this element is deliberately driven by custom
+   properties only. Both default to 0px, so desktop-without-motion/mobile/reduced-motion (which
+   never set them) render byte-identical to the plain scroll transform. */
 .hero__backdrop-liquid {
   position: absolute; inset: 0;
   pointer-events: auto;
   touch-action: none;
-  transform: translate3d(0, var(--hero-liquid-y, 0px), 0);
+  transform: translate3d(var(--hero-spatial-x, 0px), calc(var(--hero-liquid-y, 0px) + var(--hero-spatial-y, 0px)), 0);
   will-change: transform;
 }
 .hero__backdrop-liquid img {
@@ -1899,6 +1911,16 @@ html.is-ready .hero__wm {
    solid copper fill — a tinted-light chip would barely register against it. */
 .create-band__tile--code .create-band__icon { --tint: var(--c-violet); --tint-deep: #4a48a8; }
 .create-band__tile--scale .create-band__icon { --tint: var(--teal); --tint-deep: var(--teal-deep); }
+/* Icon pops a touch further than the tile's own scale(1.03) so it reads as its own responsive
+   element, not just along for the ride. */
+.create-band__icon { transition: transform 0.4s var(--ease-spring); }
+.create-band[data-stagger].is-visible .create-band__tile:hover .create-band__icon {
+  transform: scale(1.12) rotate(-4deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .create-band__icon { transition: none; }
+  .create-band[data-stagger].is-visible .create-band__tile:hover .create-band__icon { transform: none; }
+}
 
 /* Services rows — Lumora hover-fill inside faux-frost panel */
 .services-list { padding: 0.5rem; }
@@ -2096,8 +2118,23 @@ html.is-ready .hero__wm {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.7),
     0 3px 10px -3px color-mix(in srgb, var(--tint) 42%, transparent);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-glass);
 }
 .exp-row__icon .ui-icon { width: 1rem; height: 1rem; }
+/* Independent pop on top of the row's own translateX(4px) — otherwise the icon just rides along
+   with the row instead of feeling like its own responsive element. */
+.exp-row:hover .exp-row__icon,
+.exp-row[aria-expanded="true"] .exp-row__icon {
+  transform: scale(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 5px 14px -4px color-mix(in srgb, var(--tint) 52%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .exp-row__icon { transition: box-shadow 0.35s var(--ease-glass); }
+  .exp-row:hover .exp-row__icon,
+  .exp-row[aria-expanded="true"] .exp-row__icon { transform: none; }
+}
 .exp-item + .exp-item .exp-row::before {
   content: ""; position: absolute; top: 0; left: 1rem; right: 1rem; height: 1px;
   background: rgba(24,30,56,.08);
@@ -2522,19 +2559,20 @@ html.is-ready .hero__wm {
   color: #fff;
   transform: translateX(3px);
 }
-.site-footer .icon-chip--sm {
-  width: 0.9rem; height: 0.9rem;
-  border: none; box-shadow: none;
-  background: transparent;
-  margin: 0;
+/* Footer rows: real shiny icon-chips (not bare glyphs) — same tile treatment as the Services/
+   Code-Ship-Scale icons elsewhere, just at --sm scale. transform (not width/height) on hover keeps
+   this GPU-only. */
+.site-footer li a:hover .icon-chip,
+.site-footer li button:hover .icon-chip {
+  transform: scale(1.08);
 }
-.site-footer .icon-chip--sm .ui-icon {
-  width: 0.9rem; height: 0.9rem;
-  opacity: 0.85;
+.site-footer .icon-chip {
+  transition: box-shadow 0.35s var(--ease-glass), transform 0.3s var(--ease-glass);
 }
-.site-footer__ico {
-  width: 0.9rem; height: 0.9rem; flex: none;
-  color: rgba(255,255,255,.85);
+.site-footer__static-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  color: rgba(255,255,255,.8);
+  line-height: 1.45;
 }
 .site-footer__links { color: rgba(255,255,255,.8); }
 .site-footer__meta { color: rgba(255,255,255,.72); }
@@ -2549,12 +2587,6 @@ html.is-ready .hero__wm {
 .site-footer svg.text-accent-bright {
   filter: drop-shadow(0 1px 8px color-mix(in srgb, var(--accent-bright) 42%, transparent));
 }
-.site-footer__wm {
-  position: absolute; inset-inline: 0; bottom: -1.5rem; z-index: 0;
-  text-align: center; pointer-events: none; user-select: none;
-  font-weight: 700; line-height: 1; font-size: var(--watermark); color: rgba(255,255,255,.05);
-}
-
 /* Nav overlay */
 /* Asymmetric open/close (deliberate open, snappier close) — same convention the hero-card
    hover-drawer already uses. CSS transitions throughout (not @keyframes): a rapid open/close/open
@@ -2656,6 +2688,16 @@ html.is-ready .hero__wm {
 .modal-panel > .modal-close {
   position: absolute; top: 1rem; left: 1rem; z-index: 2;
   width: 2.25rem; height: 2.25rem;
+  transition: transform 0.3s var(--ease-spring), background 0.25s var(--ease-glass);
+}
+.modal-panel > .modal-close:hover,
+.modal-panel > .modal-close:focus-visible {
+  transform: scale(1.1) rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel > .modal-close { transition: background 0.25s var(--ease-glass); }
+  .modal-panel > .modal-close:hover,
+  .modal-panel > .modal-close:focus-visible { transform: none; }
 }
 /* Close button sits at left:1rem, width:2.25rem — its right edge is 3.25rem from the panel's left
    edge, inside the panel's own 1.5rem padding — macOS puts window controls on the left, not the
@@ -2687,11 +2729,66 @@ html.is-ready .hero__wm {
   .modal-footer-row .pill-btn { align-self: auto; }
 }
 
+/* Floating scroll-to-top — same black+copper glass-tile recipe as .menu-btn, circular, icon-only.
+   Toggled via Alpine (.is-visible) past a scroll threshold; also hidden whenever scroll-lock is
+   active so it never fights the menu/modal overlays for attention while they're open. */
+.back-to-top {
+  position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 90;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 6px 18px -3px rgba(17,17,17,.4),
+    0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
+  opacity: 0; transform: translateY(0.6rem) scale(0.92); pointer-events: none;
+  transition: opacity 0.3s var(--ease-glass), transform 0.3s var(--ease-glass),
+    box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass);
+}
+.back-to-top.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.back-to-top::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, color-mix(in srgb, var(--accent-bright) 60%, white) 0%, rgba(255,255,255,.08) 30%, transparent 54%);
+  opacity: 0.6;
+  transition: opacity 0.35s var(--ease-glass);
+}
+.back-to-top:hover::before,
+.back-to-top:focus-visible::before { opacity: 1; }
+.back-to-top.is-visible:hover,
+.back-to-top.is-visible:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    0 8px 22px -2px rgba(17,17,17,.48),
+    0 4px 16px -4px color-mix(in srgb, var(--accent) 65%, transparent);
+  transform: translateY(-2px) scale(1);
+}
+.back-to-top > span { position: relative; z-index: 2; display: inline-flex; }
+body.scroll-lock .back-to-top { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top { transition: opacity 0.2s linear; }
+  .back-to-top,
+  .back-to-top.is-visible,
+  .back-to-top.is-visible:hover,
+  .back-to-top.is-visible:focus-visible { transform: none; }
+}
+@media (max-width: 767px) {
+  .back-to-top { right: 1rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
+}
+
 /* Utilities */
 .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; }
 /* !important: must beat body's own overflow-x rule and any other layout rule regardless of load
-   order — this is toggled from JS whenever a modal/menu opens, so it has to win unconditionally. */
+   order — this is toggled from JS whenever a modal/menu opens, so it has to win unconditionally.
+   html.scroll-lock keeps plain overflow:hidden (nothing to restore at that level). body.scroll-lock
+   additionally gets position:fixed + width:100% — app.js pairs this with an inline `top` offset
+   (negative current scrollY) so the body appears not to move at all, and explicitly restores real
+   scroll position on unlock. Plain overflow:hidden alone (the previous approach) silently reset
+   scrollTop to 0 in Chromium the instant it was applied, with no way to recover the position. */
 .scroll-lock { overflow: hidden !important; height: 100%; }
+body.scroll-lock { position: fixed; width: 100%; }
 
 @media (max-width: 1023px) {
   .hero {

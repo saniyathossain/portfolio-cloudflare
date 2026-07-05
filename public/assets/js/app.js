@@ -10,6 +10,7 @@ function portfolioApp() {
   return {
     menuOpen: false,
     modalOpen: false,
+    showBackToTop: false,
     submitting: false,
     success: false,
     cardIndex: 0,
@@ -58,6 +59,20 @@ function portfolioApp() {
         }
       };
       window.addEventListener("keydown", this._onKey);
+      this.setupBackToTop();
+    },
+
+    // rAF-coalesced like reveal.js's scroll-progress bar — one threshold check per frame, not one
+    // per scroll event, so a fast wheel-fling can't flood Alpine's reactivity with redundant writes.
+    setupBackToTop() {
+      let raf = 0;
+      const THRESHOLD = 560;
+      const check = () => {
+        raf = 0;
+        this.showBackToTop = window.scrollY > THRESHOLD;
+      };
+      window.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
+      check();
     },
 
     setupHeroGlow() {
@@ -251,10 +266,46 @@ function portfolioApp() {
       this.clockSecondDelay = "-" + seconds.toFixed(3) + "s";
     },
 
+    // Locking via plain `overflow: hidden` on <html>/<body> silently resets scrollTop to 0 in
+    // Chromium the instant it's applied (confirmed via direct scrollY inspection, not assumed) —
+    // that's what made opening the modal or the menu snap the whole page to the top, with no way
+    // back since the position was never captured. The standard fix: pin the body at its current
+    // visual position with `position: fixed` + a negative `top` offset (this does NOT reset scroll
+    // like toggling overflow does), then explicitly restore the real scroll position on unlock —
+    // removing position:fixed alone leaves the page at 0, it doesn't "remember" where it was.
+    // Critical ordering: scrollY MUST be captured before the scroll-lock classes go on, not after —
+    // adding overflow:hidden is exactly what zeroes it, so reading it any later just captures 0
+    // (an actual bug caught here mid-fix, not a hypothetical: the first version of this same code
+    // read window.scrollY after the classList calls and always stored 0).
+    // Guarded against redundant calls: navGo() unconditionally calls closeMenu() even when the menu
+    // was never open (a plain nav-link click), which used to be a harmless no-op back when this
+    // only toggled a CSS class. Now that "unlock" also restores scroll position, an unguarded
+    // scrollLock(false) here would schedule a scrollTo(0, 0) that can race with and clobber the very
+    // section-scroll navGo() fires right after — caught via a real click test (Skills nav link
+    // silently failing to scroll), not spotted by inspection alone.
     scrollLock(on) {
+      if (on === !!this._scrollLocked) return;
+      this._scrollLocked = on;
+      const y = on ? window.scrollY : this._lockedScrollY || 0;
       const fn = on ? "add" : "remove";
       document.documentElement.classList[fn]("scroll-lock");
       document.body.classList[fn]("scroll-lock");
+      if (on) {
+        this._lockedScrollY = y;
+        document.body.style.top = -y + "px";
+      } else {
+        document.body.style.top = "";
+        // Reading a layout property forces a synchronous reflow, so the browser recomputes the
+        // document's scrollable height right here instead of on its own schedule — without this,
+        // scrollTo below reads stale (pre-reflow) layout and silently clamps to 0 (confirmed by
+        // direct inspection). This has to be synchronous, not deferred to the next frame/rAF: when
+        // navGo() closes the menu and opens the modal 60ms later, an rAF-deferred restore may not
+        // have fired yet by the time the modal re-locks and captures window.scrollY — caught via a
+        // real click-through test (menu → Contact → modal captured 0 instead of the real position),
+        // not spotted by inspection alone. Forcing the reflow inline removes the race entirely.
+        document.body.offsetHeight;
+        window.scrollTo(0, y);
+      }
     },
 
     scrollTo(id) {
@@ -263,6 +314,11 @@ function portfolioApp() {
       const y = el.getBoundingClientRect().top + window.scrollY - 12;
       this._liquidWarp();
       window.scrollTo({ top: y, behavior: "smooth" });
+    },
+
+    scrollToTop() {
+      this._liquidWarp();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     },
 
     // Brief "liquid glass" blur/refraction pulse across the whole app while a nav-triggered smooth
@@ -283,9 +339,24 @@ function portfolioApp() {
     },
 
     navGo(item) {
+      // The modal branch deliberately does NOT go through closeMenu()+openModal() (each of which
+      // calls scrollLock) — both the menu and the modal want scroll locked, so unlocking and
+      // immediately re-locking 60ms later just to hand off between them creates a race where the
+      // re-lock can capture scrollY before the unlock's restore has actually landed (caught via a
+      // real click-through test: menu → Contact → modal captured position 0 instead of the real
+      // one). Keeping the lock continuously active through the handoff removes the race outright
+      // instead of trying to make it resolve fast enough.
+      if (item.action === "modal") {
+        this.menuOpen = false;
+        setTimeout(() => {
+          this.modalOpen = true;
+          this.success = false;
+          this.submitting = false;
+        }, 60);
+        return;
+      }
       this.closeMenu();
-      if (item.action === "modal") setTimeout(() => this.openModal(), 60);
-      else setTimeout(() => this.scrollTo(item.id), 80);
+      setTimeout(() => this.scrollTo(item.id), 80);
     },
 
     openMenu() { this.menuOpen = true; this.scrollLock(true); },

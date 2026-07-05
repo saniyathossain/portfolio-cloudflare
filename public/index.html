@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=5b47e0a4dfd0">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=5b47e0a4dfd0">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=5b47e0a4dfd0">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=0f28714f1a2d">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=0f28714f1a2d">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=0f28714f1a2d">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=5b47e0a4dfd0">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=0f28714f1a2d">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -48,12 +48,6 @@
   </script>
 
   <a href="#main" class="skip-link">Skip to content</a>
-
-  <!-- Shared icon defs — reused via <use> so repeated glyphs (brand mark) ship once instead of
-       duplicating path data at every call site. No extra request: it's inline. -->
-  <svg class="svg-sprite" aria-hidden="true">
-    <symbol id="ico-spark" viewBox="0 0 48 48"><path fill="currentColor" d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></symbol>
-  </svg>
 
   <!-- Progressive blur scrim — site stays painted underneath during load -->
   <div id="load-scrim" class="load-scrim" aria-hidden="true"></div>
@@ -99,7 +93,7 @@
       <div class="glass-pill">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
           <span class="brand-bismillah-wrap">
-            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=5b47e0a4dfd0" width="509" height="100" alt="" aria-hidden="true">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=0f28714f1a2d" width="509" height="100" alt="" aria-hidden="true">
           </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
@@ -534,7 +528,6 @@
       <div class="site-footer__cols">
         <div class="site-footer__col">
           <div class="flex items-center gap-2 text-lg font-semibold">
-            <svg class="icon text-accent-bright" width="1.25rem" height="1.25rem" aria-hidden="true"><use href="#ico-spark"/></svg>
             <span x-text="profile.shortName"></span>
           </div>
           <p class="mt-4 max-w-xs text-sm text-white/55" x-text="site.footerTagline"></p>
@@ -551,10 +544,20 @@
           <p class="site-footer__heading text-xs uppercase tracking-wide">Contact</p>
           <ul class="site-footer__links text-sm">
             <li>
-              <a :href="'mailto:' + profile.email">
-                <span x-html="iconSvg('contact', 'ui-icon site-footer__ico ui-icon--sm')" aria-hidden="true"></span>
-                <span x-text="profile.email"></span>
+              <a :href="'mailto:' + profile.email" aria-label="Email">
+                <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><span x-html="iconSvg('contact', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
+                <span>Email</span>
               </a>
+            </li>
+            <li>
+              <a :href="'tel:' + profile.phoneHref" aria-label="Call">
+                <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><span x-html="iconSvg('phone', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
+                <span>Call</span>
+              </a>
+            </li>
+            <li class="site-footer__static-row">
+              <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><span x-html="iconSvg('location', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
+              <span x-text="profile.location"></span>
             </li>
           </ul>
         </div>
@@ -564,7 +567,7 @@
             <template x-for="s in socials" :key="'s-'+s.label">
               <li>
                 <a :href="s.href" target="_blank" rel="noopener noreferrer">
-                  <span x-html="iconSvg(s.icon, 'ui-icon site-footer__ico ui-icon--sm')" aria-hidden="true"></span>
+                  <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><span x-html="iconSvg(s.icon, 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
                   <span x-text="s.label"></span>
                 </a>
               </li>
@@ -572,15 +575,14 @@
           </ul>
         </div>
       </div>
-      <div class="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs site-footer__meta sm:flex-row">
+      <div class="flex items-center justify-center gap-4 border-t border-white/10 pt-8 text-xs site-footer__meta">
         <span x-text="'© ' + currentYear + ' ' + profile.name + '.'"></span>
       </div>
     </div>
-    <p class="site-footer__wm" aria-hidden="true" data-parallax data-parallax-speed="0.16" x-text="profile.shortName.toUpperCase()"></p>
   </footer>
 
   <!-- Nav overlay -->
-  <div class="nav-overlay" :class="menuOpen && 'is-open'" role="dialog" aria-modal="true" aria-label="Navigation menu" x-show="menuOpen" x-transition>
+  <div class="nav-overlay" :class="menuOpen && 'is-open'" role="dialog" aria-modal="true" aria-label="Navigation menu" :inert="!menuOpen">
     <div class="shell flex items-center justify-between py-6">
       <span class="text-lg font-semibold text-white" x-text="profile.shortName"></span>
       <button type="button" class="nav-overlay__close" @click="closeMenu()">
@@ -606,7 +608,7 @@
   </div>
 
   <!-- Request modal -->
-  <div class="modal-backdrop" :class="modalOpen && 'is-open'" role="dialog" aria-modal="true" aria-labelledby="modal-title" @click.self="closeModal()" x-show="modalOpen" x-transition>
+  <div class="modal-backdrop" :class="modalOpen && 'is-open'" role="dialog" aria-modal="true" aria-labelledby="modal-title" @click.self="closeModal()" :inert="!modalOpen">
     <div class="modal-panel" @click.stop>
       <button type="button" class="modal-close grid place-items-center rounded-full bg-surface text-ink/60" @click="closeModal()" aria-label="Close">✕</button>
 
@@ -642,11 +644,15 @@
     </div>
   </div>
 
+  <button type="button" class="back-to-top" :class="showBackToTop && 'is-visible'" :tabindex="showBackToTop ? 0 : -1" @click="scrollToTop()" aria-label="Scroll to top">
+    <span x-html="iconSvg('chevronUp', 'ui-icon ui-icon--lg ui-icon--chevron')" aria-hidden="true"></span>
+  </button>
+
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=5b47e0a4dfd0" defer></script>
-  <script src="/assets/js/icons.min.js?v=5b47e0a4dfd0" defer></script>
-  <script src="/assets/js/loader.min.js?v=5b47e0a4dfd0" defer></script>
-  <script src="/assets/js/boot.min.js?v=5b47e0a4dfd0" defer></script>
+  <script src="/assets/js/data.min.js?v=0f28714f1a2d" defer></script>
+  <script src="/assets/js/icons.min.js?v=0f28714f1a2d" defer></script>
+  <script src="/assets/js/loader.min.js?v=0f28714f1a2d" defer></script>
+  <script src="/assets/js/boot.min.js?v=0f28714f1a2d" defer></script>
 </body>
 </html>

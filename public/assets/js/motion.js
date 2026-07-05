@@ -79,6 +79,41 @@
     );
   }
 
+  // iOS-style spatial parallax for the hero image: the image plane drifts opposite the pointer,
+  // independent of (but composed with, in CSS) the scroll-linked --hero-liquid-y on the same
+  // element. Hand-rolled spring (not Motion One's animate()) because animate() writes a competing
+  // inline style.transform that would silently clobber the scroll transform's CSS custom-property
+  // value — this settle loop only ever touches --hero-spatial-x/y.
+  function heroSpatial() {
+    if (!canEnhance) return;
+    const hero = document.getElementById("home");
+    const layer = document.getElementById("heroLiquid");
+    if (!hero || !layer) return;
+    const RANGE_X = 9;
+    const RANGE_Y = 7;
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    function settle() {
+      cx += (tx - cx) * 0.12;
+      cy += (ty - cy) * 0.12;
+      layer.style.setProperty("--hero-spatial-x", cx.toFixed(2) + "px");
+      layer.style.setProperty("--hero-spatial-y", cy.toFixed(2) + "px");
+      raf = (Math.abs(tx - cx) > 0.05 || Math.abs(ty - cy) > 0.05) ? requestAnimationFrame(settle) : 0;
+    }
+    function kick() {
+      if (!raf) raf = requestAnimationFrame(settle);
+    }
+    hero.addEventListener("pointermove", (e) => {
+      const r = hero.getBoundingClientRect();
+      tx = (((e.clientX - r.left) / r.width) - 0.5) * -2 * RANGE_X;
+      ty = (((e.clientY - r.top) / r.height) - 0.5) * -2 * RANGE_Y;
+      kick();
+    }, { passive: true });
+    hero.addEventListener("pointerleave", () => {
+      tx = 0; ty = 0;
+      kick();
+    });
+  }
+
   let heroInView = true;
   let parallaxRaf = 0;
 
@@ -157,6 +192,7 @@
     }
     specular();
     scrollParallax();
+    heroSpatial();
     if (canEnhance) applyParallax(window.scrollY || 0);
   }
 
