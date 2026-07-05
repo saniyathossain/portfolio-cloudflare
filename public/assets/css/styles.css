@@ -2480,18 +2480,20 @@ html.is-ready .hero__wm {
 .brand-pill:hover .brand-pill__label-in,
 .brand-pill:focus-visible .brand-pill__label-in { color: #0a0a0a; text-shadow: none; }
 
-/* Icon→label reveal — expand on hover via max-width (interpolates on every engine; replaces the
-   grid-template-columns animation, the one flagged layout-prop jank source with interpolation quirks).
-   The width change is inherent to an expanding pill, but it's pointer-driven, one pill at a time. */
+/* Labels are ALWAYS shown, in flow — the icon→label hover-reveal was removed entirely because it was
+   the root of a recurring "juggling" bug that no amount of tuning fully cured. The reveal grew the
+   pill's width on hover; inside a `flex-wrap` row, a pill near the right edge crossing the wrap
+   threshold made flexbox re-run line-breaking and bump a neighbour to the next line mid-animation —
+   reflowing the whole block. Growing the label out of flow (absolute overlay) stopped the re-wrap but
+   introduced its own edge cases (covering neighbours; right-edge pills clipping at the viewport — the
+   exact "most-right pill" the bug report targets). A static, always-visible label sidesteps the
+   entire class of problem: the flex layout is computed once and never changes on interaction, so
+   there is nothing to re-wrap or juggle, at any width or input mode. It's also more readable (the
+   stack is legible at a glance instead of one-icon-at-a-time) and cheaper (no per-pill max-width
+   layout animation — PageSpeed-friendly). Hover keeps a subtle lift + glow + sheen (no size change),
+   so the pills still feel interactive without ever touching layout. */
 .brand-pill__label {
-  position: relative; z-index: 1;
-  display: block;
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition:
-    max-width 0.42s var(--ease-glass),
-    opacity 0.24s ease;
+  display: flex; align-items: center; min-width: 0;
 }
 .brand-pill__label-tx {
   display: block; overflow: hidden; min-width: 0;
@@ -2501,20 +2503,10 @@ html.is-ready .hero__wm {
   padding: 0 0.55rem 0 0.44rem;
   font-size: 0.8125rem; font-weight: 600; color: #14161c;
   letter-spacing: -0.015em; line-height: 1.2;
-  transform: translateX(-5px);
-  transition: transform 0.42s var(--ease-glass), color 0.22s ease;
+  transition: color 0.22s ease;
 }
 .brand-pill--sm .brand-pill__label-in {
   font-size: 0.76rem; padding: 0 0.5rem 0 0.38rem;
-}
-.brand-pill:hover .brand-pill__label,
-.brand-pill:focus-visible .brand-pill__label {
-  max-width: 14rem;
-  opacity: 1;
-}
-.brand-pill:hover .brand-pill__label-in,
-.brand-pill:focus-visible .brand-pill__label-in {
-  transform: none;
 }
 .pill-expand:not(:hover):not(:focus-visible):not([aria-expanded="true"]) .pill-expand__label {
   transition-delay: 0s, 0.18s, 0s;
@@ -2550,19 +2542,10 @@ html.is-ready .hero__wm {
     box-shadow 0.24s var(--ease-tile);
 }
 
-/* Touch / no-hover devices (real phones + DevTools device mode): show pill labels statically
-   instead of revealing them on hover. Root cause of the reported "juggling": on these devices a tap
-   synthesizes a sticky :hover (iOS) — or DevTools device-mode dispatches hover outright — which
-   expands one pill's label (max-width 0 → 14rem) mid-row, reflowing the flex-wrap layout and shoving
-   every pill to its right (and the wrapped rows below) around. That expand (reveal) / collapse
-   (unreveal) also animates max-width, a layout property, so it janks frame-to-frame. Showing labels
-   always makes the stack readable, keeps the row completely static (no reflow → no juggle), and
-   removes every per-pill animation (smoother, far fewer paints — PageSpeed-friendly). Any
-   sticky-hover that still fires is neutralised below so a tap can't nudge the pill. This mirrors the
-   prefers-reduced-motion fallback; desktop (hover: hover / pointer: fine) is unchanged. */
+/* Touch / no-hover devices (real phones): labels are already always-shown in flow (above), so
+   there's nothing to reveal — just neutralise the hover polish so a tap-synthesised sticky :hover
+   (iOS) can't nudge/glow a pill. */
 @media (hover: none), (pointer: coarse) {
-  .brand-pill__label { max-width: 14rem; opacity: 1; transition: none; }
-  .brand-pill__label-in { transform: none; }
   .brand-pill:hover { transform: none; }
   .brand-pill:hover::before { transform: translateX(-135%); }
   .brand-pill.spec:hover::after { opacity: 0; }
@@ -2587,8 +2570,6 @@ html.is-ready .hero__wm {
   .exp-details { transition: none; }
   .exp-row__chev,
   .pill-expand__label { transition: none; }
-  .brand-pill__label { max-width: none; opacity: 1; transition: none; }
-  .brand-pill__label-in { transform: none; }
   .create-band[data-stagger] .create-band__tile { opacity: 1; transform: none; }
   .pill-row[data-stagger] .brand-pill { opacity: 1; transform: none; }
 }
