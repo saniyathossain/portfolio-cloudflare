@@ -2470,6 +2470,12 @@ html.is-ready .hero__wm {
 .brand-pill--sm { padding: 0.26rem; }
 .brand-pill--stack { --pill-top: #f8fafc; --pill-bot: #eef2f6; }
 .brand-pill--ai { --pill-top: #fffefb; --pill-bot: #f9f7f4; }
+/* Experience stack/AI pills sit in a denser accordion context — a touch smaller than the Skills
+   tiles (which keep the full 2.1rem badge). */
+.brand-pill--stack, .brand-pill--ai { padding: 0.26rem; }
+.brand-pill--stack .brand-pill__badge, .brand-pill--ai .brand-pill__badge { width: 1.72rem; height: 1.72rem; }
+.brand-pill--stack .brand-pill__badge img, .brand-pill--ai .brand-pill__badge img { width: 1.1rem; height: 1.1rem; }
+.brand-pill--stack .brand-pill__mono, .brand-pill--ai .brand-pill__mono { font-size: 0.6rem; }
 
 /* sheen sweep across the pill surface, below the icon (z-index 0) */
 .brand-pill::before {
@@ -2634,9 +2640,9 @@ html.is-ready .hero__wm {
 
 /* Role stacks / AI groups */
 .role-tags { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
-.role-tags__group { display: flex; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap; }
+.role-tags__group { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .role-tags__label {
-  flex: none; margin-top: 0.35rem;
+  flex: none;
   display: inline-flex; align-items: center; gap: 0.4rem;
   font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
   min-width: 5.5rem;
