@@ -2094,11 +2094,11 @@ html.is-ready .hero__wm {
 .exp-list { padding: 0.35rem; }
 .exp-list.glass-panel {
   contain: none; overflow: visible;
-  /* This panel resizes every frame during the accordion expand, and WebKit repaints its shadow +
-     background on each resize. A single lighter shadow (instead of the default multi-layer glass
-     shadow) keeps the lift while making that per-frame repaint far cheaper — this was the visible
-     jank on the Experience expand in Safari. */
-  box-shadow: 0 14px 40px -16px rgba(24,30,56,.14), var(--glass-highlight);
+  /* This panel resizes every frame of the accordion expand, and WebKit repaints its drop shadow on
+     each resize — the cost scales with the shadow's BLUR radius, so a large soft glass shadow is the
+     expensive part. Use a tight, small-blur lift instead (kept the tinted rim highlight): the panel
+     still reads as raised, but the per-frame shadow repaint is a fraction of the cost. */
+  box-shadow: 0 5px 14px -9px rgba(24,30,56,.13), var(--glass-highlight);
 }
 .exp-group { padding: 0.35rem 0.35rem 0.5rem; }
 .exp-group--sep {
@@ -2417,17 +2417,17 @@ html.is-ready .hero__wm {
   border-radius: var(--radius-pill);
   padding: 0.3rem;
   gap: 0;
-  /* The PILL is the single shiny surface — a bright top-left gloss streak over a soft brand-tinted
-     glass base. The icon sits directly on it (the badge is transparent), so there's no inner coin
-     and no ring/seam: one seamless glossy brand tile. */
+  /* EXACTLY the .icon-chip recipe (the shiny tile beside the STACK / AI TOOLS + hero labels), just
+     round: a diagonal brand-tinted gradient with a diagonal specular gloss on top, a subtle brand
+     rim, a top inset highlight, and a soft brand lift-shadow below. One seamless glossy tile — the
+     icon sits directly on it (badge is transparent), no inner coin, no hard bottom edge. */
   background:
-    linear-gradient(148deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.3) 27%, transparent 55%),
-    radial-gradient(125% 135% at 30% 16%, color-mix(in srgb, var(--brand) 19%, #fff), color-mix(in srgb, var(--brand) 7%, #fff) 82%);
-  border: none;
+    linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%),
+    linear-gradient(145deg, color-mix(in srgb, var(--brand) 30%, #fff), color-mix(in srgb, var(--brand) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.92),
-    inset 0 -1.5px 2px color-mix(in srgb, var(--brand) 11%, transparent),
-    var(--shadow-outset-sm);
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 2px 9px -3px color-mix(in srgb, var(--brand) 44%, transparent);
   cursor: default; outline: none;
   top: 0;
   transition:
