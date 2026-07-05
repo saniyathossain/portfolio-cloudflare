@@ -5,7 +5,7 @@
     "url": "https://saniyat.com",
     "themeColor": "#0a0a0a",
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
-    "aboutHeading": "Fourteen years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
+    "aboutHeading": "{years}+ years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
     "aboutHighlights": ["telco-scale", "quiet precision"],
     "experienceHighlights": [
       "PHP", "Laravel", "Node.js", "MySQL", "Redis", "Docker", "Nginx", "Elasticsearch",
@@ -16,7 +16,25 @@
     "footerTagline": "Staff Software Engineer crafting backends, products, and the systems that connect them.",
     "ogDescription": "Backend engineering, shipped with quiet precision. {years}+ years building PHP/Laravel and Node.js services at scale.",
     "twitterDescription": "Backend engineering, shipped with quiet precision.",
-    "ogImage": "/assets/img/og-image.jpg"
+    "ogImage": "/assets/img/og-image.jpg",
+    "contactModal": {
+      "titlebarLabel": "Get in touch",
+      "closeAriaLabel": "Close",
+      "heading": "Tell us what you're building.",
+      "fields": {
+        "name": { "label": "Name", "placeholder": "Your name" },
+        "email": { "label": "Email", "placeholder": "you@company.com" },
+        "project": { "label": "Project", "placeholder": "A few words about your project, timeline, and budget." }
+      },
+      "footerNote": "We reply within one business day.",
+      "submitLabel": "Send request",
+      "submittingLabel": "Sending…",
+      "success": {
+        "heading": "Request received",
+        "message": "Thanks for reaching out — I'll get back to you within one business day.",
+        "closeLabel": "Close"
+      }
+    }
   },
   "sections": {
     "services": "Backend, architecture, APIs, and AI-assisted delivery.",

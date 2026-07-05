@@ -329,12 +329,14 @@ function portfolioApp() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
 
-    // Brief "liquid glass" blur/refraction pulse across the whole app while a nav-triggered smooth
-    // scroll is in flight — purely filter/transform (compositor-only). Cleared on the native
-    // `scrollend` event where supported, with a timeout fallback (Safari/short scrolls that never
-    // fire it) so it can never get stuck on.
+    // Brief "liquid glass" blur/refraction pulse across the scrolling content while a nav-triggered
+    // smooth scroll is in flight — purely filter/transform (compositor-only). Scoped to #main, not
+    // the whole app: blurring the fixed site-header along with the page beneath it read as the
+    // header itself "disappearing" mid-scroll, since it's the one thing on screen that never moves.
+    // Cleared on the native `scrollend` event where supported, with a timeout fallback (Safari/short
+    // scrolls that never fire it) so it can never get stuck on.
     _liquidWarp() {
-      const root = document.getElementById("app");
+      const root = document.getElementById("main");
       if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       root.classList.add("is-liquid-warp");
       clearTimeout(this._warpTimer);

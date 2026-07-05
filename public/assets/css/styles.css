@@ -16,22 +16,24 @@ html.is-loading .app-root {
 }
 html:not(.is-loading) .load-scrim { display: none; }
 
-/* Liquid-glass "warp" — a brief blur/refraction pulse across the whole app while a nav click's
-   smooth scroll is in flight (see scrollTo()/_liquidWarp() in app.js), echoing iOS's fluid screen
-   transitions. Scoped to html:not(.is-loading) so it never fights the loader's own rAF-driven
-   filter/transform reveal (which runs unconditionally on .app-root during .is-loading and has no
-   CSS transition of its own — adding one here would make it lag behind the loader's per-frame
-   values). Quick blur-in, slower glide back to clear — asymmetric via .is-liquid-warp's own
-   (faster) transition overriding the base (slower) one only while the class is present.
+/* Liquid-glass "warp" — a brief blur/refraction pulse across the scrolling content while a nav
+   click's smooth scroll is in flight (see scrollTo()/_liquidWarp() in app.js), echoing iOS's fluid
+   screen transitions. Scoped to #main, not .app-root: the fixed .site-header sits alongside <main>
+   as a sibling inside #app, so it was getting swept into the same blur — reading as the header
+   itself "disappearing" for the length of the scroll and snapping back once it cleared, since the
+   header is the one thing on screen that never actually moves. Excluding it keeps the header always
+   legible; the warp now only touches the content actually traveling past it.
+   Quick blur-in, slower glide back to clear — asymmetric via .is-liquid-warp's own (faster)
+   transition overriding the base (slower) one only while the class is present.
    NOTE: the `.is-liquid-warp` override selector below repeats the `html:not(.is-loading)` prefix
    on purpose — without it, the base rule's `html` element selector actually out-specifies a plain
-   `.app-root.is-liquid-warp` (an extra element point beats an extra one it doesn't have), so the
+   `#main.is-liquid-warp` (an extra element point beats an extra one it doesn't have), so the
    "fast entry" transition would silently never apply and everything would run at the slow (exit)
    speed both ways. Same class of specificity bug as the hero-card's reveal-system conflict. */
-html:not(.is-loading) .app-root {
-  transition: filter 0.5s var(--ease-glass), transform 0.5s var(--ease-glass);
+html:not(.is-loading) #main {
+  transition: filter 0.55s var(--ease-glass), transform 0.55s var(--ease-glass);
 }
-html:not(.is-loading) .app-root.is-liquid-warp {
+html:not(.is-loading) #main.is-liquid-warp {
   transition: filter 0.18s var(--ease-glass), transform 0.18s var(--ease-glass);
   filter: blur(6px) saturate(165%);
   transform: scale(1.008);
@@ -393,6 +395,17 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
   gap: 1.5rem;
   margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.5rem;
+}
+/* Below 1024px (phone AND tablet widths) the label+socials block and the "My work" button are each
+   narrow enough to sit on one row with space-between, which reads as two islands stranded at
+   opposite edges with a big dead gap in the middle — not a balanced/symmetric wrap. Stacking removes
+   the lopsided gap; centering both keeps it visually consistent with the rest of the mobile/tablet
+   layout. Desktop (≥1024px) is wide enough that the same space-between reads as a deliberate
+   label-left/action-right layout instead, so it's left alone there. */
+@media (max-width: 1023px) {
+  .about-card__footer { flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
+  .about-card__footer > div { display: flex; flex-direction: column; align-items: center; }
+  .about-card__footer .flex { justify-content: center; }
 }
 .about-card__label { font-size: 0.875rem; color: rgba(17,17,17,.45); }
 /* Shared "logo badge" recipe with .exp-group__logo below — same white-gradient tile + inset
@@ -910,8 +923,7 @@ html.is-loading .site-header {
 }
 
 .header-right { display: flex; align-items: center; gap: 0.65rem; }
-.clock-chip { display: none; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
-@media (min-width: 768px) { .clock-chip { display: flex; } }
+.clock-chip { display: flex; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
 .clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
 .clock-sep { color: rgba(17,17,17,.3); }
 
@@ -1509,8 +1521,14 @@ html.is-ready .hero__wm {
    focus. One shared, slow, unhurried transition drives clip-path/translateX/icon-scale together so
    open and close feel identical. Desktop/fine-pointer only — touch devices have no hover, so the card
    stays fully expanded there (unchanged), the safe fallback under reduced-motion and print. Motion is
-   done entirely with `clip-path` (compositor-only, no width/height reflow). */
-@media (hover: hover) and (pointer: fine) {
+   done entirely with `clip-path` (compositor-only, no width/height reflow). Also requires
+   min-width:1024px, not just hover/pointer capability alone — (hover:hover) and (pointer:fine) are
+   about INPUT capability, not viewport width, so a narrow browser window on a real desktop (a mouse,
+   no touch) still matches them. Without this, resizing a desktop browser down to a phone-width
+   viewport left the card permanently in its collapsed rest state (just the badge, on a plain white
+   background — the tint only ever applied on the hover-open state), since nothing there could ever
+   receive a real hover. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
   /* .hero-card carries data-reveal="scale" for its page-load entrance animation, and
      `[data-reveal].is-visible` (specificity 0,2,0) sets its own `transition` — beating a plain
      `.hero-card` rule (0,1,0) outright, which would silently discard the clip-path transition.
@@ -2708,7 +2726,7 @@ html.is-ready .hero__wm {
    back to the panel's rounded corners so it still reads as one continuous surface. */
 .modal-titlebar {
   display: flex; align-items: center; justify-content: center; position: relative;
-  height: 2.75rem; margin: -1.5rem -1.5rem 1.25rem; padding-inline: 1rem;
+  height: 2.75rem; margin: -1.5rem -1.5rem 1.25rem; padding-inline: 1.5rem;
   border-bottom: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(17,17,17,.035), transparent);
 }
@@ -2719,7 +2737,7 @@ html.is-ready .hero__wm {
 /* Black + copper glass recipe (same as .menu-btn/.back-to-top), not a literal macOS red dot — the
    red circle read as an off-brand borrowed pattern rather than this site's own control language. */
 .modal-titlebar > .modal-close {
-  position: absolute; left: 1rem; top: 50%; z-index: 2;
+  position: absolute; left: 1.5rem; top: 50%; z-index: 2;
   width: 1.9rem; height: 1.9rem; transform: translateY(-50%);
   background: linear-gradient(145deg, #2b2b2b, #060606);
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
@@ -2824,36 +2842,34 @@ body.scroll-lock .back-to-top { opacity: 0; pointer-events: none; }
 .scroll-lock { overflow: hidden !important; height: 100%; }
 body.scroll-lock { position: fixed; width: 100%; }
 
+/* Below 1024px there's no room for the desktop's side-by-side text/photo split, so the photo
+   becomes a full-bleed backdrop behind the text instead — same "text overlaid on the image" idea as
+   desktop, just without the 38/62 column split. (This used to instead push the photo out of
+   .hero's normal flex flow into a short band AFTER all the text/card/partners content — so on a
+   real phone you had to scroll past the whole hero before the photo ever came into view. Letting it
+   fall back to the base `.hero__backdrop { position:absolute; inset:0 }` rule here restores it as an
+   immediately-visible backdrop, matching desktop.) setupHeroContrast() in app.js already samples the
+   image directly under the H1 to flip text to its on-dark variant when needed — that logic is
+   geometry-driven, not breakpoint-specific, so it keeps working unchanged. */
 @media (max-width: 1023px) {
-  .hero {
-    min-height: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .hero__backdrop {
-    position: relative;
-    order: 2;
-    flex: none;
-    inset: auto;
-    width: 100%;
-    height: clamp(20rem, 64vw, 32rem);
-    margin: 0;
-    mask-image: linear-gradient(180deg, transparent 0%, #000 12%);
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%);
-  }
-  .hero__backdrop-liquid img { object-position: 50% 26%; }
+  .hero__backdrop-liquid img { object-position: 50% 20%; }
   .hero__backdrop-scrim {
     background:
-      linear-gradient(180deg, rgba(238,241,246,.4) 0%, rgba(238,241,246,.12) 26%, transparent 58%),
-      linear-gradient(180deg, rgba(255,255,255,.12), transparent 40%);
+      linear-gradient(180deg, rgba(238,241,246,.94) 0%, rgba(238,241,246,.6) 30%, rgba(238,241,246,.2) 54%, transparent 74%),
+      linear-gradient(180deg, rgba(255,255,255,.22), transparent 30%, transparent 68%, rgba(17,17,17,.1));
   }
   .hero__glow { display: none; }
   .hero__grid {
-    order: 1;
-    min-height: auto;
+    min-height: calc(100dvh - 4rem);
     gap: 1.5rem;
     padding-block: clamp(6.25rem, 12vw, 7rem) 1.25rem;
   }
+  /* Middle-aligned on mobile — the desktop left-aligned column reads off-center once there's no
+     photo alongside it to balance the composition. */
+  .hero__copy { align-items: center; text-align: center; }
+  .eyebrow { justify-content: center; }
+  .hero-rating { justify-content: center; }
+  .hero__actions { justify-content: center; }
   .hero__aside { align-items: center; }
   .hero-partners__label { text-align: center; }
   .hero-partners__list { justify-content: center; }
@@ -2863,7 +2879,6 @@ body.scroll-lock { position: fixed; width: 100%; }
     gap: 1.25rem;
     padding-block: 6.5rem 1rem;
   }
-  .hero__backdrop { height: clamp(18rem, 68vw, 27rem); }
   .hero h1 { font-size: clamp(2.35rem, 10vw, 3rem); }
   .hero-card, .hero-partners { max-width: 100%; }
 }
