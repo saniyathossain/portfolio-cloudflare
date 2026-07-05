@@ -789,9 +789,12 @@ html.is-loading .site-header {
 }
 .brand-bismillah-wrap {
   position: relative; display: block;
-  height: clamp(1.35rem, 3.5vw, 1.7rem);
+  height: clamp(1.7rem, 6.5vw, 1.95rem);
   width: auto;
-  max-width: min(9.5rem, 46vw);   /* never crowds the clock chip + Menu at 360px */
+  max-width: min(9.7rem, 43vw);   /* never crowds the clock chip + Menu at 360px */
+}
+@media (min-width: 640px) {
+  .brand-bismillah-wrap { height: clamp(1.35rem, 3.5vw, 1.7rem); max-width: min(9.5rem, 46vw); }
 }
 .brand-btn .brand-bismillah {
   display: block; height: 100%; width: auto; max-width: 100%;
@@ -1835,12 +1838,15 @@ html.is-ready .hero__wm {
 }
 
 /* Create band — parent stagger, one transition path (no animation/transition fight) */
-.create-band { display: flex; flex-direction: column; gap: 0.75rem; padding-block: 2.5rem; }
-@media (min-width: 640px) { .create-band { flex-direction: row; gap: 1rem; } }
+/* Single row at every width, incl. phones — was column-stacked (one tile per row) below 640px,
+   which read as 4 separate full-width buttons instead of the "Code · Ship · Scale" band it is on
+   larger screens. Sized down instead so all 4 keep fitting one line. */
+.create-band { display: flex; flex-direction: row; gap: 0.5rem; padding-block: 1.75rem; }
+@media (min-width: 640px) { .create-band { gap: 1rem; padding-block: 2.5rem; } }
 .create-band__tile {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.6rem; height: 6rem; border-radius: var(--radius-pill);
-  font-size: 1.875rem; font-weight: 500;
+  gap: 0.35rem; height: 4.5rem; border-radius: var(--radius-pill);
+  font-size: 0.75rem; font-weight: 500;
   backface-visibility: hidden;
   transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
 }
@@ -1864,6 +1870,11 @@ html.is-ready .hero__wm {
     box-shadow 0.45s var(--ease-glass);
 }
 @media (min-width: 640px) { .create-band__tile { height: 10rem; font-size: 2.25rem; } }
+@media (max-width: 639px) {
+  .create-band__tile .icon-chip--md { width: 1.6rem; height: 1.6rem; border-radius: 0.5rem; }
+  .create-band__tile .icon-chip--md .ui-icon { width: 0.78rem; height: 0.78rem; }
+  .create-band__tile--dark .create-band__arrow-ico { width: 1.35rem; height: 1.35rem; }
+}
 /* "Code · Ship · [→] · Scale" — each tile a distinct brand hue (violet code → copper ship → ink →
    teal scale) instead of one accent + two flat neutrals, with an embossed text-shadow for depth.
    Code uses --c-violet specifically, not --primary — --primary now aliases --accent (copper) for
@@ -2726,7 +2737,7 @@ html.is-ready .hero__wm {
    back to the panel's rounded corners so it still reads as one continuous surface. */
 .modal-titlebar {
   display: flex; align-items: center; justify-content: center; position: relative;
-  height: 2.75rem; margin: -1.5rem -1.5rem 1.25rem; padding-inline: 1.5rem;
+  height: 3.75rem; margin: -1.5rem -1.5rem 1.25rem; padding-inline: 1.5rem;
   border-bottom: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(17,17,17,.035), transparent);
 }
@@ -2736,9 +2747,13 @@ html.is-ready .hero__wm {
 }
 /* Black + copper glass recipe (same as .menu-btn/.back-to-top), not a literal macOS red dot — the
    red circle read as an off-brand borrowed pattern rather than this site's own control language. */
+/* Anchored with the same 1.5rem inset the panel uses on every other edge (left here, and the
+   submit button's own right/bottom margin below) — was vertically centered in the titlebar strip
+   instead, which put it only ~7px from the panel's top edge while the submit button sat a full
+   1.5rem from the bottom/right, an inconsistent margin the top-anchored version now matches. */
 .modal-titlebar > .modal-close {
-  position: absolute; left: 1.5rem; top: 50%; z-index: 2;
-  width: 1.9rem; height: 1.9rem; transform: translateY(-50%);
+  position: absolute; left: 1.5rem; top: 1.5rem; z-index: 2;
+  width: 1.9rem; height: 1.9rem;
   background: linear-gradient(145deg, #2b2b2b, #060606);
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
   color: rgba(255,255,255,.88); font-size: 0.75rem;
@@ -2747,14 +2762,13 @@ html.is-ready .hero__wm {
 }
 .modal-titlebar > .modal-close:hover,
 .modal-titlebar > .modal-close:focus-visible {
-  transform: translateY(-50%) scale(1.15) rotate(90deg);
+  transform: scale(1.15) rotate(90deg);
   border-color: color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.2));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 3px 12px -1px color-mix(in srgb, var(--accent) 62%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
-  .modal-titlebar > .modal-close { transition: box-shadow 0.25s var(--ease-glass); }
   .modal-titlebar > .modal-close:hover,
-  .modal-titlebar > .modal-close:focus-visible { transform: translateY(-50%); }
+  .modal-titlebar > .modal-close:focus-visible { transform: none; }
 }
 .modal-field label {
   display: flex; align-items: center; gap: 0.35rem;
