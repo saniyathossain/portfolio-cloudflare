@@ -185,12 +185,14 @@ color — used instead of any actual outline/stroke.
   icon-chip-family icon, hover-fill background, and (Experience only) an accordion detail panel +
   tenure popover.
 - **Reveal system** (`[data-reveal]`, `.blur-reveal`, `data-stagger`) — IntersectionObserver-driven
-  entrance animation, `mode: once`. **`.blur-reveal` is Safari-tuned** (`docs/aidlc/37`): animating
-  `filter: blur()` is not compositor-accelerated in WebKit, so `blur-reveal.js` promotes each animating
-  span to its own GPU layer for the life of its transition and releases it on `transitionend`, caps the
-  blur radius (7px), and groups long copy into a few segment-spans (headings stay per-word) so it never
-  animates 20+ filter layers at once. Do **not** re-raise the radius or drop the promotion — that's what
-  made the reveal sluggish in Safari before. **Specificity gotcha:** `[data-reveal].is-visible` sets its own
+  entrance animation, `mode: once`. **`.blur-reveal` never animates `filter`** (`docs/aidlc/37`):
+  animating `filter: blur()` is not compositor-accelerated in WebKit (it re-runs the blur shader every
+  frame while the radius changes — layer promotion can't fix that), which made the reveals sluggish in
+  Safari. Instead each word carries a STATIC pre-blurred overlay copy (`.brw__blur`, painted once) over
+  the sharp text, and the reveal crossfades the blur copy out + slides the word up using **only opacity
+  + transform** — compositor-only, smooth in every browser by construction. Long copy groups into a few
+  segment-spans (headings stay per-word) to keep the DOM light. Do **not** reintroduce an animated
+  `filter` transition here. **Specificity gotcha:** `[data-reveal].is-visible` sets its own
   `transition`/`transform` at specificity (0,2,0) — any component-specific transition/transform rule
   on an element that also carries `data-reveal` must out-specify this (e.g.
   `.hero__aside .hero-card[data-reveal]`, not just `.hero-card`) or it will silently lose the

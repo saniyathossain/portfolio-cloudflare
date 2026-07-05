@@ -87,10 +87,10 @@ html:not(.is-loading) #main.is-liquid-warp {
   --glass-blur: blur(26px) saturate(215%);
   --glass-blur-lg: blur(38px) saturate(220%);
   /* top light line + a full 1px hue-tinted rim (the "refracted edge") — --tint resolves per section/[data-ci] */
-  --glass-highlight: inset 0 1px 0 rgba(255,255,255,.85), inset 0 0 0 1px color-mix(in srgb, var(--tint) 20%, transparent);
-  --glass-sheen: rgba(255,255,255,.9);
-  --glass-shadow: 0 18px 50px rgba(24,30,56,.10), 0 3px 12px rgba(24,30,56,.06);
-  --glass-shadow-hover: 0 26px 70px rgba(24,30,56,.16), 0 6px 18px rgba(24,30,56,.10);
+  --glass-highlight: inset 0 1px 0 rgba(255,255,255,.96), inset 0 0 0 1px color-mix(in srgb, var(--tint) 32%, transparent);
+  --glass-sheen: rgba(255,255,255,.95);
+  --glass-shadow: 0 22px 60px rgba(24,30,56,.13), 0 4px 14px rgba(24,30,56,.08);
+  --glass-shadow-hover: 0 32px 84px rgba(24,30,56,.20), 0 8px 22px rgba(24,30,56,.13);
   --radius-pill: 9999px;
   --radius-card: 2rem;
   --radius-card-sm: 1.25rem;
@@ -485,20 +485,31 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   border-top: 2px solid var(--tint);
 }
 
-/* Softer inner glow in Experience + Skills — avoid aurora/tint stacking too vivid */
-#experience .glass-panel,
-#skills .glass-panel {
+/* Experience: one large panel — a restrained hue wash so the whole area reads as tinted glass while
+   keeping the dense role text crisp. */
+#experience .glass-panel {
   background: color-mix(in srgb, var(--glass-bg-strong) 88%, #fff);
 }
-#experience .glass-panel::before,
+#experience .glass-panel::before {
+  background:
+    radial-gradient(100% 70% at 10% -8%, color-mix(in srgb, var(--tint) 9%, transparent), transparent 62%),
+    linear-gradient(135deg, color-mix(in srgb, var(--tint) 6%, transparent), transparent 74%);
+}
+#experience .glass-panel[data-ci] {
+  border-top-color: color-mix(in srgb, var(--tint) 72%, var(--line));
+}
+/* Skills: per-category cards each wear their own hue boldly — a clear colour signature per card
+   (Languages azure, Frameworks teal, Data violet, Platform copper, AI cyan) instead of near-white. */
+#skills .glass-panel {
+  background: color-mix(in srgb, var(--glass-bg-strong) 84%, #fff);
+}
 #skills .glass-panel::before {
   background:
-    radial-gradient(100% 70% at 10% -8%, color-mix(in srgb, var(--tint) 3%, transparent), transparent 62%),
-    linear-gradient(135deg, color-mix(in srgb, var(--tint) 2%, transparent), transparent 74%);
+    radial-gradient(125% 82% at 12% -10%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--tint) 12%, transparent), transparent 72%);
 }
-#experience .glass-panel[data-ci],
 #skills .glass-panel[data-ci] {
-  border-top-color: color-mix(in srgb, var(--tint) 55%, var(--line));
+  border-top: 3px solid var(--tint);
 }
 .edu-row[data-ci] {
   border-top: 2px solid var(--tint);
@@ -508,10 +519,10 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 }
 
 .sec h2 {
-  font-size: clamp(2rem, 3vw + 0.7rem, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.06;
+  font-size: clamp(2.35rem, 3.4vw + 0.8rem, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.042em;
+  line-height: 1.02;
   text-shadow: var(--text-sh-tint);
 }
 .sec-sub {
@@ -2446,22 +2457,28 @@ html.is-ready .hero__wm {
 
 .brand-pill__badge {
   position: relative; z-index: 1; flex: none;
-  width: 1.85rem; height: 1.85rem; aspect-ratio: 1;
+  width: 2.1rem; height: 2.1rem; aspect-ratio: 1;
   display: grid; place-items: center; margin: 0;
   border-radius: 50%;
   color: var(--brand);
-  background: none;
+  /* Each logo now sits on its own glossy white coin with a brand-tinted rim — reads as a crisp,
+     shiny app-icon tile instead of a flat logo floating on the pale pill. The mono-badge rule below
+     (higher specificity via :has) still wins for lettermark tiles, keeping their solid brand fill. */
+  background: radial-gradient(120% 120% at 30% 20%, #fff, color-mix(in srgb, var(--brand) 9%, #fff) 78%);
   border: none;
-  box-shadow: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 0 0 1px color-mix(in srgb, var(--brand) 30%, rgba(255,255,255,.5)),
+    0 1px 4px rgba(17,17,17,.11);
 }
 .brand-pill--sm .brand-pill__badge {
-  width: 1.5rem; height: 1.5rem;
+  width: 1.7rem; height: 1.7rem;
 }
 .brand-pill__badge img {
-  width: 1.2rem; height: 1.2rem; object-fit: contain;
+  width: 1.34rem; height: 1.34rem; object-fit: contain;
   transition: transform 0.22s var(--ease-tile), filter 0.22s ease;
 }
-.brand-pill--sm .brand-pill__badge img { width: 1rem; height: 1rem; }
+.brand-pill--sm .brand-pill__badge img { width: 1.12rem; height: 1.12rem; }
 
 .brand-pill__badge:has(.brand-pill__mono) {
   border-radius: var(--radius-pill);

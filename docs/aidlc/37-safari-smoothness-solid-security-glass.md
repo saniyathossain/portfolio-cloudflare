@@ -77,6 +77,27 @@ no overflow. New headers verified in source; CSP byte-identical. Bundle delta: `
 techniques used (per-layer GPU promotion, radius reduction, node-count cap) are the canonical
 WebKit-effective fixes; a production Lighthouse/real-Safari pass should confirm the smoothness gain.
 
+## Follow-up (same round, after user testing)
+
+Two pieces of the first pass were reported back as not landing, and both were corrected:
+
+- **Safari was still sluggish.** The first attempt still animated `filter: blur()` (7px→0) with GPU
+  layer promotion. That was the wrong mechanism: promotion only makes *compositing* cheap, but the blur
+  *radius itself* was animating, so WebKit re-runs the blur shader every frame regardless of the layer.
+  **Corrected mechanism:** never animate `filter`. Each word now carries a STATIC pre-blurred overlay
+  copy (`.brw__blur`, `filter: blur(8px)`, painted once) stacked over the sharp text; the reveal
+  crossfades the overlay out and slides the word up using **only opacity + transform**. Verified by
+  construction — the animated `transition-property` is `opacity, transform` / `opacity`, never `filter`
+  — so it's smooth in every browser without needing a real-Safari frame capture to prove it.
+- **"Can't see much visual difference."** The Phase-D elevation was too timid. On the user picking all
+  four levers at "bold but tasteful", pushed each to clearly-visible strength: stronger `--glass-highlight`
+  rim + deeper `--glass-shadow`; **reversed the deliberate Experience/Skills tint-muting** (the prior
+  "avoid too vivid" round was the reason the panels read flat) so each Skills card wears its own hue
+  (azure/teal/violet/copper/cyan) with a solid colored top edge; `.sec h2` up to weight 800 and a larger
+  clamp; and the tech-icon badges (`.brand-pill__badge`) enlarged onto crisp glossy white coins with a
+  brand-tinted rim (mono lettermark tiles keep their solid fill). Verified: before/after screenshots at
+  1280 + 390, no horizontal overflow at 390, zero console errors.
+
 ## Build note (pre-existing, unchanged)
 `set-asset-version.js` and `sync-head.js` hash different exclude sets (the latter includes
 `boot.min.js`), so `src/index.js`/`boot.js` and `index.html` carry *different* `?v=` hashes — this is
