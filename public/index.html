@@ -386,10 +386,14 @@
                           </template>
                         </ul>
 
+                        <!-- No data-stagger on the pill-rows below: they live inside the accordion's own
+                             animated height-open, so the scroll IntersectionObserver reveal fired mid-transition
+                             and fought with the panel's own motion (the pill jitter on mobile). The accordion
+                             opening is already the reveal. -->
                         <div class="role-tags" x-show="(role.stacks && role.stacks.length) || (role.aiTools && role.aiTools.length)">
                           <div class="role-tags__group" x-show="role.stacks && role.stacks.length">
                             <span class="role-tags__label role-tags__label--stack"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('chip', 'ui-icon')" aria-hidden="true"></span></span> Stack</span>
-                            <div class="pill-row" data-stagger>
+                            <div class="pill-row">
                               <template x-for="item in role.stacks" :key="role.id + '-s-' + item">
                                 <span class="brand-pill brand-pill--stack spec" :style="'--brand:' + brandOf(item).color">
                                   <span class="brand-pill__badge">
@@ -407,7 +411,7 @@
                           </div>
                           <div class="role-tags__group" x-show="role.aiTools && role.aiTools.length">
                             <span class="role-tags__label role-tags__label--ai"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('sparkles', 'ui-icon')" aria-hidden="true"></span></span> AI tools</span>
-                            <div class="pill-row" data-stagger>
+                            <div class="pill-row">
                               <template x-for="item in role.aiTools" :key="role.id + '-ai-' + item">
                                 <span class="brand-pill brand-pill--ai spec" :style="'--brand:' + brandOf(item).color">
                                   <span class="brand-pill__badge">
