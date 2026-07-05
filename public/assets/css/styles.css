@@ -1367,47 +1367,45 @@ html.is-ready .hero__wm {
   opacity: 0.5; mix-blend-mode: soft-light;
 }
 .hero-card__inner { position: relative; z-index: 1; display: flex; gap: 0.5rem; border-radius: 0.9rem; }
-/* Badge — the EXACT .icon-chip/.nav-desktop__pill recipe (same gradient/border/box-shadow formulas,
-   same diagonal specular ::before gloss), pinned to --accent so it reads copper/on-brand regardless
-   of the hero section's ambient --tint. No backdrop-filter (flat glass panel, not frosted). */
-/* Badge reads --tint/--tint-ink, set per active heroCards item via tintVars() in app.js (:style
-   binding, same technique .partner-orb already uses for --brand) — pinned to one of the site's 3
-   existing brand hues (accent/primary/teal), never a new color; falls back to the original copper
-   if --tint is ever unset (e.g. before Alpine hydrates). */
+/* Badge + body submerged into one surface — no separate tinted tile, no border/shadow of its own;
+   the icon itself is the only accent, shown large with its own drop-shadow for depth/prominence at
+   rest (standing out of the card like a tree out of its pot), contracting smoothly on hover/focus as
+   a tactile "settle" cue. Nothing is hidden behind hover anymore — the whole card is always fully
+   shown, so there's no separate collapsed/expanded state to keep in sync. Reads --tint/--tint-ink,
+   set per active heroCards item via tintVars() in app.js (:style binding, same technique
+   .partner-orb already uses for --brand) — pinned to one of the site's 3 existing brand hues
+   (accent/primary/teal), never a new color; falls back to the original copper if --tint is ever
+   unset (e.g. before Alpine hydrates). */
 .hero-card__badge {
-  position: relative; overflow: hidden;
+  position: relative;
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
-  border-radius: 0.9rem; color: var(--tint-ink, var(--accent-dark)); font-size: 1.875rem; line-height: 0;
-  background: linear-gradient(145deg,
-    color-mix(in srgb, var(--tint, var(--accent)) 32%, #fff),
-    color-mix(in srgb, var(--tint, var(--accent)) 12%, #fff));
-  border: 1px solid color-mix(in srgb, var(--tint, var(--accent)) 26%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.7),
-    0 3px 10px -3px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent);
-  transition:
-    background var(--dur-fast) var(--ease-glass),
-    border-color var(--dur-fast) var(--ease-glass),
-    box-shadow var(--dur-fast) var(--ease-glass);
-}
-.hero-card__badge::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
-  background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
-  opacity: 0.72;
+  color: var(--tint-ink, var(--accent-dark));
 }
 /* Icon wrapper — a stable element for the swap-synced pulse, since x-html replaces the SVG root
    wholesale on each card change (a transform on the SVG itself would be discarded with it). */
 .hero-card__badge-icon {
   position: relative; z-index: 2; display: inline-flex;
-  transition: transform var(--dur-swap) var(--ease-glass);
+  transform: scale(2.4);
+  filter: drop-shadow(0 8px 12px color-mix(in srgb, var(--tint, var(--accent)) 45%, transparent));
+  transition: transform 0.5s var(--ease-smooth), filter 0.5s var(--ease-glass);
 }
-.hero-card__badge-icon.is-pulsing { transform: scale(0.96); }
+.hero-card:hover .hero-card__badge-icon,
+.hero-card:focus-within .hero-card__badge-icon {
+  transform: scale(1);
+  filter: drop-shadow(0 2px 5px color-mix(in srgb, var(--tint, var(--accent)) 30%, transparent));
+}
+/* Higher specificity than the plain hover rule above so a card-advance click mid-hover still reads
+   as a pulse (a small dip) instead of getting silently outranked and disappearing. */
+.hero-card__badge-icon.is-pulsing { transform: scale(2.25); }
+.hero-card:hover .hero-card__badge-icon.is-pulsing,
+.hero-card:focus-within .hero-card__badge-icon.is-pulsing { transform: scale(0.92); }
 .hero-card__badge .ui-icon { opacity: .9; }
 .hero-card__body {
   flex: 1; border-radius: 0.9rem;
-  background: rgba(241, 240, 238, 0.72);
   padding: 0.75rem; display: flex; flex-direction: column; justify-content: space-between;
-  border: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-card__badge-icon { transition: none; }
 }
 /* Content swap — direction-aware: "next" exits left/enters from the right (matching the arrow
    icons' own left/right semantics), "prev" mirrors. Driven by cardStep()/_finishSwap() in app.js via
@@ -1473,158 +1471,11 @@ html.is-ready .hero__wm {
     0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
 }
 
-/* Collapsed-badge → hover-expand drawer, "genie"-style: the visible pill grows out of the badge and
-   shrinks back into it, right-anchored the whole time (the clip-path's right inset never moves —
-   only its left/top/bottom insets sweep outward from the badge), rather than unveiling a fixed-size
-   rectangle. At rest the card is clipped down to exactly the badge's own footprint (tight top/
-   bottom/left insets, zero right padding) so the collapsed pill IS the badge — no white card margin
-   showing around it, flush against the same right edge the "Worked with" icons line up against. The
-   badge's own border/shadow are hidden at rest (nothing to separate it from, since it fully occupies
-   the visible area) and fade in once the card opens, once it's a distinct tile again. Hovering/
-   focusing slides the badge left (`translateX` back to its natural flex slot) while the drawer opens
-   out of the anchor; the badge slides back right and the panel shrinks back into it on hover-out —
-   one shared, slow, unhurried transition drives clip-path and the badge's translateX at the same
-   duration+curve, so open and close feel identical and nothing outpaces anything else. (No `scale()`
-   here on purpose — `.hero-card` already has its own JS-driven pointer-tilt via Motion One
-   (`tilt()` in motion.js writes `rotateX`/`rotateY` to its inline `transform` continuously), which
-   would fight a CSS `transform` transition on the same property.) Desktop/fine-pointer only — touch
-   devices have no hover, so the card stays fully expanded there (unchanged), the safe fallback under
-   reduced-motion and print.
-   The card's own box never changes size (fixed height, laid out at full width) — motion is done
-   entirely with `clip-path` (compositor-only, no width/height reflow, which is what made the earlier
-   version feel janky), so this glides the way macOS Tahoe panels do — no stutter. */
-@media (hover: hover) and (pointer: fine) {
-  /* .hero-card carries data-reveal="scale" for its page-load entrance animation, and
-     `[data-reveal].is-visible` (specificity 0,2,0) sets its own `transition` — beating a plain
-     `.hero-card` rule (0,1,0) outright, which silently discarded our clip-path transition entirely
-     (clip-path had NO transition-property at all once that rule won, so the drawer snapped open/
-     closed instantly — the real cause of the "still very fast" motion, not a duration/easing
-     problem). `.hero__aside .hero-card[data-reveal]` (0,3,0) decisively outranks it. */
-  .hero__aside .hero-card[data-reveal] {
-    height: 8rem;
-    padding: 0.5rem 0 0.5rem 0.5rem;
-    clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
-    /* No white ring/inner-highlight at rest (that's the "glass card" chrome — a leftover container
-       hint around the merged badge); just a soft shadow matching the badge's own. Restored in full
-       once the card opens. Rest/closing runs a touch faster than the hover-triggered open below
-       (asymmetric timing — system response snaps back quicker than the deliberate open). */
-    box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
-    transition:
-      clip-path 0.52s var(--ease-smooth),
-      padding-right 0.52s var(--ease-smooth),
-      box-shadow 0.4s var(--ease-glass);
-  }
-  .hero-card__inner { height: 100%; align-items: center; }
-  /* The glass-sheen top highlight is styling for the expanded "card" surface — hide it while
-     collapsed so nothing washes over the merged badge, fade in once expanded. */
-  .hero__aside .hero-card[data-reveal]::after { opacity: 0; transition: opacity 0.5s var(--ease-glass); }
-  .hero-card__badge {
-    border-color: transparent;
-    box-shadow: none;
-    /* Shifted to sit flush at the card's true right edge at rest; returns to its natural
-       left-of-body flex position on hover/focus. Value accounts for the card's max-width, which
-       differs by breakpoint (see the 1024px override below). background is included here (not just
-       border-color/box-shadow) so the per-card tint swap (cardStep()) still animates smoothly while
-       the drawer is collapsed on desktop — this whole transition list REPLACES the base
-       .hero-card__badge rule's list for hover-capable devices (same-specificity selector, later in
-       the file wins), so anything that rule needs to keep animating must be repeated here too. */
-    transform: translateX(15.5rem);
-    transition:
-      transform 0.52s var(--ease-smooth),
-      background var(--dur-fast) var(--ease-glass),
-      border-color 0.4s var(--ease-glass),
-      box-shadow 0.4s var(--ease-glass);
-  }
-  @media (min-width: 1024px) {
-    .hero-card__badge { transform: translateX(13.5rem); }
-  }
-  .hero-card__body {
-    opacity: 0; transform: translateX(-8px);
-    transition: opacity 0.4s var(--ease-glass), transform 0.52s var(--ease-smooth);
-  }
-  /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
-     enter/exit duration otherwise: the :hover/:focus-within selectors below are what's active while
-     OPENING, so declaring transition here is what actually governs the open half of the animation;
-     the rest-state declarations above govern the close half once the pointer leaves.
-     Real backdrop-filter here (not the faux-frost this file uses elsewhere for scrolling glass) is
-     safe precisely because it's scoped to :hover/:focus-within — it only ever repaints while a
-     desktop pointer is deliberately holding the card open, never continuously while scrolling, so it
-     doesn't touch the mobile-repaint cost --frost-bg was built to avoid (mobile has no hover at all,
-     so it never runs there regardless). Background dropped further and blur pushed up so the effect
-     actually reads as frosted glass instead of a faint tint — a lighter tint with a shallow blur was
-     technically real backdrop-filter but visually indistinguishable from the flat rest-state card,
-     which is why it didn't look "frosted" despite being real. A touch of --tint mixed into the white
-     (instead of plain white) gives the glass some atmosphere/character to pick up, rather than
-     reading as a colorless film. */
-  .hero__aside .hero-card[data-reveal]:hover,
-  .hero__aside .hero-card[data-reveal]:focus-within {
-    padding-right: 0.5rem;
-    clip-path: inset(0 0 0 0 round 1.35rem);
-    background: linear-gradient(180deg,
-      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.4)) 0%,
-      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.18)) 100%);
-    backdrop-filter: blur(32px) saturate(190%);
-    -webkit-backdrop-filter: blur(32px) saturate(190%);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.9),
-      0 0 0 1px rgba(230,229,226,.35),
-      0 18px 46px -10px rgba(17, 17, 17, 0.14);
-    transition:
-      clip-path 0.6s var(--ease-smooth),
-      padding-right 0.6s var(--ease-smooth),
-      background 0.6s var(--ease-smooth),
-      box-shadow 0.45s var(--ease-glass);
-  }
-  .hero__aside .hero-card[data-reveal]:hover::after,
-  .hero__aside .hero-card[data-reveal]:focus-within::after { opacity: 0.5; }
-  .hero-card:hover .hero-card__badge,
-  .hero-card:focus-within .hero-card__badge {
-    transform: translateX(0);
-    border-color: color-mix(in srgb, var(--accent) 26%, transparent);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.7),
-      0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
-    transition:
-      transform 0.6s var(--ease-smooth),
-      background var(--dur-fast) var(--ease-glass),
-      border-color 0.45s var(--ease-glass),
-      box-shadow 0.45s var(--ease-glass);
-  }
-  .hero-card:hover .hero-card__body,
-  .hero-card:focus-within .hero-card__body {
-    opacity: 1; transform: none;
-    transition: opacity 0.45s var(--ease-glass), transform 0.6s var(--ease-smooth);
-  }
-  /* The icon itself grows as the drawer opens — same icon already shown collapsed (activeCard's
-     own glyph), not a new one, just scaled up from its own base so it reads as "growing into" the
-     opened card rather than a swap. Grows past the badge tile's own edge (not just larger within
-     it): the tile's rest-state overflow:hidden is what keeps the collapsed badge crisp, but that
-     same clipping would silently cap the grown icon at the tile's boundary, so overflow switches to
-     visible for the open state specifically. z-index raised above the body text so the bleed reads
-     as the icon overlapping the card, not the card clipping the icon. Same duration/curve as the
-     clip-path open so nothing outpaces the reveal it's tied to. */
-  .hero-card:hover .hero-card__badge,
-  .hero-card:focus-within .hero-card__badge {
-    overflow: visible;
-  }
-  .hero-card__badge-icon { transform-origin: 50% 50%; }
-  .hero-card:hover .hero-card__badge-icon,
-  .hero-card:focus-within .hero-card__badge-icon {
-    transform: scale(7);
-    z-index: 4;
-    transition: transform 0.6s var(--ease-smooth);
-  }
-  /* Higher specificity than the plain hover rule above so a card-advance click mid-hover still
-     reads as a pulse (a slight dip from the grown size) instead of .is-pulsing's scale(0.96) getting
-     silently outranked and disappearing while the drawer is open. */
-  .hero-card:hover .hero-card__badge-icon.is-pulsing,
-  .hero-card:focus-within .hero-card__badge-icon.is-pulsing {
-    transform: scale(6.2);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hero-card, .hero-card__body, .hero-card__badge, .hero-card__badge-icon { transition: none; }
-  }
-}
+/* The card used to collapse down to just the badge at rest and expand on hover ("genie"-style,
+   right-anchored) — replaced: the whole card is now always fully shown (badge + body submerged into
+   one surface, see .hero-card__badge/.hero-card__badge-icon/.hero-card__body above), with only the
+   icon's own size/shadow responding to hover. No clip-path, no translateX slide, no opacity toggle
+   left to keep in sync between two states. */
 
 .hero-partners { width: 100%; max-width: 24rem; }
 .hero-partners__label {
