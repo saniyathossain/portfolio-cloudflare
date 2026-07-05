@@ -496,9 +496,10 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   background: color-mix(in srgb, var(--glass-bg-strong) 88%, #fff);
 }
 #experience .glass-panel::before {
-  background:
-    radial-gradient(100% 70% at 10% -8%, color-mix(in srgb, var(--tint) 9%, transparent), transparent 62%),
-    linear-gradient(135deg, color-mix(in srgb, var(--tint) 6%, transparent), transparent 74%);
+  /* Single cheap linear wash (no radial / no in-gradient color-mix): this pseudo repaints on every
+     frame of the accordion expand, so keeping it a light one-layer gradient cuts that cost while the
+     blue tint identity stays. */
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 9%, transparent), transparent 60%);
 }
 #experience .glass-panel[data-ci] {
   border-top-color: color-mix(in srgb, var(--tint) 72%, var(--line));
@@ -2091,7 +2092,14 @@ html.is-ready .hero__wm {
 
 /* Experience — services-style list inside glass panel */
 .exp-list { padding: 0.35rem; }
-.exp-list.glass-panel { contain: none; overflow: visible; }
+.exp-list.glass-panel {
+  contain: none; overflow: visible;
+  /* This panel resizes every frame during the accordion expand, and WebKit repaints its shadow +
+     background on each resize. A single lighter shadow (instead of the default multi-layer glass
+     shadow) keeps the lift while making that per-frame repaint far cheaper — this was the visible
+     jank on the Experience expand in Safari. */
+  box-shadow: 0 14px 40px -16px rgba(24,30,56,.14), var(--glass-highlight);
+}
 .exp-group { padding: 0.35rem 0.35rem 0.5rem; }
 .exp-group--sep {
   margin-top: 0.35rem; padding-top: 0.85rem;

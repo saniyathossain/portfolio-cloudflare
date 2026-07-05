@@ -529,9 +529,18 @@ function portfolioApp() {
       clearTimeout(panel._heightTimer);
       panel.removeEventListener("transitionend", panel._heightOnEnd);
 
+      // Promote the inner content to its own compositor layer for the duration of the height
+      // animation: it gets rasterized once, then the panel's animating overflow:hidden just clips
+      // that cached layer each frame instead of repainting the (now glossy) stack coins + detail
+      // list every frame — the height-driven repaint was the Safari jank on the Experience expand.
+      // The layer is released on finish so nothing lingers. Safe here: no popovers live inside inner
+      // (they sit in the exp-row header), so the new stacking context can't clip a tooltip.
+      const inner = panel.querySelector(".exp-details__inner");
+
       const finish = () => {
         clearTimeout(panel._heightTimer);
         panel.removeEventListener("transitionend", panel._heightOnEnd);
+        if (inner) inner.style.willChange = "";
         onDone();
       };
       panel._heightOnEnd = (e) => { if (e.propertyName === "height") finish(); };
@@ -539,6 +548,7 @@ function portfolioApp() {
       panel._heightTimer = setTimeout(finish, durationMs + 80);
 
       requestAnimationFrame(() => {
+        if (inner) inner.style.willChange = "transform";
         panel.style.transition = "height " + durationMs + "ms cubic-bezier(0.32, 0.72, 0, 1)";
         panel.style.height = toHeight;
       });
