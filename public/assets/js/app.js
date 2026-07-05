@@ -304,7 +304,12 @@ function portfolioApp() {
         // real click-through test (menu → Contact → modal captured 0 instead of the real position),
         // not spotted by inspection alone. Forcing the reflow inline removes the race entirely.
         document.body.offsetHeight;
-        window.scrollTo(0, y);
+        // Explicit behavior:"instant" is required — the legacy 2-arg scrollTo(0, y) form is governed
+        // by html's own `scroll-behavior: smooth` (confirmed via direct inspection: without this, the
+        // restore visibly animates from 0 up to the real position over several hundred ms instead of
+        // snapping back, reading as "the page scrolled to top, then scrolled back" even though the
+        // internal scrollY value was always correct at every sampled instant).
+        window.scrollTo({ top: y, left: 0, behavior: "instant" });
       }
     },
 
