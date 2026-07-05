@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=ab8fb5ac1447">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=ab8fb5ac1447">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=ab8fb5ac1447">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=210461b70d20">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=210461b70d20">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=210461b70d20">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=ab8fb5ac1447">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=210461b70d20">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -93,7 +93,7 @@
       <div class="glass-pill">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
           <span class="brand-bismillah-wrap">
-            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=ab8fb5ac1447" width="509" height="100" alt="" aria-hidden="true">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=210461b70d20" width="509" height="100" alt="" aria-hidden="true">
           </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
@@ -160,7 +160,7 @@
       <div class="shell hero__grid">
         <div class="hero__copy">
           <p class="eyebrow" data-reveal data-delay="200">
-            <span class="eyebrow-dot"></span><span x-text="profile.eyebrow"></span>
+            <span class="eyebrow-dot"></span><span x-text="profile.title + ' · ' + profile.location"></span>
           </p>
           <h1>
             <!-- SYNC:H1:START -->
@@ -335,8 +335,7 @@
                 <span class="popover exp-group__tenure">
                   <span class="exp-group__tenure-badge popover__trigger" tabindex="0" x-text="group.companyTenure.label"></span>
                   <span class="popover__panel" role="tooltip">
-                    <span class="popover__label" x-text="group.companyTenure.label"></span>
-                    <span class="popover__meta" x-text="group.companyTenure.totalMonths + ' months across ' + group.roles.length + (group.roles.length === 1 ? ' role' : ' roles')"></span>
+                    <span class="popover__label" x-text="group.roles.length + (group.roles.length === 1 ? ' role' : ' roles')"></span>
                   </span>
                 </span>
               </header>
@@ -363,7 +362,6 @@
                               <time class="exp-row__period popover__trigger" tabindex="0" @click.stop x-text="role.period"></time>
                               <span class="popover__panel" role="tooltip">
                                 <span class="popover__label" x-text="tenureOf(role.period).label"></span>
-                                <span class="popover__meta" x-text="tenureOf(role.period).totalMonths + ' months'"></span>
                               </span>
                             </span>
                           </div>
@@ -512,7 +510,7 @@
                     </span>
                   </span>
                   <h3 class="edu-row__school" x-text="e.school"></h3>
-                  <p class="edu-row__degree" x-text="e.degree"></p>
+                  <p class="edu-row__degree" x-text="e.degreeType + ' in ' + e.subject"></p>
                 </div>
               </a>
               <span class="edu-place edu-row__place" x-text="e.place"></span>
@@ -660,9 +658,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=ab8fb5ac1447" defer></script>
-  <script src="/assets/js/icons.min.js?v=ab8fb5ac1447" defer></script>
-  <script src="/assets/js/loader.min.js?v=ab8fb5ac1447" defer></script>
-  <script src="/assets/js/boot.min.js?v=ab8fb5ac1447" defer></script>
+  <script src="/assets/js/data.min.js?v=210461b70d20" defer></script>
+  <script src="/assets/js/icons.min.js?v=210461b70d20" defer></script>
+  <script src="/assets/js/loader.min.js?v=210461b70d20" defer></script>
+  <script src="/assets/js/boot.min.js?v=210461b70d20" defer></script>
 </body>
 </html>

@@ -389,19 +389,23 @@ function portfolioApp() {
     },
 
     tintVars(tint) {
-      // primary/teal deliberately resolve to violet/green (not --primary/--teal themselves, which
+      // primary/blue deliberately resolve to violet/blue (not --primary/--teal themselves, which
       // are each used 10-20+ times elsewhere) — the azure/sea-teal pair sits only 12° apart on the
-      // hue wheel and read as near-identical pale-blue badges; violet/green are 106°+ from copper
-      // and each other.
+      // hue wheel and read as near-identical pale-blue badges; violet/blue are well separated from
+      // copper and each other.
       // --tint-ink used to be each hue's *darkened* form (--accent-dark #97501f, a literal brown;
       // #146b29, a muddy forest green) — fine for small text-sized accents, but blown up to the
       // hero-card icon's own scale it read as a flat "copper and beige" wash rather than a real
       // color. Switched to each hue's own bright/base tone instead (still enough contrast against
       // the pale hero photo, now backed by a real drop-shadow for separation).
+      // The "Lately" card was --c-green (#30d158) — a light, low-saturation green that read as
+      // barely-there against this card's own pale surface (confirmed low contrast, not just a
+      // hunch). --c-blue (#0a84ff) is a genuinely distinct, higher-contrast hue from both copper
+      // and violet, and reads better against light backgrounds generally.
       const map = {
         accent: { tint: "var(--accent)", ink: "var(--accent-bright)" },
         primary: { tint: "var(--c-violet)", ink: "var(--c-violet)" },
-        teal: { tint: "var(--c-green)", ink: "var(--c-green)" },
+        blue: { tint: "var(--c-blue)", ink: "var(--c-blue)" },
       };
       const v = map[tint] || map.accent;
       return "--tint:" + v.tint + ";--tint-ink:" + v.ink;

@@ -348,7 +348,10 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   min-width: 0;
   color: inherit; text-decoration: none;
 }
-.edu-row__link:hover .edu-row__school { text-decoration: underline; text-underline-offset: 2px; }
+.edu-row__link:hover .edu-row__school,
+.edu-row__link:focus-visible .edu-row__school { color: var(--tint-deep); }
+.edu-row__link:hover .edu-row__logo,
+.edu-row__link:focus-visible .edu-row__logo { transform: scale(1.1); }
 .edu-row .edu-place { display: none; }
 @media (min-width: 1024px) {
   .edu-row.glass-card {
@@ -404,6 +407,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   width: 3rem; height: 3rem;
   border: 1px solid color-mix(in srgb, var(--tint) 22%, rgba(255,255,255,.95));
   --logo-badge-shadow: color-mix(in srgb, var(--tint) 35%, rgba(24,30,56,.18));
+  transition: transform 0.28s var(--ease-tile);
 }
 .edu-row__logo img { width: 2rem; height: 2rem; object-fit: contain; }
 .edu-row__body { min-width: 0; }
@@ -418,7 +422,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
     linear-gradient(180deg, color-mix(in srgb, var(--chip) 20%, #fff), color-mix(in srgb, var(--chip) 9%, #fff));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 2px 7px -3px color-mix(in srgb, var(--chip) 45%, transparent);
 }
-.edu-row__school { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+.edu-row__school { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.24s var(--ease-tile); }
 .edu-row__degree { margin-top: 0.2rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); }
 .edu-row__place {
   align-items: center; border-radius: var(--radius-pill);
@@ -2046,23 +2050,25 @@ html.is-ready .hero__wm {
 /* Logo + name/location wrapped in a real link to the company's site — flex:1/min-width:0 so it
    still behaves exactly like the plain div it replaced as a flex child of .exp-group__head
    (the tenure badge stays a separate sibling, outside the link, since it's its own popover
-   trigger). Underline-on-hover is the whole affordance; no extra icon to avoid implying a
-   second, separate action beyond "this row opens the company's site". */
+   trigger). No underline-on-hover (reads as a stray typo-link inside a dense list); the
+   affordance is the logo lifting + the name recoloring to the section tint instead. */
 .exp-group__link {
   display: flex; align-items: center; gap: 0.9rem;
   flex: 1; min-width: 0;
   color: inherit; text-decoration: none;
 }
-.exp-group__link:hover .exp-group__name { text-decoration: underline; text-underline-offset: 2px; }
+.exp-group__link:hover .exp-group__name,
+.exp-group__link:focus-visible .exp-group__name { color: var(--tint-deep); }
 .exp-group__logo {
   width: 2.75rem; height: 2.75rem;
   border: 1px solid rgba(255,255,255,.95);
   transition: transform 0.28s var(--ease-tile);
 }
-.exp-group:hover .exp-group__logo { transform: scale(1.06); }
+.exp-group__link:hover .exp-group__logo,
+.exp-group__link:focus-visible .exp-group__logo { transform: scale(1.12); }
 .exp-group__logo img { width: 1.6rem; height: 1.6rem; object-fit: contain; }
 .exp-group__meta { flex: 1; min-width: 0; }
-.exp-group__name { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; }
+.exp-group__name { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; transition: color 0.24s var(--ease-tile); }
 .exp-group__loc { margin-top: 0.15rem; font-size: 0.8rem; color: rgba(17,17,17,.52); }
 .exp-group__tenure { flex: none; }
 .exp-group__tenure-badge {
@@ -2306,6 +2312,20 @@ html.is-ready .hero__wm {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: translateX(-50%) translateY(0);
 }
+/* z-index:9999 on the panel only wins within its own LOCAL stacking context — an ancestor with
+   position:relative/absolute + its own explicit z-index (not "auto") starts a new one, and the
+   panel's z-index can never climb out of it, however high. .exp-group picks up exactly that from
+   the generic .glass-panel > * elevation rule (position:relative; z-index:1), and .hero__grid
+   carries its own z-index:20 for the hero's layered background — both lower than
+   .site-header's z-index:50, so a popover/tooltip inside either would render *behind* the sticky
+   header once scrolled underneath it (confirmed via elementFromPoint, not assumed). Bumping the
+   stacking-context-creating ancestor itself above the header — only while something inside it is
+   actually being interacted with — fixes it at the source instead of chasing ever-higher z-index
+   values that can never actually escape. */
+.exp-group:has(.popover:hover),
+.exp-group:has(.popover:focus-within) { z-index: 200; }
+.hero__grid:has(.partner-orb:hover),
+.hero__grid:has(.partner-orb:focus-within) { z-index: 200; }
 
 /* Expand-on-hover label (pills + view-details button) */
 .pill-expand__label {

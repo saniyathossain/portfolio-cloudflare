@@ -1,8 +1,10 @@
 /** UI icons — Lucide stroke + Simple Icons social (embedded, no runtime npm) */
 (function () {
   const LUCIDE = {
+  "activity": "<path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\" />",
   "arrow-right": "<path d=\"M5 12h14\" />\n  <path d=\"m12 5 7 7-7 7\" />",
   "arrow-left": "<path d=\"m12 19-7-7 7-7\" />\n  <path d=\"M19 12H5\" />",
+  "brain-circuit": "<path d=\"M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z\" />\n  <path d=\"M9 13a4.5 4.5 0 0 0 3-4\" />\n  <path d=\"M6.003 5.125A3 3 0 0 0 6.401 6.5\" />\n  <path d=\"M3.477 10.896a4 4 0 0 1 .585-.396\" />\n  <path d=\"M6 18a4 4 0 0 1-1.967-.516\" />\n  <path d=\"M12 13h4\" />\n  <path d=\"M12 18h6a2 2 0 0 1 2 2v1\" />\n  <path d=\"M12 8h8\" />\n  <path d=\"M16 8V5a2 2 0 0 1 2-2\" />\n  <circle cx=\"16\" cy=\"13\" r=\".5\" />\n  <circle cx=\"18\" cy=\"3\" r=\".5\" />\n  <circle cx=\"20\" cy=\"21\" r=\".5\" />\n  <circle cx=\"20\" cy=\"8\" r=\".5\" />",
   "badge-check": "<path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\"/><path d=\"m9 12 2 2 4-4\"/>",
   "bot": "<path d=\"M12 8V4H8\" />\n  <rect width=\"16\" height=\"12\" x=\"4\" y=\"8\" rx=\"2\" />\n  <path d=\"M2 14h2\" />\n  <path d=\"M20 14h2\" />\n  <path d=\"M15 13v2\" />\n  <path d=\"M9 13v2\" />",
   "briefcase": "<path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\" />\n  <rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\" />",
@@ -54,6 +56,7 @@
   "architecture": "network",
   "api": "plug",
   "ai": "bot",
+  "brainCircuit": "brain-circuit",
   "chart": "chart-line",
   "building": "building-2",
   "rocket": "rocket",
@@ -61,6 +64,7 @@
   "location": "map-pin",
   "phone": "phone",
   "clock": "clock",
+  "activity": "activity",
   "arrow": "arrow-right",
   "arrowLeft": "arrow-left",
   "external": "external-link",

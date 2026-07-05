@@ -30,7 +30,6 @@
     "title": "Staff Software Engineer",
     "location": "Dhaka, Bangladesh",
     "tagline": "Backend engineering, shipped with quiet precision.",
-    "eyebrow": "Staff Software Engineer · Dhaka, Bangladesh",
     "avatar": "/assets/img/saniyat-hossain.jpg",
     "phone": "+8801711092048",
     "email": "saniyat1000@gmail.com",
@@ -75,7 +74,7 @@
     {
       "caption": "Now",
       "title": "Staff Software Engineer at Brain Station 23",
-      "icon": "clock",
+      "icon": "activity",
       "tint": "accent"
     },
     {
@@ -87,8 +86,8 @@
     {
       "caption": "Lately",
       "title": "AI-assisted delivery with the AIDLC workflow",
-      "icon": "ai",
-      "tint": "teal"
+      "icon": "brainCircuit",
+      "tint": "blue"
     }
   ],
   "partners": [
@@ -241,7 +240,8 @@
       "startYear": 2008,
       "endYear": 2011,
       "school": "East West University",
-      "degree": "BSc, Electronics & Telecommunication Engineering (ETE)",
+      "degreeType": "BSc",
+      "subject": "Electronics & Telecommunication Engineering (ETE)",
       "place": "Dhaka, Bangladesh",
       "logo": "/assets/img/logos/east-west-university.webp",
       "website": "https://www.ewubd.edu/"
@@ -250,7 +250,8 @@
       "startYear": 2005,
       "endYear": 2007,
       "school": "St. Joseph Higher Secondary School",
-      "degree": "HSC in Science",
+      "degreeType": "HSC",
+      "subject": "Science",
       "place": "Dhaka, Bangladesh",
       "logo": "/assets/img/logos/st-joseph.webp",
       "website": "https://sjs.edu.bd/"
@@ -259,7 +260,8 @@
       "startYear": 2003,
       "endYear": 2005,
       "school": "Motijheel Govt. Boys' High School",
-      "degree": "SSC in Science",
+      "degreeType": "SSC",
+      "subject": "Science",
       "place": "Dhaka, Bangladesh",
       "logo": "/assets/img/logos/motijheel-school.webp",
       "website": "https://www.mgbhs.edu.bd/"

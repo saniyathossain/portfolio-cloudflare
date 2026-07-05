@@ -139,11 +139,15 @@ function _formatTenureMonths(total) {
   if (total < 1) total = 1;
   const years = Math.floor(total / 12);
   const months = total % 12;
-  const bits = [];
-  if (years) bits.push(years + (years === 1 ? " year" : " years"));
-  if (months) bits.push(months + (months === 1 ? " month" : " months"));
-  if (!bits.length) bits.push("1 month");
-  return { years, months, totalMonths: total, label: bits.join(", ") };
+  // Years-only once there's at least a full year — "2 years, 3 months" (and, next to it, a
+  // separate "27 months total" meta line) said the same duration twice in two different units.
+  // Genuinely sub-year tenures (a couple of the shorter contract stints run under 12 months) fall
+  // back to a months-only label instead of rounding up to a misleading "1 year", or down to "0
+  // years" which isn't a real duration at all.
+  const label = years >= 1
+    ? years + (years === 1 ? " year" : " years")
+    : months + (months === 1 ? " month" : " months");
+  return { years, months, totalMonths: total, label };
 }
 
 function _tenureOf(period) {
@@ -375,6 +379,14 @@ function _hydrate(raw) {
   data.sections = Object.assign({}, DEFAULT_SECTIONS, raw.sections || {});
   const tplVars = { years, roles: rolesCount, companies: companiesCount };
   data.sections.experience = _fillTemplate(data.sections.experience, tplVars);
+  // Same reasoning as the experience subtitle above — this used to be a hand-typed string
+  // duplicating education[0]'s own subject/place fields, which could silently go stale if the
+  // highest degree ever changed without someone remembering to update this separate copy too.
+  const topEdu = (data.education || [])[0];
+  if (topEdu) {
+    const city = String(topEdu.place || "").split(",")[0].trim();
+    data.sections.education = topEdu.subject + (city ? " — " + city : "") + ".";
+  }
   (data.stats || []).forEach((s) => {
     if (s.icon === "years") s.value = years;
     else if (s.icon === "companies") s.value = companiesCount;
