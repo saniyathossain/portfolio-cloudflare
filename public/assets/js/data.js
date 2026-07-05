@@ -397,16 +397,12 @@ function _hydrate(raw) {
     const city = String(topEdu.place || "").split(",")[0].trim();
     data.sections.education = topEdu.subject + (city ? " — " + city : "") + ".";
   }
-  // Stack count for the "stacks" stat — the real number of technologies listed under the
-  // backend/frontend/dev-ops skill categories (everything except the AI-tools category), computed
-  // from the skills data so it can never drift from what the Skills section actually shows.
-  const stackCount = (data.skills || [])
-    .filter((s) => !/^ai\b/i.test(s.title || ""))
-    .reduce((n, s) => n + ((s.items && s.items.length) || 0), 0);
+  // The "stacks" stat is a curated headline figure (the core backend/frontend/dev-ops stacks),
+  // authored directly in portfolio.json — it is deliberately NOT a raw count of every skill/tool
+  // (that over-counts: 19 skill items, 40 distinct stacks across roles). Edit its value in the JSON.
   (data.stats || []).forEach((s) => {
     if (s.icon === "years") s.value = years;
     else if (s.icon === "companies") s.value = companiesCount;
-    else if (s.icon === "stacks") s.value = stackCount;
   });
 
   data.partners = _partnersFromExperience(data);
