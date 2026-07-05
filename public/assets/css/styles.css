@@ -1801,33 +1801,36 @@ html.is-ready .hero__wm {
 .pill-btn__icon { color: #fff; }
 .ui-icon--on-ink { color: #fff; opacity: .92; }
 /* Blur reveal — Spell UI-inspired word animation */
+/* Safari-smooth de-blur: NEVER animate `filter` — WebKit re-runs the blur shader every frame while
+   the radius changes, which no amount of layer promotion fixes. Instead each word carries a STATIC
+   pre-blurred copy (.brw__blur, painted once) stacked over the sharp text; the reveal crossfades the
+   blur copy out and slides the word up using ONLY opacity + transform, both compositor-only, so it's
+   genuinely smooth in every browser by construction. The sharp text stays in flow (sizes the box);
+   the blur copy is an absolutely-positioned aria-hidden overlay. */
 .blur-reveal__word {
-  display: inline-block;
+  display: inline-block; position: relative;
   opacity: 0;
-  /* 7px, not 12px: WebKit rasterizes a fresh blur texture every animation frame and blur cost
-     scales super-linearly with radius, so halving the radius is the single biggest Safari win here
-     while still reading as a clean de-blur. GPU layer promotion (will-change set/cleared per span in
-     blur-reveal.js) + backface-visibility keep each blurred box on its own compositor layer so the
-     repaint stays local instead of forcing a section-wide software repaint. */
-  filter: blur(7px);
   transform: translateY(10px);
-  backface-visibility: hidden;
   transition:
     opacity var(--blur-dur, 0.5s) var(--ease-word),
-    filter var(--blur-dur, 0.5s) var(--ease-word),
     transform var(--blur-dur, 0.5s) var(--ease-word);
   transition-delay: var(--blur-delay, 0ms);
 }
-.blur-reveal.is-visible .blur-reveal__word {
+.blur-reveal.is-visible .blur-reveal__word { opacity: 1; transform: none; }
+.brw__blur {
+  position: absolute; left: 0; top: 0; pointer-events: none;
+  color: inherit; font: inherit; letter-spacing: inherit; white-space: pre;
+  filter: blur(8px);           /* static — painted once, never animated */
   opacity: 1;
-  filter: blur(0);
-  transform: none;
+  transition: opacity var(--blur-dur, 0.5s) var(--ease-word);
+  transition-delay: var(--blur-delay, 0ms);
 }
+.blur-reveal.is-visible .brw__blur { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
-  /* blur-reveal.js now always builds word-spans (needed so highlight coloring applies under
-     reduced motion too, not just the fade-in) — this is what makes them appear instantly instead
-     of animating in, matching every other reduced-motion override in this file. */
-  .blur-reveal__word { transition: none; }
+  /* blur-reveal.js always builds word-spans (needed so highlight coloring applies under reduced
+     motion too, not just the fade-in) — this makes them appear instantly with no transition. */
+  .blur-reveal__word, .brw__blur { transition: none; }
+  .brw__blur { display: none; }
 }
 /* Keyword emphasis — weight only, no color and no shadow. Picked after two rounds of colored-text
    treatments (a shadow-on-color emboss+glow, then inline chip badges) were both rejected; this is

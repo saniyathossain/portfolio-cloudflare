@@ -5,11 +5,13 @@
  * @author  Mohammad Saniyat Hossain
  * @license Proprietary — all rights reserved.
  *
- * Reveals a heading/statement by de-blurring its words on scroll-into-view. Two Safari-specific
- * costs are managed deliberately: animating `filter: blur()` is not compositor-accelerated in
- * WebKit, so (1) each animating span is promoted to its own GPU layer only for the duration of its
- * transition (see reveal()), and (2) long copy is grouped into a few segment-spans instead of one
- * span per word, so we never animate 20+ simultaneous blur layers (see splitWords()).
+ * Reveals a heading/statement by de-blurring its words on scroll-into-view. Animating `filter:
+ * blur()` is not compositor-accelerated in WebKit (it re-runs the blur shader every frame while the
+ * radius changes — layer promotion can't fix that), so instead each word carries a STATIC
+ * pre-blurred overlay copy that is crossfaded out with opacity while the sharp text slides up: only
+ * opacity + transform animate, which are compositor-only and smooth in every browser (see
+ * splitWords() for the overlay, the CSS `.brw__blur` rule, and reveal() for layer hygiene). Long
+ * copy is grouped into a few segment-spans so the DOM stays light (see splitWords()).
  */
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -80,30 +82,40 @@
 
     const dur = (seg * 6 * speed).toFixed(3) + "s"; // smooth per-segment fade (~0.36s headings)
     segments.forEach((sgm, idx) => {
+      const text = sgm.words.join(" ");
+      const delay = Math.min(idx * seg * speed, 0.5).toFixed(3) + "s"; // cap stagger so long copy isn't sluggish
       const s = document.createElement("span");
       const hlClass = sgm.key === null ? "" : " blur-reveal__word--hl" + (sgm.key ? "-" + sgm.key : "");
       s.className = "blur-reveal__word" + hlClass;
-      s.textContent = sgm.words.join(" ");
+      s.textContent = text; // sharp copy, stays in flow and sizes the box
       s.style.transitionDuration = dur;
-      s.style.transitionDelay = Math.min(idx * seg * speed, 0.5).toFixed(3) + "s"; // cap stagger so long copy isn't sluggish
+      s.style.transitionDelay = delay;
+      // Static pre-blurred overlay — the reveal crossfades THIS out (opacity only). The blur value
+      // never animates, so WebKit paints it once instead of re-running the blur shader every frame.
+      const b = document.createElement("span");
+      b.className = "brw__blur";
+      b.setAttribute("aria-hidden", "true");
+      b.textContent = text;
+      b.style.transitionDuration = dur;
+      b.style.transitionDelay = delay;
+      s.appendChild(b);
       el.appendChild(s);
       if (idx < segments.length - 1) el.appendChild(document.createTextNode(" "));
     });
   }
 
-  // Reveal a split element: promote each span to its own GPU layer for the life of its blur
-  // transition, then release it (a lingering `will-change` keeps the compositor layer — and its
-  // memory — alive forever). Freeing on `transitionend`, with a timeout backstop, keeps the win
-  // without the cost.
+  // Reveal a split element: promote each word for the life of its (opacity + transform) transition,
+  // then release it — a lingering `will-change` keeps the compositor layer and its memory alive
+  // forever. Only compositor-only properties animate here, so this is smooth in every browser.
   function reveal(el) {
     const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
     if (delay) el.style.setProperty("--blur-delay", delay + "ms");
 
     const spans = el.querySelectorAll(".blur-reveal__word");
     spans.forEach((s) => {
-      s.style.willChange = "filter, opacity, transform";
+      s.style.willChange = "opacity, transform";
       const done = (ev) => {
-        if (ev.propertyName !== "filter") return;
+        if (ev.target !== s || (ev.propertyName !== "opacity" && ev.propertyName !== "transform")) return;
         s.style.willChange = "";
         s.removeEventListener("transitionend", done);
       };
