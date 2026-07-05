@@ -254,10 +254,13 @@ body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(180deg, rgba(241,240,238,.06), rgba(241,240,238,.22));
 }
+/* Translate-only (no scale): scaling a filter:blur() layer makes WebKit re-rasterize the blur every
+   frame — a constant Safari cost on this full-viewport blurred pseudo. Translation just moves the
+   already-rasterized texture on the compositor, so the drift stays smooth everywhere. */
 @keyframes auroraDrift {
-  0%   { transform: translate3d(0, var(--aurora-y, 0px), 0) scale(1); }
-  50%  { transform: translate3d(-2%, calc(1.5% + var(--aurora-y, 0px)), 0) scale(1.06); }
-  100% { transform: translate3d(2%, calc(-1.5% + var(--aurora-y, 0px)), 0) scale(1.03); }
+  0%   { transform: translate3d(0, var(--aurora-y, 0px), 0); }
+  50%  { transform: translate3d(-2%, calc(1.5% + var(--aurora-y, 0px)), 0); }
+  100% { transform: translate3d(2%, calc(-1.5% + var(--aurora-y, 0px)), 0); }
 }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
 
@@ -268,7 +271,9 @@ body::after {
   position: fixed; inset: 0; width: 100%; height: 100%;
   z-index: -2; pointer-events: none;
   opacity: 0; transition: opacity 1.4s var(--ease-glass, ease);
-  filter: blur(62px) saturate(110%);
+  /* 44px, not 62px: the canvas is already a low-res upscaled buffer, so a lighter blur reads the
+     same but is a much cheaper filtered layer for WebKit to composite as it parallaxes on scroll. */
+  filter: blur(44px) saturate(110%);
   transform: translate3d(0, var(--aurora-y, 0px), 0);
   will-change: transform, opacity;
 }
@@ -2461,30 +2466,28 @@ html.is-ready .hero__wm {
   display: grid; place-items: center; margin: 0;
   border-radius: 50%;
   color: var(--brand);
-  /* Shiny tinted-glass coin — the same recipe as the .icon-chip tiles beside the hero designation:
-     a bright diagonal specular streak over a brand-tinted glass base, a brand-tinted rim, and a soft
-     brand-coloured drop shadow for lift. Reads as a premium glossy app-icon tile on ANY background,
-     not a flat disc that washes out on the pale experience panel. The mono-badge rule below (higher
-     specificity via :has) still wins for lettermark tiles, keeping their solid brand fill. */
+  /* Seamless glossy round coin — NO rim/border. A bright top-left specular streak over a soft
+     brand-tinted glass fill, an inner top-light + inner bottom-shade (the sphere gloss), and a soft
+     brand-coloured drop shadow for lift. Reads exactly like the glossy .icon-chip tile beside the
+     hero designation, but round and edge-free. The mono-badge rule below (higher specificity via
+     :has) still wins for lettermark tiles, keeping their solid brand fill. */
   background:
-    linear-gradient(125deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.24) 30%, transparent 55%),
-    linear-gradient(155deg, color-mix(in srgb, var(--brand) 22%, #fff), color-mix(in srgb, var(--brand) 8%, #fff));
+    linear-gradient(125deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.28) 30%, transparent 58%),
+    linear-gradient(160deg, color-mix(in srgb, var(--brand) 24%, #fff), color-mix(in srgb, var(--brand) 9%, #fff));
   border: none;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.95),
-    inset 0 0 0 1px color-mix(in srgb, var(--brand) 36%, transparent),
-    0 3px 9px -3px color-mix(in srgb, var(--brand) 50%, transparent),
-    0 1px 2px rgba(17,17,17,.08);
+    inset 0 1.5px 1px rgba(255,255,255,.95),
+    inset 0 -2px 3px color-mix(in srgb, var(--brand) 14%, transparent),
+    0 3px 9px -4px color-mix(in srgb, var(--brand) 46%, transparent);
   transition: box-shadow 0.24s var(--ease-tile);
 }
 .brand-pill:hover .brand-pill__badge,
 .brand-pill:focus-visible .brand-pill__badge,
 .brand-pill.is-open .brand-pill__badge {
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 0 0 1px color-mix(in srgb, var(--brand) 48%, transparent),
-    0 5px 14px -3px color-mix(in srgb, var(--brand) 60%, transparent),
-    0 1px 2px rgba(17,17,17,.10);
+    inset 0 1.5px 1px rgba(255,255,255,1),
+    inset 0 -2px 4px color-mix(in srgb, var(--brand) 20%, transparent),
+    0 6px 15px -4px color-mix(in srgb, var(--brand) 58%, transparent);
 }
 .brand-pill--sm .brand-pill__badge {
   width: 1.7rem; height: 1.7rem;
