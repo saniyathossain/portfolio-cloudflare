@@ -2550,6 +2550,25 @@ html.is-ready .hero__wm {
     box-shadow 0.24s var(--ease-tile);
 }
 
+/* Touch / no-hover devices (real phones + DevTools device mode): show pill labels statically
+   instead of revealing them on hover. Root cause of the reported "juggling": on these devices a tap
+   synthesizes a sticky :hover (iOS) — or DevTools device-mode dispatches hover outright — which
+   expands one pill's label (max-width 0 → 14rem) mid-row, reflowing the flex-wrap layout and shoving
+   every pill to its right (and the wrapped rows below) around. That expand (reveal) / collapse
+   (unreveal) also animates max-width, a layout property, so it janks frame-to-frame. Showing labels
+   always makes the stack readable, keeps the row completely static (no reflow → no juggle), and
+   removes every per-pill animation (smoother, far fewer paints — PageSpeed-friendly). Any
+   sticky-hover that still fires is neutralised below so a tap can't nudge the pill. This mirrors the
+   prefers-reduced-motion fallback; desktop (hover: hover / pointer: fine) is unchanged. */
+@media (hover: none), (pointer: coarse) {
+  .brand-pill__label { max-width: 14rem; opacity: 1; transition: none; }
+  .brand-pill__label-in { transform: none; }
+  .brand-pill:hover { transform: none; }
+  .brand-pill:hover::before { transform: translateX(-135%); }
+  .brand-pill.spec:hover::after { opacity: 0; }
+  .brand-pill:hover .brand-pill__badge img { transform: none; filter: none; }
+}
+
 /* Role stacks / AI groups */
 .role-tags { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .role-tags__group { display: flex; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap; }
