@@ -184,10 +184,10 @@
       "icon": "companies"
     },
     {
-      "value": 20,
+      "value": 0,
       "suffix": "+",
-      "label": "Products shipped",
-      "icon": "products"
+      "label": "Backend · Frontend · DevOps",
+      "icon": "stacks"
     },
     {
       "value": 4,

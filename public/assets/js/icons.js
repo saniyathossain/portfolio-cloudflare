@@ -90,6 +90,7 @@
   "engineer": "square-code",
   "years": "calendar",
   "products": "package",
+  "stacks": "layers",
   "companies": "building-2",
   "roles": "users",
   "contract": "file-signature",
