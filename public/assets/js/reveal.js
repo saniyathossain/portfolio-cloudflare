@@ -1,4 +1,10 @@
-/** Scroll reveals + word split + stats count-up */
+/**
+ * Scroll reveals + word split + stats count-up.
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 

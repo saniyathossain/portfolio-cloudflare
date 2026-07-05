@@ -1,4 +1,10 @@
-/** Portfolio content — loaded from /assets/data/portfolio.json */
+/**
+ * Portfolio content — loaded from /assets/data/portfolio.json.
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
 
 const BRANDS = {
   php: { icon: "php", color: "#777BB4" },

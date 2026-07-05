@@ -1,6 +1,12 @@
-/** Aurora gradient canvas — flowing Tahoe liquid-light field.
- *  Desktop/fine-pointer + no-reduced-motion only (gated by boot.js and self-guarded).
- *  Low-res buffer (blurred + upscaled via CSS), ~30fps, paused when the tab is hidden. */
+/**
+ * Aurora gradient canvas — flowing Tahoe liquid-light field.
+ * Desktop/fine-pointer + no-reduced-motion only (gated by boot.js and self-guarded).
+ * Low-res buffer (blurred + upscaled via CSS), ~30fps, paused when the tab is hidden.
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
 (function () {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (!window.matchMedia("(pointer: fine)").matches) return;

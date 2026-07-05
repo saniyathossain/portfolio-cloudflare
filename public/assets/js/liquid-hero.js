@@ -1,4 +1,10 @@
-/** Hero liquid cursor-reveal canvas (Lumora after base + before brush) */
+/**
+ * Hero liquid cursor-reveal canvas (Lumora after base + before brush).
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
 (function () {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (!window.matchMedia("(pointer: fine)").matches) return;

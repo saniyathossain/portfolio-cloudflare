@@ -1,4 +1,10 @@
-/** Intro loader — skeleton shimmer, GPU progress, progressive site blur, slide-up exit */
+/**
+ * Intro loader — skeleton shimmer, GPU progress, progressive site blur, slide-up exit.
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
 (function () {
   const FILL_MS = 1300;
   const REVEAL_AT = 0.28;

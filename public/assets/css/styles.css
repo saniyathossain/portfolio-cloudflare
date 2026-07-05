@@ -1804,12 +1804,18 @@ html.is-ready .hero__wm {
 .blur-reveal__word {
   display: inline-block;
   opacity: 0;
-  filter: blur(12px);
+  /* 7px, not 12px: WebKit rasterizes a fresh blur texture every animation frame and blur cost
+     scales super-linearly with radius, so halving the radius is the single biggest Safari win here
+     while still reading as a clean de-blur. GPU layer promotion (will-change set/cleared per span in
+     blur-reveal.js) + backface-visibility keep each blurred box on its own compositor layer so the
+     repaint stays local instead of forcing a section-wide software repaint. */
+  filter: blur(7px);
   transform: translateY(10px);
+  backface-visibility: hidden;
   transition:
-    opacity var(--blur-dur, 0.55s) var(--ease-word),
-    filter var(--blur-dur, 0.55s) var(--ease-word),
-    transform var(--blur-dur, 0.55s) var(--ease-word);
+    opacity var(--blur-dur, 0.5s) var(--ease-word),
+    filter var(--blur-dur, 0.5s) var(--ease-word),
+    transform var(--blur-dur, 0.5s) var(--ease-word);
   transition-delay: var(--blur-delay, 0ms);
 }
 .blur-reveal.is-visible .blur-reveal__word {
@@ -1841,8 +1847,8 @@ html.is-ready .hero__wm {
 /* Single row at every width, incl. phones — was column-stacked (one tile per row) below 640px,
    which read as 4 separate full-width buttons instead of the "Code · Ship · Scale" band it is on
    larger screens. Sized down instead so all 4 keep fitting one line. */
-.create-band { display: flex; flex-direction: row; gap: 0.5rem; padding-block: 1.75rem; }
-@media (min-width: 640px) { .create-band { gap: 1rem; padding-block: 2.5rem; } }
+.create-band { display: flex; flex-direction: row; gap: 0.5rem; padding-block: 2.25rem; }
+@media (min-width: 640px) { .create-band { gap: 1rem; padding-block: 3.25rem; } }
 .create-band__tile {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 0.35rem; height: 4.5rem; border-radius: var(--radius-pill);
@@ -2962,10 +2968,15 @@ body.scroll-lock { position: fixed; width: 100%; }
 }
 
 /* 2) Panel cursor spotlight — reuses .spec (motion.js sets --px/--py); a larger, softer
-   radial so the highlight tracks smoothly across a whole large panel instead of a small pill. */
+   radial so the highlight tracks smoothly across a whole large panel instead of a small pill.
+   Tint-aware: the spotlight is a tinted white (each section's own --tint) at the same low alpha as
+   the old flat white, so the liquid-glass surface subtly takes on the section's light — copper on
+   services, blue on experience, cyan on skills — instead of a uniform grey highlight everywhere.
+   The nested color-mix keeps the hue while a second mix-with-transparent holds the alpha down. */
 .spec--panel::after {
   background: radial-gradient(38rem 38rem at var(--px,50%) var(--py,0%),
-              rgba(255,255,255,.16), rgba(255,255,255,0) 60%);
+              color-mix(in srgb, color-mix(in srgb, var(--tint, var(--primary)) 34%, #fff) 20%, transparent),
+              transparent 60%);
 }
 .stats-panel.spec--panel::after {
   background: radial-gradient(34rem 34rem at var(--px,50%) var(--py,0%),

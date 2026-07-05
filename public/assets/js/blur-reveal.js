@@ -1,6 +1,28 @@
-/** Blur-reveal text — Spell UI-inspired, vanilla (no React/npm) */
+/**
+ * Blur-reveal text — Spell UI-inspired, vanilla (no React/npm).
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ *
+ * Reveals a heading/statement by de-blurring its words on scroll-into-view. Two Safari-specific
+ * costs are managed deliberately: animating `filter: blur()` is not compositor-accelerated in
+ * WebKit, so (1) each animating span is promoted to its own GPU layer only for the duration of its
+ * transition (see reveal()), and (2) long copy is grouped into a few segment-spans instead of one
+ * span per word, so we never animate 20+ simultaneous blur layers (see splitWords()).
+ */
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // At/under this word count (every section heading) we keep one span per word for the staggered
+  // de-blur wave. Above it (the multi-sentence About statement) we group words into segments.
+  const MAX_WORDS_PER_WORD = 10;
+  // Words per segment-span when copy is long. Small enough that a segment (an atomic inline-block)
+  // never grows wide enough to force an awkward wrap at 360px.
+  const LONG_COPY_GROUP = 3;
+  // Safety net (ms): free any GPU layer whose `transitionend` was missed. Comfortably exceeds the
+  // worst case: max stagger (0.5s cap) + per-span duration (~0.43s) + buffer.
+  const PROMOTE_MAX_MS = 1600;
 
   function splitWords(el) {
     const raw = el.getAttribute("data-blur-reveal") || el.getAttribute("data-text") || el.textContent;
@@ -34,16 +56,64 @@
         if (match) for (let j = 0; j < phrase.length; j++) hlFlags[i + j] = key;
       }
     });
-    words.forEach((w, i) => {
+    // Group words into segment-spans. Headings stay one-word-per-segment (groupSize 1) so the
+    // per-word wave is preserved; long copy uses LONG_COPY_GROUP words per segment (overridable via
+    // data-blur-max-segments) so far fewer filter layers animate at once. A segment always holds a
+    // single highlight key, so keyword coloring still lands exactly — highlighted runs are never
+    // merged into a plain neighbour.
+    const maxSeg = parseInt(el.getAttribute("data-blur-max-segments") || "0", 10);
+    const groupSize =
+      maxSeg > 0 ? Math.max(1, Math.ceil(words.length / maxSeg))
+      : words.length <= MAX_WORDS_PER_WORD ? 1 : LONG_COPY_GROUP;
+
+    const segments = [];
+    let cur = null;
+    for (let i = 0; i < words.length; i++) {
+      const key = hlFlags[i];
+      // New segment on a highlight-key change or once the current run is full.
+      if (!cur || cur.key !== key || cur.words.length >= groupSize) {
+        cur = { key, words: [] };
+        segments.push(cur);
+      }
+      cur.words.push(words[i]);
+    }
+
+    const dur = (seg * 6 * speed).toFixed(3) + "s"; // smooth per-segment fade (~0.36s headings)
+    segments.forEach((sgm, idx) => {
       const s = document.createElement("span");
-      const hlClass = hlFlags[i] === null ? "" : " blur-reveal__word--hl" + (hlFlags[i] ? "-" + hlFlags[i] : "");
+      const hlClass = sgm.key === null ? "" : " blur-reveal__word--hl" + (sgm.key ? "-" + sgm.key : "");
       s.className = "blur-reveal__word" + hlClass;
-      s.textContent = w;
-      s.style.transitionDuration = (seg * 6 * speed).toFixed(3) + "s";        // smooth per-word fade (~0.36s)
-      s.style.transitionDelay = Math.min(i * seg * speed, 0.5).toFixed(3) + "s"; // cap stagger so long copy isn't sluggish
+      s.textContent = sgm.words.join(" ");
+      s.style.transitionDuration = dur;
+      s.style.transitionDelay = Math.min(idx * seg * speed, 0.5).toFixed(3) + "s"; // cap stagger so long copy isn't sluggish
       el.appendChild(s);
-      if (i < words.length - 1) el.appendChild(document.createTextNode(" "));
+      if (idx < segments.length - 1) el.appendChild(document.createTextNode(" "));
     });
+  }
+
+  // Reveal a split element: promote each span to its own GPU layer for the life of its blur
+  // transition, then release it (a lingering `will-change` keeps the compositor layer — and its
+  // memory — alive forever). Freeing on `transitionend`, with a timeout backstop, keeps the win
+  // without the cost.
+  function reveal(el) {
+    const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
+    if (delay) el.style.setProperty("--blur-delay", delay + "ms");
+
+    const spans = el.querySelectorAll(".blur-reveal__word");
+    spans.forEach((s) => {
+      s.style.willChange = "filter, opacity, transform";
+      const done = (ev) => {
+        if (ev.propertyName !== "filter") return;
+        s.style.willChange = "";
+        s.removeEventListener("transitionend", done);
+      };
+      s.addEventListener("transitionend", done);
+    });
+
+    el.classList.add("is-visible");
+    window.setTimeout(() => {
+      spans.forEach((s) => { s.style.willChange = ""; });
+    }, PROMOTE_MAX_MS);
   }
 
   function init() {
@@ -67,9 +137,7 @@
       (entries) => {
         for (const e of entries) {
           if (!e.isIntersecting) continue;
-          const delay = parseInt(e.target.getAttribute("data-delay") || "0", 10);
-          if (delay) e.target.style.setProperty("--blur-delay", delay + "ms");
-          e.target.classList.add("is-visible");
+          reveal(e.target);
           io.unobserve(e.target);
         }
       },

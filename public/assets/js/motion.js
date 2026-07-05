@@ -1,4 +1,11 @@
-/** Motion — pointer specular + scroll parallax (vanilla, always on desktop); magnetic CTAs + hero tilt (Motion One) */
+/**
+ * Motion — pointer specular + scroll parallax (vanilla, always on desktop); magnetic CTAs + hero
+ * tilt (Motion One).
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
 (function () {
   const M = window.Motion;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

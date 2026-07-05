@@ -1,4 +1,28 @@
-/** Alpine.js portfolio app — nav, modal, clock, carousel, experience toggles */
+/**
+ * Alpine.js portfolio app — nav, modal, clock, carousel, experience toggles.
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
+
+// Centralised timing (ms) & threshold constants — keeps the numbers below self-documenting and in
+// one place to tune, instead of scattered magic literals across the component methods.
+const T = {
+  CLOCK_TICK: 1000,     // analog/text clock refresh
+  BACK_TO_TOP_PX: 560,  // scrollY past which the back-to-top control appears
+  HERO_SETTLE: 120,     // re-check hero contrast shortly after fonts/layout settle
+  LIQUID_WARP: 700,     // max life of the scroll-warp pulse (scrollend fallback)
+  FORM_SUBMIT: 900,     // stubbed contact submit -> success state
+  CARD_SWAP: 240,       // hero "Now" card content-swap exit
+  ROLE_OPEN: 420,       // experience accordion expand
+  ROLE_CLOSE: 300,      // experience accordion collapse
+  MODAL_RESET: 300,     // clear modal state after close animation
+  MENU_HANDOFF: 60,     // menu -> modal handoff (keeps scroll-lock continuous)
+  NAV_SCROLL: 80,       // delay before smooth-scroll after menu close
+};
+const HERO_ON_DARK_LUM = 0.58; // luminance below which hero text flips to its on-dark treatment
+
 function portfolioApp() {
   const D = window.PORTFOLIO_DATA || {};
   // Pre-hydration fallback only (overwritten by init() the instant portfolio.json resolves) — no
@@ -51,17 +75,21 @@ function portfolioApp() {
       if (live?.skills) this.skills = live.skills;
       this.tickClock();
       this.initClockSweep();
-      setInterval(() => this.tickClock(), 1000);
+      setInterval(() => this.tickClock(), T.CLOCK_TICK);
       this.setupHeroGlow();
       this.setupHeroContrast();
       this.$nextTick(() => this.setupNavPill());
-      this._onKey = (e) => {
-        if (e.key === "Escape") {
-          if (this.modalOpen) this.closeModal();
-          else if (this.menuOpen) this.closeMenu();
-        }
-      };
-      window.addEventListener("keydown", this._onKey);
+      // Guard against a second registration if init() ever runs twice — Alpine inits a component
+      // once, but this keeps the global keydown listener from stacking duplicates regardless.
+      if (!this._onKey) {
+        this._onKey = (e) => {
+          if (e.key === "Escape") {
+            if (this.modalOpen) this.closeModal();
+            else if (this.menuOpen) this.closeMenu();
+          }
+        };
+        window.addEventListener("keydown", this._onKey);
+      }
       this.setupBackToTop();
     },
 
@@ -69,10 +97,9 @@ function portfolioApp() {
     // per scroll event, so a fast wheel-fling can't flood Alpine's reactivity with redundant writes.
     setupBackToTop() {
       let raf = 0;
-      const THRESHOLD = 560;
       const check = () => {
         raf = 0;
-        this.showBackToTop = window.scrollY > THRESHOLD;
+        this.showBackToTop = window.scrollY > T.BACK_TO_TOP_PX;
       };
       window.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
       check();
@@ -218,7 +245,7 @@ function portfolioApp() {
         // tuned above the standard 0.5 midpoint — 0.58 — because the hero text also carries its own
         // drop-shadow, which reads as legible "on-dark" slightly earlier than raw luminance suggests.
         const lum = (0.2126 * d[0] + 0.7152 * d[1] + 0.0722 * d[2]) / 255;
-        const onDark = lum < 0.58;
+        const onDark = lum < HERO_ON_DARK_LUM;
         copy.classList.toggle("hero__copy--on-dark", onDark);
       };
 
@@ -235,7 +262,7 @@ function portfolioApp() {
       window.addEventListener("resize", scheduleUpdate);
       window.addEventListener("portfolio-ready", () => {
         requestAnimationFrame(update);
-        setTimeout(update, 120);
+        setTimeout(update, T.HERO_SETTLE);
       });
     },
 
@@ -345,7 +372,7 @@ function portfolioApp() {
         window.removeEventListener("scrollend", done);
       };
       window.addEventListener("scrollend", done, { once: true });
-      this._warpTimer = setTimeout(done, 700);
+      this._warpTimer = setTimeout(done, T.LIQUID_WARP);
     },
 
     navGo(item) {
@@ -362,11 +389,11 @@ function portfolioApp() {
           this.modalOpen = true;
           this.success = false;
           this.submitting = false;
-        }, 60);
+        }, T.MENU_HANDOFF);
         return;
       }
       this.closeMenu();
-      setTimeout(() => this.scrollTo(item.id), 80);
+      setTimeout(() => this.scrollTo(item.id), T.NAV_SCROLL);
     },
 
     openMenu() { this.menuOpen = true; this.scrollLock(true); },
@@ -381,13 +408,13 @@ function portfolioApp() {
     closeModal() {
       this.modalOpen = false;
       this.scrollLock(false);
-      setTimeout(() => { this.submitting = false; this.success = false; }, 300);
+      setTimeout(() => { this.submitting = false; this.success = false; }, T.MODAL_RESET);
     },
 
     submitForm(e) {
       e.preventDefault();
       this.submitting = true;
-      setTimeout(() => { this.submitting = false; this.success = true; }, 900);
+      setTimeout(() => { this.submitting = false; this.success = true; }, T.FORM_SUBMIT);
     },
 
     tintVars(tint) {
@@ -452,7 +479,7 @@ function portfolioApp() {
         this._finishSwap(wrap, next, dir_);
       };
       wrap.addEventListener("transitionend", this._onSwapExitEnd);
-      this._swapTimer = setTimeout(() => this._finishSwap(wrap, next, dir_), 240);
+      this._swapTimer = setTimeout(() => this._finishSwap(wrap, next, dir_), T.CARD_SWAP);
     },
 
     _finishSwap(wrap, next, dir_) {
@@ -542,14 +569,14 @@ function portfolioApp() {
         this.$nextTick(() => {
           panel.style.overflow = "hidden";
           panel.style.height = "0px";
-          this._animateHeight(panel, inner.scrollHeight + "px", 420, finish);
+          this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish);
         });
         return;
       }
 
       panel.style.overflow = "hidden";
       panel.style.height = panel.scrollHeight + "px";
-      this._animateHeight(panel, "0px", 300, () => {
+      this._animateHeight(panel, "0px", T.ROLE_CLOSE, () => {
         this.openRoles[id] = false;
         finish();
       });
