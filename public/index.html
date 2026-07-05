@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=77db0fd6dd33">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=77db0fd6dd33">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=77db0fd6dd33">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=e133ba4ce901">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=e133ba4ce901">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=e133ba4ce901">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=77db0fd6dd33">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=e133ba4ce901">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -93,7 +93,7 @@
       <div class="glass-pill">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
           <span class="brand-bismillah-wrap">
-            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=77db0fd6dd33" width="509" height="100" alt="" aria-hidden="true">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=e133ba4ce901" width="509" height="100" alt="" aria-hidden="true">
           </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
@@ -634,6 +634,8 @@
             <div class="modal-field"><label for="f-name"><span x-html="iconSvg('users', 'ui-icon ui-icon--sm')" aria-hidden="true"></span><span x-text="site.contactModal.fields.name.label"></span></label><input id="f-name" name="name" type="text" required :placeholder="site.contactModal.fields.name.placeholder" autocomplete="name"></div>
             <div class="modal-field"><label for="f-email"><span x-html="iconSvg('contact', 'ui-icon ui-icon--sm')" aria-hidden="true"></span><span x-text="site.contactModal.fields.email.label"></span></label><input id="f-email" name="email" type="email" required :placeholder="site.contactModal.fields.email.placeholder" autocomplete="email"></div>
             <div class="modal-field"><label for="f-project"><span x-html="iconSvg('rocket', 'ui-icon ui-icon--sm')" aria-hidden="true"></span><span x-text="site.contactModal.fields.project.label"></span></label><textarea id="f-project" name="project" rows="4" required :placeholder="site.contactModal.fields.project.placeholder"></textarea></div>
+            <div class="cf-turnstile" :data-sitekey="site.turnstileSiteKey" data-theme="light" x-show="site.turnstileSiteKey"></div>
+            <p class="modal-error" role="alert" x-show="formError" x-text="formError"></p>
             <div class="modal-footer-row mt-2">
               <p class="text-xs text-ink/45" x-text="site.contactModal.footerNote"></p>
               <button type="submit" class="pill-btn pill-btn-dark" :disabled="submitting">
@@ -662,9 +664,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=77db0fd6dd33" defer></script>
-  <script src="/assets/js/icons.min.js?v=77db0fd6dd33" defer></script>
-  <script src="/assets/js/loader.min.js?v=77db0fd6dd33" defer></script>
-  <script src="/assets/js/boot.min.js?v=77db0fd6dd33" defer></script>
+  <script src="/assets/js/data.min.js?v=e133ba4ce901" defer></script>
+  <script src="/assets/js/icons.min.js?v=e133ba4ce901" defer></script>
+  <script src="/assets/js/loader.min.js?v=e133ba4ce901" defer></script>
+  <script src="/assets/js/boot.min.js?v=e133ba4ce901" defer></script>
 </body>
 </html>

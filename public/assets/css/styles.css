@@ -2862,6 +2862,12 @@ html.is-ready .hero__wm {
   font-family: inherit; outline: none; transition: border-color 0.2s, background 0.2s;
 }
 .modal-field input:focus, .modal-field textarea:focus { border-color: rgba(17,17,17,.3); background: #fff; }
+/* Contact submit error (shown only if the POST to /api/contact fails). */
+.modal-error {
+  margin: -0.25rem 0 0.15rem;
+  font-size: 0.82rem; font-weight: 500;
+  color: color-mix(in srgb, var(--c-rose) 62%, #7a1020);
+}
 /* Footer row: stacked on narrow modals (the disclaimer + pill button used to share one row via
    Tailwind's flex utilities and would wrap the button's own text mid-word once the row got tight —
    e.g. "Send" / "request" on 2 lines inside a pill). Row layout only once there's room for both

@@ -17,6 +17,7 @@
     "ogDescription": "Backend engineering, shipped with quiet precision. {years}+ years building PHP/Laravel and Node.js services at scale.",
     "twitterDescription": "Backend engineering, shipped with quiet precision.",
     "ogImage": "/assets/img/og-image.jpg",
+    "turnstileSiteKey": "",
     "contactModal": {
       "titlebarLabel": "Get in touch",
       "closeAriaLabel": "Close",
@@ -27,6 +28,7 @@
         "project": { "label": "Project", "placeholder": "A few words about your project, timeline, and budget." }
       },
       "footerNote": "We reply within one business day.",
+      "errorNote": "Couldn't send just now — please email me directly.",
       "submitLabel": "Send request",
       "submittingLabel": "Sending…",
       "success": {

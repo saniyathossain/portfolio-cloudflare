@@ -40,6 +40,7 @@ function portfolioApp() {
     showBackToTop: false,
     submitting: false,
     success: false,
+    formError: "",
     cardIndex: 0,
     clockTime: "9:41am",
     clockDate: "12 March, 2025",
@@ -389,7 +390,9 @@ function portfolioApp() {
           this.modalOpen = true;
           this.success = false;
           this.submitting = false;
+          this.formError = "";
         }, T.MENU_HANDOFF);
+        this._loadTurnstile();
         return;
       }
       this.closeMenu();
@@ -403,18 +406,64 @@ function portfolioApp() {
       this.modalOpen = true;
       this.success = false;
       this.submitting = false;
+      this.formError = "";
       this.scrollLock(true);
+      this._loadTurnstile();
     },
     closeModal() {
       this.modalOpen = false;
       this.scrollLock(false);
-      setTimeout(() => { this.submitting = false; this.success = false; }, T.MODAL_RESET);
+      setTimeout(() => { this.submitting = false; this.success = false; this.formError = ""; }, T.MODAL_RESET);
     },
 
-    submitForm(e) {
+    // Lazy-load the Turnstile widget script only when the contact modal opens — keeps the external
+    // request (and its bytes) off the initial page load, so PageSpeed is unaffected. No-ops when no
+    // site key is configured (the form still works; the Worker only enforces the CAPTCHA when its
+    // secret is set), and only injects the script once.
+    _loadTurnstile() {
+      const key = this.site && this.site.turnstileSiteKey;
+      if (!key || window.turnstile || this._tsLoading) return;
+      this._tsLoading = true;
+      const s = document.createElement("script");
+      s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      s.async = true;
+      s.defer = true;
+      document.head.appendChild(s);
+    },
+
+    // Real submit: POST the form to the Worker (/api/contact). The Worker validates, verifies
+    // Turnstile, logs + persists the submission, and emails a notification. On any failure we surface
+    // a fallback message instead of a fake success.
+    async submitForm(e) {
       e.preventDefault();
+      if (this.submitting) return;
+      const form = e.target;
       this.submitting = true;
-      setTimeout(() => { this.submitting = false; this.success = true; }, T.FORM_SUBMIT);
+      this.formError = "";
+      const fd = new FormData(form);
+      const payload = {
+        name: fd.get("name") || "",
+        email: fd.get("email") || "",
+        project: fd.get("project") || "",
+        token: fd.get("cf-turnstile-response") || "",
+      };
+      try {
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        this.success = true;
+        form.reset();
+        if (window.turnstile) { try { window.turnstile.reset(); } catch (_) { /* widget not rendered */ } }
+      } catch (_) {
+        this.formError =
+          (this.site && this.site.contactModal && this.site.contactModal.errorNote) ||
+          "Couldn't send — please try again.";
+      } finally {
+        this.submitting = false;
+      }
     },
 
     tintVars(tint) {
