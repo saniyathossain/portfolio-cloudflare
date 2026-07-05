@@ -13,15 +13,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=cc7bfaa32a19">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=cc7bfaa32a19">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=cc7bfaa32a19">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=ab8fb5ac1447">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=ab8fb5ac1447">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=ab8fb5ac1447">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://saniyat.com/">
   <meta property="og:title" content="Saniyat Hossain — Staff Software Engineer">
-  <meta property="og:description" content="Backend engineering, shipped with quiet precision. 14+ years building PHP/Laravel and Node.js services at scale.">
+  <meta property="og:description" content="Backend engineering, shipped with quiet precision. 13+ years building PHP/Laravel and Node.js services at scale.">
   <meta property="og:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=cc7bfaa32a19">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=ab8fb5ac1447">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -93,7 +93,7 @@
       <div class="glass-pill">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
           <span class="brand-bismillah-wrap">
-            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=cc7bfaa32a19" width="509" height="100" alt="" aria-hidden="true">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=ab8fb5ac1447" width="509" height="100" alt="" aria-hidden="true">
           </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
@@ -224,7 +224,7 @@
             <p class="hero-partners__label">Worked with</p>
             <div class="hero-partners__list" data-stagger>
               <template x-for="p in partners" :key="p.name">
-                <span class="partner-orb" tabindex="0" :style="'--brand:' + (p.color || '#6b6b6b')">
+                <a class="partner-orb" tabindex="0" :href="p.website" :target="p.website ? '_blank' : null" :rel="p.website ? 'noopener noreferrer' : null" :aria-label="p.website ? ('Visit ' + p.name + ' website') : p.name" :style="'--brand:' + (p.color || '#6b6b6b')">
                   <span class="partner-orb__badge">
                     <template x-if="p.logo">
                       <img :src="p.logo" :alt="p.name" width="16" height="16" loading="lazy">
@@ -234,7 +234,7 @@
                     </template>
                   </span>
                   <span class="partner-orb__tip" role="tooltip" x-text="p.name"></span>
-                </span>
+                </a>
               </template>
             </div>
           </div>
@@ -323,13 +323,15 @@
           <template x-for="(group, gi) in experienceGroups" :key="group.slug">
             <li class="exp-group" :class="gi > 0 && 'exp-group--sep'" data-reveal :data-delay="gi * 80">
               <header class="exp-group__head">
-                <span class="exp-group__logo">
-                  <img :src="group.logo" :alt="group.company" width="28" height="28" loading="lazy">
-                </span>
-                <div class="exp-group__meta">
-                  <h3 class="exp-group__name" x-text="group.company"></h3>
-                  <p class="exp-group__loc" x-text="group.location"></p>
-                </div>
+                <a class="exp-group__link" :href="group.website" :target="group.website ? '_blank' : null" :rel="group.website ? 'noopener noreferrer' : null" :aria-label="group.website ? ('Visit ' + group.company + ' website') : null">
+                  <span class="exp-group__logo">
+                    <img :src="group.logo" :alt="group.company" width="28" height="28" loading="lazy">
+                  </span>
+                  <div class="exp-group__meta">
+                    <h3 class="exp-group__name" x-text="group.company"></h3>
+                    <p class="exp-group__loc" x-text="group.location"></p>
+                  </div>
+                </a>
                 <span class="popover exp-group__tenure">
                   <span class="exp-group__tenure-badge popover__trigger" tabindex="0" x-text="group.companyTenure.label"></span>
                   <span class="popover__panel" role="tooltip">
@@ -366,7 +368,7 @@
                             </span>
                           </div>
                         </div>
-                        <p class="exp-row__desc" x-text="role.summary"></p>
+                        <p class="exp-row__desc" x-html="highlightExp(role.summary)"></p>
                       </div>
                       <span class="exp-row__arrow" aria-hidden="true">
                         <span class="icon-chip icon-chip--sm">
@@ -381,7 +383,7 @@
                           <template x-for="d in role.details" :key="d">
                             <li>
                               <span class="point-chip" aria-hidden="true" x-html="iconSvg('check', 'ui-icon ui-icon--sm')"></span>
-                              <span x-text="d"></span>
+                              <span x-html="highlightExp(d)"></span>
                             </li>
                           </template>
                         </ul>
@@ -500,12 +502,19 @@
         <ul class="grid gap-4">
           <template x-for="(e,i) in education" :key="e.school">
             <li class="edu-row glass-card spec sheen" data-reveal :data-delay="i*80" :data-ci="['teal','green','indigo'][i]">
-              <span class="edu-row__logo"><img :src="e.logo" :alt="e.school" width="48" height="48" loading="lazy"></span>
-              <div class="edu-row__body">
-                <span class="edu-row__years" x-text="e.years"></span>
-                <h3 class="edu-row__school" x-text="e.school"></h3>
-                <p class="edu-row__degree" x-text="e.degree"></p>
-              </div>
+              <a class="edu-row__link" :href="e.website" :target="e.website ? '_blank' : null" :rel="e.website ? 'noopener noreferrer' : null" :aria-label="e.website ? ('Visit ' + e.school + ' website') : null">
+                <span class="edu-row__logo"><img :src="e.logo" :alt="e.school" width="48" height="48" loading="lazy"></span>
+                <div class="edu-row__body">
+                  <span class="popover">
+                    <span class="edu-row__years popover__trigger" tabindex="0" x-text="e.startYear + ' — ' + e.endYear"></span>
+                    <span class="popover__panel" role="tooltip">
+                      <span class="popover__label" x-text="eduTenureOf(e).label"></span>
+                    </span>
+                  </span>
+                  <h3 class="edu-row__school" x-text="e.school"></h3>
+                  <p class="edu-row__degree" x-text="e.degree"></p>
+                </div>
+              </a>
               <span class="edu-place edu-row__place" x-text="e.place"></span>
             </li>
           </template>
@@ -651,9 +660,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=cc7bfaa32a19" defer></script>
-  <script src="/assets/js/icons.min.js?v=cc7bfaa32a19" defer></script>
-  <script src="/assets/js/loader.min.js?v=cc7bfaa32a19" defer></script>
-  <script src="/assets/js/boot.min.js?v=cc7bfaa32a19" defer></script>
+  <script src="/assets/js/data.min.js?v=ab8fb5ac1447" defer></script>
+  <script src="/assets/js/icons.min.js?v=ab8fb5ac1447" defer></script>
+  <script src="/assets/js/loader.min.js?v=ab8fb5ac1447" defer></script>
+  <script src="/assets/js/boot.min.js?v=ab8fb5ac1447" defer></script>
 </body>
 </html>

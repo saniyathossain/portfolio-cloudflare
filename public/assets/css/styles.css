@@ -335,16 +335,28 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .edu-row.glass-card {
   padding: 1.35rem 1.4rem;
   display: grid; align-items: center;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr;
   gap: 1rem 1.15rem;
 }
+/* Logo + years/school/degree wrapped in a link to the institute's site — its own nested grid
+   replicates the auto/1fr logo+body split the outer row used to apply directly, since merging
+   them into one link changed the outer row from 2-3 direct children down to 2 (link + place). */
+.edu-row__link {
+  display: grid; align-items: center;
+  grid-template-columns: auto 1fr;
+  gap: 1rem 1.15rem;
+  min-width: 0;
+  color: inherit; text-decoration: none;
+}
+.edu-row__link:hover .edu-row__school { text-decoration: underline; text-underline-offset: 2px; }
 .edu-row .edu-place { display: none; }
 @media (min-width: 1024px) {
   .edu-row.glass-card {
     padding: 1.5rem 1.75rem;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     gap: 1rem 1.25rem;
   }
+  .edu-row__link { gap: 1rem 1.25rem; }
   .edu-row .edu-place { display: inline-flex; }
 }
 
@@ -1379,27 +1391,39 @@ html.is-ready .hero__wm {
 .hero-card__badge {
   position: relative;
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
-  color: var(--tint-ink, var(--accent-dark));
+  color: var(--tint-ink, var(--accent-bright));
 }
+/* Soft ambient color bloom behind the icon — a real "spotlight," not just a drop-shadow — so the
+   icon reads as a featured, lit element rather than a flat glyph sitting on the photo. */
+.hero-card__badge::before {
+  content: ""; position: absolute; inset: -30%; z-index: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tint, var(--accent)) 38%, transparent) 0%, transparent 68%);
+  opacity: 0.85;
+  transition: opacity 0.5s var(--ease-glass);
+}
+.hero-card:hover .hero-card__badge::before,
+.hero-card:focus-within .hero-card__badge::before { opacity: 0.5; }
 /* Icon wrapper — a stable element for the swap-synced pulse, since x-html replaces the SVG root
-   wholesale on each card change (a transform on the SVG itself would be discarded with it). */
+   wholesale on each card change (a transform on the SVG itself would be discarded with it). Bolder
+   stroke at this scale — the default weight reads thin/flimsy blown up this large. */
 .hero-card__badge-icon {
   position: relative; z-index: 2; display: inline-flex;
   transform: scale(2.9);
-  filter: drop-shadow(0 8px 12px color-mix(in srgb, var(--tint, var(--accent)) 45%, transparent));
+  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent));
   transition: transform 0.5s var(--ease-smooth), filter 0.5s var(--ease-glass);
 }
+.hero-card__badge-icon .ui-icon { stroke-width: 1.75; }
 .hero-card:hover .hero-card__badge-icon,
 .hero-card:focus-within .hero-card__badge-icon {
-  transform: scale(1);
-  filter: drop-shadow(0 2px 5px color-mix(in srgb, var(--tint, var(--accent)) 30%, transparent));
+  transform: scale(1.7);
+  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent));
 }
 /* Higher specificity than the plain hover rule above so a card-advance click mid-hover still reads
    as a pulse (a small dip) instead of getting silently outranked and disappearing. */
 .hero-card__badge-icon.is-pulsing { transform: scale(2.7); }
 .hero-card:hover .hero-card__badge-icon.is-pulsing,
-.hero-card:focus-within .hero-card__badge-icon.is-pulsing { transform: scale(0.92); }
-.hero-card__badge .ui-icon { opacity: .9; }
+.hero-card:focus-within .hero-card__badge-icon.is-pulsing { transform: scale(1.55); }
+.hero-card__badge .ui-icon { opacity: 1; }
 .hero-card__body {
   flex: 1; border-radius: 0.9rem;
   padding: 0.75rem; display: flex; flex-direction: column; justify-content: space-between;
@@ -1579,7 +1603,7 @@ html.is-ready .hero__wm {
   display: inline-flex; align-items: center; justify-content: center;
   width: 2.35rem; height: 2.35rem; border-radius: 50%;
   overflow: visible;
-  cursor: default; outline: none;
+  cursor: pointer; outline: none;
   background: linear-gradient(145deg,
     color-mix(in srgb, var(--brand) 34%, #fff),
     color-mix(in srgb, var(--brand) 12%, #fff));
@@ -2019,6 +2043,17 @@ html.is-ready .hero__wm {
   display: flex; align-items: center; gap: 0.9rem;
   padding: 0.85rem 1rem 0.65rem;
 }
+/* Logo + name/location wrapped in a real link to the company's site — flex:1/min-width:0 so it
+   still behaves exactly like the plain div it replaced as a flex child of .exp-group__head
+   (the tenure badge stays a separate sibling, outside the link, since it's its own popover
+   trigger). Underline-on-hover is the whole affordance; no extra icon to avoid implying a
+   second, separate action beyond "this row opens the company's site". */
+.exp-group__link {
+  display: flex; align-items: center; gap: 0.9rem;
+  flex: 1; min-width: 0;
+  color: inherit; text-decoration: none;
+}
+.exp-group__link:hover .exp-group__name { text-decoration: underline; text-underline-offset: 2px; }
 .exp-group__logo {
   width: 2.75rem; height: 2.75rem;
   border: 1px solid rgba(255,255,255,.95);
@@ -2181,6 +2216,11 @@ html.is-ready .hero__wm {
 .exp-details__list {
   padding-top: 0.25rem; font-size: 0.9375rem; color: rgba(17,17,17,.72); line-height: 1.65;
 }
+/* Term/keyword highlight in role summaries + detail bullets (site.experienceHighlights in
+   portfolio.json, matched + wrapped by data.js's highlightExp()) — weight only, no color/shadow,
+   same restrained treatment already settled on for the About statement's own highlighted phrases:
+   emphasis purely from contrast against the surrounding lighter-weight body text. */
+.exp-highlight { font-weight: 650; color: var(--ink); }
 .exp-details__list li {
   display: flex;
   align-items: flex-start;

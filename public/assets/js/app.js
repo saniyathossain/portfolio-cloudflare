@@ -1,9 +1,12 @@
 /** Alpine.js portfolio app — nav, modal, clock, carousel, experience toggles */
 function portfolioApp() {
   const D = window.PORTFOLIO_DATA || {};
+  // Pre-hydration fallback only (overwritten by init() the instant portfolio.json resolves) — no
+  // specific years/roles/companies count here since those are computed from data this module
+  // doesn't have yet, and a stale hardcoded number is exactly the drift this was fixed to avoid.
   const sections = D.sections || {
     services: "Backend, architecture, APIs, and AI-assisted delivery.",
-    experience: "14+ years · 8 roles across 5 companies.",
+    experience: "Backend and mobile engineering, shipped across companies.",
     skills: "Languages, frameworks, data, platform, and AI in the flow.",
     education: "Electronics & Telecommunication Engineering — Dhaka.",
   };
@@ -390,10 +393,15 @@ function portfolioApp() {
       // are each used 10-20+ times elsewhere) — the azure/sea-teal pair sits only 12° apart on the
       // hue wheel and read as near-identical pale-blue badges; violet/green are 106°+ from copper
       // and each other.
+      // --tint-ink used to be each hue's *darkened* form (--accent-dark #97501f, a literal brown;
+      // #146b29, a muddy forest green) — fine for small text-sized accents, but blown up to the
+      // hero-card icon's own scale it read as a flat "copper and beige" wash rather than a real
+      // color. Switched to each hue's own bright/base tone instead (still enough contrast against
+      // the pale hero photo, now backed by a real drop-shadow for separation).
       const map = {
-        accent: { tint: "var(--accent)", ink: "var(--accent-dark)" },
-        primary: { tint: "var(--c-violet)", ink: "#4a48a8" },
-        teal: { tint: "var(--c-green)", ink: "#146b29" },
+        accent: { tint: "var(--accent)", ink: "var(--accent-bright)" },
+        primary: { tint: "var(--c-violet)", ink: "var(--c-violet)" },
+        teal: { tint: "var(--c-green)", ink: "var(--c-green)" },
       };
       const v = map[tint] || map.accent;
       return "--tint:" + v.tint + ";--tint-ink:" + v.ink;
@@ -463,7 +471,11 @@ function portfolioApp() {
 
     tenureOf(period) { return window.PORTFOLIO_DATA.tenureOf(period); },
 
+    eduTenureOf(e) { return window.PORTFOLIO_DATA.eduTenureOf(e); },
+
     companyTenureOf(roles) { return window.PORTFOLIO_DATA.companyTenureOf(roles); },
+
+    highlightExp(text) { return window.PORTFOLIO_DATA.highlightExp(text); },
 
     iconSvg(name, className) { return window.iconSvg(name, className); },
 

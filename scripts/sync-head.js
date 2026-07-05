@@ -31,8 +31,30 @@ function esc(s) {
     .replace(/</g, "&lt;");
 }
 
+// Same "completed years" math as data.js's browser-side _yearsSince (duplicated, not shared — this
+// runs in Node at build time, data.js runs in the browser, and this static-site setup has no shared
+// module boundary between the two) — keeps the {years} placeholder in ogDescription in sync with
+// profile.experienceStartDate/experienceYearsOffset instead of a hand-maintained number that only
+// ever gets updated when someone remembers to.
+function yearsSince(dateStr, offset) {
+  const m = String(dateStr || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return 0;
+  const start = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  const monthDiff = now.getMonth() - start.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < start.getDate())) years--;
+  return Math.max(0, years - (parseInt(offset, 10) || 0));
+}
+
+function fillTemplate(str, vars) {
+  return String(str || "").replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : "{" + key + "}"));
+}
+
 function buildHead(data) {
   const { site, profile, socials } = data;
+  const years = yearsSince(profile.experienceStartDate, profile.experienceYearsOffset);
+  const ogDescription = fillTemplate(site.ogDescription, { years });
   const ogImage = absUrl(site.url, site.ogImage || "/assets/img/og-image.jpg");
   const heroWebp480 = path.join(ROOT, "public/assets/img/saniyat-hossain-480.webp");
   const heroWebpLink = fs.existsSync(heroWebp480)
@@ -68,7 +90,7 @@ function buildHead(data) {
 ${heroWebpLink}  <meta property="og:type" content="website">
   <meta property="og:url" content="${esc(absUrl(site.url, "/"))}">
   <meta property="og:title" content="${esc(site.title)}">
-  <meta property="og:description" content="${esc(site.ogDescription || site.description)}">
+  <meta property="og:description" content="${esc(ogDescription || site.description)}">
   <meta property="og:image" content="${esc(ogImage)}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">

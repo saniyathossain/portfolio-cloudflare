@@ -121,6 +121,7 @@ function _groupExperiences(data) {
         logo: co?.logo,
         location: co?.location,
         color: co?.color,
+        website: co?.website,
         roles: [],
       };
       map.set(exp.companySlug, g);
@@ -154,6 +155,14 @@ function _tenureOf(period) {
   if (!start || !end) return { years: 0, months: 0, totalMonths: 0, label: "—" };
   let total = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
   return _formatTenureMonths(total);
+}
+
+// Education dates are year-precision only (startYear/endYear, not month-level like experience's
+// "period" strings) — so the duration shown in its tenure popover is years-only, deliberately
+// omitting a months breakdown that the underlying data doesn't actually support to that precision.
+function _eduTenureOf(startYear, endYear) {
+  const years = Math.max(1, (parseInt(endYear, 10) || 0) - (parseInt(startYear, 10) || 0));
+  return { years, label: years + (years === 1 ? " year" : " years") };
 }
 
 function _companyTenureOf(roles) {
@@ -241,6 +250,7 @@ function _partnersFromExperience(data) {
       logo: group.logo,
       slug: group.slug,
       color: group.color || "#8d8d8d",
+      website: group.website,
     });
   }
   return partners.length ? partners : data.partners || [];
@@ -255,10 +265,35 @@ function _applyLoaderCopy(data) {
 
 const DEFAULT_SECTIONS = {
   services: "Backend, architecture, APIs, and AI-assisted delivery.",
-  experience: "14+ years · 8 roles across 5 companies.",
+  experience: "{years}+ years · {roles} roles across {companies} companies.",
   skills: "Languages, frameworks, data, platform, and AI in the flow.",
   education: "Electronics & Telecommunication Engineering — Dhaka.",
 };
+
+// Whole calendar years elapsed since a career-start date, minus a configurable offset — the
+// same "completed years" math as a birthday/age calculation (a naive
+// now.getFullYear() - start.getFullYear() overcounts by 1 for any month/day before the
+// anniversary has passed this year). The offset exists because "years of experience" is
+// sometimes rounded down deliberately (e.g. to exclude a probation period, or just to understate
+// it) — set profile.experienceYearsOffset in portfolio.json rather than hand-editing the
+// displayed number every time the real elapsed time changes.
+function _yearsSince(dateStr, offset) {
+  const m = String(dateStr || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return 0;
+  const start = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  const monthDiff = now.getMonth() - start.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < start.getDate())) years--;
+  return Math.max(0, years - (parseInt(offset, 10) || 0));
+}
+
+// Fill {years}/{roles}/{companies} placeholders in a template string — used for both
+// sections.experience (live, per page load) and, separately, sync-head.js's build-time
+// ogDescription (same placeholder syntax, different runtime, no shared module between the two).
+function _fillTemplate(str, vars) {
+  return String(str || "").replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : "{" + key + "}"));
+}
 
 function _applySectionSubs(data) {
   const sections = data.sections || DEFAULT_SECTIONS;
@@ -267,6 +302,32 @@ function _applySectionSubs(data) {
     const copy = sections[key] || DEFAULT_SECTIONS[key] || "";
     if (copy) el.textContent = copy;
   });
+}
+
+// Escape first, then wrap matches — the escaping has to happen before matching so a term like
+// "Node.js" can't accidentally match inside an already-escaped entity, and so the highlighted
+// output is safe to inject via x-html regardless of what's in the source text (this is config-
+// authored keyword text, not third-party input, but the escape-before-highlight order is what
+// makes that distinction not matter).
+function _escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function _escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+// Longest-first so a multi-word/longer term (e.g. "Node.js") is matched whole before a shorter
+// term that happens to be its prefix would otherwise claim part of it.
+function _highlightTerms(text, terms) {
+  const escaped = _escapeHtml(text || "");
+  if (!terms || !terms.length) return escaped;
+  const sorted = terms.slice().sort((a, b) => b.length - a.length).map(_escapeRegex);
+  const re = new RegExp("(" + sorted.join("|") + ")", "gi");
+  return escaped.replace(re, '<strong class="exp-highlight">$1</strong>');
 }
 
 function _applyHeroImages(data) {
@@ -297,11 +358,31 @@ function _hydrate(raw) {
   };
   data.tenureOf = _tenureOf;
   data.companyTenureOf = _companyTenureOf;
+  data.eduTenureOf = (e) => _eduTenureOf(e.startYear, e.endYear);
   data.normalizeRole = _enrichExperience;
   data.experienceGroups = _groupExperiences(data);
   data.profile.phoneHref = String(data.profile.phone || "").replace(/[^\d+]/g, "");
+
+  // Years of experience, roles, and companies are all derived here rather than hand-maintained as
+  // separate strings scattered across the JSON — every place that cites "N years"/"N roles"/"N
+  // companies" reads from these same three numbers, so they can't silently drift out of sync with
+  // each other or with the actual experiences array as roles are added over time.
+  const years = _yearsSince(data.profile.experienceStartDate, data.profile.experienceYearsOffset);
+  const rolesCount = (data.experiences || []).length;
+  const companiesCount = data.experienceGroups.length;
+  data.profile.years = years + "+";
+  data.profile.heroRating = data.profile.years + " years · " + (data.profile.heroRatingTail || "");
   data.sections = Object.assign({}, DEFAULT_SECTIONS, raw.sections || {});
+  const tplVars = { years, roles: rolesCount, companies: companiesCount };
+  data.sections.experience = _fillTemplate(data.sections.experience, tplVars);
+  (data.stats || []).forEach((s) => {
+    if (s.icon === "years") s.value = years;
+    else if (s.icon === "companies") s.value = companiesCount;
+  });
+
   data.partners = _partnersFromExperience(data);
+  const expTerms = (data.site && data.site.experienceHighlights) || [];
+  data.highlightExp = (text) => _highlightTerms(text, expTerms);
   return data;
 }
 

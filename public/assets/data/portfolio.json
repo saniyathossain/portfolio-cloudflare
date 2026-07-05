@@ -7,14 +7,20 @@
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
     "aboutHeading": "Fourteen years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
     "aboutHighlights": ["telco-scale", "quiet precision"],
+    "experienceHighlights": [
+      "PHP", "Laravel", "Node.js", "MySQL", "Redis", "Docker", "Nginx", "Elasticsearch",
+      "Firebase", "CodeIgniter", "Joomla", "Elgg", "Go",
+      "microservices", "monolith", "API Gateway", "BFF", "AIDLC", "AI-assisted",
+      "Role-Based Access Control", "Change Data Capture", "SSO", "async APIs", "GZIP"
+    ],
     "footerTagline": "Staff Software Engineer crafting backends, products, and the systems that connect them.",
-    "ogDescription": "Backend engineering, shipped with quiet precision. 14+ years building PHP/Laravel and Node.js services at scale.",
+    "ogDescription": "Backend engineering, shipped with quiet precision. {years}+ years building PHP/Laravel and Node.js services at scale.",
     "twitterDescription": "Backend engineering, shipped with quiet precision.",
     "ogImage": "/assets/img/og-image.jpg"
   },
   "sections": {
     "services": "Backend, architecture, APIs, and AI-assisted delivery.",
-    "experience": "14+ years · 8 roles across 5 companies.",
+    "experience": "{years}+ years · {roles} roles across {companies} companies.",
     "skills": "Languages, frameworks, data, platform, and AI in the flow.",
     "education": "Electronics & Telecommunication Engineering — Dhaka."
   },
@@ -28,13 +34,14 @@
     "avatar": "/assets/img/saniyat-hossain.jpg",
     "phone": "+8801711092048",
     "email": "saniyat1000@gmail.com",
-    "years": "14+",
+    "experienceStartDate": "2012-09-01",
+    "experienceYearsOffset": 0,
     "nameLines": [
       "Mohammad",
       "Saniyat",
       "Hossain"
     ],
-    "heroRating": "14+ years · PHP, Laravel, Node.js & microservices at scale"
+    "heroRatingTail": "PHP, Laravel, Node.js & microservices at scale"
   },
   "nav": [
     {
@@ -231,25 +238,31 @@
   ],
   "education": [
     {
-      "years": "2008 — 2011",
+      "startYear": 2008,
+      "endYear": 2011,
       "school": "East West University",
-      "degree": "BSc, Electronics & Telecommunication Engineering",
+      "degree": "BSc, Electronics & Telecommunication Engineering (ETE)",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/east-west-university.webp"
+      "logo": "/assets/img/logos/east-west-university.webp",
+      "website": "https://www.ewubd.edu/"
     },
     {
-      "years": "2005 — 2007",
-      "school": "St. Joseph Higher Secondary",
+      "startYear": 2005,
+      "endYear": 2007,
+      "school": "St. Joseph Higher Secondary School",
       "degree": "HSC in Science",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/st-joseph.webp"
+      "logo": "/assets/img/logos/st-joseph.webp",
+      "website": "https://sjs.edu.bd/"
     },
     {
-      "years": "2003 — 2005",
+      "startYear": 2003,
+      "endYear": 2005,
       "school": "Motijheel Govt. Boys' High School",
       "degree": "SSC in Science",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/motijheel-school.webp"
+      "logo": "/assets/img/logos/motijheel-school.webp",
+      "website": "https://www.mgbhs.edu.bd/"
     }
   ],
   "socials": [
@@ -279,31 +292,36 @@
       "name": "Brain Station 23",
       "logo": "/assets/img/logos/brainstation-23-official.svg",
       "location": "Dhaka, Bangladesh",
-      "color": "#8d8d8d"
+      "color": "#8d8d8d",
+      "website": "https://brainstation-23.com/"
     },
     "grameenphone-limited": {
       "name": "Grameenphone",
       "logo": "/assets/img/logos/grameenphone-official.svg",
       "location": "Dhaka, Bangladesh",
-      "color": "#8d8d8d"
+      "color": "#8d8d8d",
+      "website": "https://www.grameenphone.com/"
     },
     "icddr-b": {
       "name": "icddr,b",
       "logo": "/assets/img/logos/icddrb-official.webp",
       "location": "Dhaka, Bangladesh",
-      "color": "#8d8d8d"
+      "color": "#8d8d8d",
+      "website": "https://www.icddrb.org/"
     },
     "optimum-solution-services-ltd": {
       "name": "Optimum Solution & Services",
       "logo": "/assets/img/logos/oss-official-transparent.webp",
       "location": "Dhaka, Bangladesh",
-      "color": "#8d8d8d"
+      "color": "#8d8d8d",
+      "website": "https://oss.com.bd/"
     },
     "runner-cyberlink-limited": {
       "name": "Runner Cyberlink",
       "logo": "/assets/img/logos/runnercyberlink-official.svg",
       "location": "Dhaka, Bangladesh",
-      "color": "#8d8d8d"
+      "color": "#8d8d8d",
+      "website": "https://www.runnercyberlink.com/"
     }
   },
   "experiences": [
