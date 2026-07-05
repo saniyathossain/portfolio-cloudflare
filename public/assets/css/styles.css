@@ -1471,11 +1471,88 @@ html.is-ready .hero__wm {
     0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
 }
 
-/* The card used to collapse down to just the badge at rest and expand on hover ("genie"-style,
-   right-anchored) — replaced: the whole card is now always fully shown (badge + body submerged into
-   one surface, see .hero-card__badge/.hero-card__badge-icon/.hero-card__body above), with only the
-   icon's own size/shadow responding to hover. No clip-path, no translateX slide, no opacity toggle
-   left to keep in sync between two states. */
+/* Collapsed-badge → hover-expand drawer, "genie"-style: the card is clipped down to just the badge's
+   own footprint at rest (right-anchored, flush with the "Worked with" row below), and the body text
+   slides/fades out from behind it on hover — same mechanism as before, but the badge itself stays
+   submerged (no separate tinted tile, matching .hero-card__badge above) both collapsed and open, and
+   the icon's size now runs the OPPOSITE direction from the drawer: big + shadowed while collapsed
+   (it's the only thing visible, so it should read as prominent on its own, "tree out of its pot"),
+   contracting to its normal contained size once the drawer opens and the text takes over as the
+   focus. One shared, slow, unhurried transition drives clip-path/translateX/icon-scale together so
+   open and close feel identical. Desktop/fine-pointer only — touch devices have no hover, so the card
+   stays fully expanded there (unchanged), the safe fallback under reduced-motion and print. Motion is
+   done entirely with `clip-path` (compositor-only, no width/height reflow). */
+@media (hover: hover) and (pointer: fine) {
+  /* .hero-card carries data-reveal="scale" for its page-load entrance animation, and
+     `[data-reveal].is-visible` (specificity 0,2,0) sets its own `transition` — beating a plain
+     `.hero-card` rule (0,1,0) outright, which would silently discard the clip-path transition.
+     `.hero__aside .hero-card[data-reveal]` (0,3,0) decisively outranks it. */
+  .hero__aside .hero-card[data-reveal] {
+    height: 8rem;
+    padding: 0.5rem 0 0.5rem 0.5rem;
+    clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
+    box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
+    transition:
+      clip-path 0.52s var(--ease-smooth),
+      padding-right 0.52s var(--ease-smooth),
+      box-shadow 0.4s var(--ease-glass);
+  }
+  .hero-card__inner { height: 100%; align-items: center; }
+  .hero__aside .hero-card[data-reveal]::after { opacity: 0; transition: opacity 0.5s var(--ease-glass); }
+  .hero-card__badge {
+    /* Shifted to sit flush at the card's true right edge at rest; returns to its natural
+       left-of-body flex position on hover/focus. Value accounts for the card's max-width, which
+       differs by breakpoint (see the 1024px override below). */
+    transform: translateX(15.5rem);
+    transition: transform 0.52s var(--ease-smooth);
+  }
+  @media (min-width: 1024px) {
+    .hero-card__badge { transform: translateX(13.5rem); }
+  }
+  .hero-card__body {
+    opacity: 0; transform: translateX(-8px);
+    transition: opacity 0.4s var(--ease-glass), transform 0.52s var(--ease-smooth);
+  }
+  /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
+     enter/exit duration otherwise. Real backdrop-filter here (not the faux-frost this file uses
+     elsewhere for scrolling glass) is safe precisely because it's scoped to :hover/:focus-within —
+     it only ever repaints while a desktop pointer is deliberately holding the card open, never
+     continuously while scrolling. */
+  .hero__aside .hero-card[data-reveal]:hover,
+  .hero__aside .hero-card[data-reveal]:focus-within {
+    padding-right: 0.5rem;
+    clip-path: inset(0 0 0 0 round 1.35rem);
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.4)) 0%,
+      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.18)) 100%);
+    backdrop-filter: blur(32px) saturate(190%);
+    -webkit-backdrop-filter: blur(32px) saturate(190%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 0 0 1px rgba(230,229,226,.35),
+      0 18px 46px -10px rgba(17, 17, 17, 0.14);
+    transition:
+      clip-path 0.6s var(--ease-smooth),
+      padding-right 0.6s var(--ease-smooth),
+      background 0.6s var(--ease-smooth),
+      box-shadow 0.45s var(--ease-glass);
+  }
+  .hero__aside .hero-card[data-reveal]:hover::after,
+  .hero__aside .hero-card[data-reveal]:focus-within::after { opacity: 0.5; }
+  .hero-card:hover .hero-card__badge,
+  .hero-card:focus-within .hero-card__badge {
+    transform: translateX(0);
+    transition: transform 0.6s var(--ease-smooth);
+  }
+  .hero-card:hover .hero-card__body,
+  .hero-card:focus-within .hero-card__body {
+    opacity: 1; transform: none;
+    transition: opacity 0.45s var(--ease-glass), transform 0.6s var(--ease-smooth);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-card, .hero-card__body, .hero-card__badge { transition: none; }
+  }
+}
 
 .hero-partners { width: 100%; max-width: 24rem; }
 .hero-partners__label {
