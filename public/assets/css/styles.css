@@ -244,15 +244,15 @@ body::before {
     radial-gradient(32vmax 32vmax at 48% 48%, rgba(255,92,138,.035), transparent 62%),
     radial-gradient(28vmax 28vmax at 72% 38%, rgba(177,95,44,.03), transparent 65%);
   filter: blur(28px) saturate(118%);
-  animation: auroraDrift 34s ease-in-out infinite alternate, auroraHue 52s ease-in-out infinite alternate;
+  /* Only the transform drift animates — the old auroraHue keyframe animated `filter: hue-rotate()`
+     on this full-viewport blurred layer every frame, which WebKit repaints continuously (a real,
+     always-on Safari cost). The 8deg hue shift over 52s was imperceptible; dropping it leaves the
+     blur static (painted once, composited) while auroraDrift stays transform-only (compositor-safe). */
+  animation: auroraDrift 34s ease-in-out infinite alternate;
 }
 body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(180deg, rgba(241,240,238,.06), rgba(241,240,238,.22));
-}
-@keyframes auroraHue {
-  0%   { filter: blur(28px) saturate(118%) hue-rotate(0deg); }
-  100% { filter: blur(28px) saturate(118%) hue-rotate(8deg); }
 }
 @keyframes auroraDrift {
   0%   { transform: translate3d(0, var(--aurora-y, 0px), 0) scale(1); }
@@ -2461,15 +2461,30 @@ html.is-ready .hero__wm {
   display: grid; place-items: center; margin: 0;
   border-radius: 50%;
   color: var(--brand);
-  /* Each logo now sits on its own glossy white coin with a brand-tinted rim — reads as a crisp,
-     shiny app-icon tile instead of a flat logo floating on the pale pill. The mono-badge rule below
-     (higher specificity via :has) still wins for lettermark tiles, keeping their solid brand fill. */
-  background: radial-gradient(120% 120% at 30% 20%, #fff, color-mix(in srgb, var(--brand) 9%, #fff) 78%);
+  /* Shiny tinted-glass coin — the same recipe as the .icon-chip tiles beside the hero designation:
+     a bright diagonal specular streak over a brand-tinted glass base, a brand-tinted rim, and a soft
+     brand-coloured drop shadow for lift. Reads as a premium glossy app-icon tile on ANY background,
+     not a flat disc that washes out on the pale experience panel. The mono-badge rule below (higher
+     specificity via :has) still wins for lettermark tiles, keeping their solid brand fill. */
+  background:
+    linear-gradient(125deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.24) 30%, transparent 55%),
+    linear-gradient(155deg, color-mix(in srgb, var(--brand) 22%, #fff), color-mix(in srgb, var(--brand) 8%, #fff));
   border: none;
   box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 0 0 1px color-mix(in srgb, var(--brand) 36%, transparent),
+    0 3px 9px -3px color-mix(in srgb, var(--brand) 50%, transparent),
+    0 1px 2px rgba(17,17,17,.08);
+  transition: box-shadow 0.24s var(--ease-tile);
+}
+.brand-pill:hover .brand-pill__badge,
+.brand-pill:focus-visible .brand-pill__badge,
+.brand-pill.is-open .brand-pill__badge {
+  box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 0 0 1px color-mix(in srgb, var(--brand) 30%, rgba(255,255,255,.5)),
-    0 1px 4px rgba(17,17,17,.11);
+    inset 0 0 0 1px color-mix(in srgb, var(--brand) 48%, transparent),
+    0 5px 14px -3px color-mix(in srgb, var(--brand) 60%, transparent),
+    0 1px 2px rgba(17,17,17,.10);
 }
 .brand-pill--sm .brand-pill__badge {
   width: 1.7rem; height: 1.7rem;
