@@ -369,13 +369,26 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .edu-row__link:focus-visible .edu-row__logo { transform: scale(1.1); }
 .edu-row .edu-place { display: none; }
 @media (min-width: 1024px) {
+  /* Desktop: 3 education entries map cleanly onto a 3-up row, so the section uses the full width
+     instead of leaving the right half of each full-width row empty. Each becomes a vertical card
+     (logo → year → school → degree); below 1024px they stay stacked horizontal rows. */
+  .edu-grid { grid-template-columns: repeat(3, 1fr); align-items: stretch; }
   .edu-row.glass-card {
-    padding: 1.5rem 1.75rem;
-    grid-template-columns: 1fr auto;
-    gap: 1rem 1.25rem;
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding: 1.6rem 1.5rem 1.5rem;
+    align-items: stretch;
+    gap: 0.95rem;
   }
-  .edu-row__link { gap: 1rem 1.25rem; }
-  .edu-row .edu-place { display: inline-flex; }
+  .edu-row__link {
+    grid-template-columns: 1fr;
+    align-items: start;
+    justify-items: start;
+    gap: 0.85rem;
+  }
+  /* margin-top:auto pins the place to the card bottom so all three align even when a degree wraps
+     to two lines (the cards are equal-height via align-items:stretch). */
+  .edu-row .edu-place { display: inline-flex; margin-top: auto; align-self: flex-start; }
 }
 
 /* About — cardless again, but unlike the earlier cardless attempt (doc 30), this one carries real
