@@ -117,8 +117,8 @@ html:not(.is-loading) #main.is-liquid-warp {
   --dur-swap: 0.18s;
   --dur-slow: 1.05s;
   --dur-reveal: 0.88s;
-  --dur-pill-reveal: 1s;
-  --ease-pill-reveal: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-pill-reveal: 0.72s;
+  --ease-pill-reveal: cubic-bezier(0.22, 1, 0.36, 1); /* buttery decelerate — smoother stack/skill stagger */
   --dur-pill-expand: 0.4s;
   --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
   /* Inter-first on every platform → identical look on Mac/iOS/Windows/Android/Linux (see doc 19).
@@ -2454,18 +2454,20 @@ html.is-ready .hero__wm {
      identity. Shine = a strong diagonal specular streak + a bright inset top-light here, plus a
      "wet" top catchlight in ::after and the animated sheen in ::before. */
   background:
-    linear-gradient(125deg, rgba(255,255,255,.85) 0%, rgba(255,255,255,.28) 28%, transparent 52%),
-    linear-gradient(160deg, color-mix(in srgb, var(--brand) 15%, #fff), color-mix(in srgb, var(--brand) 5%, #fff));
-  border: 1px solid color-mix(in srgb, var(--brand) 20%, rgba(255,255,255,.55));
+    linear-gradient(125deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.34) 27%, transparent 52%),
+    linear-gradient(160deg, color-mix(in srgb, var(--brand) 16%, #fff), color-mix(in srgb, var(--brand) 6%, #fff));
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, rgba(255,255,255,.5));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.9),
-    0 2px 8px -3px color-mix(in srgb, var(--brand) 32%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 2px 8px -3px color-mix(in srgb, var(--brand) 34%, transparent),
     0 1px 2px rgba(17,17,17,.05);
   cursor: default; outline: none;
   top: 0;
+  /* Same Tahoe deceleration + duration as the .icon-chip tiles, so the pills settle identically. */
   transition:
-    top 0.24s var(--ease-tile),
-    box-shadow 0.22s var(--ease-tile);
+    top 0.32s var(--ease-glass),
+    box-shadow 0.32s var(--ease-glass),
+    border-color 0.32s var(--ease-glass);
 }
 .brand-pill--sm { padding: 0.26rem; }
 .brand-pill--stack { --pill-top: #f8fafc; --pill-bot: #eef2f6; }
@@ -2506,12 +2508,14 @@ html.is-ready .hero__wm {
      the FLIP so the pill can glide if it wraps. z-index keeps the active pill above sliding neighbours. */
   z-index: 2;
   top: -2px;
-  /* Soft brand lift only — NOT --shadow-outset-hover, whose `0 2px 0` (zero-blur) white layer drew
-     a hard line along the bottom edge on hover (the "bottom border" bug). This is a blurred,
-     offset-down brand glow: a lift, no crisp edge. */
+  /* Exactly the .icon-chip hover feel: the brand rim brightens and the shadow deepens into a soft
+     brand glow (a lift, no crisp edge — NOT --shadow-outset-hover, whose zero-blur white layer drew
+     the old "bottom border"). Combined with the sheen sweep (::before) this reads as the tile
+     lighting up on hover, like the icon-chips beside the labels. */
+  border-color: color-mix(in srgb, var(--brand) 36%, rgba(255,255,255,.35));
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
-    0 7px 18px -6px color-mix(in srgb, var(--brand) 42%, transparent),
+    0 7px 18px -6px color-mix(in srgb, var(--brand) 46%, transparent),
     0 2px 5px rgba(17,17,17,.06);
 }
 
