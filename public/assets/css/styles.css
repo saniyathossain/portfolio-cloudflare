@@ -342,6 +342,17 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   transition: transform 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass),
               border-color 0.5s var(--ease-glass);
 }
+/* Reusable "liquid glass" card material — the exact frosted look loved on the hero Now-card: a
+   translucent white gradient, a bright top gloss line, a hairline ring and a soft deep shadow. Meant
+   to float over a visible background so the aurora subtly shows through it. Defined AFTER .glass-card
+   so adding both classes simply swaps the opaque frost for this see-through glass. */
+.glass-lux {
+  background: linear-gradient(180deg, rgba(255,255,255,.82) 0%, rgba(255,255,255,.55) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 0 0 1px rgba(230,229,226,.4),
+    0 18px 46px -12px rgba(17,17,17,.16);
+}
 .glass-card::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
   background:
@@ -1286,6 +1297,15 @@ html.is-ready .hero__wm {
   perspective: 1000px;
 }
 @media (min-width: 1024px) { .hero__aside { align-items: flex-end; } }
+/* Mobile/tablet: the portrait is a full-bleed background behind a single content column, so the CTA
+   and the Now-card/partners can land on the subject's face. Push them down — a gap above the actions
+   clears the mouth/beard, and a larger copy↔aside gap drops the card/partners onto the shirt — so the
+   face reads clearly between the headline and the buttons. */
+@media (max-width: 1023px) {
+  .hero__grid { gap: 3.5rem; padding-block: 8rem 5.5rem; align-items: start; }
+  .hero__actions { margin-top: 1.75rem; }
+  .hero__aside { margin-top: 1rem; }
+}
 
 .hero-rating { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .hero-rating__text {
