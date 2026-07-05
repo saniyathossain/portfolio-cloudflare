@@ -92,6 +92,21 @@ function portfolioApp() {
         window.addEventListener("keydown", this._onKey);
       }
       this.setupBackToTop();
+      this.setupIdlePause();
+    },
+
+    // Battery optimisation: pause every always-on decorative animation (the aurora drift, the .beam
+    // rotations, the brand sheen — see the `html.is-idle` rules in styles.css) whenever the page is
+    // hidden OR the window loses focus, and resume on return. Continuously compositing those while the
+    // user is in another app is pure wasted GPU/battery, and freezing them off-screen is invisible.
+    // (The aurora *canvas* pauses itself in aurora.js; this covers the CSS-driven animations.)
+    setupIdlePause() {
+      const root = document.documentElement;
+      const idle = () => root.classList.add("is-idle");
+      const active = () => root.classList.remove("is-idle");
+      document.addEventListener("visibilitychange", () => { if (document.hidden) idle(); else active(); });
+      window.addEventListener("blur", idle);
+      window.addEventListener("focus", active);
     },
 
     // rAF-coalesced like reveal.js's scroll-progress bar — one threshold check per frame, not one

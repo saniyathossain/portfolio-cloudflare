@@ -263,6 +263,16 @@ body::after {
   100% { transform: translate3d(2%, calc(-1.5% + var(--aurora-y, 0px)), 0); }
 }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+/* Battery: freeze every always-on decorative animation while the page is hidden or the window is
+   blurred (app.js toggles html.is-idle). They resume seamlessly on return, so nothing visible
+   changes — it just stops burning GPU/battery compositing them in the background. The clock is
+   intentionally excluded (pausing a phase-locked sweep would desync it; its cost is negligible). */
+html.is-idle body::before,
+html.is-idle .brand-bismillah,
+html.is-idle .brand-bismillah-wrap::after,
+html.is-idle .beam::before {
+  animation-play-state: paused;
+}
 
 /* Aurora canvas — real flowing gradient field (desktop/fine-pointer only, injected by aurora.js).
    Paints on top of the ::before orbs (same z-layer, later in DOM), under the ::after veil. Low-res

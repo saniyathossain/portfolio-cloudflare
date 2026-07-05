@@ -35,8 +35,8 @@ const SECURITY_HEADERS = {
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=feb7967b9aa4>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=feb7967b9aa4>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=d343e51aa381>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=d343e51aa381>; rel=preload; as=image; type=image/svg+xml",
 ].join(", ");
 
 // Field limits — reject obviously abusive payloads before doing any work.
@@ -59,6 +59,27 @@ function jsonResponse(obj, status) {
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
   });
+}
+
+// One structured single-line JSON log per API call — greppable/filterable in `wrangler tail` and the
+// Workers Logs dashboard. Request metadata (method, path, status, latency, client geo/UA, CF ray id)
+// plus per-route outcome fields. The raw message body is never logged (only stored in KV); logs keep
+// name/email so a submission can be correlated with its stored record.
+function logApi(fields) {
+  console.log(JSON.stringify(Object.assign({ log: "api", at: new Date().toISOString() }, fields)));
+}
+
+// Request metadata common to every API log line.
+function reqMeta(request) {
+  return {
+    method: request.method,
+    path: new URL(request.url).pathname,
+    ip: request.headers.get("CF-Connecting-IP") || "",
+    country: request.headers.get("CF-IPCountry") || "",
+    ray: request.headers.get("CF-Ray") || "",
+    ua: request.headers.get("User-Agent") || "",
+    referer: request.headers.get("Referer") || "",
+  };
 }
 
 // UTF-8-safe base64 (btoa only handles latin1) — used for the email subject/body encoding.
@@ -111,16 +132,24 @@ function buildMime({ from, to, name, email, project }) {
 }
 
 async function handleContact(request, env) {
-  if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  const t0 = Date.now();
+  const meta = reqMeta(request);
+  // Every exit point logs one structured line (status, latency + outcome fields) and returns JSON.
+  const finish = (status, resBody, extra) => {
+    logApi(Object.assign({ status, ms: Date.now() - t0, outcome: (resBody && resBody.error) || "ok" }, meta, extra || {}));
+    return jsonResponse(resBody, status);
+  };
+
+  if (request.method !== "POST") return finish(405, { error: "method_not_allowed" });
   if (!(request.headers.get("content-type") || "").includes("application/json")) {
-    return jsonResponse({ error: "bad_content_type" }, 415);
+    return finish(415, { error: "bad_content_type" });
   }
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return jsonResponse({ error: "bad_json" }, 400);
+    return finish(400, { error: "bad_json" });
   }
 
   const name = String(body.name || "").trim();
@@ -129,16 +158,18 @@ async function handleContact(request, env) {
   const token = String(body.token || body["cf-turnstile-response"] || "");
 
   // Validate before any network work.
-  if (!name || !email || !project) return jsonResponse({ error: "missing_fields" }, 422);
+  if (!name || !email || !project) return finish(422, { error: "missing_fields" }, { name, email });
   if (name.length > LIMITS.name || email.length > LIMITS.email || project.length > LIMITS.project) {
-    return jsonResponse({ error: "too_long" }, 422);
+    return finish(422, { error: "too_long" }, { name, email });
   }
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return jsonResponse({ error: "bad_email" }, 422);
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return finish(422, { error: "bad_email" }, { name, email });
 
   // Anti-spam — enforced only once a Turnstile secret is configured, so the form works pre-setup.
+  let turnstile = "skipped";
   if (env.TURNSTILE_SECRET) {
-    const ok = await verifyTurnstile(env.TURNSTILE_SECRET, token, request.headers.get("CF-Connecting-IP"));
-    if (!ok) return jsonResponse({ error: "captcha_failed" }, 403);
+    const ok = await verifyTurnstile(env.TURNSTILE_SECRET, token, meta.ip);
+    if (!ok) return finish(403, { error: "captcha_failed" }, { name, email, turnstile: "failed" });
+    turnstile = "passed";
   }
 
   const record = {
@@ -146,15 +177,14 @@ async function handleContact(request, env) {
     email,
     project,
     ts: new Date().toISOString(),
-    ip: request.headers.get("CF-Connecting-IP") || "",
-    country: request.headers.get("CF-IPCountry") || "",
-    ua: request.headers.get("User-Agent") || "",
+    ip: meta.ip,
+    country: meta.country,
+    ua: meta.ua,
+    ray: meta.ray,
   };
 
-  // 1) Log — visible in `wrangler tail` / Workers Logs. Never log the full message body verbatim.
-  console.log("contact submission", JSON.stringify({ name, email, country: record.country, ts: record.ts }));
-
-  // 2) Persist a durable record (guarded — works before the KV namespace is bound).
+  // 1) Persist a durable record (guarded — works before the KV namespace is bound).
+  let kvStored = false;
   if (env.CONTACT_KV) {
     try {
       await env.CONTACT_KV.put(
@@ -162,12 +192,13 @@ async function handleContact(request, env) {
         JSON.stringify(record),
         { expirationTtl: 60 * 60 * 24 * 365 }
       );
+      kvStored = true;
     } catch (err) {
       console.error("KV put failed:", err && err.message);
     }
   }
 
-  // 3) Send the notification email via the Email Routing send_email binding (guarded).
+  // 2) Send the notification email via the Email Routing send_email binding (guarded).
   let emailed = false;
   if (env.CONTACT_EMAIL && env.CONTACT_FROM && env.CONTACT_TO) {
     try {
@@ -178,11 +209,32 @@ async function handleContact(request, env) {
       // The submission is already saved to KV + logs, so don't fail the visitor — just record it.
       console.error("contact email send failed:", err && err.message);
     }
-  } else {
-    console.warn("contact email skipped — Email Routing binding/vars not configured");
   }
 
-  return jsonResponse({ ok: true, emailed }, 200);
+  return finish(200, { ok: true, emailed }, { name, email, turnstile, kvStored, emailed });
+}
+
+// Admin read endpoint: GET /api/contact?token=<ADMIN_TOKEN> → the most recent stored submissions.
+// Locked unless ADMIN_TOKEN is set (`npx wrangler secret put ADMIN_TOKEN`). Not linked from the UI.
+async function handleContactList(request, env) {
+  const meta = reqMeta(request);
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token") || (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) {
+    logApi(Object.assign({ status: 401, outcome: "unauthorized" }, meta));
+    return jsonResponse({ error: "unauthorized" }, 401);
+  }
+  if (!env.CONTACT_KV) return jsonResponse({ count: 0, items: [], note: "kv_not_configured" }, 200);
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10) || 50, 200);
+  const list = await env.CONTACT_KV.list({ prefix: "contact:", limit });
+  const items = [];
+  for (const key of list.keys) {
+    const val = await env.CONTACT_KV.get(key.name);
+    if (val) { try { items.push(JSON.parse(val)); } catch { /* skip corrupt entry */ } }
+  }
+  items.sort((a, b) => String(b.ts || "").localeCompare(String(a.ts || "")));
+  logApi(Object.assign({ status: 200, outcome: "list", count: items.length }, meta));
+  return jsonResponse({ count: items.length, items }, 200);
 }
 
 export default {
@@ -190,7 +242,9 @@ export default {
     const url = new URL(request.url);
 
     // Contact API — handled before static assets; never cached, no early hints.
+    // GET = token-gated admin read of stored submissions; POST = a new submission.
     if (url.pathname === "/api/contact") {
+      if (request.method === "GET") return handleContactList(request, env);
       return handleContact(request, env);
     }
 

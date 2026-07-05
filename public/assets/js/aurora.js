@@ -26,7 +26,7 @@
     { h: "255,92,138",  k: 0.30, ax: 0.15, ay: 0.13, sx: 0.009, sy: 0.012, ph: 5.6, x: 0.42, y: 0.52, r: 0.34 },
     { h: "177,95,44",   k: 0.50, ax: 0.11, ay: 0.10, sx: 0.011, sy: 0.009, ph: 2.3, x: 0.70, y: 0.40, r: 0.36 },
   ];
-  const FRAME_MS = 33; // ~30fps
+  const FRAME_MS = 42; // ~24fps — the drift is slow, so fewer frames are imperceptible but save GPU/battery
 
   function init() {
     let canvas = document.getElementById("auroraCanvas");
@@ -90,9 +90,15 @@
 
     resize();
     window.addEventListener("resize", () => { resize(); if (!running) draw(performance.now() * 0.06); });
+    // Pause the canvas loop whenever the page isn't actually being looked at — tab hidden AND window
+    // blurred (switched to another app/window). Continuously repainting a full-screen blurred canvas
+    // in the background is the main battery cost on laptops (notably Safari), and freezing an ambient
+    // drift while it's not visible changes nothing the user can see.
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stop(); else start();
     });
+    window.addEventListener("blur", stop);
+    window.addEventListener("focus", start);
 
     draw(0);
     requestAnimationFrame(() => canvas.classList.add("is-ready"));
