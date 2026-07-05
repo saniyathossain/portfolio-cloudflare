@@ -1221,38 +1221,6 @@ html.is-ready .hero__wm {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 1px 3px rgba(17,17,17,.12);
 }
 .pill-btn__icon .ui-icon { width: 1rem; height: 1rem; color: var(--ink); stroke-width: 2.25; }
-/* "View experience" — a leaf that unfurls (rotate + scale from its own base, not the button's
-   center) and a thin stem that grows along the button's underside on hover, both driven by
-   transform only (never width/height) per this file's GPU-only animation convention. --c-green is
-   an existing Aurora token (already used for Education elsewhere), not a new hue — scoped to this
-   one nature-themed icon rather than adopted as a second sitewide accent. */
-.grow-btn { position: relative; }
-.grow-btn__icon {
-  background: linear-gradient(145deg, color-mix(in srgb, var(--c-green) 30%, #fff), color-mix(in srgb, var(--c-green) 10%, #fff));
-  color: #146b29;
-  transform-origin: 50% 100%;
-  transition: transform 0.4s var(--ease-glass);
-}
-.grow-btn__icon .ui-icon { color: #146b29; }
-@media (hover: hover) and (pointer: fine) {
-  .grow-btn:hover .grow-btn__icon { transform: rotate(-10deg) scale(1.12); }
-}
-/* A real child element, not ::after — .beam already claims ::before (rotating conic border) and
-   .pill-btn-glass already claims ::after (gloss overlay) on this same button, so there's no free
-   pseudo-element slot left. Two-class selector (.grow-btn > .grow-btn__stem) so it reliably wins
-   position:absolute back from .pill-btn-glass > * (which promotes every direct child to
-   position:relative for its own z-index stacking) regardless of source order. */
-.grow-btn > .grow-btn__stem {
-  position: absolute; z-index: 2; left: 1.5rem; right: 2.75rem; bottom: 0.6rem; height: 2px;
-  background: color-mix(in srgb, var(--c-green) 65%, transparent);
-  border-radius: 2px;
-  transform: scaleX(0); transform-origin: 0% 50%;
-  transition: transform 0.45s var(--ease-glass);
-}
-.grow-btn:hover > .grow-btn__stem { transform: scaleX(1); }
-@media (prefers-reduced-motion: reduce) {
-  .grow-btn__icon, .grow-btn__stem { transition: none; }
-}
 /* Both CTAs below add the icon-chip "shiny tile" gloss via ::after (not ::before — .beam already
    claims that pseudo-element for its rotating conic border on these same buttons). */
 .pill-btn-dark {
@@ -1278,7 +1246,7 @@ html.is-ready .hero__wm {
   display: inline-flex; align-items: center; gap: 0.75rem;
   border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
   background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
-  color: #111; padding: 0.875rem 0.375rem 0.875rem 1.5rem;
+  color: #111; padding: 0.875rem 1.75rem;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px -7px rgba(17,17,17,.14);
   transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
 }
@@ -1570,11 +1538,20 @@ html.is-ready .hero__wm {
   /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
      enter/exit duration otherwise: the :hover/:focus-within selectors below are what's active while
      OPENING, so declaring transition here is what actually governs the open half of the animation;
-     the rest-state declarations above govern the close half once the pointer leaves. */
+     the rest-state declarations above govern the close half once the pointer leaves.
+     Real backdrop-filter here (not the faux-frost this file uses elsewhere for scrolling glass) is
+     safe precisely because it's scoped to :hover/:focus-within — it only ever repaints while a
+     desktop pointer is deliberately holding the card open, never continuously while scrolling, so it
+     doesn't touch the mobile-repaint cost --frost-bg was built to avoid (mobile has no hover at all,
+     so it never runs there regardless). Background lightened further so the blur actually has
+     something to read through instead of mostly-opaque white. */
   .hero__aside .hero-card[data-reveal]:hover,
   .hero__aside .hero-card[data-reveal]:focus-within {
     padding-right: 0.5rem;
     clip-path: inset(0 0 0 0 round 1.35rem);
+    background: linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.4) 100%);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.9),
       0 0 0 1px rgba(230,229,226,.35),
@@ -1582,6 +1559,7 @@ html.is-ready .hero__wm {
     transition:
       clip-path 0.6s var(--ease-smooth),
       padding-right 0.6s var(--ease-smooth),
+      background 0.6s var(--ease-smooth),
       box-shadow 0.45s var(--ease-glass);
   }
   .hero__aside .hero-card[data-reveal]:hover::after,
@@ -1604,8 +1582,25 @@ html.is-ready .hero__wm {
     opacity: 1; transform: none;
     transition: opacity 0.45s var(--ease-glass), transform 0.6s var(--ease-smooth);
   }
+  /* The icon itself grows as the drawer opens — same icon already shown collapsed (activeCard's
+     own glyph), not a new one, just scaled up from its own base so it reads as "growing into" the
+     opened card rather than a swap. Same duration/curve as the clip-path open so nothing outpaces
+     the reveal it's tied to. */
+  .hero-card__badge-icon { transform-origin: 50% 50%; }
+  .hero-card:hover .hero-card__badge-icon,
+  .hero-card:focus-within .hero-card__badge-icon {
+    transform: scale(1.3);
+    transition: transform 0.6s var(--ease-smooth);
+  }
+  /* Higher specificity than the plain hover rule above so a card-advance click mid-hover still
+     reads as a pulse (a slight dip from the grown size) instead of .is-pulsing's scale(0.96) getting
+     silently outranked and disappearing while the drawer is open. */
+  .hero-card:hover .hero-card__badge-icon.is-pulsing,
+  .hero-card:focus-within .hero-card__badge-icon.is-pulsing {
+    transform: scale(1.18);
+  }
   @media (prefers-reduced-motion: reduce) {
-    .hero-card, .hero-card__body, .hero-card__badge { transition: none; }
+    .hero-card, .hero-card__body, .hero-card__badge, .hero-card__badge-icon { transition: none; }
   }
 }
 
@@ -2677,33 +2672,41 @@ html.is-ready .hero__wm {
   opacity: 0.8;
 }
 .modal-panel > * { position: relative; z-index: 1; }
-/* The close button used to rely on Tailwind's `absolute right-4 top-4` utilities — but this rule
-   (.modal-panel > *, equal specificity, and later in the cascade since tailwind.css is concatenated
-   BEFORE styles.css in minify-css.js) was silently winning `position` back to `relative`, so the
-   button was actually rendering in normal document flow the whole time, not floating in the corner
-   — confirmed via computed style, not assumed. That's what let it drift into the eyebrow line at
-   every viewport width regardless of the padding-right fix below, which only ever addressed the
-   *title*'s wrap width, never the actual mispositioned button. Fixed with an explicit two-class
-   selector that decisively outranks .modal-panel > * regardless of source order. */
-.modal-panel > .modal-close {
-  position: absolute; top: 1rem; left: 1rem; z-index: 2;
-  width: 2.25rem; height: 2.25rem;
-  transition: transform 0.3s var(--ease-spring), background 0.25s var(--ease-glass);
+/* macOS-style title bar: close control at left, small centered title, thin divider beneath — the
+   heading/form content starts fresh below it on its own line instead of sharing space with a
+   floating button (the old .modal-close was absolutely positioned over the top of .modal-header,
+   which is exactly what kept colliding with the title text at various widths). Bleeds to the
+   panel's own edges via negative margins; .modal-panel's overflow:hidden + border-radius clips it
+   back to the panel's rounded corners so it still reads as one continuous surface. */
+.modal-titlebar {
+  display: flex; align-items: center; justify-content: center; position: relative;
+  height: 2.75rem; margin: -1.5rem -1.5rem 1.25rem; padding-inline: 1rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(17,17,17,.035), transparent);
 }
-.modal-panel > .modal-close:hover,
-.modal-panel > .modal-close:focus-visible {
-  transform: scale(1.1) rotate(90deg);
+.modal-titlebar__label {
+  font-size: 0.8125rem; font-weight: 600; letter-spacing: -0.005em;
+  color: rgba(17,17,17,.5);
+}
+.modal-titlebar > .modal-close {
+  position: absolute; left: 1rem; top: 50%; z-index: 2;
+  width: 1.5rem; height: 1.5rem; transform: translateY(-50%);
+  background: linear-gradient(150deg, #ff8a80, #e0443e);
+  color: rgba(90,10,8,.55); font-size: 0.6rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 1px 3px rgba(17,17,17,.22);
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.25s var(--ease-glass);
+}
+.modal-titlebar > .modal-close:hover,
+.modal-titlebar > .modal-close:focus-visible {
+  transform: translateY(-50%) scale(1.15) rotate(90deg);
+  color: rgba(90,10,8,.85);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 2px 6px rgba(17,17,17,.3);
 }
 @media (prefers-reduced-motion: reduce) {
-  .modal-panel > .modal-close { transition: background 0.25s var(--ease-glass); }
-  .modal-panel > .modal-close:hover,
-  .modal-panel > .modal-close:focus-visible { transform: none; }
+  .modal-titlebar > .modal-close { transition: box-shadow 0.25s var(--ease-glass); }
+  .modal-titlebar > .modal-close:hover,
+  .modal-titlebar > .modal-close:focus-visible { transform: translateY(-50%); }
 }
-/* Close button sits at left:1rem, width:2.25rem — its right edge is 3.25rem from the panel's left
-   edge, inside the panel's own 1.5rem padding — macOS puts window controls on the left, not the
-   right. Without this, the title/eyebrow text runs the full padded width and collides with the
-   button on any line long enough to reach it, at every size. */
-.modal-header { padding-left: 2.25rem; }
 .modal-field label {
   display: flex; align-items: center; gap: 0.35rem;
   font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em;
