@@ -2415,13 +2415,11 @@ html.is-ready .hero__wm {
 
 .brand-pill:hover,
 .brand-pill:focus-visible {
-  /* overflow:visible lets the absolute label overlay escape the icon-sized pill box and paint over
-     the neighbour to the right; z-index lifts the whole hovered pill above its siblings. --pill-shift
-     (set by app.js, 0 for most pills) nudges right-edge pills left so the grown label can't run off
-     the viewport — folded into the SAME transform as the -2px lift, since transform is one property. */
-  overflow: visible;
-  z-index: 5;
-  transform: translate(var(--pill-shift, 0px), -2px);
+  /* In-flow reveal (see the label block below): the pill grows in flow and pillFlip() glides the
+     neighbours out of the way, so no overlay/overflow escape is needed. A small z-index keeps the
+     active pill crisp above the siblings that slide past it during the FLIP. */
+  z-index: 2;
+  transform: translateY(-2px);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
     0 8px 22px -8px color-mix(in srgb, var(--brand) 45%, transparent),
@@ -2486,51 +2484,40 @@ html.is-ready .hero__wm {
 .brand-pill:hover .brand-pill__label-in,
 .brand-pill:focus-visible .brand-pill__label-in { color: #0a0a0a; text-shadow: none; }
 
-/* Icon→label reveal, done OUT OF FLOW so it can't juggle. The label is position:absolute, so the
-   pill's flex box stays icon-sized and flex-wrap line-breaking is computed once and never re-runs on
-   hover — no matter how far the label expands, no sibling ever moves or re-wraps (the root cause of
-   the juggle). On hover the label grows rightward as an overlay that paints over the neighbour to its
-   right (accepted trade-off) and carries the pill's own 3-layer background + radius so it reads as
-   one continuous grown pill; the badge sits on top (z-index) at the left. Right-edge pills that would
-   run the label off the viewport are nudged left via --pill-shift (app.js). Touch / reduced-motion
-   fall back to static in-flow labels below. */
+/* Icon→label reveal, done IN FLOW so the pill genuinely takes the space its label needs — no absolute
+   overlay painting over the neighbour (which left an overlap + a lingering box-shadow). The label is a
+   grid column that is 0-width when collapsed and full-width when the pill is .is-open. The width flips
+   INSTANTLY (no width transition), so the flex row reflows to its final layout in a single frame; then
+   motion.js' pillFlip() smooths that reflow with FLIP — each sibling is inverted to its old position
+   and glides to its new one over one shared duration, so neighbours slide aside / wrap to the next line
+   smoothly and return cleanly on un-hover, and nothing ever overlaps in the resting state. The label
+   text fades + slides in on top of the already-reserved width. Touch / reduced-motion force the label
+   open in flow (no JS, no motion) below. */
 .brand-pill__label {
-  position: absolute; inset: 0 auto 0 0; z-index: 0;
-  display: flex; align-items: center;
-  padding-left: 2.15rem;                 /* clear the 1.85rem badge + 0.3rem pill padding */
-  max-width: 2.15rem;                    /* collapsed: badge area only, label text clipped away */
-  opacity: 0;
+  display: grid;
+  grid-template-columns: 0fr;            /* collapsed: label column collapses to zero width */
   overflow: hidden;
-  border-radius: var(--radius-pill);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.2) 44%, transparent 60%),
-    radial-gradient(130% 170% at 8% 50%, color-mix(in srgb, var(--brand) 22%, var(--pill-top)), transparent 58%),
-    linear-gradient(180deg, var(--pill-top) 0%, var(--pill-bot) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(17,17,17,.03);
-  transition:
-    max-width 0.42s var(--ease-glass),
-    opacity 0.26s ease;
 }
-.brand-pill--sm .brand-pill__label { padding-left: 1.76rem; }
+.brand-pill.is-open .brand-pill__label { grid-template-columns: 1fr; }
 .brand-pill__label-tx {
   display: block; overflow: hidden; min-width: 0;
 }
 .brand-pill__label-in {
   display: block; white-space: nowrap;
-  padding: 0 0.62rem 0 0.05rem;
+  padding: 0 0.62rem 0 0.4rem;
   font-size: 0.8125rem; font-weight: 600; color: #14161c;
   letter-spacing: -0.015em; line-height: 1.2;
-  transition: color 0.22s ease;
+  opacity: 0; transform: translateX(-4px);
+  transition:
+    opacity 0.26s ease,
+    transform 0.3s var(--ease-glass),
+    color 0.22s ease;
 }
 .brand-pill--sm .brand-pill__label-in {
-  font-size: 0.76rem; padding: 0 0.55rem 0 0.05rem;
+  font-size: 0.76rem; padding: 0 0.55rem 0 0.34rem;
 }
-.brand-pill:hover .brand-pill__label,
-.brand-pill:focus-visible .brand-pill__label {
-  max-width: 15rem;
-  opacity: 1;
+.brand-pill.is-open .brand-pill__label-in {
+  opacity: 1; transform: none;
 }
 .pill-expand:not(:hover):not(:focus-visible):not([aria-expanded="true"]) .pill-expand__label {
   transition-delay: 0s, 0.18s, 0s;
@@ -2560,28 +2547,24 @@ html.is-ready .hero__wm {
   transition-delay: var(--reveal-delay, 0ms);
 }
 .pill-row[data-stagger].is-visible .brand-pill:hover {
-  /* keep the --pill-shift nudge here too (this rule would otherwise override the hover transform
-     above and drop the shift in the Skills section, re-introducing the right-edge clip). */
-  transform: translate(var(--pill-shift, 0px), -2px);
+  /* re-assert the hover lift so this stagger rule doesn't override it back to the entrance transform. */
+  transform: translateY(-2px);
   transition:
     transform 0.24s var(--ease-tile),
     box-shadow 0.24s var(--ease-tile);
 }
 
-/* Touch / no-hover devices (real phones): no hover to reveal on, so show labels STATICALLY and IN
-   FLOW — reset the absolute overlay back to a normal flex child (an always-on absolute overlay would
-   permanently cover the neighbouring pill). Gives the readable static stack with zero animation and
-   zero reflow; the hover polish is neutralised so a tap-synthesised sticky :hover can't nudge a pill. */
+/* Touch / no-hover devices (real phones): no hover to reveal on, so force the label OPEN and in flow —
+   the pill just carries its label statically. Zero JS (pillFlip is gated out) and zero animation; the
+   hover polish is neutralised so a tap-synthesised sticky :hover can't nudge a pill. */
 @media (hover: none), (pointer: coarse) {
-  .brand-pill__label {
-    position: static; z-index: auto;
-    max-width: none; opacity: 1; padding-left: 0;
-    background: none; box-shadow: none; border-radius: 0;
-    transition: none;
+  .brand-pill__label { grid-template-columns: 1fr; }
+  .brand-pill__label-in {
+    opacity: 1; transform: none; transition: none;
+    padding: 0 0.55rem 0 0.44rem;
   }
-  .brand-pill__label-in { padding: 0 0.55rem 0 0.44rem; }
   .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
-  .brand-pill:hover { transform: none; overflow: hidden; z-index: auto; }
+  .brand-pill:hover { transform: none; z-index: auto; }
   .brand-pill:hover::before { transform: translateX(-135%); }
   .brand-pill.spec:hover::after { opacity: 0; }
   .brand-pill:hover .brand-pill__badge img { transform: none; filter: none; }
@@ -2605,15 +2588,14 @@ html.is-ready .hero__wm {
   .exp-details { transition: none; }
   .exp-row__chev,
   .pill-expand__label { transition: none; }
-  /* Static in-flow labels (same as the touch fallback) so reduced-motion users get the readable
-     stack with no animation instead of an icon-only row they can't reveal without motion. */
-  .brand-pill__label {
-    position: static; z-index: auto;
-    max-width: none; opacity: 1; padding-left: 0;
-    background: none; box-shadow: none; border-radius: 0;
-    transition: none;
+  /* Force-open in-flow labels (same as the touch fallback) so reduced-motion users get the readable
+     stack with no animation instead of an icon-only row they can't reveal without motion (pillFlip is
+     gated out by the module-level reduced-motion early return). */
+  .brand-pill__label { grid-template-columns: 1fr; }
+  .brand-pill__label-in {
+    opacity: 1; transform: none; transition: none;
+    padding: 0 0.55rem 0 0.44rem;
   }
-  .brand-pill__label-in { padding: 0 0.55rem 0 0.44rem; }
   .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
   .create-band[data-stagger] .create-band__tile { opacity: 1; transform: none; }
   .pill-row[data-stagger] .brand-pill { opacity: 1; transform: none; }

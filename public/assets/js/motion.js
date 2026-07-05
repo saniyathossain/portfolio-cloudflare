@@ -184,34 +184,91 @@
     applyElementParallax();
   }
 
-  // Right-edge shift for the icon→label hover reveal. The label expands out of flow (absolute), so
-  // the flex row never re-wraps (no juggle) — but a pill near the right edge would grow its label off
-  // the viewport. On hover/focus we measure the label's needed width and, if it would overflow, set
-  // --pill-shift to slide the pill left just enough to keep the label on screen (CSS folds it into the
-  // pill's hover transform). Delegated (one listener each), desktop-only via canEnhance, two rect
-  // reads per newly-entered pill — no rAF loop. Touch / reduced-motion never reach here and show the
-  // static in-flow labels from CSS instead.
-  function pillReveal() {
+  // Icon→label hover reveal, smoothed with FLIP (First, Last, Invert, Play). The label is an IN-FLOW
+  // grid column that flips from 0fr to 1fr the instant a pill gets .is-open, so the flex row reflows to
+  // its final layout in a single frame (no per-frame line-break juggle). We then animate that reflow:
+  // snapshot every sibling's position First, toggle .is-open and read the Last positions, Invert each
+  // moved sibling back to where it was with a transform, then Play it to identity next frame — so
+  // neighbours glide aside / wrap to the next line and slide back on un-hover, and nothing ever
+  // overlaps in the resting state. The hovered pill's own growth is CSS (width flip + text fade); FLIP
+  // touches ONLY the siblings, so it never fights the pill's :hover lift transform. Delegated listeners,
+  // desktop-pointer-only via canEnhance; touch / reduced-motion show the static in-flow labels from CSS.
+  function pillFlip() {
     if (!canEnhance) return;
-    const MARGIN = 10; // px kept between the grown label and the viewport edge
-    let lastPill = null;
-    function place(pill) {
-      const labelIn = pill.querySelector(".brand-pill__label-in");
-      if (!labelIn) return;
-      const pr = pill.getBoundingClientRect();
-      const need = pr.width + labelIn.scrollWidth + 14; // icon box + label text + padding fudge
-      const overflow = pr.left + need - (window.innerWidth - MARGIN);
-      pill.style.setProperty("--pill-shift", overflow > 0 ? "-" + Math.round(overflow) + "px" : "0px");
+    const DUR = 300;
+    const EASE = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+    const rowTimers = new WeakMap(); // row -> cleanup timeout id
+
+    function siblingsOf(pill) {
+      const out = [];
+      for (let el = pill.parentElement.firstElementChild; el; el = el.nextElementSibling) {
+        if (el !== pill && el.classList.contains("brand-pill")) out.push(el);
+      }
+      return out;
     }
-    function onEnter(e) {
+
+    function flip(pill, open) {
+      const row = pill.parentElement;
+      if (!row) return;
+      const sibs = siblingsOf(pill);
+      // FIRST — current visual positions (include any in-flight transforms from a prior interrupt).
+      const first = sibs.map((s) => s.getBoundingClientRect());
+      // Clear in-flight transforms so LAST is measured against the clean, final layout. No paint
+      // happens between here and the Invert below (all synchronous), so this never flashes.
+      sibs.forEach((s) => { s.style.transition = "none"; s.style.transform = "none"; });
+      // Mutate to the final layout INSTANTLY (label width has no CSS transition).
+      pill.classList.toggle("is-open", open);
+      // LAST — reading a rect forces the synchronous layout we need.
+      const last = sibs.map((s) => s.getBoundingClientRect());
+      // INVERT — send each moved sibling back to its old spot (transform only; layout stays final).
+      const movers = [];
+      sibs.forEach((s, i) => {
+        const dx = first[i].left - last[i].left;
+        const dy = first[i].top - last[i].top;
+        if (dx || dy) {
+          s.style.willChange = "transform";
+          s.style.transform = "translate(" + dx + "px," + dy + "px)";
+          movers.push(s);
+        } else {
+          s.style.transition = "";
+          s.style.transform = "";
+        }
+      });
+      // PLAY — two rAFs guarantee the Invert frame committed before we transition to identity.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          movers.forEach((s) => {
+            s.style.transition = "transform " + DUR + "ms " + EASE;
+            s.style.transform = "";
+          });
+        });
+      });
+      // Strip inline transition/will-change once the glide settles so nothing lingers to fight the
+      // next hover (transform is already back to identity from Play).
+      clearTimeout(rowTimers.get(row));
+      rowTimers.set(row, setTimeout(() => {
+        siblingsOf(pill).forEach((s) => { s.style.transition = ""; s.style.willChange = ""; });
+      }, DUR + 90));
+    }
+
+    function onOpen(e) {
       const pill = e.target.closest && e.target.closest(".brand-pill");
-      if (!pill || pill === lastPill) return;
-      lastPill = pill;
-      place(pill);
+      if (!pill || pill.__pillOpen) return;
+      pill.__pillOpen = 1;
+      flip(pill, true);
     }
-    document.addEventListener("pointerover", onEnter, { passive: true });
-    document.addEventListener("focusin", onEnter);
-    window.addEventListener("resize", () => { lastPill = null; }, { passive: true });
+    function onClose(e) {
+      const pill = e.target.closest && e.target.closest(".brand-pill");
+      if (!pill || !pill.__pillOpen) return;
+      if (e.relatedTarget && pill.contains(e.relatedTarget)) return; // moved onto a child — still inside
+      pill.__pillOpen = 0;
+      flip(pill, false);
+    }
+
+    document.addEventListener("pointerover", onOpen, { passive: true });
+    document.addEventListener("pointerout", onClose, { passive: true });
+    document.addEventListener("focusin", onOpen);
+    document.addEventListener("focusout", onClose);
   }
 
   function boot() {
@@ -223,7 +280,7 @@
     specular();
     scrollParallax();
     heroSpatial();
-    pillReveal();
+    pillFlip();
     if (canEnhance) applyParallax(window.scrollY || 0);
   }
 
