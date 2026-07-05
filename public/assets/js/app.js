@@ -540,7 +540,7 @@ function portfolioApp() {
       const finish = () => {
         clearTimeout(panel._heightTimer);
         panel.removeEventListener("transitionend", panel._heightOnEnd);
-        if (inner) inner.style.willChange = "";
+        if (inner) { inner.style.willChange = ""; inner.style.transform = ""; }
         onDone();
       };
       panel._heightOnEnd = (e) => { if (e.propertyName === "height") finish(); };
@@ -548,7 +548,10 @@ function portfolioApp() {
       panel._heightTimer = setTimeout(finish, durationMs + 80);
 
       requestAnimationFrame(() => {
-        if (inner) inner.style.willChange = "transform";
+        // translateZ(0), not just will-change: Safari treats will-change as a hint and often skips
+        // the cached layer, so the glossy content repaints every frame as the clip grows. An explicit
+        // 3D transform forces a real compositor layer — content rasterized once, then only clipped.
+        if (inner) { inner.style.willChange = "transform"; inner.style.transform = "translateZ(0)"; }
         panel.style.transition = "height " + durationMs + "ms cubic-bezier(0.32, 0.72, 0, 1)";
         panel.style.height = toHeight;
       });
