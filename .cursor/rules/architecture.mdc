@@ -1,0 +1,17 @@
+---
+description: Static site architecture, file layout, boot chain, Cloudflare Workers deployment
+alwaysApply: true
+---
+
+# Architecture
+
+- **Deploy root**: `public/` served via Cloudflare Workers Static Assets (`wrangler.toml`).
+- **Worker**: `src/index.js` — security headers + CSP on every response.
+- **Content**: `public/assets/data/portfolio.json` fetched by `data.js`; exposes `window.portfolioDataReady`.
+- **Boot**: `data.js` → `loader.js` → `boot.js` → `app.js` + Alpine → reveal/blur scripts → idle motion/liquid-hero.
+- **No npm at runtime**; Tailwind built via `build-css.sh` + standalone CLI in `bin/` (gitignored).
+- **JS modules**: `data.js`, `icons.js`, `loader.js`, `boot.js`, `app.js`, `reveal.js`, `blur-reveal.js`, `motion.js`, `liquid-hero.js`, `aurora.js`; vendors in `public/assets/js/vendor/`.
+- **SW**: `public/sw.js` — network-first for `/assets/js/*` (except `/vendor/` → cache-first) and `/assets/css/*`; cache-first for other `/assets/*`.
+- **Head sync**: `scripts/sync-head.js` generates marked blocks in `index.html`; do not edit inside sync markers.
+- **Legacy**: an old `legacy/` dc-runtime site predated this rebuild and is **not** in the repo (gitignored) — nothing to extend.
+- **No `eval` / `new Function`** in production code.

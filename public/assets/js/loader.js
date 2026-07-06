@@ -1,11 +1,73 @@
-/** Intro loader — skeleton shimmer, GPU progress, slide-up exit */
+/**
+ * Intro loader — skeleton shimmer, GPU progress, progressive site blur, slide-up exit.
+ *
+ * Portfolio of Mohammad Saniyat Hossain — https://saniyat.com
+ * @author  Mohammad Saniyat Hossain
+ * @license Proprietary — all rights reserved.
+ */
 (function () {
   const FILL_MS = 1300;
   const REVEAL_AT = 0.28;
+  const BLUR_MAX = 16;
+  const DIM_MAX = 0.48;
+  const SCALE_MAX = 0.012;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let ready = false;
+  let running = false;
 
   function easeInOutCubic(t) {
     return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function rootEl() {
+    return document.documentElement;
+  }
+
+  function setLoadVisuals(p) {
+    const root = rootEl();
+    const blur = (1 - p) * BLUR_MAX;
+    const dim = (1 - p) * DIM_MAX;
+    const scale = 1 + (1 - p) * SCALE_MAX;
+    root.style.setProperty("--load-blur", blur.toFixed(2) + "px");
+    root.style.setProperty("--load-dim", dim.toFixed(3));
+    root.style.setProperty("--load-scale", scale.toFixed(4));
+  }
+
+  function ensureScrim() {
+    let scrim = document.getElementById("load-scrim");
+    if (!scrim) {
+      scrim = document.createElement("div");
+      scrim.id = "load-scrim";
+      scrim.className = "load-scrim";
+      scrim.setAttribute("aria-hidden", "true");
+      document.body.insertBefore(scrim, document.body.firstChild);
+    }
+    return scrim;
+  }
+
+  function resetPageState() {
+    const root = rootEl();
+    root.classList.remove("is-ready");
+    document.querySelector(".hero")?.classList.remove("is-ready");
+    document.querySelector(".site-header")?.classList.remove("is-ready");
+    ready = false;
+    window.__portfolioReady = false;
+  }
+
+  function beginLoading() {
+    resetPageState();
+    const root = rootEl();
+    root.classList.add("is-loading");
+    setLoadVisuals(0);
+    ensureScrim();
+  }
+
+  function endLoading() {
+    const root = rootEl();
+    root.classList.remove("is-loading");
+    root.style.removeProperty("--load-blur");
+    root.style.removeProperty("--load-dim");
+    root.style.removeProperty("--load-scale");
   }
 
   function stopScroll() {
@@ -27,11 +89,60 @@
     window.dispatchEvent(new Event("portfolio-ready"));
   }
 
+  function finishLoader(loader) {
+    setLoadVisuals(1);
+    const complete = () => {
+      endLoading();
+      startScroll();
+      running = false;
+      setReady();
+    };
+    if (loader) {
+      loader.classList.add("is-fade-center");
+      loader.classList.add("is-exit");
+      setTimeout(() => {
+        loader.remove();
+        complete();
+      }, reduced ? 0 : 720);
+    } else {
+      complete();
+    }
+    try {
+      sessionStorage.setItem("portfolio-visited", "1");
+    } catch (_) {}
+  }
+
+  function skipLoader() {
+    const loader = document.getElementById("loader");
+    if (loader) loader.remove();
+    endLoading();
+    startScroll();
+    setReady();
+    running = false;
+  }
+
   function runLoader() {
+    if (running) return;
+
     const loader = document.getElementById("loader");
     const fill = document.getElementById("loadFill");
     const num = document.getElementById("loadNum");
-    if (!loader) { setReady(); startScroll(); return; }
+    beginLoading();
+    if (!loader) {
+      endLoading();
+      setReady();
+      startScroll();
+      return;
+    }
+
+    running = true;
+
+    if (reduced) {
+      if (fill) fill.style.transform = "scaleX(1)";
+      if (num) num.textContent = "100";
+      finishLoader(loader);
+      return;
+    }
 
     stopScroll();
     const start = performance.now();
@@ -41,6 +152,7 @@
       const t = Math.min((now - start) / FILL_MS, 1);
       const p = easeInOutCubic(t);
       const count = Math.round(p * 100);
+      setLoadVisuals(p);
       if (fill) fill.style.transform = "scaleX(" + p + ")";
       if (num) num.textContent = String(count).padStart(3, "0");
       if (!revealed && t >= REVEAL_AT) {
@@ -50,23 +162,28 @@
       if (t < 1) {
         requestAnimationFrame(step);
       } else {
-        loader.classList.add("is-fade-center");
-        loader.classList.add("is-exit");
-        setReady();
-        setTimeout(() => {
-          startScroll();
-          loader.remove();
-        }, 720);
+        finishLoader(loader);
       }
     }
     requestAnimationFrame(step);
   }
 
-  window.portfolioLoader = { isReady: () => ready, stopScroll, startScroll };
+  window.portfolioLoader = { isReady: () => ready, stopScroll, startScroll, skipLoader };
+
+  function scheduleLoader() {
+    beginLoading();
+    requestAnimationFrame(() => requestAnimationFrame(runLoader));
+  }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", runLoader);
+    document.addEventListener("DOMContentLoaded", scheduleLoader);
   } else {
-    runLoader();
+    scheduleLoader();
   }
+
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    running = false;
+    scheduleLoader();
+  });
 })();

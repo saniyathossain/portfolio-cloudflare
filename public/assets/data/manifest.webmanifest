@@ -1,21 +1,32 @@
 {
-  "name": "Saniyat — Portfolio",
+  "id": "/",
+  "name": "Saniyat Hossain — Staff Software Engineer",
   "short_name": "Saniyat",
   "description": "Staff Software Engineer — backend, microservices, and AI-assisted delivery.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#0a0a0a",
   "icons": [
     {
       "src": "/assets/img/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
-      "src": "/assets/img/saniyat-hossain.jpg",
+      "src": "/assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

@@ -1,0 +1,18 @@
+---
+description: Lumora + Tahoe design tokens, shiny chips, glass, and visual patterns
+globs: public/**/*.{html,css,js}
+alwaysApply: false
+---
+
+# Design System
+
+- **Palette**: `--ink`, `--accent` / `--accent-bright` (copper), `--primary` (azure), `--surface #f1f0ee`, `--beige` hero eyebrow, `--line`.
+- **Fonts**: `-apple-system`, SF Pro Display/Text, self-hosted Inter fallback — no webfont CDN at runtime.
+- **Section tints**: `#about`, `#services`, `#experience`, … override `--tint`; list rows use `[data-ci]` (blue, teal, purple, orange, …).
+- **Glass**: `.glass-panel`, `.glass-card`, `.hero-card`, `.glass-pill` — `--glass-blur`, `--glass-highlight`, soft-light sheen `::after`.
+- **Shiny chips**: `.icon-chip`, `.service-row__icon`, `.exp-row__icon`, `.point-chip` — **tinted gradient + rim shadow + diagonal gloss** (not backdrop-filter-only neutral pills).
+- **Brand pills**: `.brand-pill` + `.brand-pill--stack` / `--ai`; expand label on hover; brand mono badge with gradient fill.
+- **Hero partners**: `.partner-pill` — frosted pill with logo + company name (simple, readable).
+- **Motion**: `[data-reveal]`, `.blur-reveal`, `--ease-glass`; all animations gated by `prefers-reduced-motion`.
+- **No inline CSS** in static HTML; styles in `styles.css` or prebuilt `tailwind.css`.
+- **Effects**: `.beam`, `.sheen`, `.spec` (pointer-tracked highlight) — use sparingly on CTAs/cards.

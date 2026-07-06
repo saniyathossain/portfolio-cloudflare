@@ -1,0 +1,17 @@
+---
+description: Content source of truth — portfolio.json, seeds, sections, brand pills
+globs: public/assets/**/*.{js,json}
+alwaysApply: false
+---
+
+# Content Source
+
+- **Runtime JSON**: `public/assets/data/portfolio.json` — loaded by `data.js` at fetch time.
+- **Bundled fallback / transforms**: `public/assets/js/data.js` (`PORTFOLIO_DATA`, `_applySectionSubs`, `_partnersFromExperience`).
+- **CV reference**: `docs/cv-modern-template.md` — do not invent employers, dates, or titles.
+- **Legacy seeds** (when syncing): `portfolio-v2/codes/database/seeders/data/` in the sibling docker repo.
+- **Sections map**: `portfolio.json` → `sections` keys (`about`, `services`, `experience`, …) → `[data-sec-sub]` in HTML.
+- **Experience**: Brain Station 23 = four roles in one group; `toggleRole(id)` per role; point list uses `.point-chip` check markers.
+- **Brand pills**: `brandOf(item)` → `{ color, mono, icon }`; add entries to `brands` map + SVG in `public/assets/img/brands/`.
+- **Per-role tech**: `stacks[]` and `aiTools[]` on each experience role → `.brand-pill` rows under `.role-tags`.
+- **Partners**: derived from experience logos + `brandColors` slug map; rendered as `.partner-pill` in hero.

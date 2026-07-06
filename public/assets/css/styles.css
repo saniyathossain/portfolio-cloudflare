@@ -1,4 +1,43 @@
 [x-cloak] { display: none !important; }
+.svg-sprite { display: none; }
+
+/* Loader stage — site painted + progressively unblurred during splash */
+html.is-loading .app-root {
+  filter: blur(var(--load-blur, 16px));
+  transform: scale(var(--load-scale, 1.012));
+  transform-origin: center top;
+  will-change: filter, transform;
+}
+.load-scrim {
+  position: fixed; inset: 0; z-index: 119;
+  pointer-events: auto;
+  background: rgba(10, 10, 10, var(--load-dim, 0.48));
+  transition: background-color 80ms linear;
+}
+html:not(.is-loading) .load-scrim { display: none; }
+
+/* Liquid-glass "warp" — a brief blur/refraction pulse across the scrolling content while a nav
+   click's smooth scroll is in flight (see scrollTo()/_liquidWarp() in app.js), echoing iOS's fluid
+   screen transitions. Scoped to #main, not .app-root: the fixed .site-header sits alongside <main>
+   as a sibling inside #app, so it was getting swept into the same blur — reading as the header
+   itself "disappearing" for the length of the scroll and snapping back once it cleared, since the
+   header is the one thing on screen that never actually moves. Excluding it keeps the header always
+   legible; the warp now only touches the content actually traveling past it.
+   Quick blur-in, slower glide back to clear — asymmetric via .is-liquid-warp's own (faster)
+   transition overriding the base (slower) one only while the class is present.
+   NOTE: the `.is-liquid-warp` override selector below repeats the `html:not(.is-loading)` prefix
+   on purpose — without it, the base rule's `html` element selector actually out-specifies a plain
+   `#main.is-liquid-warp` (an extra element point beats an extra one it doesn't have), so the
+   "fast entry" transition would silently never apply and everything would run at the slow (exit)
+   speed both ways. Same class of specificity bug as the hero-card's reveal-system conflict. */
+html:not(.is-loading) #main {
+  transition: filter 0.55s var(--ease-glass), transform 0.55s var(--ease-glass);
+}
+html:not(.is-loading) #main.is-liquid-warp {
+  transition: filter 0.18s var(--ease-glass), transform 0.18s var(--ease-glass);
+  filter: blur(6px) saturate(165%);
+  transform: scale(1.008);
+}
 
 /* Saniyat Portfolio — Lumora design system + cursor-presentation polish */
 
@@ -11,29 +50,47 @@
   --line: #e6e5e2;
   --surface: #f1f0ee;
   --surface2: #e3e2df;
+  /* Copper — reinstated as the single locked accent per explicit instruction (was graphite for one
+     round, see docs/aidlc/27); --primary/--primary-deep alias --accent/--accent-dark directly rather
+     than duplicating the hex, so every root-tint-driven control (nav active state, .beam border glow
+     via var(--tint, var(--primary))) and every --accent-driven control (hero name, CTA icon glow)
+     stay a single source of truth instead of two copper values that could drift apart. */
   --accent: #b15f2c;
   --accent-bright: #cf8047;
   --accent-dark: #97501f;
-  --hero-from: #eef1f6;
-  --hero-to: #d9dee8;
+  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1, harmonises with copper) */
+  --primary: var(--accent);
+  --primary-deep: var(--accent-dark);
+  --teal: #2b8c9a;           /* sea */
+  --teal-deep: #1a6773;
+  /* per-section accent driver (sections override --tint) */
+  --tint: var(--primary);
+  --tint-deep: var(--primary-deep);
+  --hero-from: #f1f0ee;
+  --hero-to: #e3e2df;
 
-  /* Aurora palette — ambient colour that the glass refracts */
-  --c-violet: #7c5cff;
-  --c-blue: #2f6bff;
-  --c-cyan: #19b9d6;
-  --c-teal: #12b3a6;
-  --c-amber: #f0a030;
-  --c-rose: #f0577f;
+  /* Aurora palette — ambient colour that the glass refracts (macOS Tahoe system hues) */
+  --c-violet: #6e6cf0;  /* Tahoe indigo */
+  --c-blue: #0a84ff;    /* Tahoe blue */
+  --c-cyan: #64d2ff;    /* Tahoe cyan */
+  --c-teal: #3fd0e0;    /* Tahoe teal */
+  --c-amber: #ff9f0a;   /* Tahoe orange */
+  --c-rose: #ff5c8a;    /* Tahoe pink */
+  --c-green: #30d158;   /* Tahoe green (Education) */
+  --c-mint: #5fe0c6;    /* soft mint, green's lighter kin */
 
   /* Liquid-glass material */
-  --glass-bg: rgba(255,255,255,.26);
-  --glass-bg-strong: rgba(255,255,255,.42);
-  --glass-border: rgba(255,255,255,.82);
-  --glass-blur: blur(28px) saturate(210%);
-  --glass-blur-lg: blur(40px) saturate(220%);
-  --glass-highlight: inset 0 1px 0 rgba(255,255,255,.85);
-  --glass-shadow: 0 18px 50px rgba(24,30,56,.10), 0 3px 12px rgba(24,30,56,.06);
-  --glass-shadow-hover: 0 26px 70px rgba(24,30,56,.16), 0 6px 18px rgba(24,30,56,.10);
+  --glass-bg: rgba(255,255,255,.2);
+  --glass-bg-strong: rgba(255,255,255,.38);
+  --frost-bg: rgba(255,255,255,.74);   /* faux-frost for SCROLLING glass — no backdrop-filter (100/100 on mobile) */
+  --glass-border: rgba(255,255,255,.85);
+  --glass-blur: blur(26px) saturate(215%);
+  --glass-blur-lg: blur(38px) saturate(220%);
+  /* top light line + a full 1px hue-tinted rim (the "refracted edge") — --tint resolves per section/[data-ci] */
+  --glass-highlight: inset 0 1px 0 rgba(255,255,255,.96), inset 0 0 0 1px color-mix(in srgb, var(--tint) 32%, transparent);
+  --glass-sheen: rgba(255,255,255,.95);
+  --glass-shadow: 0 22px 60px rgba(24,30,56,.13), 0 4px 14px rgba(24,30,56,.08);
+  --glass-shadow-hover: 0 32px 84px rgba(24,30,56,.20), 0 8px 22px rgba(24,30,56,.13);
   --radius-pill: 9999px;
   --radius-card: 2rem;
   --radius-card-sm: 1.25rem;
@@ -44,25 +101,84 @@
   --ease-reveal: cubic-bezier(0.22, 1, 0.28, 1);
   --ease-word: cubic-bezier(0.2, 0.85, 0.32, 1);
   --ease-hover: cubic-bezier(0.25, 0.9, 0.35, 1);
-  --ease-glass: cubic-bezier(0.33, 1, 0.38, 1);
+  /* Small tile/logo hover lift — snappier settle than --ease-hover, used across the tenure badges,
+     logo tiles, and role-tag chips (previously hand-repeated as a raw cubic-bezier in 6 places). */
+  --ease-tile: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* macOS Tahoe deceleration — soft, fluid settle (from cursor-presentation) */
+  --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Pronounced "back-out" overshoot — a liquid tile that stretches past its target then settles,
+     like iOS's fluid tab-bar indicator. Only for small, bounded UI (nav pill) — never large panels. */
+  --ease-liquid: cubic-bezier(0.3, 1.9, 0.6, 1);
   --dur-fast: 0.45s;
   --dur-mid: 0.7s;
+  /* Content-swap speed (hero-card carousel) — nothing else in this file sits in the 150-250ms
+     "dropdown/select" range a text-content swap calls for; --dur-fast (450ms) is 2-3x too slow. */
+  --dur-swap: 0.18s;
   --dur-slow: 1.05s;
-  --dur-pill-expand: 0.52s;
-  --ease-pill-expand: cubic-bezier(0.33, 1, 0.38, 1);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --dur-reveal: 0.88s;
+  --dur-pill-reveal: 0.82s;
+  --ease-pill-reveal: cubic-bezier(0.33, 1, 0.68, 1); /* easeOutCubic — gentle onset, no snap (smoother stack/skill stagger) */
+  --dur-pill-expand: 0.4s;
+  --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
+  /* Inter-first on every platform → identical look on Mac/iOS/Windows/Android/Linux (see doc 19).
+     "Inter Fallback" is metric-matched so there's no CLS before Inter loads. */
+  --font-sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-  --text-sh: 0 1px 3px rgba(17,17,17,.12), 0 1px 0 rgba(255,255,255,.65);
-  --text-sh-sm: 0 1px 1px rgba(255,255,255,.6), 0 1px 2px rgba(17,17,17,.08);
-  --grad-from: var(--accent-dark);
-  --grad-via: var(--accent-bright);
-  --grad-to: var(--accent);
+  --text-sh: 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(17,17,17,.1), 0 2px 10px rgba(17,17,17,.05);
+  --text-sh-sm: 0 1px 0 rgba(255,255,255,.7), 0 1px 2px rgba(17,17,17,.07);
+  --text-sh-dark: 0 1px 2px rgba(0,0,0,.35), 0 1px 12px rgba(0,0,0,.18);
+  --text-sh-emboss: 0 1px 0 rgba(255,255,255,.95), 0 -1px 0 rgba(17,17,17,.06), 0 2px 7px rgba(17,17,17,.05);
+  --text-sh-tint: 0 1px 0 rgba(255,255,255,.72), 0 1px 2px color-mix(in srgb, var(--tint) 16%, transparent), 0 2px 16px color-mix(in srgb, var(--tint) 10%, transparent);
+  /* cool blend — azure → cyan → teal, echoing the portrait (ambient wash, see --grad-soft) */
+  --grad-from: var(--primary-deep);
+  --grad-via: var(--c-cyan);
+  --grad-to: var(--teal);
+  /* warm surname gradient — copper → gold, the Hossain hero line */
+  --grad-warm-from: var(--accent-dark);
+  --grad-warm-via: var(--accent);
+  --grad-warm-to: var(--accent-bright);
+  /* soft tri-stop cool wash — ambient accent for hero-card / CreateBand / chip fills (sparing use) */
+  --grad-soft: linear-gradient(120deg,
+    color-mix(in srgb, var(--grad-from) 65%, transparent),
+    color-mix(in srgb, var(--grad-via) 55%, transparent) 45%,
+    color-mix(in srgb, var(--grad-to) 55%, transparent) 85%);
   --icon-fg: rgba(17,17,17,.58);
-  --icon-accent-filter: brightness(0) saturate(100%) invert(43%) sepia(47%) saturate(1100%) hue-rotate(346deg) brightness(94%);
   --shadow-outset-sm: 0 1px 0 rgba(255,255,255,.95), 0 2px 5px rgba(17,17,17,.07), 0 6px 14px rgba(17,17,17,.06);
   --shadow-outset-md: 0 1px 0 rgba(255,255,255,.98), 0 4px 10px rgba(17,17,17,.08), 0 12px 28px rgba(17,17,17,.08);
   --shadow-outset-hover: 0 2px 0 rgba(255,255,255,.98), 0 8px 22px rgba(17,17,17,.1), 0 16px 36px rgba(17,17,17,.08);
 }
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/assets/fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Metric-matched fallback (Arial tuned to Inter's metrics) → the swap to Inter causes no layout shift (CLS-safe).
+   Result: identical type across Mac / iOS / Windows / Android / Linux once Inter (self-hosted, same-origin) loads. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.06%;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel,
+  .glass-card,
+  .hero-card,
+  .brand-pill {
+    background: var(--glass-bg-strong);
+  }
+}
+
+/* Scrolling glass uses faux-frost (opaque --frost-bg + gradient films), so no mobile blur fallback needed. */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -76,6 +192,19 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Subtle Tahoe scrollbar — desktop/fine-pointer only; native on touch */
+@media (hover: hover) and (pointer: fine) {
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--ink) 20%, transparent);
+    border: 3px solid transparent; background-clip: padding-box; border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--ink) 34%, transparent); background-clip: padding-box; }
 }
 
 @media (max-width: 1920px) { html { font-size: clamp(15px, 0.833333vw, 16px); } }
@@ -85,38 +214,98 @@ html {
 
 body {
   margin: 0;
-  background: #f5f6f9;
+  background: var(--surface);
   color: var(--fg);
   font-family: var(--font-sans);
-  letter-spacing: -0.014em;
+  letter-spacing: -0.011em;
   line-height: 1.5;
   overflow-x: hidden;
   font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Aurora field — soft, slowly drifting colour behind everything */
+/* Aurora field — CSS fallback + conic mesh (mobile / reduced-motion baseline) */
 body::before {
   content: ""; position: fixed; inset: -25vmax; z-index: -2; pointer-events: none;
   background:
-    radial-gradient(40vmax 40vmax at 12% 4%, rgba(124,92,255,.28), transparent 58%),
-    radial-gradient(36vmax 36vmax at 88% 0%, rgba(47,107,255,.24), transparent 58%),
-    radial-gradient(46vmax 46vmax at 84% 82%, rgba(18,179,166,.24), transparent 60%),
-    radial-gradient(42vmax 42vmax at 4% 90%, rgba(240,160,48,.22), transparent 58%),
-    radial-gradient(32vmax 32vmax at 48% 48%, rgba(240,87,127,.14), transparent 62%),
-    radial-gradient(28vmax 28vmax at 72% 38%, rgba(177,95,44,.12), transparent 65%);
-  filter: blur(28px) saturate(135%);
-  animation: auroraDrift 32s ease-in-out infinite alternate;
+    /* warm sun-glare bloom — the single warm focal accent (whisper-subtle) */
+    radial-gradient(52vmax 42vmax at 76% 1%, rgba(255,216,168,.10), transparent 60%),
+    radial-gradient(15vmax 15vmax at 78% -1%, rgba(255,232,199,.085), transparent 62%),
+    conic-gradient(from 210deg at 50% 42%,
+      rgba(110,108,240,.06), rgba(10,132,255,.05) 22%,
+      rgba(63,208,224,.06) 44%, rgba(255,159,10,.035) 66%,
+      rgba(255,92,138,.025) 82%, rgba(177,95,44,.025) 100%),
+    radial-gradient(40vmax 40vmax at 12% 4%, rgba(110,108,240,.14), transparent 58%),
+    radial-gradient(36vmax 36vmax at 88% 0%, rgba(10,132,255,.11), transparent 58%),
+    radial-gradient(46vmax 46vmax at 84% 82%, rgba(63,208,224,.12), transparent 60%),
+    radial-gradient(42vmax 42vmax at 4% 90%, rgba(255,159,10,.07), transparent 58%),
+    radial-gradient(32vmax 32vmax at 48% 48%, rgba(255,92,138,.035), transparent 62%),
+    radial-gradient(28vmax 28vmax at 72% 38%, rgba(177,95,44,.03), transparent 65%);
+  filter: blur(28px) saturate(118%);
+  /* Only the transform drift animates — the old auroraHue keyframe animated `filter: hue-rotate()`
+     on this full-viewport blurred layer every frame, which WebKit repaints continuously (a real,
+     always-on Safari cost). The 8deg hue shift over 52s was imperceptible; dropping it leaves the
+     blur static (painted once, composited) while auroraDrift stays transform-only (compositor-safe). */
+  animation: auroraDrift 34s ease-in-out infinite alternate;
 }
 body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(180deg, rgba(245,246,249,.08), rgba(245,246,249,.28));
+  background: linear-gradient(180deg, rgba(241,240,238,.06), rgba(241,240,238,.22));
 }
+/* Translate-only (no scale): scaling a filter:blur() layer makes WebKit re-rasterize the blur every
+   frame — a constant Safari cost on this full-viewport blurred pseudo. Translation just moves the
+   already-rasterized texture on the compositor, so the drift stays smooth everywhere. */
 @keyframes auroraDrift {
-  0%   { transform: translate3d(0,0,0) scale(1); }
-  50%  { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
-  100% { transform: translate3d(2%, -1.5%, 0) scale(1.03); }
+  0%   { transform: translate3d(0, var(--aurora-y, 0px), 0); }
+  50%  { transform: translate3d(-2%, calc(1.5% + var(--aurora-y, 0px)), 0); }
+  100% { transform: translate3d(2%, calc(-1.5% + var(--aurora-y, 0px)), 0); }
 }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+/* Battery: freeze every always-on decorative animation while the page is hidden or the window is
+   blurred (app.js toggles html.is-idle). They resume seamlessly on return, so nothing visible
+   changes — it just stops burning GPU/battery compositing them in the background. The clock is
+   intentionally excluded (pausing a phase-locked sweep would desync it; its cost is negligible). */
+html.is-idle body::before,
+html.is-idle .brand-bismillah,
+html.is-idle .brand-bismillah-wrap::after,
+html.is-idle .beam::before {
+  animation-play-state: paused;
+}
+
+/* Aurora canvas — real flowing gradient field (desktop/fine-pointer only, injected by aurora.js).
+   Paints on top of the ::before orbs (same z-layer, later in DOM), under the ::after veil. Low-res
+   buffer upscaled + CSS-blurred so it reads as soft liquid light. */
+#auroraCanvas {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  z-index: -2; pointer-events: none;
+  opacity: 0; transition: opacity 1.4s var(--ease-glass, ease);
+  /* 44px, not 62px: the canvas is already a low-res upscaled buffer, so a lighter blur reads the
+     same but is a much cheaper filtered layer for WebKit to composite as it parallaxes on scroll. */
+  filter: blur(44px) saturate(110%);
+  transform: translate3d(0, var(--aurora-y, 0px), 0);
+  will-change: transform, opacity;
+}
+#auroraCanvas.is-ready { opacity: 0.58; }
+
+/* Film-grain overlay — fixed, pointer-events-none; sits above content, below the fixed chrome/overlays */
+.grain {
+  position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  opacity: 0.038; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Scroll-progress hairline — reflects page scroll; hidden under reduced motion */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 130;
+  transform: scaleX(var(--sp, 0)); transform-origin: left center;
+  background: linear-gradient(90deg, var(--accent), var(--primary) 55%, var(--c-cyan));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent);
+  pointer-events: none; will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) { .scroll-progress { display: none; } }
 
 code, kbd, pre, samp { font-family: var(--font-mono); }
 
@@ -124,14 +313,22 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .glass-panel {
   position: relative; border-radius: var(--radius-card);
   padding: 1.75rem 1.75rem 2rem;
-  background: var(--glass-bg); backdrop-filter: var(--glass-blur-lg);
-  -webkit-backdrop-filter: var(--glass-blur-lg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  background: var(--frost-bg);
+  box-shadow: var(--glass-shadow), 0 26px 60px -30px color-mix(in srgb, var(--tint) 32%, transparent), var(--glass-highlight);
+  transform: translateZ(0); contain: paint;
 }
+/* Tinted inner glow — each panel faintly picks up its section/[data-ci] hue through the frost */
 .glass-panel::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(135deg, rgba(124,92,255,.10), rgba(18,179,166,.08) 45%, transparent 70%);
+  background:
+    radial-gradient(120% 85% at 12% -12%, color-mix(in srgb, var(--tint) 16%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--tint) 10%, transparent), color-mix(in srgb, var(--teal) 7%, transparent) 45%, transparent 72%);
+}
+/* Tahoe soft-light top specular film — the frosted top edge */
+.glass-panel::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(180deg, var(--glass-sheen) 0%, transparent 22%, transparent 100%);
+  opacity: 0.5; mix-blend-mode: soft-light;
 }
 .glass-panel > * { position: relative; z-index: 1; }
 @media (min-width: 1024px) {
@@ -139,31 +336,160 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 }
 .glass-card {
   position: relative; overflow: hidden; border-radius: var(--radius-card-sm);
-  background: var(--glass-bg); backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), var(--glass-highlight);
-  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring),
-              border-color 0.4s var(--ease-spring);
+  background: var(--frost-bg);
+  box-shadow: var(--glass-shadow), 0 20px 44px -26px color-mix(in srgb, var(--tint) 30%, transparent), var(--glass-highlight);
+  transform: translateZ(0); contain: paint;
+  transition: transform 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass),
+              border-color 0.5s var(--ease-glass);
+}
+/* Reusable "liquid glass" card material — the exact frosted look loved on the hero Now-card: a
+   translucent white gradient, a bright top gloss line, a hairline ring and a soft deep shadow. Meant
+   to float over a visible background so the aurora subtly shows through it. Defined AFTER .glass-card
+   so adding both classes simply swaps the opaque frost for this see-through glass. */
+.glass-lux {
+  background: linear-gradient(180deg, rgba(255,255,255,.82) 0%, rgba(255,255,255,.55) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 0 0 1px rgba(230,229,226,.4),
+    0 18px 46px -12px rgba(17,17,17,.16);
 }
 .glass-card::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(140deg, rgba(255,255,255,.28), transparent 42%);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.4) 0%, transparent 20%),
+    linear-gradient(140deg, rgba(255,255,255,.28), transparent 42%),
+    radial-gradient(70% 60% at 88% 102%, color-mix(in srgb, var(--tint) 13%, transparent), transparent 65%);
 }
 .edu-row.glass-card {
   padding: 1.35rem 1.4rem;
   display: grid; align-items: center;
+  grid-template-columns: 1fr;
+  gap: 1rem 1.15rem;
+  /* The base .glass-card clips its contents (overflow:hidden + contain:paint), which trapped the
+     tenure popover inside the card so it was cut off by the card edge — z-index can't escape a clip.
+     Education rows opt out of the clip (the gloss/sheen still clip to their own border-radius), and
+     the hovered row lifts above its siblings so the popover renders on top, exactly like Experience. */
+  overflow: visible;
+  contain: none;
+}
+.edu-row:has(.popover:hover),
+.edu-row:has(.popover:focus-within) { z-index: 200; }
+/* Logo + years/school/degree wrapped in a link to the institute's site — its own nested grid
+   replicates the auto/1fr logo+body split the outer row used to apply directly, since merging
+   them into one link changed the outer row from 2-3 direct children down to 2 (link + place). */
+.edu-row__link {
+  display: grid; align-items: center;
   grid-template-columns: auto 1fr;
   gap: 1rem 1.15rem;
+  min-width: 0;
+  color: inherit; text-decoration: none;
 }
+.edu-row__link:hover .edu-row__school,
+.edu-row__link:focus-visible .edu-row__school { color: var(--tint-deep); }
+.edu-row__link:hover .edu-row__logo,
+.edu-row__link:focus-visible .edu-row__logo { transform: scale(1.1); }
 .edu-row .edu-place { display: none; }
 @media (min-width: 1024px) {
+  /* Desktop: 3 education entries map cleanly onto a 3-up row, so the section uses the full width
+     instead of leaving the right half of each full-width row empty. Each becomes a vertical card
+     (logo → year → school → degree); below 1024px they stay stacked horizontal rows. */
+  .edu-grid { grid-template-columns: repeat(3, 1fr); align-items: stretch; }
   .edu-row.glass-card {
-    padding: 1.5rem 1.75rem;
-    grid-template-columns: auto 1fr auto;
-    gap: 1rem 1.25rem;
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding: 1.6rem 1.5rem 1.5rem;
+    align-items: stretch;
+    gap: 0.95rem;
   }
-  .edu-row .edu-place { display: block; }
+  .edu-row__link {
+    grid-template-columns: 1fr;
+    align-items: start;
+    justify-items: start;
+    gap: 0.85rem;
+  }
+  /* margin-top:auto pins the place to the card bottom so all three align even when a degree wraps
+     to two lines (the cards are equal-height via align-items:stretch). */
+  .edu-row .edu-place { display: inline-flex; margin-top: auto; align-self: flex-start; }
+}
+
+/* About — cardless again, but unlike the earlier cardless attempt (doc 30), this one carries real
+   visual weight through colored/shadowed key-phrase emphasis instead of shipping with no accent at
+   all — that first attempt read as "empty and unfinished" per redesign-existing-projects' own
+   anti-pattern list specifically because it had neither a card NOR any color. Picked from 3
+   structurally distinct card/cardless options shown together (this, the two-card Cascade with the
+   same color treatment added back, and a single nested double-bezel card) — going cardless was a
+   deliberate choice this time, not a default. */
+#about .shell { position: relative; }
+.about-plain { padding-block: 2rem 1rem; }
+@media (min-width: 640px) { .about-plain { padding-block: 2.5rem 1rem; } }
+.about-plain__kicker {
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--accent-dark); margin-bottom: 1.25rem;
+}
+.about-plain .about-plain__statement {
+  /* Two-class selector, not the bare class alone — .sec h2 (class+element, 0,1,1) already
+     outranked a single-class .about-card__statement rule once before (doc 27); scoping this the
+     same way it was fixed there from the start, rather than waiting to hit the same bug again. */
+  max-width: 44rem;
+  font-size: 1.65rem; font-weight: 380; line-height: 1.4; letter-spacing: -0.01em;
+  color: var(--ink);
+  text-shadow: var(--text-sh-emboss);
+}
+@media (min-width: 640px) { .about-plain .about-plain__statement { font-size: 2rem; } }
+@media (min-width: 1024px) { .about-plain .about-plain__statement { font-size: 2.2rem; } }
+.about-card__footer {
+  position: relative; z-index: 4;
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1.5rem;
+}
+/* Below 1024px (phone AND tablet widths) the label+socials block and the "My work" button are each
+   narrow enough to sit on one row with space-between, which reads as two islands stranded at
+   opposite edges with a big dead gap in the middle — not a balanced/symmetric wrap. Stacking removes
+   the lopsided gap; centering both keeps it visually consistent with the rest of the mobile/tablet
+   layout. Desktop (≥1024px) is wide enough that the same space-between reads as a deliberate
+   label-left/action-right layout instead, so it's left alone there. */
+@media (max-width: 1023px) {
+  .about-card__footer { flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
+  .about-card__footer > div { display: flex; flex-direction: column; align-items: center; }
+  .about-card__footer .flex { justify-content: center; }
+}
+.about-card__label { font-size: 0.875rem; color: rgba(17,17,17,.45); }
+/* Shared "logo badge" recipe with .exp-group__logo below — same white-gradient tile + inset
+   top-highlight, parameterized by size/border/shadow-tint per call site via --logo-badge-shadow. */
+.edu-row__logo, .exp-group__logo {
+  flex: none; display: grid; place-items: center;
+  border-radius: 0.85rem;
+  background: linear-gradient(150deg, #ffffff 0%, #eceef2 100%);
+  box-shadow: inset 0 1px 0 #ffffff, 0 3px 10px -3px var(--logo-badge-shadow, rgba(24,30,56,.2));
+}
+.edu-row__logo {
+  width: 3rem; height: 3rem;
+  border: 1px solid color-mix(in srgb, var(--tint) 22%, rgba(255,255,255,.95));
+  --logo-badge-shadow: color-mix(in srgb, var(--tint) 35%, rgba(24,30,56,.18));
+  transition: transform 0.28s var(--ease-tile);
+}
+.edu-row__logo img { width: 2rem; height: 2rem; object-fit: contain; }
+.edu-row__body { min-width: 0; }
+.edu-row__years {
+  --chip: var(--tint);
+  display: inline-flex; align-items: center; margin-bottom: 0.45rem;
+  border-radius: var(--radius-pill); padding: 0.2rem 0.62rem;
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--chip) 74%, #0a0a0a);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.15) 55%, transparent 78%),
+    linear-gradient(180deg, color-mix(in srgb, var(--chip) 20%, #fff), color-mix(in srgb, var(--chip) 9%, #fff));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 2px 7px -3px color-mix(in srgb, var(--chip) 45%, transparent);
+}
+.edu-row__school { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.24s var(--ease-tile); }
+.edu-row__degree { margin-top: 0.2rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); }
+.edu-row__place {
+  align-items: center; border-radius: var(--radius-pill);
+  padding: 0.16rem 0.62rem; font-size: 0.7rem; font-weight: 600; color: rgba(17,17,17,.64);
+  white-space: nowrap;
+  background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.45));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 1px 5px -2px rgba(17,17,17,.16);
 }
 .glass-card:hover {
   transform: translateY(-3px);
@@ -181,24 +507,98 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .spec:hover::after, .spec:focus-visible::after { opacity: 1; }
 
 .sec { position: relative; }
-.sec h2 {
-  font-size: clamp(1.875rem, 2.8vw + 0.65rem, 2.75rem);
-  letter-spacing: -0.03em;
-  line-height: 1.08;
+
+/* Per-section Tahoe tints — drive each section's eyebrow / icon-chip / hairline / hover via --tint.
+   Hero (#home) uses the default azure --primary. --tint = light hue for fills, --tint-deep = readable ink.
+   Education now owns mint/green (was sharing teal with About) for more distinct section colour. */
+#about { --tint: var(--c-rose); --tint-deep: #c4214f; }
+#services { --tint: var(--accent); --tint-deep: var(--accent-dark); }
+#experience { --tint: var(--c-blue); --tint-deep: #1f63ad; }
+#skills { --tint: var(--c-cyan); --tint-deep: #15637f; }
+#education { --tint: var(--c-green); --tint-deep: #146b29; }
+
+/* Slide-13 multi-hue cards — per-item Tahoe tints via [data-ci] (overrides section --tint) */
+[data-ci="blue"]   { --tint: var(--c-blue);   --tint-deep: #1f63ad; }
+[data-ci="teal"]   { --tint: var(--c-teal);   --tint-deep: var(--teal-deep); }
+[data-ci="purple"] { --tint: var(--c-violet); --tint-deep: #4a48a8; }
+[data-ci="orange"] { --tint: var(--c-amber); --tint-deep: #c27100; }
+[data-ci="cyan"]   { --tint: var(--c-cyan);   --tint-deep: #15637f; }
+[data-ci="green"]  { --tint: var(--c-green);  --tint-deep: #146b29; }
+[data-ci="pink"]   { --tint: var(--c-rose);   --tint-deep: #c4214f; }
+[data-ci="indigo"] { --tint: var(--c-violet); --tint-deep: #4a48a8; }
+[data-ci="mint"]   { --tint: var(--c-mint);   --tint-deep: #16806c; }
+
+.glass-panel[data-ci] {
+  border-top: 2px solid var(--tint);
 }
 
-/* Gradient text — brand highlight */
-.grad {
-  background: linear-gradient(110deg, var(--grad-from), var(--grad-via), var(--grad-to), var(--grad-from));
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Experience: one large panel — a restrained hue wash so the whole area reads as tinted glass while
+   keeping the dense role text crisp. */
+#experience .glass-panel {
+  background: color-mix(in srgb, var(--glass-bg-strong) 88%, #fff);
 }
-.hero.is-ready .grad { animation: gradflow 9s linear infinite; }
-@keyframes gradflow { to { background-position: 220% 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .hero.is-ready .grad { animation: none; }
+#experience .glass-panel::before {
+  /* Single cheap linear wash (no radial / no in-gradient color-mix): this pseudo repaints on every
+     frame of the accordion expand, so keeping it a light one-layer gradient cuts that cost while the
+     blue tint identity stays. */
+  background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 9%, transparent), transparent 60%);
+}
+#experience .glass-panel[data-ci] {
+  border-top-color: color-mix(in srgb, var(--tint) 72%, var(--line));
+}
+/* Skills: per-category cards each wear their own hue boldly — a clear colour signature per card
+   (Languages azure, Frameworks teal, Data violet, Platform copper, AI cyan) instead of near-white. */
+#skills .glass-panel {
+  background: color-mix(in srgb, var(--glass-bg-strong) 84%, #fff);
+}
+#skills .glass-panel::before {
+  background:
+    radial-gradient(125% 82% at 12% -10%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--tint) 12%, transparent), transparent 72%);
+}
+#skills .glass-panel[data-ci] {
+  border-top: 3px solid var(--tint);
+}
+.edu-row[data-ci] {
+  border-top: 2px solid var(--tint);
+}
+[data-ci] .skills-panel__head h3 {
+  color: var(--tint-deep);
+}
+
+.sec h2 {
+  font-size: clamp(2.35rem, 3.4vw + 0.8rem, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.042em;
+  line-height: 1.02;
+  text-shadow: var(--text-sh-tint);
+}
+.sec-sub {
+  font-size: clamp(1.0625rem, 1.65vw, 1.25rem);
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: color-mix(in srgb, var(--tint-deep) 26%, rgba(17,17,17,.64));
+  max-width: 48ch;
+  margin-top: 0.65rem;
+  margin-bottom: clamp(3rem, 5vw, 4rem);
+  line-height: 1.55;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.92),
+    0 2px 14px rgba(241,240,238,.85),
+    0 1px 3px rgba(17,17,17,.05);
+}
+#experience .sec-sub {
+  color: color-mix(in srgb, var(--accent-dark) 42%, rgba(17,17,17,.58));
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.95),
+    0 2px 16px color-mix(in srgb, var(--accent) 12%, rgba(241,240,238,.9)),
+    0 1px 2px rgba(17,17,17,.06);
+}
+
+/* Hero surname — solid copper (gradient-text is an AI tell; emphasis via colour + weight, not a gradient) */
+.grad {
+  color: var(--accent);
+  -webkit-text-fill-color: var(--accent);
 }
 
 a { color: inherit; text-decoration: none; }
@@ -216,31 +616,55 @@ img { display: block; max-width: 100%; height: auto; }
   border-radius: var(--radius-control); background: var(--ink);
   padding: 0.5rem 1rem; font-size: 0.875rem; color: #fff;
 }
-.skip-link:focus { left: 1rem; outline: 2px solid var(--accent); outline-offset: 2px; }
+.skip-link:focus { left: 1rem; outline: 2px solid var(--primary); outline-offset: 2px; }
 
-h1, h2, h3, h4 { text-shadow: var(--text-sh); }
-.eyebrow, .hero-rating__text, .hero-card__caption, .hero-partners__label { text-shadow: var(--text-sh-sm); }
+h1, h2, h3, h4 { text-shadow: var(--text-sh); text-wrap: balance; }
+p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { text-wrap: pretty; }
+.eyebrow, .hero-rating__text, .hero-card__caption, .hero-partners__label,
+.exp-row__desc, .service-row__desc, .exp-group__loc, .edu-row__degree,
+.hero-card__title, .role-tags__label {
+  text-shadow: var(--text-sh-sm);
+}
 
 .eyebrow {
   display: inline-flex; align-items: center; gap: 0.55rem;
-  font-size: 0.875rem; font-weight: 500; letter-spacing: -0.01em;
-  color: rgba(17,17,17,.68);
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tint-deep);
+  text-shadow: var(--text-sh-emboss);
 }
 .eyebrow-dot {
   width: 0.375rem; height: 0.375rem; border-radius: var(--radius-pill);
-  background: rgba(17,17,17,.5); flex: none;
+  background: var(--tint); flex: none;
 }
+/* Hero designation — minimal template-style eyebrow in warm beige (harmonises with the copper name) */
+#home .eyebrow {
+  color: var(--beige);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  -webkit-font-smoothing: antialiased;
+}
+#home .eyebrow-dot { background: var(--beige); }
+/* over the portrait — beat the #home id specificity so the white on-dark state still wins */
+#home .hero__copy--on-dark .eyebrow { color: rgba(255,255,255,.88); }
+#home .hero__copy--on-dark .eyebrow-dot { background: rgba(255,255,255,.7); }
 
 .social-link {
   display: grid; place-items: center;
   width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill);
-  background: var(--ink); color: #fff;
-  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s ease;
+  color: #fff;
+  background: linear-gradient(160deg, #202022 0%, #0a0a0a 75%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 2px 6px -2px rgba(17,17,17,.25);
+  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
 }
-.social-link:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(17,17,17,.18); }
-.social-link .ui-icon { width: 1rem; height: 1rem; filter: brightness(0) invert(1); }
+.social-link:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 10px 22px -6px rgba(17,17,17,.3);
+}
+.social-link .ui-icon { width: 1rem; height: 1rem; }
 
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--accent) 20%, #fff); color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -251,24 +675,54 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   }
 }
 
-/* Loader — Lumora-style skeleton shimmer + accent progress sweep */
+/* Loader — Lumora-style skeleton shimmer + glass splash over blurred site */
 .loader {
   position: fixed; inset: 0; z-index: 120;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2.5rem; background: var(--ink); color: #fff;
+  gap: 2.5rem;
+  background: rgba(10, 10, 10, 0.38);
+  backdrop-filter: blur(22px) saturate(145%);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  color: #fff;
   border-radius: 0 0 var(--radius-card) var(--radius-card);
-  transition: transform 0.7s var(--ease-spring);
+  transition: transform 0.7s var(--ease-spring), opacity 0.55s var(--ease-spring);
   overflow: hidden;
 }
 .loader::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(36rem 20rem at 18% -8%, rgba(124,92,255,.22), transparent 58%),
-    radial-gradient(32rem 18rem at 88% 108%, rgba(207,128,71,.18), transparent 60%);
-  opacity: .85;
+    radial-gradient(40rem 24rem at 14% -10%, rgba(100,210,255,.20), transparent 60%),
+    radial-gradient(34rem 22rem at 86% 6%, rgba(63,208,224,.15), transparent 60%),
+    radial-gradient(30rem 20rem at 90% 110%, rgba(207,128,71,.16), transparent 60%),
+    radial-gradient(28rem 20rem at 50% 120%, rgba(110,108,240,.14), transparent 62%);
+  opacity: .9;
+  animation: loaderAurora 9s ease-in-out infinite alternate;
 }
+@keyframes loaderAurora {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(0, -1.5%, 0) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) { .loader::before { animation: none; } }
 .loader > * { position: relative; z-index: 1; }
-.loader.is-exit { transform: translateY(-100%); }
+/* Tahoe frosted glass splash card — sits on the already-blurred loader (no extra backdrop-filter → PageSpeed-safe) */
+.loader__panel {
+  display: flex; flex-direction: column; align-items: center; gap: 2.5rem;
+  padding: 3rem 2.75rem;
+  border-radius: 1.9rem;
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.028) 60%);
+  border: 1px solid rgba(255,255,255,.13);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    inset 0 -1px 0 rgba(0,0,0,.15),
+    0 34px 90px rgba(0,0,0,.45);
+  animation: loaderPanelIn 0.75s var(--ease-glass) both;
+}
+@keyframes loaderPanelIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.975); filter: blur(7px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+@media (max-width: 640px) { .loader__panel { padding: 2.4rem 1.6rem; border-radius: 1.5rem; } }
+.loader.is-exit { transform: translateY(-100%); opacity: 0; }
 .loader__center {
   position: relative; display: grid; place-items: center;
   min-height: 6.5rem; text-align: center;
@@ -293,15 +747,14 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
 .loader__sk--tag { width: 16.5rem; height: 0.72rem; border-radius: 0.5rem; animation-delay: 0.12s; }
 .loader__content {
   grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
-  opacity: 0; transform: translateY(6px);
-  transition: opacity 0.5s var(--ease-spring), transform 0.5s var(--ease-spring);
+  opacity: 0; transform: translateY(8px); filter: blur(10px);
+  transition: opacity 0.65s var(--ease-glass), transform 0.65s var(--ease-glass), filter 0.65s var(--ease-glass);
 }
-.loader.is-revealed .loader__skeleton { opacity: 0; transform: translateY(-8px); pointer-events: none; }
-.loader.is-revealed .loader__content { opacity: 1; transform: none; }
+.loader.is-revealed .loader__skeleton { opacity: 0; transform: translateY(-8px); filter: blur(6px); pointer-events: none; }
+.loader.is-revealed .loader__content { opacity: 1; transform: none; filter: blur(0); }
 .loader.is-fade-center .loader__center { opacity: 0; transform: translateY(-12px); }
 .loader__brand { display: flex; align-items: center; gap: 0.65rem; font-weight: 600; font-size: 1.875rem; letter-spacing: -0.01em; }
-.loader__brand svg { color: var(--accent-bright); font-size: 1.875rem; }
-.loader__tagline { max-width: 26ch; font-size: 0.875rem; color: rgba(255,255,255,.55); line-height: 1.5; }
+.loader__tagline { max-width: 26ch; font-size: 0.9375rem; color: rgba(255,255,255,.55); line-height: 1.5; }
 .loader__track-wrap { display: flex; flex-direction: column; gap: 0.75rem; width: min(22rem, 72vw); }
 .loader__track {
   position: relative; height: 2px; width: 100%; border-radius: var(--radius-pill);
@@ -351,53 +804,393 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   100% { transform: translateX(220%); }
 }
 @media (prefers-reduced-motion: reduce) {
+  html.is-loading .app-root { filter: blur(6px); transform: none; }
   .loader__sk, .loader__track-shimmer, .loader__fill-shimmer { animation: none; }
-  .loader__content { opacity: 1; transform: none; }
+  .loader__content { opacity: 1; transform: none; filter: none; }
+  .loader__panel { animation: none; }
   .loader__skeleton { display: none; }
+  .loader.is-exit { transition-duration: 0.2s; }
 }
 
-/* Header */
-.site-header { position: fixed; inset-inline: 0; top: 0; z-index: 50; padding: 1rem 0; }
+/* Header — hidden during splash; reveals after loader */
+html.is-loading .site-header {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.site-header { position: fixed; inset-inline: 0; top: 0; z-index: 50; padding-block: 1rem; }
 .site-header.is-ready { animation: headerIn 0.85s var(--ease-spring) 0.15s both; }
 @keyframes headerIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
 
+/* macOS Tahoe "Liquid Glass" nav pill: real backdrop refraction (blur + saturate + brightness) so
+   whatever scrolls behind it reads as lensed glass, a gradient-border rim for the specular edge, and
+   a denser/lifted state once it floats over page content (.is-scrolled). */
 .glass-pill {
+  position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
-  padding: 0.55rem 0.55rem 0.55rem 1.25rem; border-radius: var(--radius-pill);
-  background: rgba(255,255,255,.55); backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255,255,255,.6);
-  box-shadow: 0 10px 34px rgba(17,17,17,.08), inset 0 1px 0 rgba(255,255,255,.75);
+  padding: 0.7rem 0.55rem 0.7rem 1.25rem; border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.34));
+  backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
+  border: 1px solid rgba(255,255,255,.5);
+  box-shadow:
+    0 12px 38px -14px rgba(17,17,17,.14),
+    0 2px 6px rgba(17,17,17,.05),
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -6px 16px -12px rgba(255,255,255,.55);
+  transform: translateZ(0);
+  transition: background 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass),
+    -webkit-backdrop-filter 0.5s var(--ease-glass), backdrop-filter 0.5s var(--ease-glass);
+}
+/* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round). */
+.glass-pill::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 0;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,.95) 0%, rgba(255,255,255,.36) 26%,
+    rgba(255,255,255,.06) 52%, rgba(255,255,255,.5) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none; opacity: 0.85;
+}
+.glass-pill::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background: linear-gradient(180deg, var(--glass-sheen) 0%, transparent 42%, transparent 100%);
+  opacity: 0.5; mix-blend-mode: soft-light;
+}
+.glass-pill > * { position: relative; z-index: 1; }
+/* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
+.glass-pill.is-scrolled {
+  background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
+  backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
+  -webkit-backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
+  box-shadow:
+    0 20px 50px -16px rgba(17,17,17,.22),
+    0 3px 10px rgba(17,17,17,.07),
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 -6px 18px -12px rgba(255,255,255,.6);
 }
 
-.brand-btn { display: flex; align-items: center; gap: 0.5rem; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; transition: transform var(--dur-mid) var(--ease-hover); }
+.brand-btn { position: relative; display: flex; align-items: center; gap: 0.5rem; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; transition: transform var(--dur-mid) var(--ease-hover); }
 .brand-btn:hover { transform: scale(1.03); }
-.brand-btn svg { font-size: 1.25rem; color: var(--accent); }
-
-.nav-desktop { display: none; align-items: center; gap: 1.75rem; font-size: 0.875rem; font-weight: 500; }
-@media (min-width: 1024px) { .nav-desktop { display: flex; } }
-.nav-desktop button {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  color: rgba(17,17,17,.75); opacity: 0.85;
-  transition: transform var(--dur-mid) var(--ease-hover), opacity var(--dur-mid) ease;
+.brand-btn svg, .brand-btn img {
+  font-size: 1.25rem; color: var(--accent);
+  filter: drop-shadow(0 1px 6px color-mix(in srgb, var(--accent) 42%, transparent));
+  transition: filter 0.4s var(--ease-glass);
 }
-.nav-desktop button .ui-icon { width: 0.72rem; height: 0.72rem; filter: brightness(0) opacity(.42); }
-.nav-desktop button:hover { opacity: 1; transform: translateY(-1px); }
+.brand-bismillah-wrap {
+  position: relative; display: block;
+  height: clamp(1.7rem, 6.5vw, 1.95rem);
+  width: auto;
+  max-width: min(9.7rem, 43vw);   /* never crowds the clock chip + Menu at 360px */
+}
+@media (min-width: 640px) {
+  .brand-bismillah-wrap { height: clamp(1.35rem, 3.5vw, 1.7rem); max-width: min(9.5rem, 46vw); }
+}
+.brand-btn .brand-bismillah {
+  display: block; height: 100%; width: auto; max-width: 100%;
+  /* No shadow on the image itself — the shine is the SVG metallic gradient; the sheen (below)
+     animates the light, and the ambient/hover glow lives on the wrapper so it isn't clipped by
+     the image's own tight bounding box. */
+}
+@media (prefers-reduced-motion: no-preference) {
+  .brand-btn .brand-bismillah { animation: bismSheen 5.5s ease-in-out infinite; }
+}
+@keyframes bismSheen {
+  0%, 100% { filter: brightness(1) saturate(1.02); }
+  50%      { filter: brightness(1.26) saturate(1.2) drop-shadow(0 1px 5px color-mix(in srgb, var(--accent) 30%, transparent)); }
+}
+/* Hover: a brighter, more saturated glow layered on top of the ambient sheen — the calligraphy's
+   metallic gradient catches more "light" the way real engraved copper would under a lamp. */
+.brand-btn:hover .brand-bismillah,
+.brand-btn:focus-visible .brand-bismillah {
+  filter: brightness(1.34) saturate(1.4) drop-shadow(0 2px 12px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+/* Specular sweep — a bright highlight glides across, masked to the calligraphy's own silhouette
+   (not a rectangle) so it reads as light glinting off engraved metal rather than a generic shine
+   bar. mask-image on the same SVG source clips the sweep to exactly the drawn strokes. */
+.brand-bismillah-wrap::after {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.95) 50%, transparent 65%);
+  background-size: 300% 100%;
+  background-position: -100% 0;
+  -webkit-mask: url(/assets/img/bismillah.svg) center / contain no-repeat;
+  mask: url(/assets/img/bismillah.svg) center / contain no-repeat;
+  mix-blend-mode: overlay;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .brand-bismillah-wrap::after { animation: bismSweep 4.5s ease-in-out infinite; }
+}
+@keyframes bismSweep {
+  0%, 15% { background-position: -100% 0; }
+  55%, 100% { background-position: 120% 0; }
+}
+.brand-btn:hover .brand-bismillah-wrap::after,
+.brand-btn:focus-visible .brand-bismillah-wrap::after { animation-duration: 1.8s; }
 
-.header-right { display: flex; align-items: center; gap: 0.85rem; }
-.clock-chip { display: none; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
-@media (min-width: 768px) { .clock-chip { display: flex; } }
+/* English-meaning tooltip — origin-aware (scales from its trigger, not the viewport center; see
+   the emil-design-eng skill's popover guidance), positioned below since the header sits at the very
+   top of the viewport (a tooltip above would run off-screen). */
+.brand-tooltip {
+  position: absolute; top: calc(100% + 0.65rem); left: 0; z-index: 30;
+  transform-origin: top left;
+  transform: translateY(-4px) scale(0.95);
+  white-space: nowrap; pointer-events: none;
+  background: rgba(17,17,17,.92);
+  color: #fff; font-size: 0.75rem; font-weight: 500; letter-spacing: -0.005em;
+  padding: 0.5rem 0.85rem; border-radius: 0.6rem;
+  box-shadow: 0 12px 28px -10px rgba(17,17,17,.4), inset 0 1px 0 rgba(255,255,255,.08);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.3s var(--ease-spring);
+}
+.brand-tooltip::before {
+  content: ""; position: absolute; bottom: 100%; left: 1.1rem;
+  border: 5px solid transparent; border-bottom-color: rgba(17,17,17,.92);
+}
+.brand-btn:hover .brand-tooltip,
+.brand-btn:focus-visible .brand-tooltip {
+  opacity: 1; transform: translateY(0) scale(1);
+}
+@media (prefers-reduced-motion: reduce) { .brand-tooltip { transition: opacity 0.2s ease; } }
+
+/* Primary nav with a sliding "liquid" pill (see setupNavPill in app.js). The pill sits BEHIND the
+   buttons (z-0) and glides via its own CSS transition on transform/width — JS only writes the
+   --pill-* custom props. Buttons stay crisp on top (z-1). */
+.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.875rem; font-weight: 500; }
+@media (min-width: 1024px) { .nav-desktop { display: flex; } }
+/* Shiny tile treatment — the EXACT .icon-chip recipe (same gradient/border/box-shadow formulas,
+   same diagonal specular gloss), just with --tint swapped for --accent so it stays copper/on-brand
+   in the header instead of picking up whatever section happens to be scrolled into view. */
+.nav-desktop__pill {
+  position: absolute; top: 50%; left: 0; z-index: 0; overflow: hidden;
+  height: var(--pill-h, 2rem); width: var(--pill-w, 0);
+  transform: translate(var(--pill-x, 0), -50%);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 32%, #fff),
+    color-mix(in srgb, var(--accent) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+  opacity: var(--pill-o, 0);
+  pointer-events: none;
+  /* Liquid morph: position and width overshoot on a "back-out" curve (slightly staggered
+     durations) before settling, so the pill reads as a fluid glass blob stretching toward the
+     destination rather than a rigid slide — same idea as iOS's tab-bar indicator. */
+  transition: transform 0.48s var(--ease-liquid), width 0.7s var(--ease-liquid),
+    opacity 0.3s ease, box-shadow 0.35s var(--ease-glass);
+}
+.nav-desktop:hover .nav-desktop__pill,
+.nav-desktop:focus-within .nav-desktop__pill {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
+}
+.nav-desktop__pill::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.72;
+}
+.nav-desktop:hover .nav-desktop__pill::before { opacity: 1; }
+.nav-desktop button {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.42rem 0.85rem; border-radius: var(--radius-pill);
+  color: rgba(17,17,17,.72); opacity: 0.9;
+  transition: color var(--dur-mid) var(--ease-hover), opacity var(--dur-mid) ease;
+}
+.nav-desktop button:hover,
+.nav-desktop button:focus-visible { opacity: 1; color: var(--accent-dark); }
+.nav-desktop button.is-active { opacity: 1; color: var(--accent-dark); font-weight: 600; }
+.nav-desktop button .ui-icon {
+  width: 0.9rem; height: 0.9rem; opacity: 0.6;
+  transition: opacity var(--dur-mid) ease, transform 0.3s var(--ease-spring);
+}
+.nav-desktop button.is-active .ui-icon,
+.nav-desktop button:hover .ui-icon { opacity: 0.9; }
+.nav-desktop button:hover .ui-icon { transform: scale(1.15); }
+@media (prefers-reduced-motion: reduce) {
+  .nav-desktop__pill { transition: opacity 0.3s ease; }
+  .nav-desktop button .ui-icon { transition: opacity var(--dur-mid) ease; }
+}
+
+.header-right { display: flex; align-items: center; gap: 0.65rem; }
+.clock-chip { display: flex; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
 .clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
 .clock-sep { color: rgba(17,17,17,.3); }
 
-.menu-btn {
-  border: none; background: var(--ink); border-radius: var(--radius-pill);
-  box-shadow: 0 6px 18px rgba(17,17,17,.18);
+/* Live analog clock — an extremely frosted "liquid glass" disc (heavy backdrop-blur; allowed here
+   because the navbar is fixed chrome) with understated graphite hands + a slate second hand. Hover
+   grows from the RIGHT edge (transform-origin) so the enlarged face expands left/up/down and never
+   covers the digital time text sitting to its right. Cardinal tick marks fade in on hover only, to
+   help read the hour/minute at the bigger size without cluttering the resting state. The second
+   hand's animation-delay is set once on load (never re-touched), so its 60s linear sweep runs on its
+   own compositor timeline with zero JS-driven correction jumps — a genuinely seamless glide. */
+.clock-face {
+  --hand: #2a2f38;          /* charcoal hour/minute hands */
+  --hand-second: #5b6472;   /* slate second hand — understated, no bright color */
+  position: relative; flex: none; overflow: hidden;
+  width: 2.6rem; height: 2.6rem; /* was 2.2rem — bigger by default */
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255,255,255,.6), rgba(255,255,255,.1) 72%),
+    rgba(255,255,255,.16);
+  backdrop-filter: blur(18px) saturate(220%);
+  -webkit-backdrop-filter: blur(18px) saturate(220%);
+  border: 1px solid rgba(255,255,255,.8);
+  box-shadow:
+    inset 0 1px 1.5px rgba(255,255,255,.95),
+    inset 0 0 0 0.5px rgba(17,17,17,.04),
+    0 3px 10px -2px rgba(17,17,17,.16);
+  transform-origin: 50% 50%;
+  transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass);
 }
-.menu-btn span {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  padding: 0.55rem 1.05rem; font-size: 0.75rem; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.05em; color: #fff;
+/* Radial "glass orb" highlight, not the shared diagonal icon-chip gloss — a directional linear band
+   reads as a lopsided/non-circular cue on a disc (the eye interprets the asymmetric light/shadow as
+   an uneven edge even though the geometry underneath is a mathematically perfect circle, confirmed
+   via computed width===height at every breakpoint). A radial highlight positioned like a light
+   source hitting a sphere reinforces roundness instead of fighting it. */
+.clock-face::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.9) 0%, rgba(255,255,255,.3) 38%, transparent 68%);
+  opacity: 0.85;
+  transition: opacity 0.35s var(--ease-glass);
+}
+@media (hover: hover) and (pointer: fine) {
+  /* Hover trigger is the analog face itself, not the whole .clock-chip (which also wraps the
+     digital time/date text) — hovering the date shouldn't pop the clock open. */
+  .clock-face:hover {
+    transform-origin: 100% 50%;   /* grow away from the clock-time text to the right */
+    transform: scale(1.9);
+    box-shadow:
+      inset 0 1px 1.5px rgba(255,255,255,.98),
+      0 8px 22px rgba(17,17,17,.2);
+  }
+  .clock-face:hover::before { opacity: 1; }
+  .clock-face:hover .clock-tick { opacity: 1; }
+}
+.clock-tick {
+  position: absolute; left: 50%; bottom: 50%;
+  transform-origin: 50% 100%;
+  width: 1.4px; height: 42%; margin-left: -0.7px;
+  /* spans center→edge like a hand, but only the outer segment is painted, so it reads as a short
+     rim mark rather than a spoke through the pivot */
+  background: linear-gradient(to top, transparent 0%, transparent 76%, rgba(42,47,56,.55) 80%, rgba(42,47,56,.55) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.clock-tick--12 { transform: rotate(0deg); }
+.clock-tick--3  { transform: rotate(90deg); }
+.clock-tick--6  { transform: rotate(180deg); }
+.clock-tick--9  { transform: rotate(270deg); }
+.clock-hand {
+  position: absolute; left: 50%; bottom: 50%;
+  transform-origin: 50% 100%;
+  border-radius: 999px;
+  background: var(--hand);
+}
+.clock-hand--h {
+  width: 2px; height: 25%; margin-left: -1px;
+  transform: rotate(var(--clock-h, 0deg));
+  transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
+}
+.clock-hand--m {
+  width: 1.7px; height: 35%; margin-left: -0.85px;
+  transform: rotate(var(--clock-m, 0deg));
+  transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
+}
+.clock-hand--s {
+  width: 1.3px; height: 39%; margin-left: -0.65px;
+  background: var(--hand-second);
+  transform: rotate(var(--clock-s, 0deg));
+  animation: clock-sweep 60s linear infinite;
+  animation-delay: var(--clock-s-delay, 0s);
+}
+.clock-hand--s::after {         /* counterbalance tail behind the pivot */
+  content: ""; position: absolute; left: 50%; bottom: -22%;
+  width: 1.3px; height: 22%; margin-left: -0.65px;
+  border-radius: 999px; background: var(--hand-second);
+}
+.clock-pin {
+  position: absolute; left: 50%; top: 50%;
+  width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%; background: var(--hand);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.9);
+}
+@keyframes clock-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clock-face { transition: none; }
+  .clock-hand--s { animation: none; transform: rotate(var(--clock-s, 0deg)); }
+  .clock-hand--h, .clock-hand--m { transition: none; }
+  .clock-tick { transition: none; }
+}
+
+/* Same shiny-tile recipe as .icon-chip/.nav-desktop__pill (gradient + border + layered shadow +
+   diagonal gloss), black base with a copper edge/glow and copper bars on interaction — "copper,
+   black, and other theme colors" combined in one control rather than flat single-tone black. */
+.menu-btn {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  border-radius: var(--radius-pill);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 6px 18px -3px rgba(17,17,17,.4),
+    0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
+  transition: box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass);
+}
+.menu-btn:hover,
+.menu-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    0 8px 22px -2px rgba(17,17,17,.48),
+    0 4px 16px -4px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+.menu-btn::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, color-mix(in srgb, var(--accent-bright) 60%, white) 0%, rgba(255,255,255,.08) 30%, transparent 54%);
+  opacity: 0.6;
+  transition: opacity 0.35s var(--ease-glass);
+}
+.menu-btn:hover::before,
+.menu-btn:focus-visible::before { opacity: 1; }
+.menu-btn:hover .menu-btn__bar,
+.menu-btn:focus-visible .menu-btn__bar,
+.menu-btn[aria-expanded="true"] .menu-btn__bar { background: var(--accent-bright); }
+/* Direct-child combinator, not a bare descendant selector: this must only style the one wrapper
+   span, not the .menu-btn__icon/.menu-btn__bar spans nested inside it below (a bare `.menu-btn
+   span` matched those too, inflating each 1.5px bar into a full padded flex box). */
+.menu-btn > span {
+  position: relative; z-index: 2;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.48rem 0.85rem; font-size: 0.6875rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
+}
+/* Hamburger-to-X morph — 3 plain bars instead of a single SVG (CSS can't interpolate between two
+   path shapes), keyed off :aria-expanded the same way the experience accordion already keys its
+   own open state off an ARIA attribute rather than an ad-hoc class. */
+.menu-btn__icon {
+  display: inline-flex; flex-direction: column; justify-content: center; gap: 0.2rem;
+  width: 0.85rem; height: 0.7rem;
+}
+.menu-btn__bar {
+  display: block; height: 1.5px; width: 100%; border-radius: 1px;
+  background: currentColor;
+  transition: transform 0.35s var(--ease-glass), opacity 0.25s var(--ease-glass);
+}
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(1) { transform: translateY(4.3px) rotate(45deg); }
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(2) { opacity: 0; }
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(3) { transform: translateY(-4.3px) rotate(-45deg); }
+@media (prefers-reduced-motion: reduce) {
+  .menu-btn__bar { transition: none; }
 }
 
 /* Hero */
@@ -405,17 +1198,30 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   position: relative; isolation: isolate; overflow: hidden;
   border-radius: 0 0 var(--radius-card) var(--radius-card);
   background:
-    linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0) 38%),
-    linear-gradient(160deg, rgba(238,241,246,.62) 0%, rgba(217,222,232,.48) 100%);
-  min-height: 100lvh;
+    radial-gradient(38rem 30rem at 88% -8%, rgba(255,214,164,.16), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0) 38%),
+    linear-gradient(160deg, var(--hero-from) 0%, var(--hero-to) 100%);
+  min-height: 100dvh;
 }
 
 /* Portrait spread — full-height banner on the right, face-safe crop */
 .hero__backdrop {
-  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  position: absolute; inset: 0; z-index: 2;
+  pointer-events: none;
 }
+/* --hero-spatial-x/y: pointer-driven depth layer (iOS-style spatial parallax, motion.js's
+   heroSpatial()), composed into the SAME transform as the scroll-linked --hero-liquid-y instead of
+   fighting it — Motion One's animate() writes a competing inline style.transform on elements that
+   already own a CSS transform rule, silently overriding it (the exact class of cascade bug this
+   codebase has hit repeatedly elsewhere), so this element is deliberately driven by custom
+   properties only. Both default to 0px, so desktop-without-motion/mobile/reduced-motion (which
+   never set them) render byte-identical to the plain scroll transform. */
 .hero__backdrop-liquid {
   position: absolute; inset: 0;
+  pointer-events: auto;
+  touch-action: none;
+  transform: translate3d(var(--hero-spatial-x, 0px), calc(var(--hero-liquid-y, 0px) + var(--hero-spatial-y, 0px)), 0);
+  will-change: transform;
 }
 .hero__backdrop-liquid img {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -440,23 +1246,11 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
     mask-image: linear-gradient(90deg, transparent 0%, #000 18%);
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 18%);
   }
-  .hero__backdrop-liquid img { object-position: 50% 12%; }
+  .hero__backdrop-liquid img { object-position: 40% 12%; }
   .hero__backdrop-scrim {
     background:
-      linear-gradient(90deg, rgba(238,241,246,.92) 0%, rgba(238,241,246,.45) 22%, transparent 48%),
-      linear-gradient(180deg, rgba(255,255,255,.2), transparent 30%, transparent 78%, rgba(17,17,17,.06));
-  }
-}
-@media (max-width: 1023px) {
-  .hero__backdrop {
-    inset: auto 0 0 0; height: 52%;
-    mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
-  }
-  .hero__backdrop-liquid img { object-position: 50% 10%; }
-  .hero__backdrop-scrim {
-    background:
-      linear-gradient(180deg, rgba(238,241,246,.92) 0%, rgba(238,241,246,.55) 38%, rgba(238,241,246,.12) 68%, transparent 100%);
+      linear-gradient(90deg, rgba(241,240,238,.94) 0%, rgba(241,240,238,.5) 22%, transparent 48%),
+      linear-gradient(180deg, rgba(255,255,255,.24), transparent 30%, transparent 78%, rgba(17,17,17,.05));
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -466,24 +1260,62 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   position: absolute; left: 62%; top: 40%; z-index: 0;
   width: 44rem; height: 44rem; border-radius: var(--radius-pill);
   background:
-    radial-gradient(circle at 40% 40%, rgba(124,92,255,.28), transparent 60%),
-    radial-gradient(circle at 65% 60%, rgba(240,160,48,.30), transparent 62%);
-  transform: translate(-50%, -50%); pointer-events: none;
+    radial-gradient(circle at 40% 40%, rgba(255,255,255,.22), transparent 60%),
+    radial-gradient(circle at 65% 60%, rgba(255,248,240,.18), transparent 62%),
+    radial-gradient(circle at 55% 75%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%);
+  transform: translate(-50%, -50%) translate3d(0, var(--glow-y, 0px), 0); pointer-events: none;
   opacity: 0; transition: opacity 0.6s ease; filter: blur(10px);
 }
 .hero__wm {
-  pointer-events: none; position: absolute; inset-inline: 0; bottom: 5.5rem; z-index: 1;
-  text-align: center; user-select: none; font-weight: 700; line-height: 1;
-  font-size: var(--watermark); letter-spacing: -0.03em;
-  color: transparent;
-  background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(124,92,255,.14));
-  -webkit-background-clip: text; background-clip: text;
+  position: absolute; inset-inline: 0; bottom: 7rem; z-index: 1;
+  text-align: center; pointer-events: none; user-select: none;
+  font-weight: 700; line-height: 1; letter-spacing: 0.06em;
+  font-size: clamp(5.5rem, 16vw, var(--watermark));
+  color: color-mix(in srgb, var(--ink) 6%, transparent);
+  opacity: 0;
+  transform: translate3d(0, calc(20px + var(--wm-parallax-y, 0px)), 0);
+}
+html.is-ready .hero__wm {
+  opacity: 1;
+  transform: translate3d(0, var(--wm-parallax-y, 0px), 0);
+  transition: opacity 0.9s var(--ease-spring) 0.3s, transform 0.9s var(--ease-spring) 0.3s;
+}
+[data-parallax] {
+  transform: translate3d(0, var(--parallax-y, 0px), 0);
+  will-change: transform;
+}
+@media (min-width: 1024px) {
+  .hero__wm {
+    text-align: right; padding-inline-end: 4%;
+    bottom: 7rem;
+    color: color-mix(in srgb, var(--ink) 5%, transparent);
+  }
 }
 .hero__grid {
   position: relative; z-index: 20; display: grid; gap: 2.5rem;
-  padding: 9rem 0 4rem; align-items: center; min-height: calc(100lvh - 4rem);
+  padding-block: 9rem 4rem;
+  align-items: center; min-height: calc(100dvh - 4rem);
+  pointer-events: none;
 }
-@media (min-width: 1024px) { .hero__grid { grid-template-columns: 1.15fr 0.85fr; } }
+.hero__grid > * { pointer-events: auto; }
+@media (min-width: 1024px) {
+  .hero__grid {
+    grid-template-columns: 1.22fr 0.78fr;
+    gap: 3rem;
+    align-items: end;
+    padding-block: clamp(7.5rem, 10vw, 9rem) 4.5rem;
+  }
+  .hero__copy { max-width: 42rem; }
+  .hero h1 {
+    font-size: clamp(3.15rem, 5.4vw, 5.15rem);
+    max-width: 11ch;
+  }
+  .hero__aside {
+    margin-top: 0;
+    align-items: flex-end;
+    transform: translate(1.5rem, 3.25rem);
+  }
+}
 
 .hero__copy {
   position: relative; z-index: 3;
@@ -497,182 +1329,615 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   perspective: 1000px;
 }
 @media (min-width: 1024px) { .hero__aside { align-items: flex-end; } }
+/* Mobile/tablet: the portrait is a full-bleed background behind a single content column, so the CTA
+   and the Now-card/partners can land on the subject's face. Push them down — a gap above the actions
+   clears the mouth/beard, and a larger copy↔aside gap drops the card/partners onto the shirt — so the
+   face reads clearly between the headline and the buttons. */
+@media (max-width: 1023px) {
+  .hero__grid { gap: 3.5rem; padding-block: 8rem 5.5rem; align-items: start; }
+  .hero__actions { margin-top: 1.75rem; }
+  .hero__aside { margin-top: 1rem; }
+}
 
 .hero-rating { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.hero-stars { color: var(--accent); display: inline-flex; gap: 0.15rem; font-size: 1rem; line-height: 0; }
-.hero-rating__text { font-size: 0.875rem; font-weight: 500; color: rgba(17,17,17,.7); }
+.hero-rating__text {
+  font-size: 0.875rem; font-weight: 500;
+  color: color-mix(in srgb, var(--primary-deep) 65%, var(--ink));
+  text-shadow: 0 1px 2px rgba(255,255,255,.75);
+}
 
 .pill-btn__icon {
   width: 2.25rem; height: 2.25rem; display: grid; place-items: center;
   border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 1rem; line-height: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 1px 3px rgba(17,17,17,.12);
 }
-.pill-btn__icon .ui-icon { width: 1rem; height: 1rem; }
+.pill-btn__icon .ui-icon { width: 1rem; height: 1rem; color: var(--ink); stroke-width: 2.25; }
+/* Opposite-contrast pairing for a light-surface button: dark circle + white glyph, mirroring
+   .pill-btn-dark's white circle + dark glyph so the two hero CTAs read as an inverted pair. */
+.pill-btn__icon--dark {
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 1px 3px rgba(17,17,17,.3);
+}
+.pill-btn__icon--dark .ui-icon { color: #fff; }
+/* Both CTAs below add the icon-chip "shiny tile" gloss via ::after (not ::before — .beam already
+   claims that pseudo-element for its rotating conic border on these same buttons). */
 .pill-btn-dark {
+  position: relative; overflow: hidden;
   display: inline-flex; align-items: center; gap: 0.75rem;
   border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
-  background: var(--ink); color: #fff; padding: 0.375rem 0.375rem 0.375rem 1.5rem;
-  box-shadow: 0 10px 24px rgba(17,17,17,.18); transition: transform 0.35s var(--ease-hover);
+  background: linear-gradient(145deg, #2b2b2b, #060606); color: #fff; padding: 0.375rem 0.375rem 0.375rem 1.5rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(17,17,17,.18);
+  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
 }
-.pill-btn-dark:hover { transform: scale(1.03); }
+.pill-btn-dark::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.1) 30%, transparent 58%);
+  opacity: 0.92;
+  transition: opacity 0.35s var(--ease-glass);
+}
+.pill-btn-dark > * { position: relative; z-index: 2; }
+.pill-btn-dark:hover { transform: translateY(-2px) scale(1.03); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 16px 34px rgba(17,17,17,.24); }
+.pill-btn-dark:hover::after { opacity: 1; }
+.pill-btn-dark:active { transform: translateY(0) scale(0.985); transition-duration: 0.12s; }
 .pill-btn-glass {
+  position: relative; overflow: hidden;
   display: inline-flex; align-items: center; gap: 0.75rem;
   border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
-  background: rgba(255,255,255,.55); backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255,255,255,.6); color: #111; padding: 0.875rem 1.75rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.7); transition: transform 0.35s var(--ease-hover);
+  background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
+  color: #111; padding: 0.375rem 0.375rem 0.375rem 1.5rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px -7px rgba(17,17,17,.14);
+  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
 }
-.pill-btn-glass:hover { transform: scale(1.03); }
+.pill-btn-glass::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.32) 30%, transparent 58%);
+  opacity: 0.88;
+  transition: opacity 0.35s var(--ease-glass);
+}
+.pill-btn-glass > * { position: relative; z-index: 2; }
+.pill-btn-glass:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 12px 28px -8px rgba(17,17,17,.14);
+}
+.pill-btn-glass:hover::after { opacity: 1; }
+.pill-btn-glass:active { transform: translateY(0) scale(0.985); transition-duration: 0.12s; }
 
 .hero h1 {
   max-width: 16ch;
   font-size: clamp(2.85rem, 5.8vw + 0.5rem, 4.75rem);
-  font-weight: 620; line-height: 0.94; letter-spacing: -0.038em; margin: 0;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin: 0;
 }
-.hero h1 .line-wrap { display: block; overflow: hidden; }
-.hero h1 .line-inner { display: block; transform: translateY(110%); }
+.hero h1 .line-wrap {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.06em;
+}
+.hero h1 .line-inner {
+  display: block;
+  transform: translateY(110%);
+  padding-bottom: 0.02em;
+}
 .hero.is-ready h1 .line-inner { transform: none; transition: transform 1.05s var(--ease-reveal); }
 .hero.is-ready h1 .line-inner:nth-child(1) { transition-delay: 280ms; }
 .hero.is-ready h1 .line-inner:nth-child(2) { transition-delay: 420ms; }
 .hero.is-ready h1 .line-inner:nth-child(3) { transition-delay: 560ms; }
 .hero h1 .accent { color: var(--accent); }
 
+.hero__copy--on-dark .hero h1 .line-inner:not(.grad) {
+  color: #fff;
+  text-shadow:
+    0 2px 20px rgba(0,0,0,.55),
+    0 1px 3px rgba(0,0,0,.6),
+    0 0 24px color-mix(in srgb, var(--primary) 28%, transparent);
+}
+.hero__copy--on-dark .hero h1 .line-inner.grad {
+  color: var(--accent-bright);
+  -webkit-text-fill-color: var(--accent-bright);
+}
+.hero__copy--on-dark .eyebrow { color: rgba(255,255,255,.84); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+.hero__copy--on-dark .eyebrow-dot { background: rgba(255,255,255,.55); }
+.hero__copy--on-dark .hero-rating__text { color: rgba(255,255,255,.8); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+
+.hero h1 .line-inner:not(.grad) {
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.95),
+    0 1px 2px rgba(17,17,17,.1),
+    0 2px 18px rgba(238,241,246,.65),
+    0 0 1px rgba(17,17,17,.08);
+}
+.hero h1 .line-inner.grad {
+  filter:
+    drop-shadow(0 1px 1px rgba(255,255,255,.8))
+    drop-shadow(0 2px 10px color-mix(in srgb, var(--accent) 22%, transparent));
+  -webkit-font-smoothing: antialiased;
+}
+.hero__copy--on-dark .hero h1 .line-inner.grad {
+  filter:
+    drop-shadow(0 2px 12px rgba(0,0,0,.48))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--accent-bright) 30%, transparent));
+}
+
+/* Hero name (3 lines: "Mohammad" / "Saniyat" / "Hossain") — first 2 lines stay plain ink; only the
+   surname on line 3 carries the .grad copper-accent treatment. :where() zeroes out the specificity
+   of the :nth-of-type selectors so this can't outrank the on-dark/contrast overrides above. */
+.hero h1 :where(.line-wrap:nth-of-type(1)) .line-inner:not(.grad),
+.hero h1 :where(.line-wrap:nth-of-type(2)) .line-inner:not(.grad) {
+  color: var(--ink);
+}
+.hero h1 :where(.line-wrap:nth-of-type(3)) .line-inner.grad {
+  text-shadow: none;
+}
+
 .hero-card {
+  /* Faux-frost, not real backdrop-filter: this card scrolls with the page (it isn't fixed/sticky),
+     and backdrop-filter on scrolling content repaints every frame while it's in view — the exact
+     mobile-performance cost this file's own --frost-bg token was already created to avoid ("faux-
+     frost for SCROLLING glass — no backdrop-filter (100/100 on mobile)"). More translucency here
+     instead of a live blur gets the frosted *read* without spending the PageSpeed budget on it. */
+  position: relative; overflow: hidden;
   width: 100%; max-width: 22rem; border-radius: 1.35rem;
-  background: var(--glass-bg-strong); padding: 0.5rem; cursor: pointer;
-  box-shadow: var(--glass-shadow), var(--glass-highlight);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur-lg);
-  -webkit-backdrop-filter: var(--glass-blur-lg);
+  background: linear-gradient(180deg, rgba(255,255,255,.8) 0%, rgba(255,255,255,.52) 100%);
+  padding: 0.5rem; cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    0 0 0 1px rgba(230,229,226,.35),
+    0 18px 46px -10px rgba(17, 17, 17, 0.14);
   transition: transform var(--dur-mid) var(--ease-glass), box-shadow var(--dur-mid) var(--ease-glass);
 }
-.hero-card__inner { display: flex; gap: 0.5rem; border-radius: 0.9rem; }
-.hero-card__badge {
-  aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
-  border-radius: 0.9rem; background: var(--ink); color: var(--accent-bright); font-size: 1.875rem; line-height: 0;
+@media (min-width: 1024px) {
+  .hero-card { max-width: 20rem; }
 }
+.hero-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background: linear-gradient(180deg, var(--glass-sheen) 0%, transparent 24%, transparent 100%);
+  opacity: 0.5; mix-blend-mode: soft-light;
+}
+.hero-card__inner { position: relative; z-index: 1; display: flex; gap: 0.5rem; border-radius: 0.9rem; }
+/* Badge + body submerged into one surface — no separate tinted tile, no border/shadow of its own;
+   the icon itself is the only accent, shown large with its own drop-shadow for depth/prominence at
+   rest (standing out of the card like a tree out of its pot), contracting smoothly on hover/focus as
+   a tactile "settle" cue. Nothing is hidden behind hover anymore — the whole card is always fully
+   shown, so there's no separate collapsed/expanded state to keep in sync. Reads --tint/--tint-ink,
+   set per active heroCards item via tintVars() in app.js (:style binding, same technique
+   .partner-orb already uses for --brand) — pinned to one of the site's 3 existing brand hues
+   (accent/primary/teal), never a new color; falls back to the original copper if --tint is ever
+   unset (e.g. before Alpine hydrates). */
+.hero-card__badge {
+  position: relative;
+  aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
+  color: var(--tint-ink, var(--accent-bright));
+}
+/* Soft ambient color bloom behind the icon — a real "spotlight," not just a drop-shadow — so the
+   icon reads as a featured, lit element rather than a flat glyph sitting on the photo. */
+.hero-card__badge::before {
+  content: ""; position: absolute; inset: -30%; z-index: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tint, var(--accent)) 38%, transparent) 0%, transparent 68%);
+  opacity: 0.85;
+  transition: opacity 0.5s var(--ease-glass);
+}
+.hero-card:hover .hero-card__badge::before,
+.hero-card:focus-within .hero-card__badge::before { opacity: 0.5; }
+/* Icon wrapper — a stable element for the swap-synced pulse, since x-html replaces the SVG root
+   wholesale on each card change (a transform on the SVG itself would be discarded with it). Bolder
+   stroke at this scale — the default weight reads thin/flimsy blown up this large. */
+.hero-card__badge-icon {
+  position: relative; z-index: 2; display: inline-flex;
+  transform: scale(2.9);
+  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent));
+  transition: transform 0.5s var(--ease-smooth), filter 0.5s var(--ease-glass);
+}
+.hero-card__badge-icon .ui-icon { stroke-width: 1.75; }
+.hero-card:hover .hero-card__badge-icon,
+.hero-card:focus-within .hero-card__badge-icon {
+  transform: scale(1.7);
+  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent));
+}
+/* Higher specificity than the plain hover rule above so a card-advance click mid-hover still reads
+   as a pulse (a small dip) instead of getting silently outranked and disappearing. */
+.hero-card__badge-icon.is-pulsing { transform: scale(2.7); }
+.hero-card:hover .hero-card__badge-icon.is-pulsing,
+.hero-card:focus-within .hero-card__badge-icon.is-pulsing { transform: scale(1.55); }
+.hero-card__badge .ui-icon { opacity: 1; }
 .hero-card__body {
-  flex: 1; border-radius: 0.9rem; background: rgba(241,240,238,.6);
+  flex: 1; border-radius: 0.9rem;
   padding: 0.75rem; display: flex; flex-direction: column; justify-content: space-between;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-card__badge-icon { transition: none; }
+}
+/* Content swap — direction-aware: "next" exits left/enters from the right (matching the arrow
+   icons' own left/right semantics), "prev" mirrors. Driven by cardStep()/_finishSwap() in app.js via
+   direct classList toggles (not Alpine :class, so the double-rAF timing is exact). Transitions only,
+   never @keyframes, so rapid re-clicking retargets smoothly instead of restarting from zero. */
+.hero-card__swap {
+  transition: opacity var(--dur-swap) var(--ease-glass), transform var(--dur-swap) var(--ease-glass);
+}
+.hero-card__swap.is-swapping-next { opacity: 0; transform: translateX(-10px); }
+.hero-card__swap.is-swapping-prev { opacity: 0; transform: translateX(10px); }
+.hero-card__swap.is-entering-next { transform: translateX(10px); }
+.hero-card__swap.is-entering-prev { transform: translateX(-10px); }
+.hero-card__swap.is-swap-instant { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  /* Swap fires on click, not hover, so it needs its own top-level guard — not nested inside the
+     hover-only drawer block below, which is conditioned on desktop pointer capability. Belt and
+     suspenders alongside cardStep()'s own JS early-return. */
+  .hero-card__swap, .hero-card__badge-icon { transition: none; }
+  .hero-card__swap.is-swapping-next, .hero-card__swap.is-swapping-prev,
+  .hero-card__swap.is-entering-next, .hero-card__swap.is-entering-prev { opacity: 1; transform: none; }
 }
 .hero-card__caption {
   font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
-  letter-spacing: 0.05em; color: rgba(17,17,17,.45);
+  letter-spacing: 0.05em; color: rgba(17, 17, 17, 0.45);
 }
-.hero-card__title { max-width: 11rem; font-size: 0.875rem; font-weight: 500; line-height: 1.35; margin-top: 0.25rem; }
+.hero-card__title {
+  max-width: 11rem; font-size: 0.875rem; font-weight: 500; line-height: 1.35; margin-top: 0.25rem;
+  color: rgba(17, 17, 17, 0.88);
+}
 .hero-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem; }
 .hero-card__dots { display: flex; align-items: center; gap: 0.3rem; }
 .hero-card__dot {
   height: 0.25rem; width: 0.375rem; border-radius: var(--radius-pill);
-  background: rgba(17,17,17,.2); transition: all 0.3s;
+  background: rgba(17,17,17,.2);
+  transition: width 0.3s var(--ease-glass), background-color 0.3s var(--ease-glass);
 }
 .hero-card__dot.is-active { width: 1rem; background: rgba(17,17,17,.7); }
 .hero-card__nav { display: flex; gap: 0.35rem; }
+/* Prev/next controls — the exact icon-chip shine recipe (was a flat white circle with a plain
+   text "←"/"→" glyph; now a real SVG arrow on the same tinted-glass tile as the badge/services
+   icons), pinned to --accent so it stays on-brand with the rest of the card. */
 .hero-card__arrow {
   width: 1.75rem; height: 1.75rem; display: grid; place-items: center;
-  border-radius: var(--radius-pill); background: #fff; color: rgba(17,17,17,.7);
-  box-shadow: 0 0 0 1px var(--line); line-height: 0; transition: color 0.2s;
+  border-radius: var(--radius-pill); color: var(--accent-dark);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 32%, #fff),
+    color-mix(in srgb, var(--accent) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+  line-height: 0;
+  transition: box-shadow 0.35s var(--ease-glass), transform 0.16s var(--ease-glass);
 }
-.hero-card__arrow:hover { color: #111; }
+.hero-card__arrow .ui-icon { width: 0.7rem; height: 0.7rem; }
+.hero-card__arrow:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-card__arrow { transition: box-shadow 0.35s var(--ease-glass); }
+}
+.hero-card__arrow:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
+}
 
-.hero-partners { width: 100%; max-width: 22rem; }
+/* Collapsed-badge → hover-expand drawer, "genie"-style: the card is clipped down to just the badge's
+   own footprint at rest (right-anchored, flush with the "Worked with" row below), and the body text
+   slides/fades out from behind it on hover — same mechanism as before, but the badge itself stays
+   submerged (no separate tinted tile, matching .hero-card__badge above) both collapsed and open, and
+   the icon's size now runs the OPPOSITE direction from the drawer: big + shadowed while collapsed
+   (it's the only thing visible, so it should read as prominent on its own, "tree out of its pot"),
+   contracting to its normal contained size once the drawer opens and the text takes over as the
+   focus. One shared, slow, unhurried transition drives clip-path/translateX/icon-scale together so
+   open and close feel identical. Desktop/fine-pointer only — touch devices have no hover, so the card
+   stays fully expanded there (unchanged), the safe fallback under reduced-motion and print. Motion is
+   done entirely with `clip-path` (compositor-only, no width/height reflow). Also requires
+   min-width:1024px, not just hover/pointer capability alone — (hover:hover) and (pointer:fine) are
+   about INPUT capability, not viewport width, so a narrow browser window on a real desktop (a mouse,
+   no touch) still matches them. Without this, resizing a desktop browser down to a phone-width
+   viewport left the card permanently in its collapsed rest state (just the badge, on a plain white
+   background — the tint only ever applied on the hover-open state), since nothing there could ever
+   receive a real hover. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  /* .hero-card carries data-reveal="scale" for its page-load entrance animation, and
+     `[data-reveal].is-visible` (specificity 0,2,0) sets its own `transition` — beating a plain
+     `.hero-card` rule (0,1,0) outright, which would silently discard the clip-path transition.
+     `.hero__aside .hero-card[data-reveal]` (0,3,0) decisively outranks it. */
+  .hero__aside .hero-card[data-reveal] {
+    height: 8rem;
+    padding: 0.5rem 0 0.5rem 0.5rem;
+    clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
+    box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
+    transition:
+      clip-path 0.52s var(--ease-smooth),
+      padding-right 0.52s var(--ease-smooth),
+      box-shadow 0.4s var(--ease-glass);
+  }
+  .hero-card__inner { height: 100%; align-items: center; }
+  .hero__aside .hero-card[data-reveal]::after { opacity: 0; transition: opacity 0.5s var(--ease-glass); }
+  .hero-card__badge {
+    /* Shifted to sit flush at the card's true right edge at rest; returns to its natural
+       left-of-body flex position on hover/focus. Value accounts for the card's max-width, which
+       differs by breakpoint (see the 1024px override below). */
+    transform: translateX(15.5rem);
+    transition: transform 0.52s var(--ease-smooth);
+  }
+  @media (min-width: 1024px) {
+    .hero-card__badge { transform: translateX(13.5rem); }
+  }
+  .hero-card__body {
+    opacity: 0; transform: translateX(-8px);
+    transition: opacity 0.4s var(--ease-glass), transform 0.52s var(--ease-smooth);
+  }
+  /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
+     enter/exit duration otherwise. Real backdrop-filter here (not the faux-frost this file uses
+     elsewhere for scrolling glass) is safe precisely because it's scoped to :hover/:focus-within —
+     it only ever repaints while a desktop pointer is deliberately holding the card open, never
+     continuously while scrolling. */
+  .hero__aside .hero-card[data-reveal]:hover,
+  .hero__aside .hero-card[data-reveal]:focus-within {
+    padding-right: 0.5rem;
+    clip-path: inset(0 0 0 0 round 1.35rem);
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.4)) 0%,
+      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.18)) 100%);
+    backdrop-filter: blur(32px) saturate(190%);
+    -webkit-backdrop-filter: blur(32px) saturate(190%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 0 0 1px rgba(230,229,226,.35),
+      0 18px 46px -10px rgba(17, 17, 17, 0.14);
+    transition:
+      clip-path 0.6s var(--ease-smooth),
+      padding-right 0.6s var(--ease-smooth),
+      background 0.6s var(--ease-smooth),
+      box-shadow 0.45s var(--ease-glass);
+  }
+  .hero__aside .hero-card[data-reveal]:hover::after,
+  .hero__aside .hero-card[data-reveal]:focus-within::after { opacity: 0.5; }
+  .hero-card:hover .hero-card__badge,
+  .hero-card:focus-within .hero-card__badge {
+    transform: translateX(0);
+    transition: transform 0.6s var(--ease-smooth);
+  }
+  .hero-card:hover .hero-card__body,
+  .hero-card:focus-within .hero-card__body {
+    opacity: 1; transform: none;
+    transition: opacity 0.45s var(--ease-glass), transform 0.6s var(--ease-smooth);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-card, .hero-card__body, .hero-card__badge { transition: none; }
+  }
+}
+
+.hero-partners { width: 100%; max-width: 24rem; }
 .hero-partners__label {
-  margin-bottom: 0.75rem; font-size: 0.75rem; font-weight: 500;
-  color: rgba(17,17,17,.45); text-align: left;
+  margin-bottom: 0.75rem; font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(17,17,17,.72);
+  text-shadow: 0 1px 2px rgba(255,255,255,.9), 0 1px 10px rgba(255,255,255,.6);
+  text-align: left;
 }
 @media (min-width: 1024px) { .hero-partners__label { text-align: right; } }
-.hero-partners__list { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: flex-start; }
+/* min-height reserves the row's footprint before Alpine populates it from the async-loaded JSON
+   (an empty flex container has zero height otherwise) — avoids a layout shift once the 5 partner
+   icons render in. */
+.hero-partners__list { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: flex-start; min-height: 2.35rem; }
 @media (min-width: 1024px) { .hero-partners__list { justify-content: flex-end; } }
 
-.partner-pill {
-  display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap;
-  background: rgba(255,255,255,.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,.6); border-radius: var(--radius-pill);
-  padding: 0.35rem 0.8rem 0.35rem 0.4rem; font-size: 0.75rem; color: rgba(17,17,17,.75);
+/* Partner "dock" icons — a fixed-size, never-shifting row (each icon's own box never changes
+   dimensions, so hovering one can NEVER push its neighbors: that reflow was the source of the
+   jiggle in the old inline-expand version). The company name floats up in a small tooltip bubble
+   above the icon instead, macOS-Dock style — reveals via opacity + a short rise, no layout impact
+   on anything else in the row. */
+.partner-orb {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.35rem; height: 2.35rem; border-radius: 50%;
+  overflow: visible;
+  cursor: pointer; outline: none;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--brand) 34%, #fff),
+    color-mix(in srgb, var(--brand) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--brand) 26%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 2px 8px -3px color-mix(in srgb, var(--brand) 45%, transparent);
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-glass), z-index 0s;
 }
-.partner-pill img { width: 1.1rem; height: 1.1rem; object-fit: contain; border-radius: var(--radius-pill); }
+.partner-orb::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, rgba(255,255,255,.68) 0%, rgba(255,255,255,.18) 30%, transparent 54%);
+  opacity: 0.75; transition: opacity 0.3s var(--ease-glass);
+}
+.partner-orb:hover,
+.partner-orb:focus-visible {
+  transform: translateY(-3px) scale(1.1);
+  z-index: 2;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 10px 22px -8px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+.partner-orb:hover::before,
+.partner-orb:focus-visible::before { opacity: 1; }
+.partner-orb__badge { position: relative; z-index: 2; width: 1rem; height: 1rem; display: grid; place-items: center; }
+.partner-orb__badge img { width: 100%; height: 100%; object-fit: contain; }
+.partner-orb__mono { font-size: 0.6rem; font-weight: 800; color: #fff; }
 
-.hero-status {
-  position: relative; z-index: 20;
-  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-  border-top: 1px solid rgba(17,17,17,.1); padding: 1.25rem 0;
-  font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
-  letter-spacing: 0.025em; color: rgba(17,17,17,.6);
+.partner-orb__tip {
+  position: absolute; left: 50%; bottom: calc(100% + 0.55rem); z-index: 3;
+  transform: translate(-50%, 5px) scale(0.92);
+  white-space: nowrap; pointer-events: none;
+  background: rgba(255,255,255,.96);
+  color: #14161c; font-size: 0.75rem; font-weight: 600; letter-spacing: -0.01em;
+  padding: 0.35rem 0.65rem; border-radius: 0.55rem;
+  border: 1px solid rgba(17,17,17,.06);
+  box-shadow: 0 10px 24px -8px rgba(17,17,17,.28), inset 0 1px 0 rgba(255,255,255,.9);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.32s var(--ease-spring);
 }
-.hero-status__scroll { display: inline-flex; gap: 0.5rem; }
-@media (max-width: 640px) {
-  .hero-status { flex-wrap: wrap; gap: 0.5rem 1rem; }
-  .hero-status__scroll { width: 100%; }
+.partner-orb__tip::after {
+  content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: rgba(255,255,255,.96);
 }
+.partner-orb:hover .partner-orb__tip,
+.partner-orb:focus-visible .partner-orb__tip {
+  opacity: 1; transform: translate(-50%, 0) scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .partner-orb, .partner-orb::before, .partner-orb__tip { transition: none; }
+}
+
 
 /* Reveals — slower, softer */
-[data-reveal] { opacity: 0; transform: translateY(22px); }
+[data-reveal] { opacity: 0; transform: translateY(22px); transition: none; }
 [data-reveal].is-visible {
   opacity: 1; transform: none;
-  transition: opacity var(--dur-reveal) var(--ease-reveal), transform var(--dur-reveal) var(--ease-reveal);
+  transition: opacity var(--dur-reveal) var(--ease-smooth), transform var(--dur-reveal) var(--ease-smooth);
+  transition-delay: var(--reveal-delay, 0ms);
 }
 [data-reveal="scale"] { transform: translateY(14px) scale(0.97); }
 [data-reveal="fade"] { transform: none; }
 [data-reveal="fade"].is-visible { transform: none; }
 
-/* UI icons — unified chips + accent tint */
+/* UI icons — Lucide stroke + Simple Icons social via currentColor */
 .ui-icon {
   display: block; flex: none; width: 1em; height: 1em;
-  object-fit: contain;
 }
 .ui-icon--sm { width: 0.8125rem; height: 0.8125rem; }
 .ui-icon--md { width: 1rem; height: 1rem; }
 .ui-icon--lg { width: 1.2rem; height: 1.2rem; }
+.ui-icon--social { fill: currentColor; stroke: none; }
+/* Chevrons render thin/washed-out at default stroke-width — bolder + very slightly bigger so they
+   read with the same confidence as the rest of the icon set instead of looking like an afterthought. */
+.ui-icon--chevron { width: 0.95em; height: 0.95em; stroke-width: 2.75; }
 
 .icon-chip {
   display: inline-grid; place-items: center; flex: none;
-  width: 1.5rem; height: 1.5rem; border-radius: 0.42rem;
-  background: linear-gradient(165deg, #fff 0%, #f3f2f0 100%);
-  border: 1px solid rgba(17,17,17,.07);
-  box-shadow: var(--shadow-outset-sm);
+  width: 1.5rem; height: 1.5rem; border-radius: 0.5rem;
+  color: var(--tint-deep);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--tint) 32%, #fff),
+    color-mix(in srgb, var(--tint) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--tint) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px color-mix(in srgb, var(--tint) 45%, transparent);
+  transition: box-shadow 0.35s var(--ease-glass);
+}
+.icon-chip:hover,
+.icon-chip:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    0 3px 12px -2px color-mix(in srgb, var(--tint) 52%, transparent);
+}
+/* Shiny tile gloss — shared diagonal specular across icon-chip + service/exp row icons */
+.icon-chip,
+.service-row__icon,
+.exp-row__icon,
+.point-chip,
+.hero-card__arrow {
+  position: relative;
+  overflow: hidden;
+}
+.icon-chip::before,
+.service-row__icon::before,
+.exp-row__icon::before,
+.point-chip::before,
+.hero-card__arrow::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.72;
+  transition: opacity 0.35s var(--ease-glass);
+}
+.service-row:hover .service-row__icon::before,
+.exp-row:hover .exp-row__icon::before,
+.exp-row[aria-expanded="true"] .exp-row__icon::before,
+.point-chip:hover::before,
+.icon-chip:hover::before,
+.icon-chip:focus-within::before,
+.hero-card__arrow:hover::before {
+  opacity: 1;
 }
 .icon-chip--sm { width: 1.28rem; height: 1.28rem; border-radius: 0.36rem; }
 .icon-chip--md { width: 2.35rem; height: 2.35rem; border-radius: 0.72rem; }
-.icon-chip .ui-icon {
-  width: 0.78rem; height: 0.78rem;
-  filter: var(--icon-accent-filter);
-}
-.icon-chip--sm .ui-icon { width: 0.68rem; height: 0.68rem; }
-.icon-chip--md .ui-icon { width: 1.05rem; height: 1.05rem; filter: var(--icon-accent-filter); opacity: .88; }
+.icon-chip .ui-icon { width: 0.78rem; height: 0.78rem; }
+.icon-chip--sm .ui-icon { width: 0.75rem; height: 0.75rem; }
+.icon-chip--md .ui-icon { width: 1.05rem; height: 1.05rem; opacity: .88; }
 
-.icon-chip--muted .ui-icon {
-  filter: brightness(0) opacity(.48);
+.icon-chip--muted {
+  color: rgba(17,17,17,.5);
+  background: linear-gradient(145deg, #fff, #eeedea);
+  border-color: rgba(17,17,17,.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 1px 4px -2px rgba(17,17,17,.2);
 }
 .icon-chip--on-dark {
+  color: rgba(255,255,255,.92);
   background: linear-gradient(165deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 2px 8px rgba(0,0,0,.22), 0 1px 0 rgba(255,255,255,.12);
 }
-.icon-chip--on-dark .ui-icon {
-  filter: brightness(0) invert(1);
-  opacity: .92;
+/* Menu drawer nav icons — deliberately NOT the .icon-chip glossy-tile treatment used everywhere
+   else: a small colorful badge next to text set at clamp(2.25rem, 6vw, 3.75rem) read as a
+   disconnected, bolted-on afterthought (wrong scale, wrong material — a busy gradient chip next to
+   flat ghost-white type). Ghost-outline instead, sized to actually sit alongside the text scale, at
+   rest just a dim suggestion of the glyph — lights up to a bright copper glow in lockstep with the
+   label's own hover treatment below, so icon+text read as one responding unit, not badge+caption. */
+.nav-overlay__icon {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  color: rgba(255,255,255,.3);
+  transition: color 0.4s var(--ease-glass), filter 0.4s var(--ease-glass), transform 0.5s var(--ease-smooth);
+}
+.nav-overlay__icon .ui-icon {
+  width: clamp(1.5rem, 3.4vw, 2.35rem); height: clamp(1.5rem, 3.4vw, 2.35rem);
+  stroke-width: 1.5;
+}
+.nav-overlay__item:hover .nav-overlay__icon,
+.nav-overlay__item[aria-expanded="true"] .nav-overlay__icon {
+  color: var(--accent-bright);
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 60%, transparent));
+  transform: scale(1.1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-overlay__icon { transition: color 0.4s var(--ease-glass); }
+  .nav-overlay__item:hover .nav-overlay__icon,
+  .nav-overlay__item[aria-expanded="true"] .nav-overlay__icon { transform: none; }
 }
 
-.ui-icon--on-ink { filter: brightness(0) invert(1); opacity: .85; }
-.ui-icon--accent { filter: var(--icon-accent-filter); }
-.exp-toggle .ui-icon { filter: var(--icon-accent-filter); opacity: 0.88; }
-
+.pill-btn__icon { color: #fff; }
+.ui-icon--on-ink { color: #fff; opacity: .92; }
 /* Blur reveal — Spell UI-inspired word animation */
+/* Safari-smooth de-blur: NEVER animate `filter` — WebKit re-runs the blur shader every frame while
+   the radius changes, which no amount of layer promotion fixes. Instead each word carries a STATIC
+   pre-blurred copy (.brw__blur, painted once) stacked over the sharp text; the reveal crossfades the
+   blur copy out and slides the word up using ONLY opacity + transform, both compositor-only, so it's
+   genuinely smooth in every browser by construction. The sharp text stays in flow (sizes the box);
+   the blur copy is an absolutely-positioned aria-hidden overlay. */
 .blur-reveal__word {
-  display: inline-block;
+  display: inline-block; position: relative;
   opacity: 0;
-  filter: blur(12px);
   transform: translateY(10px);
   transition:
-    opacity var(--blur-dur, 0.55s) var(--ease-word),
-    filter var(--blur-dur, 0.55s) var(--ease-word),
-    transform var(--blur-dur, 0.55s) var(--ease-word);
+    opacity var(--blur-dur, 0.5s) var(--ease-word),
+    transform var(--blur-dur, 0.5s) var(--ease-word);
   transition-delay: var(--blur-delay, 0ms);
 }
-.blur-reveal.is-visible .blur-reveal__word {
+.blur-reveal.is-visible .blur-reveal__word { opacity: 1; transform: none; }
+.brw__blur {
+  position: absolute; left: 0; top: 0; pointer-events: none;
+  color: inherit; font: inherit; letter-spacing: inherit; white-space: pre;
+  filter: blur(8px);           /* static — painted once, never animated */
   opacity: 1;
-  filter: blur(0);
-  transform: none;
+  transition: opacity var(--blur-dur, 0.5s) var(--ease-word);
+  transition-delay: var(--blur-delay, 0ms);
+}
+.blur-reveal.is-visible .brw__blur { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  /* blur-reveal.js always builds word-spans (needed so highlight coloring applies under reduced
+     motion too, not just the fade-in) — this makes them appear instantly with no transition. */
+  .blur-reveal__word, .brw__blur { transition: none; }
+  .brw__blur { display: none; }
+}
+/* Keyword emphasis — weight only, no color and no shadow. Picked after two rounds of colored-text
+   treatments (a shadow-on-color emboss+glow, then inline chip badges) were both rejected; this is
+   the most disciplined reading of "one locked accent" — the phrase stands out purely through
+   contrast against the surrounding lighter body weight, nothing else competes with the ink color. */
+.blur-reveal__word--hl {
+  color: var(--ink); font-weight: 800;
 }
 
 .word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }
@@ -681,70 +1946,155 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   transition: opacity 0.85s var(--ease-word), transform 0.85s var(--ease-word);
 }
 
-/* Create band */
-.create-band { display: flex; flex-direction: column; gap: 0.75rem; padding: 2.5rem 0; }
-@media (min-width: 640px) { .create-band { flex-direction: row; gap: 1rem; } }
+/* Create band — parent stagger, one transition path (no animation/transition fight) */
+/* Single row at every width, incl. phones — was column-stacked (one tile per row) below 640px,
+   which read as 4 separate full-width buttons instead of the "Code · Ship · Scale" band it is on
+   larger screens. Sized down instead so all 4 keep fitting one line. */
+.create-band { display: flex; flex-direction: row; gap: 0.5rem; padding-block: 2.25rem; }
+@media (min-width: 640px) { .create-band { gap: 1rem; padding-block: 3.25rem; } }
 .create-band__tile {
-  flex: 1; display: grid; place-items: center; height: 6rem; border-radius: var(--radius-pill);
-  font-size: 1.875rem; font-weight: 500;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.35rem; height: 4.5rem; border-radius: var(--radius-pill);
+  font-size: 0.75rem; font-weight: 500;
+  backface-visibility: hidden;
   transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
 }
+.create-band[data-stagger] .create-band__tile {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.965);
+  transition: none;
+}
+.create-band[data-stagger].is-visible .create-band__tile {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition:
+    opacity var(--dur-pill-reveal) var(--ease-pill-reveal),
+    transform var(--dur-pill-reveal) var(--ease-pill-reveal);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.create-band[data-stagger].is-visible .create-band__tile:hover {
+  transform: translate3d(0, 0, 0) scale(1.03);
+  transition:
+    transform 0.45s var(--ease-glass),
+    box-shadow 0.45s var(--ease-glass);
+}
 @media (min-width: 640px) { .create-band__tile { height: 10rem; font-size: 2.25rem; } }
-.create-band__tile:hover { transform: scale(1.03); }
-.create-band__tile--light { background: var(--glass-bg-strong); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); color: var(--fg); }
+@media (max-width: 639px) {
+  .create-band__tile .icon-chip--md { width: 1.6rem; height: 1.6rem; border-radius: 0.5rem; }
+  .create-band__tile .icon-chip--md .ui-icon { width: 0.78rem; height: 0.78rem; }
+  .create-band__tile--dark .create-band__arrow-ico { width: 1.35rem; height: 1.35rem; }
+}
+/* "Code · Ship · [→] · Scale" — each tile a distinct brand hue (violet code → copper ship → ink →
+   teal scale) instead of one accent + two flat neutrals, with an embossed text-shadow for depth.
+   Code uses --c-violet specifically, not --primary — --primary now aliases --accent (copper) for
+   the sitewide single-accent system, and Code sitting right next to the copper Ship tile needs its
+   own distinct hue or the two tiles silently become the same color. */
+.create-band__tile { position: relative; overflow: hidden; }
+.create-band__tile::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.85;
+}
+.create-band__tile > * { position: relative; z-index: 2; }
+.create-band__tile--code {
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--c-violet) 22%, #fff),
+    color-mix(in srgb, var(--c-violet) 7%, #fff));
+  color: #4a48a8;
+  text-shadow: var(--text-sh-emboss);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 8px 22px -10px color-mix(in srgb, var(--c-violet) 35%, transparent);
+}
 .create-band__tile--accent {
   background: linear-gradient(145deg, var(--accent-dark) 0%, var(--accent) 42%, var(--accent-bright) 100%);
   color: #fff;
+  text-shadow: 0 1px 3px rgba(17,17,17,.22);
   box-shadow: 0 10px 28px rgba(151, 80, 31, .28), 0 2px 8px rgba(151, 80, 31, .18);
 }
 .create-band__tile--accent:hover {
   box-shadow: 0 16px 40px rgba(151, 80, 31, .34), 0 4px 12px rgba(151, 80, 31, .22);
 }
-.create-band__tile--dark { background: var(--ink); color: #fff; }
-.create-band__tile--ghost {
-  background: linear-gradient(135deg, rgba(47,107,255,.12), rgba(18,179,166,.10));
-  border: 1px solid rgba(255,255,255,.55); color: rgba(17,17,17,.42);
+.create-band__tile--dark { background: linear-gradient(165deg, #2b2b2b, #060606); color: #fff; }
+.create-band__tile--dark .create-band__arrow-ico { width: 2.25rem; height: 2.25rem; color: #fff; }
+.create-band__tile--scale {
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--teal) 26%, #fff),
+    color-mix(in srgb, var(--teal) 8%, #fff));
+  color: var(--teal-deep);
+  text-shadow: var(--text-sh-emboss);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 8px 22px -10px color-mix(in srgb, var(--teal) 30%, transparent);
+}
+/* Icon buttons — the exact "What I build" .service-row__icon shiny-tile recipe (shared gloss
+   ::before, gradient + border + layered shadow), just re-tinted per tile so each icon reads in its
+   own tile's hue instead of the section-default tint .icon-chip would otherwise pick up. Ship's
+   icon uses icon-chip--on-dark (translucent white) instead of a tint, since the tile itself is a
+   solid copper fill — a tinted-light chip would barely register against it. */
+.create-band__tile--code .create-band__icon { --tint: var(--c-violet); --tint-deep: #4a48a8; }
+.create-band__tile--scale .create-band__icon { --tint: var(--teal); --tint-deep: var(--teal-deep); }
+/* Icon pops a touch further than the tile's own scale(1.03) so it reads as its own responsive
+   element, not just along for the ride. */
+.create-band__icon { transition: transform 0.4s var(--ease-spring); }
+.create-band[data-stagger].is-visible .create-band__tile:hover .create-band__icon {
+  transform: scale(1.12) rotate(-4deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .create-band__icon { transition: none; }
+  .create-band[data-stagger].is-visible .create-band__tile:hover .create-band__icon { transform: none; }
 }
 
-/* Services rows — inside a glass panel */
+/* Services rows — Lumora hover-fill inside faux-frost panel */
 .services-list { padding: 0.5rem; }
 .service-row {
-  display: flex; align-items: center; gap: 1rem; border-radius: var(--radius-card-sm);
-  padding: 1.35rem 1rem; position: relative;
-  transition: background 0.4s var(--ease-spring), transform 0.4s var(--ease-spring);
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: center; gap: 0.75rem 1rem;
+  border-radius: var(--radius-card-sm);
+  padding: 1.35rem 1.25rem; position: relative;
+  transition: background 0.35s var(--ease-glass);
 }
 .service-row__icon {
   flex: none; width: 2.5rem; height: 2.5rem; display: grid; place-items: center;
-  border-radius: 0.75rem;
-  background: linear-gradient(165deg, #fff 0%, #f5f4f2 100%);
-  border: 1px solid rgba(17,17,17,.07);
-  box-shadow: var(--shadow-outset-sm);
+  border-radius: 0.85rem; color: var(--tint-deep);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--tint) 32%, #fff),
+    color-mix(in srgb, var(--tint) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--tint) 26%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 3px 10px -3px color-mix(in srgb, var(--tint) 42%, transparent);
+  transition: transform 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass);
 }
-.service-row__icon .ui-icon {
-  width: 1.05rem; height: 1.05rem;
-  filter: var(--icon-accent-filter);
+@media (hover: hover) and (pointer: fine) {
+  .service-row:hover .service-row__icon { transform: scale(1.06) translateX(4px); }
+}
+.service-row__icon .ui-icon { width: 1.05rem; height: 1.05rem; }
+.service-row__gutter {
+  flex: none; min-width: 2rem;
 }
 .service-row + .service-row::before {
   content: ""; position: absolute; top: 0; left: 1rem; right: 1rem; height: 1px;
   background: rgba(24,30,56,.08);
 }
-.service-row:hover {
-  background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 10%, rgba(255,255,255,.5)), rgba(255,255,255,.35));
-  transform: translateX(4px);
+@media (hover: hover) and (pointer: fine) {
+  .service-row:hover { background: var(--surface); }
+  .service-row:hover .service-row__body { transform: translateX(6px); }
+  .service-row:hover .service-row__title { color: var(--tint-deep); }
+  .service-row:hover .service-row__arrow { opacity: 1; transform: translateX(5px); }
 }
 .service-row:hover::before, .service-row:hover + .service-row::before { opacity: 0; }
-.service-row__n {
-  flex: none; font-size: 0.8rem; font-weight: 600; color: var(--accent);
-  font-variant-numeric: tabular-nums; min-width: 2rem;
+.service-row__body {
+  min-width: 0;
+  transition: transform 0.35s var(--ease-glass);
 }
-.service-row__body { flex: 1; min-width: 0; }
-.service-row__title { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
-.service-row__desc { margin-top: 0.35rem; font-size: 0.875rem; color: rgba(17,17,17,.62); line-height: 1.5; }
+.service-row__title { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; transition: color 0.3s var(--ease-glass); }
+.service-row__desc { margin-top: 0.35rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); line-height: 1.5; }
 .service-row__arrow {
-  flex: none; opacity: 0; transform: translateX(-8px);
-  font-size: 1.25rem; color: var(--accent); transition: opacity 0.3s, transform 0.3s var(--ease-spring);
+  flex: none; opacity: 0; transform: translateX(-6px);
+  font-size: 1.25rem; color: var(--tint-deep);
+  transition: opacity 0.28s ease, transform 0.32s var(--ease-glass);
 }
-.service-row:hover .service-row__arrow { opacity: 1; transform: none; }
 
 /* Stats panel */
 .stats-panel {
@@ -752,8 +2102,8 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   border-radius: var(--radius-card); color: #fff;
   padding: 3rem 1.5rem;
   background:
-    radial-gradient(40rem 24rem at 12% -10%, rgba(124,92,255,.42), transparent 60%),
-    radial-gradient(38rem 24rem at 90% 120%, rgba(18,179,166,.36), transparent 60%),
+    radial-gradient(40rem 24rem at 12% -10%, rgba(110,108,240,.42), transparent 60%),
+    radial-gradient(38rem 24rem at 90% 120%, rgba(63,208,224,.34), transparent 60%),
     radial-gradient(30rem 20rem at 70% 20%, rgba(207,128,71,.22), transparent 55%),
     var(--ink);
   border: 1px solid rgba(255,255,255,.1);
@@ -761,21 +2111,46 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
 }
 @media (min-width: 640px) { .stats-panel { padding: 4rem 2.5rem; } }
 .stats-panel__eyebrow {
-  color: rgba(255,255,255,.72) !important;
-  text-shadow: none;
+  color: rgba(255,255,255,.72);
+  text-shadow: var(--text-sh-dark);
 }
 .stats-panel__eyebrow-dot {
-  background: rgba(255,255,255,.62) !important;
+  background: rgba(255,255,255,.62);
 }
 .stats-panel__title {
   color: #fff;
-  text-shadow: none;
+  text-shadow: var(--text-sh-dark);
 }
-.stats-panel [data-count] {
-  color: #fff;
+.stats-panel [data-count],
+.stats-panel__value {
+  font-size: clamp(2.25rem, 3.5vw + 1rem, 3rem);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.45),
+    0 2px 8px rgba(0,0,0,.28);
 }
 .stats-panel__icon { margin-bottom: 0.85rem; }
+.stats-panel li[data-ci] [data-count],
+.stats-panel li[data-ci] .stats-panel__value {
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.45),
+    0 2px 8px rgba(0,0,0,.28),
+    0 0 24px color-mix(in srgb, var(--tint) 22%, transparent);
+}
+.stats-panel li[data-ci] .icon-chip--on-dark {
+  color: var(--tint);
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--tint) 28%, transparent),
+    color-mix(in srgb, var(--tint) 10%, transparent));
+  border-color: color-mix(in srgb, var(--tint) 32%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 2px 12px color-mix(in srgb, var(--tint) 38%, transparent);
+}
 .skills-panel__head {
   display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.25rem;
 }
@@ -785,97 +2160,310 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em;
   text-transform: uppercase; color: rgba(17,17,17,.48);
 }
-.hero-status .icon-chip--sm { margin-right: 0.1rem; }
 .role-tags__label .icon-chip--sm { margin-right: 0.15rem; }
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .stats-panel [data-count] {
-    background: linear-gradient(125deg, #fff 0%, var(--c-cyan) 48%, var(--accent-bright) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-}
-.stats-panel li > p { color: rgba(255,255,255,.58); }
-
-/* Experience — glass timeline */
-.exp-timeline { position: relative; display: flex; flex-direction: column; gap: 1.5rem; }
-@media (min-width: 768px) {
-  .exp-timeline { padding-left: 2.5rem; }
-  .exp-timeline::before {
-    content: ""; position: absolute; left: 0.6rem; top: 0.5rem; bottom: 0.5rem; width: 2px;
-    background: linear-gradient(180deg, var(--c-violet), var(--c-teal) 55%, var(--accent-bright));
-    opacity: .35; border-radius: 2px;
-  }
+.stats-panel li > p {
+  color: rgba(255,255,255,.58);
+  text-shadow: var(--text-sh-dark);
 }
 
-.exp-company { position: relative; overflow: visible; padding: 1.6rem 1.6rem 1.75rem; }
-@media (min-width: 768px) {
-  .exp-company::before {
-    content: ""; position: absolute; left: -2.25rem; top: 2rem;
-    width: 0.85rem; height: 0.85rem; border-radius: 50%;
-    background: #fff; border: 2px solid var(--accent);
-    box-shadow: 0 0 0 4px rgba(177,95,44,.14);
-  }
+/* Experience — services-style list inside glass panel */
+.exp-list { padding: 0.35rem; }
+.exp-list.glass-panel {
+  contain: none; overflow: visible;
+  /* This panel resizes every frame of the accordion expand, and WebKit repaints its drop shadow on
+     each resize — the cost scales with the shadow's BLUR radius, so a large soft glass shadow is the
+     expensive part. Use a tight, small-blur lift instead (kept the tinted rim highlight): the panel
+     still reads as raised, but the per-frame shadow repaint is a fraction of the cost. */
+  box-shadow: 0 5px 14px -9px rgba(24,30,56,.13), var(--glass-highlight);
 }
-.exp-company__head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 1.25rem; }
-.exp-company__logo {
-  flex: none; width: 3rem; height: 3rem; display: grid; place-items: center;
-  border-radius: 0.9rem; background: var(--glass-bg-strong);
-  border: 1px solid var(--glass-border); box-shadow: var(--glass-highlight);
+.exp-group { padding: 0.35rem 0.35rem 0.5rem; }
+.exp-group--sep {
+  margin-top: 0.35rem; padding-top: 0.85rem;
+  border-top: 1px solid rgba(24,30,56,.08);
 }
-.exp-company__logo img { width: 1.7rem; height: 1.7rem; object-fit: contain; }
-
-.exp-role {
-  position: relative; border-radius: var(--radius-card-sm);
-  background: rgba(255,255,255,.42); border: 1px solid rgba(255,255,255,.6);
-  padding: 1.1rem 1.15rem; box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
-  transition: background 0.35s var(--ease-spring), border-color 0.35s var(--ease-spring);
+.exp-group__head {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.85rem 1rem 0.65rem;
 }
-.exp-role + .exp-role { margin-top: 0.85rem; }
-.exp-role:hover { background: rgba(255,255,255,.6); border-color: rgba(255,255,255,.85); }
-.exp-role__period {
+/* Logo + name/location wrapped in a real link to the company's site — flex:1/min-width:0 so it
+   still behaves exactly like the plain div it replaced as a flex child of .exp-group__head
+   (the tenure badge stays a separate sibling, outside the link, since it's its own popover
+   trigger). No underline-on-hover (reads as a stray typo-link inside a dense list); the
+   affordance is the logo lifting + the name recoloring to the section tint instead. */
+.exp-group__link {
+  display: flex; align-items: center; gap: 0.9rem;
+  flex: 1; min-width: 0;
+  color: inherit; text-decoration: none;
+}
+.exp-group__link:hover .exp-group__name,
+.exp-group__link:focus-visible .exp-group__name { color: var(--tint-deep); }
+.exp-group__logo {
+  width: 2.75rem; height: 2.75rem;
+  border: 1px solid rgba(255,255,255,.95);
+  transition: transform 0.28s var(--ease-tile);
+}
+.exp-group__link:hover .exp-group__logo,
+.exp-group__link:focus-visible .exp-group__logo { transform: scale(1.12); }
+.exp-group__logo img { width: 1.6rem; height: 1.6rem; object-fit: contain; }
+.exp-group__meta { flex: 1; min-width: 0; }
+.exp-group__name { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; transition: color 0.24s var(--ease-tile); }
+.exp-group__loc { margin-top: 0.15rem; font-size: 0.8rem; color: rgba(17,17,17,.52); }
+.exp-group__tenure { flex: none; }
+.exp-group__tenure-badge {
+  --chip: var(--tint);
   display: inline-flex; align-items: center; border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--accent) 12%, rgba(255,255,255,.6));
-  color: var(--accent-dark); padding: 0.15rem 0.65rem;
-  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.01em; white-space: nowrap;
-  cursor: help; outline: none;
-  transition: background 0.2s ease, transform 0.2s ease;
+  padding: 0.26rem 0.72rem;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap;
+  color: color-mix(in srgb, var(--chip) 80%, #0a0a0a);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.18) 55%, transparent 80%),
+    linear-gradient(180deg, color-mix(in srgb, var(--chip) 22%, #fff), color-mix(in srgb, var(--chip) 10%, #fff));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    0 2px 8px -3px color-mix(in srgb, var(--chip) 46%, transparent);
+  cursor: default; outline: none;
+  transition: transform 0.24s var(--ease-tile), box-shadow 0.24s var(--ease-tile);
 }
-.exp-role__period:hover,
-.popover:focus-within .exp-role__period {
-  background: color-mix(in srgb, var(--accent) 18%, rgba(255,255,255,.72));
+.exp-group__tenure:hover .exp-group__tenure-badge,
+.exp-group__tenure:focus-within .exp-group__tenure-badge {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 7px 16px -5px color-mix(in srgb, var(--chip) 48%, transparent);
 }
+
+.exp-group__roles { list-style: none; }
+.exp-item { position: relative; }
+.exp-row {
+  width: 100%; text-align: left;
+  display: flex; align-items: center; gap: 0.85rem;
+  border-radius: var(--radius-card-sm);
+  padding: 1.2rem 1rem; position: relative;
+  transition: background 0.5s var(--ease-glass), transform 0.5s var(--ease-glass);
+}
+.exp-row__gutter {
+  flex: none; min-width: 1.75rem;
+}
+.exp-row__icon {
+  flex: none; width: 2.35rem; height: 2.35rem; display: grid; place-items: center;
+  border-radius: 0.8rem; color: var(--tint-deep);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--tint) 32%, #fff),
+    color-mix(in srgb, var(--tint) 12%, #fff));
+  border: 1px solid color-mix(in srgb, var(--tint) 26%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 3px 10px -3px color-mix(in srgb, var(--tint) 42%, transparent);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-glass);
+}
+.exp-row__icon .ui-icon { width: 1rem; height: 1rem; }
+/* Independent pop on top of the row's own translateX(4px) — otherwise the icon just rides along
+   with the row instead of feeling like its own responsive element. */
+.exp-row:hover .exp-row__icon,
+.exp-row[aria-expanded="true"] .exp-row__icon {
+  transform: scale(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 5px 14px -4px color-mix(in srgb, var(--tint) 52%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .exp-row__icon { transition: box-shadow 0.35s var(--ease-glass); }
+  .exp-row:hover .exp-row__icon,
+  .exp-row[aria-expanded="true"] .exp-row__icon { transform: none; }
+}
+.exp-item + .exp-item .exp-row::before {
+  content: ""; position: absolute; top: 0; left: 1rem; right: 1rem; height: 1px;
+  background: rgba(24,30,56,.08);
+}
+.exp-row:hover,
+.exp-row[aria-expanded="true"] {
+  background: linear-gradient(100deg, color-mix(in srgb, var(--tint) 12%, rgba(255,255,255,.5)), rgba(255,255,255,.35));
+  transform: translateX(4px);
+}
+.exp-row:hover::before,
+.exp-row[aria-expanded="true"]::before,
+.exp-row:hover + .exp-row::before,
+.exp-row[aria-expanded="true"] + .exp-row::before { opacity: 0; }
+.exp-row__body { flex: 1; min-width: 0; }
+.exp-row__top {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem;
+}
+.exp-row__badges {
+  display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+  gap: 0.35rem;
+}
+.exp-row__type {
+  --chip: var(--accent);
+  display: inline-flex; align-items: center; gap: 0.34rem;
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.62rem 0.2rem 0.4rem;
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; white-space: nowrap;
+  border: none;
+  color: color-mix(in srgb, var(--chip) 74%, #0a0a0a);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.15) 55%, transparent 78%),
+    linear-gradient(180deg, color-mix(in srgb, var(--chip) 20%, #fff), color-mix(in srgb, var(--chip) 9%, #fff));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    0 2px 7px -3px color-mix(in srgb, var(--chip) 45%, transparent);
+}
+.exp-row__type-icon {
+  display: inline-grid; place-items: center;
+  width: 0.95rem; height: 0.95rem; flex: none;
+}
+.exp-row__type-icon .ui-icon { width: 0.72rem; height: 0.72rem; }
+.exp-row__type--contract { --chip: #0a84ff; }
+.exp-row__type--permanent { --chip: #12a8c4; }
+.exp-row__type-icon { color: var(--chip); }
+.exp-row__title { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.3s var(--ease-glass); }
+.exp-row:hover .exp-row__title,
+.exp-row[aria-expanded="true"] .exp-row__title { color: var(--tint-deep); }
+.exp-row__period {
+  display: inline-flex; align-items: center; border-radius: var(--radius-pill);
+  color: rgba(17,17,17,.64);
+  padding: 0.16rem 0.6rem; font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.01em; white-space: nowrap; cursor: default; outline: none;
+  border: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.45));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 1px 5px -2px rgba(17,17,17,.16);
+  transition: color 0.24s ease, box-shadow 0.24s ease;
+}
+.exp-row__period:hover,
+.popover:focus-within .exp-row__period {
+  color: rgba(17,17,17,.82);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 3px 9px -3px rgba(17,17,17,.22);
+}
+.exp-row__desc {
+  margin-top: 0.4rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); line-height: 1.5;
+}
+.exp-row__arrow {
+  flex: none; opacity: 0.45; transform: translateX(-4px);
+  transition: opacity 0.3s, transform 0.3s var(--ease-spring);
+}
+.exp-row:hover .exp-row__arrow,
+.exp-row[aria-expanded="true"] .exp-row__arrow { opacity: 1; transform: none; }
+.exp-row__chev { color: var(--accent); opacity: 0.75; transition: transform 0.2s var(--ease-spring), opacity 0.2s ease; }
+.exp-row__chev.is-open { transform: rotate(180deg); opacity: 1; }
+.exp-row:hover .exp-row__chev,
+.exp-row[aria-expanded="true"] .exp-row__chev { opacity: 1; }
+
+.exp-details {
+  overflow: hidden; height: 0;
+  contain: layout style;
+}
+.exp-details.is-open:not([style*="height"]) { height: auto; overflow: visible; }
+.exp-details__inner {
+  min-height: 0;
+  padding: 0 1rem 1.15rem 4.75rem;
+}
+.exp-details__list {
+  padding-top: 0.25rem; font-size: 0.9375rem; color: rgba(17,17,17,.72); line-height: 1.65;
+}
+/* Term/keyword highlight in role summaries + detail bullets (site.experienceHighlights in
+   portfolio.json, matched + wrapped by data.js's highlightExp()) — weight only, no color/shadow,
+   same restrained treatment already settled on for the About statement's own highlighted phrases:
+   emphasis purely from contrast against the surrounding lighter-weight body text. */
+.exp-highlight { font-weight: 650; color: var(--ink); }
+.exp-details__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+.point-chip {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-top: 0.12em;
+  border-radius: 0.38rem;
+  color: var(--tint-deep);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--tint) 34%, #fff),
+    color-mix(in srgb, var(--tint) 14%, var(--surface)));
+  border: 1px solid color-mix(in srgb, var(--tint) 28%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.78),
+    0 2px 8px -2px color-mix(in srgb, var(--tint) 44%, transparent);
+}
+.exp-item[data-ci] .point-chip { color: var(--tint-deep); }
+.point-chip .ui-icon,
+.point-chip svg {
+  width: 0.72rem;
+  height: 0.72rem;
+  display: block;
+  flex: none;
+  stroke: currentColor;
+  stroke-width: 2.75;
+}
+.exp-details .role-tags { margin-top: 0.85rem; }
+
+#experience .exp-list { margin-top: 0.25rem; }
+
+@media (max-width: 639px) {
+  .exp-group__head { flex-wrap: wrap; }
+  .exp-group__tenure { width: 100%; padding-left: 3.65rem; }
+  .exp-row__gutter { display: none; }
+  .exp-details__inner { padding-left: 1rem; }
+}
+
 
 /* Popover — tenure tooltips & reusable triggers */
 .popover { position: relative; display: inline-flex; vertical-align: middle; }
-.popover__trigger { cursor: help; }
+.popover:hover,
+.popover:focus-within { z-index: 9999; }
+.popover__trigger { cursor: default; }
 .popover__panel {
-  position: absolute; z-index: 30; left: 50%; bottom: calc(100% + 0.5rem);
+  position: absolute; z-index: 9999; left: 50%; bottom: calc(100% + 0.5rem);
   min-width: 7.5rem; padding: 0.45rem 0.7rem;
   display: flex; flex-direction: column; gap: 0.15rem; align-items: center;
   border-radius: 0.55rem;
-  background: var(--ink); color: #fff;
+  background: #fff; color: var(--ink);
   font-size: 0.7rem; font-weight: 600; line-height: 1.3;
   white-space: nowrap; text-align: center;
-  box-shadow: 0 10px 28px rgba(10,10,10,.22), inset 0 1px 0 rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.95);
+  box-shadow:
+    0 12px 32px rgba(10,10,10,.16),
+    0 2px 8px rgba(10,10,10,.08),
+    inset 0 1px 0 rgba(255,255,255,.95);
   opacity: 0; visibility: hidden; pointer-events: none;
   transform: translateX(-50%) translateY(4px);
   transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
 }
 .popover__meta {
-  font-size: 0.62rem; font-weight: 500; color: rgba(255,255,255,.55);
+  font-size: 0.62rem; font-weight: 500; color: rgba(17,17,17,.55);
   letter-spacing: 0.02em; text-transform: uppercase;
 }
 .popover__panel::after {
   content: ""; position: absolute; top: 100%; left: 50%;
   transform: translateX(-50%);
-  border: 5px solid transparent; border-top-color: var(--ink);
+  border: 5px solid transparent; border-top-color: #fff;
+  filter: drop-shadow(0 2px 2px rgba(10,10,10,.06));
 }
 .popover:hover .popover__panel,
 .popover:focus-within .popover__panel {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: translateX(-50%) translateY(0);
 }
+/* z-index:9999 on the panel only wins within its own LOCAL stacking context — an ancestor with
+   position:relative/absolute + its own explicit z-index (not "auto") starts a new one, and the
+   panel's z-index can never climb out of it, however high. .exp-group picks up exactly that from
+   the generic .glass-panel > * elevation rule (position:relative; z-index:1), and .hero__grid
+   carries its own z-index:20 for the hero's layered background — both lower than
+   .site-header's z-index:50, so a popover/tooltip inside either would render *behind* the sticky
+   header once scrolled underneath it (confirmed via elementFromPoint, not assumed). Bumping the
+   stacking-context-creating ancestor itself above the header — only while something inside it is
+   actually being interacted with — fixes it at the source instead of chasing ever-higher z-index
+   values that can never actually escape. */
+.exp-group:has(.popover:hover),
+.exp-group:has(.popover:focus-within) { z-index: 200; }
+.hero__grid:has(.partner-orb:hover),
+.hero__grid:has(.partner-orb:focus-within) { z-index: 200; }
 
 /* Expand-on-hover label (pills + view-details button) */
 .pill-expand__label {
@@ -889,62 +2477,9 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
 .pill-expand:hover .pill-expand__label,
 .pill-expand:focus-visible .pill-expand__label,
 .pill-expand[aria-expanded="true"] .pill-expand__label {
-  transition-delay: 0.06s, 0.14s, 0.06s;
+  transition-delay: 0.1s, 0.2s, 0.1s;
 }
 
-.exp-toggle {
-  position: relative; overflow: hidden; isolation: isolate;
-  display: inline-flex; align-items: center;
-  margin-top: 0.9rem;
-  padding: 0.46rem 0.52rem;
-  gap: 0;
-  border-radius: var(--radius-pill);
-  font-size: 0.8rem; font-weight: 500; color: var(--fg);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.72) 0%, transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,.88) 0%, rgba(247,246,244,.78) 100%);
-  border: 1px solid rgba(17,17,17,.07);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.92), var(--shadow-outset-sm);
-  backdrop-filter: blur(10px) saturate(155%);
-  -webkit-backdrop-filter: blur(10px) saturate(155%);
-  cursor: pointer;
-  transition:
-    transform 0.2s var(--ease-glass),
-    box-shadow 0.2s var(--ease-glass),
-    border-color 0.2s var(--ease-glass),
-    padding var(--dur-pill-expand) var(--ease-pill-expand),
-    gap var(--dur-pill-expand) var(--ease-pill-expand);
-}
-.exp-toggle:hover,
-.exp-toggle:focus-visible,
-.exp-toggle[aria-expanded="true"] {
-  padding: 0.46rem 0.9rem 0.46rem 1rem;
-  gap: 0.4rem;
-}
-.exp-toggle:hover .pill-expand__label,
-.exp-toggle:focus-visible .pill-expand__label,
-.exp-toggle[aria-expanded="true"] .pill-expand__label {
-  max-width: 9rem; opacity: 1; padding-right: 0.2rem;
-}
-.exp-toggle:hover {
-  transform: translateY(-1px);
-  border-color: rgba(17,17,17,.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.98), var(--shadow-outset-hover);
-}
-.exp-toggle__chev {
-  flex: none;
-  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
-  transform-origin: center;
-}
-.exp-toggle__chev.is-open { transform: rotate(180deg); }
-.exp-details {
-  height: 0; overflow: hidden;
-  contain: layout style;
-}
-.exp-details.is-open:not([style*="height"]) { height: auto; overflow: visible; }
-.exp-details__inner { min-height: 0; }
-.exp-details ul { padding-top: 0.85rem; font-size: 0.86rem; color: rgba(17,17,17,.72); line-height: 1.65; }
-.exp-details li { margin-bottom: 0.5rem; list-style: disc; margin-left: 1.25rem; }
 
 /* Brand pills — single clipped outset surface (icon + label share one pill) */
 .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; }
@@ -956,175 +2491,231 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   position: relative; overflow: hidden; isolation: isolate;
   display: inline-flex; align-items: center;
   border-radius: var(--radius-pill);
-  padding: 0.2rem;
+  padding: 0.3rem;
   gap: 0;
+  /* Clean glossy glass tile. The brand tint is deliberately LOW (15% / 5%): many tech brand hexes
+     are near-black (Cursor/Express/Copilot) or hot reds (Laravel/Redis/Git), which turn muddy or
+     washed at a heavy tint — kept subtle, the tile stays clean and the colourful logo carries the
+     identity. Shine = a strong diagonal specular streak + a bright inset top-light here, plus a
+     "wet" top catchlight in ::after and the animated sheen in ::before. */
   background:
-    linear-gradient(180deg, rgba(255,255,255,.78) 0%, transparent 40%),
-    radial-gradient(130% 160% at 8% 50%, color-mix(in srgb, var(--brand) 13%, var(--pill-top)), transparent 58%),
-    linear-gradient(180deg, var(--pill-top) 0%, var(--pill-bot) 100%);
-  border: none;
+    linear-gradient(125deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.34) 27%, transparent 52%),
+    linear-gradient(160deg, color-mix(in srgb, var(--brand) 16%, #fff), color-mix(in srgb, var(--brand) 6%, #fff));
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, rgba(255,255,255,.5));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.98),
-    inset 0 -1px 0 rgba(17,17,17,.03),
-    var(--shadow-outset-sm);
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 2px 8px -3px color-mix(in srgb, var(--brand) 34%, transparent),
+    0 1px 2px rgba(17,17,17,.05);
   cursor: default; outline: none;
+  top: 0;
+  /* Same Tahoe deceleration + duration as the .icon-chip tiles, so the pills settle identically. */
   transition:
-    transform 0.35s var(--ease-glass),
-    box-shadow 0.35s var(--ease-glass),
-    padding var(--dur-pill-expand) var(--ease-pill-expand);
+    top 0.32s var(--ease-glass),
+    box-shadow 0.32s var(--ease-glass),
+    border-color 0.32s var(--ease-glass);
 }
-.brand-pill--sm { padding: 0.18rem; }
-.brand-pill--ai {
-  --pill-top: #fffefb;
-  --pill-bot: #f9f7f4;
-}
+.brand-pill--sm { padding: 0.26rem; }
+.brand-pill--stack { --pill-top: #f8fafc; --pill-bot: #eef2f6; }
+.brand-pill--ai { --pill-top: #fffefb; --pill-bot: #f9f7f4; }
+/* Experience stack/AI pills sit in a denser accordion context — a touch smaller than the Skills
+   tiles (which keep the full 2.1rem badge). */
+.brand-pill--stack, .brand-pill--ai { padding: 0.26rem; }
+.brand-pill--stack .brand-pill__badge, .brand-pill--ai .brand-pill__badge { width: 1.72rem; height: 1.72rem; }
+.brand-pill--stack .brand-pill__badge img, .brand-pill--ai .brand-pill__badge img { width: 1.1rem; height: 1.1rem; }
+.brand-pill--stack .brand-pill__mono, .brand-pill--ai .brand-pill__mono { font-size: 0.6rem; }
 
+/* sheen sweep across the pill surface, below the icon (z-index 0) */
 .brand-pill::before {
-  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(115deg, transparent 22%, rgba(255,255,255,.95) 48%, transparent 74%);
+  background: linear-gradient(115deg, transparent 14%, rgba(255,255,255,.55) 48%, transparent 84%);
   transform: translateX(-135%);
-  transition: transform 0.75s var(--ease-glass);
-  opacity: 0.9;
+  transition: transform 0.8s var(--ease-glass);
 }
 .brand-pill:hover::before,
-.brand-pill:focus-visible::before { transform: translateX(135%); }
+.brand-pill:focus-visible::before,
+.brand-pill.is-open::before { transform: translateX(135%); }
+
+/* "Wet glass" top catchlight — a bright curved highlight across the upper edge that reads as a
+   polished/glossy surface. z-index 0 keeps it on the surface, under the icon (badge is z-index 1),
+   and it fades out well before the vertical centre so it never washes the centred logo. */
+.brand-pill::after {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(115% 78% at 50% -24%, rgba(255,255,255,.78), rgba(255,255,255,.1) 46%, transparent 60%);
+}
 
 .brand-pill:hover,
-.brand-pill:focus-visible {
-  padding-right: 0.72rem;
-  transform: translateY(-2px);
+.brand-pill:focus-visible,
+.brand-pill.is-open {
+  /* Active/open polish is keyed to .is-open (JS-controlled by pillFlip), NOT only :hover — a pill that
+     wraps to a new line loses Chrome's :hover but stays .is-open, so it keeps its full styling. The lift
+     uses `top` (the pill is position:relative) instead of a transform, leaving `transform` entirely to
+     the FLIP so the pill can glide if it wraps. z-index keeps the active pill above sliding neighbours. */
+  z-index: 2;
+  top: -2px;
+  /* Exactly the .icon-chip hover feel: the brand rim brightens and the shadow deepens into a soft
+     brand glow (a lift, no crisp edge — NOT --shadow-outset-hover, whose zero-blur white layer drew
+     the old "bottom border"). Combined with the sheen sweep (::before) this reads as the tile
+     lighting up on hover, like the icon-chips beside the labels. */
+  border-color: color-mix(in srgb, var(--brand) 36%, rgba(255,255,255,.35));
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(17,17,17,.04),
-    0 6px 18px color-mix(in srgb, var(--brand) 12%, transparent),
-    var(--shadow-outset-hover);
-}
-.brand-pill:focus-visible {
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent),
-    0 6px 18px color-mix(in srgb, var(--brand) 12%, transparent),
-    var(--shadow-outset-hover);
-}
-.brand-pill--sm:hover,
-.brand-pill--sm:focus-visible { padding-right: 0.62rem; }
-
-.brand-pill:hover .brand-pill__label,
-.brand-pill:focus-visible .brand-pill__label {
-  max-width: 14rem;
-  opacity: 1;
-  padding-left: 0.36rem;
-  transition-delay: 0.06s, 0.14s, 0.06s;
-}
-.brand-pill--sm:hover .brand-pill__label,
-.brand-pill--sm:focus-visible .brand-pill__label {
-  max-width: 12rem;
-  padding-left: 0.32rem;
+    0 7px 18px -6px color-mix(in srgb, var(--brand) 46%, transparent),
+    0 2px 5px rgba(17,17,17,.06);
 }
 
 .brand-pill:active {
-  transform: translateY(0);
+  top: 0;
   transition-duration: 0.12s;
 }
 
 .brand-pill__badge {
   position: relative; z-index: 1; flex: none;
-  width: 1.75rem; height: 1.75rem; display: grid; place-items: center;
-  margin: 0;
-  border-radius: calc(var(--radius-pill) - 0.24rem);
-  background: transparent;
+  width: 2.1rem; height: 2.1rem; aspect-ratio: 1;
+  display: grid; place-items: center; margin: 0;
+  color: var(--brand);
+  /* Transparent — the pill itself is the shiny surface, so the icon merges seamlessly into it with
+     no inner coin, ring or border. */
+  background: none;
   border: none;
   box-shadow: none;
 }
 .brand-pill--sm .brand-pill__badge {
-  width: 1.5rem; height: 1.5rem;
-  border-radius: calc(var(--radius-pill) - 0.2rem);
+  width: 1.7rem; height: 1.7rem;
 }
 .brand-pill__badge img {
-  width: 0.9rem; height: 0.9rem; object-fit: contain; filter: none;
-  transition: transform 0.35s var(--ease-glass);
+  width: 1.34rem; height: 1.34rem; object-fit: contain;
+  transition: transform 0.3s var(--ease-glass), filter 0.3s ease;
 }
-.brand-pill--sm .brand-pill__badge img { width: 0.78rem; height: 0.78rem; }
+.brand-pill--sm .brand-pill__badge img { width: 1.12rem; height: 1.12rem; }
 
-.brand-pill__badge:has(.brand-pill__mono) {
-  border-radius: var(--radius-pill);
-  background: linear-gradient(165deg,
-    color-mix(in srgb, var(--brand) 68%, #fff 32%),
-    var(--brand) 54%,
-    color-mix(in srgb, var(--brand) 86%, #000 14%));
-  box-shadow: none;
-}
+/* Lettermark tiles (no logo image) sit directly on the pill too — a dark-brand glyph on the pill's
+   own brand-tinted surface, so they're just as seamless as the image icons (no separate coin). */
 .brand-pill__mono {
-  font-size: 0.66rem; font-weight: 800; line-height: 1; color: #fff;
+  font-size: 0.74rem; font-weight: 800; line-height: 1;
+  color: color-mix(in srgb, var(--brand) 62%, #1c1c1c);
 }
 .brand-pill--sm .brand-pill__mono { font-size: 0.56rem; }
 
 .brand-pill:hover .brand-pill__badge img,
-.brand-pill:focus-visible .brand-pill__badge img {
+.brand-pill:focus-visible .brand-pill__badge img,
+.brand-pill.is-open .brand-pill__badge img {
   transform: scale(1.05);
+  filter: brightness(1.05) saturate(1.1);
 }
+.brand-pill:hover .brand-pill__label-in,
+.brand-pill:focus-visible .brand-pill__label-in,
+.brand-pill.is-open .brand-pill__label-in { color: #0a0a0a; text-shadow: none; }
 
+/* Icon→label reveal, done IN FLOW so the pill genuinely takes the space its label needs — no absolute
+   overlay painting over the neighbour (which left an overlap + a lingering box-shadow). The label is a
+   grid column that is 0-width when collapsed and full-width when the pill is .is-open. The width flips
+   INSTANTLY (no width transition), so the flex row reflows to its final layout in a single frame; then
+   motion.js' pillFlip() smooths that reflow with FLIP — each sibling is inverted to its old position
+   and glides to its new one over one shared duration, so neighbours slide aside / wrap to the next line
+   smoothly and return cleanly on un-hover, and nothing ever overlaps in the resting state. The label
+   text fades + slides in on top of the already-reserved width. Touch / reduced-motion force the label
+   open in flow (no JS, no motion) below. */
 .brand-pill__label {
-  position: relative; z-index: 1;
-  max-width: 0; opacity: 0; overflow: hidden;
-  padding-left: 0;
+  display: grid;
+  grid-template-columns: 0fr;            /* collapsed: label column collapses to zero width */
+  overflow: hidden;
+}
+.brand-pill.is-open .brand-pill__label { grid-template-columns: 1fr; }
+.brand-pill__label-tx {
+  display: block; overflow: hidden; min-width: 0;
+}
+.brand-pill__label-in {
+  display: block; white-space: nowrap;
+  padding: 0 0.62rem 0 0.4rem;
   font-size: 0.8125rem; font-weight: 600; color: #14161c;
   letter-spacing: -0.015em; line-height: 1.2;
-  white-space: nowrap;
+  opacity: 0; transform: translateX(-5px);
   transition:
-    max-width var(--dur-pill-expand) var(--ease-pill-expand),
-    opacity calc(var(--dur-pill-expand) * 0.85) var(--ease-pill-expand) 0.1s,
-    padding var(--dur-pill-expand) var(--ease-pill-expand);
+    opacity 0.34s ease,
+    transform 0.42s var(--ease-glass),
+    color 0.24s ease;
 }
-.brand-pill--sm .brand-pill__label {
-  font-size: 0.76rem; font-weight: 600;
+.brand-pill--sm .brand-pill__label-in {
+  font-size: 0.76rem; padding: 0 0.55rem 0 0.34rem;
 }
-.brand-pill:not(:hover):not(:focus-visible) .brand-pill__label,
+.brand-pill.is-open .brand-pill__label-in {
+  opacity: 1; transform: none;
+}
 .pill-expand:not(:hover):not(:focus-visible):not([aria-expanded="true"]) .pill-expand__label {
-  transition-delay: 0s, 0.12s, 0s;
+  transition-delay: 0s, 0.18s, 0s;
 }
 
+/* soft brand glow BEHIND the icon (z-index 0) — shine without washing the icon out */
 .brand-pill.spec::after {
-  z-index: 2;
-  background: radial-gradient(8rem 5rem at var(--px,50%) var(--py,0%),
-              rgba(255,255,255,.78), rgba(255,255,255,0) 56%);
-  opacity: 0.35;
+  z-index: 0;
+  background: radial-gradient(2.6rem 2.6rem at 0.9rem 50%,
+              color-mix(in srgb, var(--brand) 34%, transparent), transparent 62%);
+  opacity: 0;
+  transition: opacity 0.32s var(--ease-glass);
 }
 .brand-pill.spec:hover::after,
-.brand-pill.spec:focus-visible::after { opacity: 1; }
+.brand-pill.spec:focus-visible::after,
+.brand-pill.spec.is-open::after { opacity: 0.75; }
 
-.pill-row[data-stagger] .brand-pill { opacity: 0; transform: translateY(10px); }
-.pill-row[data-stagger].is-visible .brand-pill {
-  opacity: 1; transform: none;
-  transition: opacity 0.55s var(--ease-glass), transform 0.55s var(--ease-spring);
+.pill-row[data-stagger] .brand-pill {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0) scale(0.98);
+  transition: none;
 }
-.pill-row[data-stagger].is-visible .brand-pill:hover { transform: translateY(-2px); }
+.pill-row[data-stagger].is-visible .brand-pill {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition:
+    opacity var(--dur-pill-reveal) var(--ease-pill-reveal),
+    transform var(--dur-pill-reveal) var(--ease-pill-reveal);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* Touch / no-hover devices (real phones): no hover to reveal on, so force the label OPEN and in flow —
+   the pill just carries its label statically. Zero JS (pillFlip is gated out) and zero animation; the
+   hover polish is neutralised so a tap-synthesised sticky :hover can't nudge a pill. */
+@media (hover: none), (pointer: coarse) {
+  .brand-pill__label { grid-template-columns: 1fr; }
+  .brand-pill__label-in {
+    opacity: 1; transform: none; transition: none;
+    padding: 0 0.55rem 0 0.44rem;
+  }
+  .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
+  .brand-pill:hover { transform: none; z-index: auto; }
+  .brand-pill:hover::before { transform: translateX(-135%); }
+  .brand-pill.spec:hover::after { opacity: 0; }
+  .brand-pill:hover .brand-pill__badge img { transform: none; filter: none; }
+}
 
 /* Role stacks / AI groups */
 .role-tags { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
-.role-tags__group { display: flex; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap; }
+.role-tags__group { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .role-tags__label {
-  flex: none; margin-top: 0.35rem;
+  flex: none;
   display: inline-flex; align-items: center; gap: 0.4rem;
-  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
-  color: rgba(17,17,17,.45); min-width: 2.5rem;
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  min-width: 5.5rem;
 }
-.hero-status span { display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 500; }
-.role-tags__label--ai { color: var(--accent); }
+.role-tags__label--stack { color: var(--primary-deep); }
+.role-tags__label--stack .icon-chip { --tint: var(--primary); --tint-deep: var(--primary-deep); }
+.role-tags__label--ai { color: var(--accent-dark); }
+.role-tags__label--ai .icon-chip { --tint: var(--accent); --tint-deep: var(--accent-dark); }
 
 @media (prefers-reduced-motion: reduce) {
   .exp-details { transition: none; }
-  .exp-toggle__chev,
-  .pill-expand__label,
-  .brand-pill__label { transition: none; }
-  .brand-pill:hover .brand-pill__label,
-  .brand-pill:focus-visible .brand-pill__label,
-  .exp-toggle:hover .pill-expand__label,
-  .exp-toggle:focus-visible .pill-expand__label,
-  .exp-toggle[aria-expanded="true"] .pill-expand__label {
-    max-width: 14rem; opacity: 1; padding-left: 0.36rem;
+  .exp-row__chev,
+  .pill-expand__label { transition: none; }
+  /* Force-open in-flow labels (same as the touch fallback) so reduced-motion users get the readable
+     stack with no animation instead of an icon-only row they can't reveal without motion (pillFlip is
+     gated out by the module-level reduced-motion early return). */
+  .brand-pill__label { grid-template-columns: 1fr; }
+  .brand-pill__label-in {
+    opacity: 1; transform: none; transition: none;
+    padding: 0 0.55rem 0 0.44rem;
   }
+  .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
+  .create-band[data-stagger] .create-band__tile { opacity: 1; transform: none; }
   .pill-row[data-stagger] .brand-pill { opacity: 1; transform: none; }
 }
 
@@ -1140,7 +2731,7 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
 @media (min-width: 768px) { .site-footer__cols { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .site-footer__cols { grid-template-columns: repeat(4, 1fr); } }
 .site-footer__col { min-width: 0; }
-.site-footer__heading { margin: 0 0 1rem; }
+.site-footer__heading { margin: 0 0 1rem; color: rgba(255,255,255,.72); }
 .site-footer__links {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-direction: column; gap: 0.75rem;
@@ -1159,42 +2750,106 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   color: #fff;
   transform: translateX(3px);
 }
-.site-footer .icon-chip--sm {
-  width: 0.9rem; height: 0.9rem;
-  border: none; box-shadow: none;
-  background: transparent;
-  margin: 0;
+/* Footer rows: real shiny icon-chips (not bare glyphs) — same tile treatment as the Services/
+   Code-Ship-Scale icons elsewhere, just at --sm scale. transform (not width/height) on hover keeps
+   this GPU-only. */
+.site-footer li a:hover .icon-chip,
+.site-footer li button:hover .icon-chip {
+  transform: scale(1.08);
 }
-.site-footer .icon-chip--sm .ui-icon {
-  width: 0.9rem; height: 0.9rem;
-  opacity: 0.85;
+.site-footer .icon-chip {
+  transition: box-shadow 0.35s var(--ease-glass), transform 0.3s var(--ease-glass);
 }
-.site-footer__ico {
-  width: 0.9rem; height: 0.9rem; flex: none;
-  filter: brightness(0) invert(1);
-  opacity: 0.85;
+.site-footer__static-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  color: rgba(255,255,255,.8);
+  line-height: 1.45;
 }
 .site-footer__links { color: rgba(255,255,255,.8); }
-.site-footer__wm {
-  position: absolute; inset-inline: 0; bottom: -1.5rem; z-index: 0;
-  text-align: center; pointer-events: none; user-select: none;
-  font-weight: 700; line-height: 1; font-size: var(--watermark); color: rgba(255,255,255,.05);
+.site-footer__meta { color: rgba(255,255,255,.72); }
+.site-footer h2,
+.site-footer__heading,
+.site-footer p,
+.site-footer li a,
+.site-footer li button {
+  text-shadow: var(--text-sh-dark);
 }
-
+.site-footer .text-accent-bright,
+.site-footer svg.text-accent-bright {
+  filter: drop-shadow(0 1px 8px color-mix(in srgb, var(--accent-bright) 42%, transparent));
+}
 /* Nav overlay */
+/* Asymmetric open/close (deliberate open, snappier close) — same convention the hero-card
+   hover-drawer already uses. CSS transitions throughout (not @keyframes): a rapid open/close/open
+   (Escape mid-transition, fast re-click) retargets smoothly instead of restarting from zero. */
 .nav-overlay {
   position: fixed; inset: 0; z-index: 115;
-  display: flex; flex-direction: column; background: var(--ink); color: #fff;
-  opacity: 0; pointer-events: none; transition: opacity 0.5s var(--ease-spring);
+  display: flex; flex-direction: column; color: #fff;
+  /* Frosted Liquid Glass: translucent ink tint (not opaque) so the section you were on shows
+     through, blurred + saturated — same backdrop-filter mechanism .modal-backdrop already ships,
+     just a deeper blur since this covers the full viewport instead of sitting on a white panel.
+     The tint alpha alone (no blur) is still dark enough to keep white nav text legible as a
+     graceful no-backdrop-filter fallback. Radial highlight is a second background layer, not a
+     pseudo-element, so it can't collide with or need z-index above the nav items/close button. */
+  background:
+    radial-gradient(120% 55% at 50% -8%, rgba(255,255,255,.12), transparent 60%),
+    color-mix(in srgb, var(--ink) 76%, transparent);
+  backdrop-filter: blur(48px) saturate(190%);
+  -webkit-backdrop-filter: blur(48px) saturate(190%);
+  opacity: 0; pointer-events: none; transition: opacity 0.45s var(--ease-glass);
 }
-.nav-overlay.is-open { opacity: 1; pointer-events: auto; }
+.nav-overlay.is-open { opacity: 1; pointer-events: auto; transition: opacity 0.55s var(--ease-smooth); }
 .nav-overlay__item {
-  display: flex; align-items: center; gap: 0.85rem; padding-block: 0.5rem; text-align: left;
+  display: flex; align-items: center; gap: 1.1rem; padding-block: 0.65rem; text-align: left;
   font-size: clamp(2.25rem, 6vw, 3.75rem); font-weight: 600; letter-spacing: -0.02em;
-  color: rgba(255,255,255,.7); transition: color 0.3s;
+  color: rgba(255,255,255,.7);
+  text-shadow: var(--text-sh-dark);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  opacity: 0; transform: translateY(22px);
+  transition: color 0.3s, text-shadow 0.35s var(--ease-glass), opacity 0s, transform 0s;
 }
-.nav-overlay__item:hover { color: #fff; }
-.nav-overlay__idx { font-size: 1rem; font-weight: 400; color: rgba(255,255,255,.3); }
+.nav-overlay li:last-child .nav-overlay__item { border-bottom: none; }
+.nav-overlay__item:hover,
+.nav-overlay__item[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+/* Per-item stagger entrance, delay driven by --stagger-i (set inline via Alpine :style in the
+   x-for loop — same custom-property idiom .partner-orb already uses for --brand). Rest state above
+   keeps opacity/transform transition at 0s so closing snaps the item back instantly with no visible
+   reverse-stagger — only the overlay's own opacity fade is visible on close. */
+.nav-overlay.is-open .nav-overlay__item {
+  opacity: 1; transform: none;
+  transition: color 0.3s, text-shadow 0.35s var(--ease-glass),
+              opacity 0.5s var(--ease-smooth), transform 0.5s var(--ease-smooth);
+  transition-delay: calc(var(--stagger-i, 0) * 45ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-overlay, .nav-overlay.is-open { transition: none; }
+  .nav-overlay__item, .nav-overlay.is-open .nav-overlay__item {
+    transition: none; opacity: 1; transform: none;
+  }
+}
+.nav-overlay__item:hover {
+  color: #fff;
+  text-shadow:
+    var(--text-sh-dark),
+    0 0 28px color-mix(in srgb, var(--primary) 38%, transparent);
+}
+.nav-overlay__gutter {
+  flex: none; min-width: 2rem;
+}
+.nav-overlay__close {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  border: 1px solid rgba(255,255,255,.15); border-radius: var(--radius-control);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
+  color: rgba(255,255,255,.7);
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.nav-overlay__close .ui-icon { width: 0.7rem; height: 0.7rem; }
+.nav-overlay__close:hover {
+  color: #fff; border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06);
+}
 
 /* Modal */
 .modal-backdrop {
@@ -1211,27 +2866,323 @@ h1, h2, h3, h4 { text-shadow: var(--text-sh); }
   border: 1px solid var(--line); transform: translateY(28px); transition: transform 0.45s var(--ease-spring);
 }
 .modal-backdrop.is-open .modal-panel { transform: none; }
-.modal-field label { display: block; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em; color: rgba(17,17,17,.5); margin-bottom: 0.35rem; }
+/* Shiny-tile gloss, same recipe as .icon-chip/.menu-btn — a light glass surface reads flatter
+   without it once every other control on the page has the treatment. */
+.modal-panel::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.85) 0%, rgba(255,255,255,.25) 22%, transparent 46%);
+  opacity: 0.8;
+}
+.modal-panel > * { position: relative; z-index: 1; }
+/* macOS-style title bar: close control at left, small centered title, thin divider beneath — the
+   heading/form content starts fresh below it on its own line instead of sharing space with a
+   floating button (the old .modal-close was absolutely positioned over the top of .modal-header,
+   which is exactly what kept colliding with the title text at various widths). Bleeds to the
+   panel's own edges via negative margins; .modal-panel's overflow:hidden + border-radius clips it
+   back to the panel's rounded corners so it still reads as one continuous surface. */
+.modal-titlebar {
+  display: flex; align-items: center; justify-content: center; position: relative;
+  height: 3.75rem; margin: -1.5rem -1.5rem 1.25rem; padding-inline: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(17,17,17,.035), transparent);
+}
+.modal-titlebar__label {
+  font-size: 0.8125rem; font-weight: 600; letter-spacing: -0.005em;
+  color: rgba(17,17,17,.5);
+}
+/* Black + copper glass recipe (same as .menu-btn/.back-to-top), not a literal macOS red dot — the
+   red circle read as an off-brand borrowed pattern rather than this site's own control language.
+   Vertically centred in the titlebar strip via top/bottom:0 + margin-block:auto (not a transform, so
+   the hover rotate stays clean) so it lines up exactly with the centred titlebar label; left inset
+   matches the panel's 1.5rem edge. Carries a crisp Lucide stroke `x` icon (was a thin ✕ text glyph). */
+.modal-titlebar > .modal-close {
+  position: absolute; left: 1.5rem; top: 0; bottom: 0; margin-block: auto; z-index: 2;
+  width: 2rem; height: 2rem;
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
+  color: rgba(255,255,255,.9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 2px 8px -1px color-mix(in srgb, var(--accent) 48%, transparent);
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.25s var(--ease-glass), border-color 0.25s var(--ease-glass), color 0.25s var(--ease-glass);
+}
+.modal-titlebar > .modal-close .ui-icon { width: 0.85rem; height: 0.85rem; stroke-width: 2.4; }
+.modal-titlebar > .modal-close:hover,
+.modal-titlebar > .modal-close:focus-visible {
+  transform: scale(1.12) rotate(90deg);
+  color: #fff;
+  border-color: color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.2));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 3px 12px -1px color-mix(in srgb, var(--accent) 62%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-titlebar > .modal-close:hover,
+  .modal-titlebar > .modal-close:focus-visible { transform: none; }
+}
+.modal-field label {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em;
+  color: rgba(17,17,17,.5); margin-bottom: 0.35rem;
+}
+.modal-field label .ui-icon { width: 0.8rem; height: 0.8rem; opacity: 0.75; }
 .modal-field input, .modal-field textarea {
   width: 100%; border: 1px solid var(--line); background: rgba(241,240,238,.5);
   border-radius: var(--radius-control); padding: 0.75rem 1rem; font-size: 0.875rem;
   font-family: inherit; outline: none; transition: border-color 0.2s, background 0.2s;
 }
 .modal-field input:focus, .modal-field textarea:focus { border-color: rgba(17,17,17,.3); background: #fff; }
+/* Contact submit error (shown only if the POST to /api/contact fails). */
+.modal-error {
+  margin: -0.25rem 0 0.15rem;
+  font-size: 0.82rem; font-weight: 500;
+  color: color-mix(in srgb, var(--c-rose) 62%, #7a1020);
+}
+/* Footer row: stacked on narrow modals (the disclaimer + pill button used to share one row via
+   Tailwind's flex utilities and would wrap the button's own text mid-word once the row got tight —
+   e.g. "Send" / "request" on 2 lines inside a pill). Row layout only once there's room for both
+   comfortably; the button never wraps its own label regardless of breakpoint. */
+.modal-footer-row {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.85rem;
+}
+.modal-footer-row .pill-btn { white-space: nowrap; align-self: stretch; justify-content: center; }
+@media (min-width: 420px) {
+  .modal-footer-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 1rem; }
+  .modal-footer-row .pill-btn { align-self: auto; }
+}
+
+/* Under-construction state (site.contactModal.underConstruction.enabled): the form is frosted out
+   and a glass notice + mail CTA floats over it. Toggle off → .is-uc absent + panel not rendered. */
+.modal-form-wrap { position: relative; }
+.modal-form-wrap.is-uc .modal-form {
+  filter: blur(5px);
+  opacity: 0.5;
+  transform: scale(0.99);
+  pointer-events: none;
+  user-select: none;
+}
+.modal-form-wrap.is-uc .modal-header { filter: blur(1.5px); opacity: 0.7; }
+.uc-panel {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.8rem; text-align: center; padding: 1.25rem;
+}
+.uc-panel::before {   /* soft white halo so the notice reads clearly over the blurred form */
+  content: ""; position: absolute; inset: -1rem; z-index: -1;
+  background: radial-gradient(60% 58% at 50% 46%, color-mix(in srgb, #fff 84%, transparent), transparent 74%);
+}
+.uc-panel__icon { margin-bottom: 0.1rem; }
+.uc-panel__title { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+.uc-panel__msg { max-width: 21rem; font-size: 0.85rem; line-height: 1.5; color: rgba(17,17,17,.62); }
+.uc-panel__cta { margin-top: 0.35rem; }
+
+/* Floating scroll-to-top — same black+copper glass-tile recipe as .menu-btn, circular, icon-only.
+   Toggled via Alpine (.is-visible) past a scroll threshold; also hidden whenever scroll-lock is
+   active so it never fights the menu/modal overlays for attention while they're open. */
+.back-to-top {
+  position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 90;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 6px 18px -3px rgba(17,17,17,.4),
+    0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
+  opacity: 0; transform: translateY(0.6rem) scale(0.92); pointer-events: none;
+  transition: opacity 0.3s var(--ease-glass), transform 0.3s var(--ease-glass),
+    box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass);
+}
+.back-to-top.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.back-to-top::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, color-mix(in srgb, var(--accent-bright) 60%, white) 0%, rgba(255,255,255,.08) 30%, transparent 54%);
+  opacity: 0.6;
+  transition: opacity 0.35s var(--ease-glass);
+}
+.back-to-top:hover::before,
+.back-to-top:focus-visible::before { opacity: 1; }
+.back-to-top.is-visible:hover,
+.back-to-top.is-visible:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 65%, rgba(255,255,255,.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    0 8px 22px -2px rgba(17,17,17,.48),
+    0 4px 16px -4px color-mix(in srgb, var(--accent) 65%, transparent);
+  transform: translateY(-2px) scale(1);
+}
+.back-to-top > span { position: relative; z-index: 2; display: inline-flex; }
+body.scroll-lock .back-to-top { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top { transition: opacity 0.2s linear; }
+  .back-to-top,
+  .back-to-top.is-visible,
+  .back-to-top.is-visible:hover,
+  .back-to-top.is-visible:focus-visible { transform: none; }
+}
+@media (max-width: 767px) {
+  .back-to-top { right: 1rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
+}
 
 /* Utilities */
 .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; }
+/* !important: must beat body's own overflow-x rule and any other layout rule regardless of load
+   order — this is toggled from JS whenever a modal/menu opens, so it has to win unconditionally.
+   html.scroll-lock keeps plain overflow:hidden (nothing to restore at that level). body.scroll-lock
+   additionally gets position:fixed + width:100% — app.js pairs this with an inline `top` offset
+   (negative current scrollY) so the body appears not to move at all, and explicitly restores real
+   scroll position on unlock. Plain overflow:hidden alone (the previous approach) silently reset
+   scrollTop to 0 in Chromium the instant it was applied, with no way to recover the position. */
 .scroll-lock { overflow: hidden !important; height: 100%; }
+body.scroll-lock { position: fixed; width: 100%; }
 
+/* Below 1024px there's no room for the desktop's side-by-side text/photo split, so the photo
+   becomes a full-bleed backdrop behind the text instead — same "text overlaid on the image" idea as
+   desktop, just without the 38/62 column split. (This used to instead push the photo out of
+   .hero's normal flex flow into a short band AFTER all the text/card/partners content — so on a
+   real phone you had to scroll past the whole hero before the photo ever came into view. Letting it
+   fall back to the base `.hero__backdrop { position:absolute; inset:0 }` rule here restores it as an
+   immediately-visible backdrop, matching desktop.) setupHeroContrast() in app.js already samples the
+   image directly under the H1 to flip text to its on-dark variant when needed — that logic is
+   geometry-driven, not breakpoint-specific, so it keeps working unchanged. */
 @media (max-width: 1023px) {
+  .hero__backdrop-liquid img { object-position: 50% 20%; }
+  .hero__backdrop-scrim {
+    background:
+      linear-gradient(180deg, rgba(238,241,246,.94) 0%, rgba(238,241,246,.6) 30%, rgba(238,241,246,.2) 54%, transparent 74%),
+      linear-gradient(180deg, rgba(255,255,255,.22), transparent 30%, transparent 68%, rgba(17,17,17,.1));
+  }
+  .hero__glow { display: none; }
+  .hero__grid {
+    min-height: calc(100dvh - 4rem);
+    gap: 1.5rem;
+    padding-block: clamp(6.25rem, 12vw, 7rem) 1.25rem;
+  }
+  /* Middle-aligned on mobile — the desktop left-aligned column reads off-center once there's no
+     photo alongside it to balance the composition. */
+  .hero__copy { align-items: center; text-align: center; }
+  .eyebrow { justify-content: center; }
+  .hero-rating { justify-content: center; }
+  .hero__actions { justify-content: center; }
   .hero__aside { align-items: center; }
   .hero-partners__label { text-align: center; }
   .hero-partners__list { justify-content: center; }
-  .hero__grid { padding-bottom: 46vh; }
 }
-@media (max-width: 900px) {
-  .hero__wm { font-size: 6rem; bottom: 2rem; }
-  .hero__grid { padding-top: 8rem; padding-bottom: 2rem; min-height: auto; }
+@media (max-width: 640px) {
+  .hero__grid {
+    gap: 1.25rem;
+    padding-block: 6.5rem 1rem;
+  }
+  .hero h1 { font-size: clamp(2.35rem, 10vw, 3rem); }
   .hero-card, .hero-partners { max-width: 100%; }
-  .about-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── Signature motion (Tahoe refinement pass) ────────────────────────────
+   All effects are transform/opacity/background-position/paint-only on a
+   handful of elements (hero-card + primary CTA + a few cards/panels), and
+   every animated one is disabled under prefers-reduced-motion. */
+
+/* 1) Gradient border-beam — light travels the rim of the hero card + primary CTA. */
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.beam { position: relative; isolation: isolate; }
+.beam::before {
+  content: "";
+  position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+  padding: 1.5px;
+  background: conic-gradient(from var(--beam-angle),
+    transparent 0deg,
+    color-mix(in srgb, var(--tint, var(--primary)) 90%, #fff) 16deg,
+    transparent 46deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: beam-rotate 7s linear infinite;
+}
+@keyframes beam-rotate { to { --beam-angle: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .beam::before {
+    animation: none;
+    background: linear-gradient(120deg, color-mix(in srgb, var(--tint, var(--primary)) 55%, transparent), transparent 62%);
+  }
+}
+
+/* 2) Panel cursor spotlight — reuses .spec (motion.js sets --px/--py); a larger, softer
+   radial so the highlight tracks smoothly across a whole large panel instead of a small pill.
+   Tint-aware: the spotlight is a tinted white (each section's own --tint) at the same low alpha as
+   the old flat white, so the liquid-glass surface subtly takes on the section's light — copper on
+   services, blue on experience, cyan on skills — instead of a uniform grey highlight everywhere.
+   The nested color-mix keeps the hue while a second mix-with-transparent holds the alpha down. */
+.spec--panel::after {
+  background: radial-gradient(38rem 38rem at var(--px,50%) var(--py,0%),
+              color-mix(in srgb, color-mix(in srgb, var(--tint, var(--primary)) 34%, #fff) 20%, transparent),
+              transparent 60%);
+}
+.stats-panel.spec--panel::after {
+  background: radial-gradient(34rem 34rem at var(--px,50%) var(--py,0%),
+              rgba(255,255,255,.10), rgba(255,255,255,0) 62%);
+}
+/* 3) Aurora parallax — motion.js writes --aurora-y (body) / --glow-y (#heroGlow) from a
+   throttled rAF scroll handler; the drift keyframes above fold them in (transform-only).
+   motion.js only ever inline-sets the --glow-y *custom property*, never `transform` itself, so the
+   id selector below (0,1,0,0) already outranks .hero__glow's class rule (0,0,1,0) on its own —
+   no !important needed to drop the var(--glow-y) term under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  #heroGlow { transform: translate(-50%, -50%); }
+}
+
+/* 4) Sheen sweep — a diagonal light glides across on hover/focus. Implemented as an extra
+   background-image layer (not a pseudo-element) so it never collides with a component's
+   own ::before/::after film; background-color/box-shadow from the base rule stay intact. */
+.sheen {
+  background-image: linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 50%, transparent 58%);
+  background-repeat: no-repeat;
+  background-size: 260% 260%;
+  background-position: -40% -40%;
+  transition: background-position 0.85s var(--ease-glass);
+}
+.sheen:hover, .sheen:focus-visible { background-position: 140% 140%; }
+@media (prefers-reduced-motion: reduce) {
+  .sheen { transition: none; background-position: -40% -40%; }
+}
+/* .hero-card already layers --grad-soft as a background-image (ambient wash) — combine both
+   layers here instead of letting .sheen's single-layer image replace it. */
+.hero-card.sheen {
+  background-color: rgba(255, 255, 255, 0.82);
+  background-image: linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 50%, transparent 58%);
+  background-size: 260% 260%;
+  background-position: -40% -40%;
+}
+.hero-card.sheen:hover, .hero-card.sheen:focus-visible { background-position: 140% 140%; }
+/* .pill-btn-dark/.pill-btn-glass paint their own color via the `background` shorthand, which sets
+   background-image too — .sheen's bare `background-image` (equal specificity, later in source)
+   was fully replacing that gradient instead of layering over it, leaving the button looking blank/
+   white. Same collision already solved above for .hero-card.sheen; two-class selectors here also
+   outrank both single-class rules on specificity, not just source order, so this holds regardless
+   of where .sheen is declared. */
+.pill-btn-dark.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+    linear-gradient(145deg, #2b2b2b, #060606);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+.pill-btn-dark.sheen:hover, .pill-btn-dark.sheen:focus-visible { background-position: 140% 140%, 0 0; }
+.pill-btn-glass.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+.pill-btn-glass.sheen:hover, .pill-btn-glass.sheen:focus-visible {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
+  background-position: 140% 140%, 0 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill-btn-dark.sheen, .pill-btn-glass.sheen { background-position: -40% -40%, 0 0; }
 }

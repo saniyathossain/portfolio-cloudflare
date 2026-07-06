@@ -5,11 +5,58 @@
     "url": "https://saniyat.com",
     "themeColor": "#0a0a0a",
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
-    "aboutHeading": "I partner with product teams to ship resilient backends, telco-scale platforms and mobile apps — from monoliths to microservices, held together with quiet precision.",
+    "aboutHeading": "{years}+ years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
+    "aboutHighlights": ["telco-scale", "quiet precision"],
+    "experienceHighlights": [
+      "PHP", "Laravel", "Node.js", "MySQL", "Redis", "Docker", "Nginx", "Elasticsearch",
+      "Firebase", "CodeIgniter", "Joomla", "Elgg", "Go",
+      "microservices", "monolith", "API Gateway", "BFF", "AIDLC", "AI-assisted",
+      "Role-Based Access Control", "Change Data Capture", "SSO", "async APIs", "GZIP"
+    ],
     "footerTagline": "Staff Software Engineer crafting backends, products, and the systems that connect them.",
-    "ogDescription": "Backend engineering, shipped with quiet precision. 14+ years building PHP/Laravel and Node.js services at scale.",
+    "ogDescription": "Backend engineering, shipped with quiet precision. {years}+ years building PHP/Laravel and Node.js services at scale.",
     "twitterDescription": "Backend engineering, shipped with quiet precision.",
-    "ogImage": "/assets/img/og-image.jpg"
+    "ogImage": "/assets/img/og-image.jpg",
+    "turnstileSiteKey": "",
+    "contactModal": {
+      "titlebarLabel": "Get in touch",
+      "closeAriaLabel": "Close",
+      "heading": "Tell us what you're building.",
+      "fields": {
+        "name": { "label": "Name", "placeholder": "Your name" },
+        "email": { "label": "Email", "placeholder": "you@company.com" },
+        "project": { "label": "Project", "placeholder": "A few words about your project, timeline, and budget." }
+      },
+      "footerNote": "We reply within one business day.",
+      "errorNote": "Couldn't send just now — please email me directly.",
+      "submitLabel": "Send request",
+      "submittingLabel": "Sending…",
+      "success": {
+        "heading": "Request received",
+        "message": "Thanks for reaching out — I'll get back to you within one business day.",
+        "closeLabel": "Close"
+      }
+    },
+    "features": {
+      "underConstruction": {
+        "contactForm": {
+          "enabled": true,
+          "title": "This page is under construction",
+          "message": "Our contact form is getting a tune-up. In the meantime, kindly email us directly — we reply within one business day.",
+          "mailLabel": "Email us"
+        }
+      }
+    },
+    "analytics": {
+      "googleId": "",
+      "cloudflareToken": ""
+    }
+  },
+  "sections": {
+    "services": "Backend, architecture, APIs, and AI-assisted delivery.",
+    "experience": "{years}+ years · {roles} roles across {companies} companies.",
+    "skills": "Languages, frameworks, data, platform, and AI in the flow.",
+    "education": "Electronics & Telecommunication Engineering — Dhaka."
   },
   "profile": {
     "name": "Mohammad Saniyat Hossain",
@@ -17,49 +64,42 @@
     "title": "Staff Software Engineer",
     "location": "Dhaka, Bangladesh",
     "tagline": "Backend engineering, shipped with quiet precision.",
-    "eyebrow": "Staff Software Engineer · Dhaka, Bangladesh",
     "avatar": "/assets/img/saniyat-hossain.jpg",
     "phone": "+8801711092048",
     "email": "saniyat1000@gmail.com",
-    "years": "14+",
+    "experienceStartDate": "2012-09-01",
+    "experienceYearsOffset": 0,
     "nameLines": [
       "Mohammad",
       "Saniyat",
       "Hossain"
     ],
-    "heroRating": "14+ years · PHP, Laravel, Node.js & microservices at scale",
-    "heroStatusShipping": "Shipping since 2012",
-    "heroStatusLocation": "Dhaka, Bangladesh · Remote-friendly"
+    "heroRatingTail": "PHP, Laravel, Node.js & microservices at scale"
   },
   "nav": [
     {
       "label": "Home",
       "id": "home",
-      "n": "01",
       "icon": "home"
     },
     {
       "label": "Experience",
       "id": "experience",
-      "n": "02",
       "icon": "experience"
     },
     {
       "label": "Skills",
       "id": "skills",
-      "n": "03",
       "icon": "skills"
     },
     {
       "label": "Education",
       "id": "education",
-      "n": "04",
       "icon": "education"
     },
     {
       "label": "Contact",
       "id": "contact",
-      "n": "05",
       "icon": "contact",
       "action": "modal"
     }
@@ -67,15 +107,21 @@
   "heroCards": [
     {
       "caption": "Now",
-      "title": "Staff Software Engineer at Brain Station 23"
+      "title": "Staff Software Engineer at Brain Station 23",
+      "icon": "activity",
+      "tint": "accent"
     },
     {
       "caption": "Focus",
-      "title": "Backend & mobile architecture at scale"
+      "title": "Backend & mobile architecture at scale",
+      "icon": "architecture",
+      "tint": "primary"
     },
     {
       "caption": "Lately",
-      "title": "AI-assisted delivery with the AIDLC workflow"
+      "title": "AI-assisted delivery with the AIDLC workflow",
+      "icon": "brainCircuit",
+      "tint": "blue"
     }
   ],
   "partners": [
@@ -89,11 +135,11 @@
     },
     {
       "name": "icddr,b",
-      "logo": "/assets/img/logos/icddrb-official.png"
+      "logo": "/assets/img/logos/icddrb-official.webp"
     },
     {
       "name": "Optimum Solution",
-      "logo": "/assets/img/logos/oss-official-transparent.png"
+      "logo": "/assets/img/logos/oss-official-transparent.webp"
     },
     {
       "name": "Runner Cyberlink",
@@ -102,11 +148,11 @@
   ],
   "createBand": [
     {
-      "text": "We",
-      "variant": "light"
+      "text": "Code",
+      "variant": "code"
     },
     {
-      "text": "Build",
+      "text": "Ship",
       "variant": "accent"
     },
     {
@@ -114,31 +160,27 @@
       "variant": "dark"
     },
     {
-      "text": "Better",
-      "variant": "ghost"
+      "text": "Scale",
+      "variant": "scale"
     }
   ],
   "services": [
     {
-      "n": "01",
       "title": "Backend Development",
       "desc": "Scalable PHP/Laravel and Node.js services built to last.",
       "icon": "server"
     },
     {
-      "n": "02",
       "title": "Architecture & Microservices",
       "desc": "Monolith-to-microservice migrations with clear design patterns.",
       "icon": "architecture"
     },
     {
-      "n": "03",
       "title": "API Design & Integration",
       "desc": "BFF, API Gateway, and async APIs for telco-scale products.",
       "icon": "api"
     },
     {
-      "n": "04",
       "title": "AI-Assisted Delivery",
       "desc": "AIDLC workflows with Claude, Cursor, and Copilot in the loop.",
       "icon": "ai"
@@ -158,9 +200,9 @@
       "icon": "companies"
     },
     {
-      "value": 20,
+      "value": 12,
       "suffix": "+",
-      "label": "Products shipped",
+      "label": "Projects delivered",
       "icon": "products"
     },
     {
@@ -229,25 +271,34 @@
   ],
   "education": [
     {
-      "years": "2008 — 2011",
+      "startYear": 2008,
+      "endYear": 2011,
       "school": "East West University",
-      "degree": "BSc, Electronics & Telecommunication Engineering",
+      "degreeType": "BSc",
+      "subject": "Electronics & Telecommunication Engineering (ETE)",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/east-west-university.png"
+      "logo": "/assets/img/logos/east-west-university.webp",
+      "website": "https://www.ewubd.edu/"
     },
     {
-      "years": "2005 — 2007",
-      "school": "St. Joseph Higher Secondary",
-      "degree": "HSC in Science",
+      "startYear": 2005,
+      "endYear": 2007,
+      "school": "St. Joseph Higher Secondary School",
+      "degreeType": "HSC",
+      "subject": "Science",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/st-joseph.png"
+      "logo": "/assets/img/logos/st-joseph.webp",
+      "website": "https://sjs.edu.bd/"
     },
     {
-      "years": "2003 — 2005",
+      "startYear": 2003,
+      "endYear": 2005,
       "school": "Motijheel Govt. Boys' High School",
-      "degree": "SSC in Science",
+      "degreeType": "SSC",
+      "subject": "Science",
       "place": "Dhaka, Bangladesh",
-      "logo": "/assets/img/logos/motijheel-school.png"
+      "logo": "/assets/img/logos/motijheel-school.webp",
+      "website": "https://www.mgbhs.edu.bd/"
     }
   ],
   "socials": [
@@ -274,29 +325,39 @@
   ],
   "companies": {
     "brain-station-23-plc": {
-      "name": "Brain Station 23 PLC",
+      "name": "Brain Station 23",
       "logo": "/assets/img/logos/brainstation-23-official.svg",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d",
+      "website": "https://brainstation-23.com/"
     },
     "grameenphone-limited": {
-      "name": "Grameenphone — Digital Ninja",
+      "name": "Grameenphone",
       "logo": "/assets/img/logos/grameenphone-official.svg",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d",
+      "website": "https://www.grameenphone.com/"
     },
     "icddr-b": {
       "name": "icddr,b",
-      "logo": "/assets/img/logos/icddrb-official.png",
-      "location": "Dhaka, Bangladesh"
+      "logo": "/assets/img/logos/icddrb-official.webp",
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d",
+      "website": "https://www.icddrb.org/"
     },
     "optimum-solution-services-ltd": {
       "name": "Optimum Solution & Services",
-      "logo": "/assets/img/logos/oss-official-transparent.png",
-      "location": "Dhaka, Bangladesh"
+      "logo": "/assets/img/logos/oss-official-transparent.webp",
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d",
+      "website": "https://oss.com.bd/"
     },
     "runner-cyberlink-limited": {
       "name": "Runner Cyberlink",
       "logo": "/assets/img/logos/runnercyberlink-official.svg",
-      "location": "Dhaka, Bangladesh"
+      "location": "Dhaka, Bangladesh",
+      "color": "#8d8d8d",
+      "website": "https://www.runnercyberlink.com/"
     }
   },
   "experiences": [
@@ -304,6 +365,7 @@
       "id": "bs23-staff",
       "companySlug": "brain-station-23-plc",
       "role": "Staff Software Engineer",
+      "employmentType": "permanent",
       "period": "Jan 2025 — Present",
       "summary": "Leading backend and mobile app architecture, design, infrastructure planning and development for a coaching-center application — scalable PHP/Laravel and Node.js APIs with MySQL optimization and AI-assisted (AIDLC) delivery.",
       "details": [
@@ -330,6 +392,7 @@
       "id": "bs23-lead",
       "companySlug": "brain-station-23-plc",
       "role": "Technical Lead",
+      "employmentType": "permanent",
       "period": "Jan 2022 — Dec 2024",
       "summary": "Led solution design, feature delivery, backend development and code reviews for the Grameenphone MyGP squad — Redis optimization, async APIs, BFF/API Gateway and a large monolith-to-microservices migration.",
       "details": [
@@ -372,7 +435,8 @@
     {
       "id": "bs23-senior",
       "companySlug": "brain-station-23-plc",
-      "role": "Senior Software Engineer (Permanent)",
+      "role": "Senior Software Engineer",
+      "employmentType": "permanent",
       "period": "Jan 2021 — Dec 2021",
       "summary": "Refactored and segregated the monolithic MyGP back-end into microservices. Managed event queues, cron jobs and database query optimization.",
       "details": [
@@ -393,7 +457,8 @@
     {
       "id": "bs23-contract",
       "companySlug": "brain-station-23-plc",
-      "role": "Senior Software Engineer (Contract)",
+      "role": "Senior Software Engineer",
+      "employmentType": "contract",
       "period": "Oct 2020 — Dec 2020",
       "summary": "Joined on contract and contributed to the initial phases of the MyGP back-end project.",
       "details": [
@@ -411,7 +476,8 @@
     {
       "id": "gp-ninja",
       "companySlug": "grameenphone-limited",
-      "role": "PHP Developer — Digital Ninja (Contract)",
+      "role": "PHP Developer — Digital Ninja",
+      "employmentType": "contract",
       "period": "Jan 2019 — Oct 2020",
       "summary": "Built a Warehouse & Logistics Management System with dynamic, configurable workflow journeys and dynamic billing across multiple logistics companies under a single management point.",
       "details": [
@@ -444,7 +510,8 @@
     {
       "id": "icddrb",
       "companySlug": "icddr-b",
-      "role": "Consultant / Team Lead (Contract)",
+      "role": "Consultant / Team Lead",
+      "employmentType": "contract",
       "period": "Sep 2016 — Jan 2019",
       "summary": "As Team Lead, delivered a comprehensive Human Resource Information System (HRIS) with Role-Based Access Control and efficient workflow management across multiple modules.",
       "details": [
@@ -467,6 +534,7 @@
       "id": "oss",
       "companySlug": "optimum-solution-services-ltd",
       "role": "Associate Software Engineer",
+      "employmentType": "permanent",
       "period": "Mar 2014 — Aug 2016",
       "summary": "Shipped responsive portals — news, jobs, online study/exam/result management and domain-registration automation — with desktop and mobile performance optimization.",
       "details": [
@@ -495,6 +563,7 @@
       "id": "runner",
       "companySlug": "runner-cyberlink-limited",
       "role": "PHP Programmer",
+      "employmentType": "permanent",
       "period": "Sep 2012 — Feb 2014",
       "summary": "Designed and developed responsive websites, a social-networking web application and e-commerce platforms for clients.",
       "details": [
@@ -514,501 +583,6 @@
         "WYSIWYG Editor"
       ],
       "aiTools": []
-    }
-  ],
-  "brands": {
-    "php": {
-      "icon": "php",
-      "color": "#777BB4"
-    },
-    "javascript": {
-      "icon": "javascript",
-      "color": "#F7DF1E"
-    },
-    "typescript": {
-      "icon": "typescript",
-      "color": "#3178C6"
-    },
-    "go": {
-      "icon": "go",
-      "color": "#00ADD8"
-    },
-    "golang": {
-      "icon": "go",
-      "color": "#00ADD8"
-    },
-    "laravel": {
-      "icon": "laravel",
-      "color": "#FF2D20"
-    },
-    "lumen": {
-      "icon": "lumen",
-      "color": "#E74430"
-    },
-    "nestjs": {
-      "icon": "nestjs",
-      "color": "#E0234E"
-    },
-    "nest": {
-      "icon": "nestjs",
-      "color": "#E0234E"
-    },
-    "node": {
-      "icon": "nodedotjs",
-      "color": "#5FA04E"
-    },
-    "node.js": {
-      "icon": "nodedotjs",
-      "color": "#5FA04E"
-    },
-    "nodejs": {
-      "icon": "nodedotjs",
-      "color": "#5FA04E"
-    },
-    "express": {
-      "icon": "express",
-      "color": "#3B4A54"
-    },
-    "vue": {
-      "icon": "vuedotjs",
-      "color": "#42B883"
-    },
-    "vue.js": {
-      "icon": "vuedotjs",
-      "color": "#42B883"
-    },
-    "vuejs": {
-      "icon": "vuedotjs",
-      "color": "#42B883"
-    },
-    "mysql": {
-      "icon": "mysql",
-      "color": "#4479A1"
-    },
-    "mssql": {
-      "icon": "mssql",
-      "color": "#CC2927"
-    },
-    "redis": {
-      "icon": "redis",
-      "color": "#FF4438"
-    },
-    "redisearch": {
-      "icon": "redis",
-      "color": "#FF4438"
-    },
-    "elasticsearch": {
-      "icon": "elasticsearch",
-      "color": "#005571"
-    },
-    "kibana": {
-      "icon": "kibana",
-      "color": "#00A3E0"
-    },
-    "rabbitmq": {
-      "icon": "rabbitmq",
-      "color": "#FF6600"
-    },
-    "minio": {
-      "icon": "minio",
-      "color": "#C72E49"
-    },
-    "mockoon": {
-      "icon": "mockoon",
-      "color": "#1997E8"
-    },
-    "jmeter": {
-      "icon": "apachejmeter",
-      "color": "#D22128"
-    },
-    "nginx": {
-      "icon": "nginx",
-      "color": "#009639"
-    },
-    "docker": {
-      "icon": "docker",
-      "color": "#2496ED"
-    },
-    "git": {
-      "icon": "git",
-      "color": "#F05032"
-    },
-    "svn": {
-      "icon": "subversion",
-      "color": "#809CC9"
-    },
-    "firebase": {
-      "icon": "firebase",
-      "color": "#DD2C00"
-    },
-    "wordpress": {
-      "icon": "wordpress",
-      "color": "#21759B"
-    },
-    "codeigniter": {
-      "icon": "codeigniter",
-      "color": "#EF4223"
-    },
-    "joomla": {
-      "icon": "joomla",
-      "color": "#5091CD"
-    },
-    "jquery": {
-      "icon": "jquery",
-      "color": "#0769AD"
-    },
-    "bootstrap": {
-      "icon": "bootstrap",
-      "color": "#7952B3"
-    },
-    "webpack": {
-      "icon": "webpack",
-      "color": "#1C78C0"
-    },
-    "parcel": {
-      "icon": "parcel",
-      "color": "#E7A03C"
-    },
-    "parcel builder": {
-      "icon": "parcel",
-      "color": "#E7A03C"
-    },
-    "openstreetmap": {
-      "icon": "openstreetmap",
-      "color": "#578f4a"
-    },
-    "dotenv": {
-      "icon": "dotenv",
-      "color": "#a08800"
-    },
-    "cakephp": {
-      "icon": "cakephp",
-      "color": "#D33C43"
-    },
-    "kendo ui": {
-      "icon": "kendo",
-      "color": "#FF6358"
-    },
-    "kendo": {
-      "icon": "kendo",
-      "color": "#FF6358"
-    },
-    "handsontable": {
-      "icon": "handsontable",
-      "color": "#166b45"
-    },
-    "datatables": {
-      "icon": "datatables",
-      "color": "#1f5a86"
-    },
-    "highcharts": {
-      "icon": "highcharts",
-      "color": "#5c63c9"
-    },
-    "uikit": {
-      "icon": "uikit",
-      "color": "#2396F3"
-    },
-    "elgg": {
-      "icon": "elgg",
-      "color": "#3a3a3a"
-    },
-    "microservices": {
-      "icon": "microservices",
-      "color": "#97501f"
-    },
-    "wysiwyg editor": {
-      "icon": "wysiwyg-editor",
-      "color": "#6b5b95"
-    },
-    "form wizard": {
-      "icon": "form-wizard",
-      "color": "#2f7a6b"
-    },
-    "claude": {
-      "icon": "claude",
-      "color": "#D97757"
-    },
-    "chatgpt": {
-      "icon": "openai",
-      "color": "#10A37F"
-    },
-    "openai": {
-      "icon": "openai",
-      "color": "#10A37F"
-    },
-    "gemini": {
-      "icon": "googlegemini",
-      "color": "#7c60a6"
-    },
-    "copilot": {
-      "icon": "githubcopilot",
-      "color": "#24292E"
-    },
-    "cursor": {
-      "icon": "cursor",
-      "color": "#0A0A0A"
-    },
-    "antigravity": {
-      "icon": "antigravity",
-      "color": "#3186ff"
-    }
-  },
-  "experienceGroups": [
-    {
-      "slug": "brain-station-23-plc",
-      "company": "Brain Station 23 PLC",
-      "logo": "/assets/img/logos/brainstation-23-official.svg",
-      "location": "Dhaka, Bangladesh",
-      "roles": [
-        {
-          "id": "bs23-staff",
-          "companySlug": "brain-station-23-plc",
-          "role": "Staff Software Engineer",
-          "period": "Jan 2025 — Present",
-          "summary": "Leading backend and mobile app architecture, design, infrastructure planning and development for a coaching-center application — scalable PHP/Laravel and Node.js APIs with MySQL optimization and AI-assisted (AIDLC) delivery.",
-          "details": [
-            "Coaching-center app: leading backend & mobile architecture, design and infra planning.",
-            "Scalable PHP/Laravel and Node.js APIs with MySQL query optimization.",
-            "Ecom Intelligence — SaaS multi-tenant e-commerce: solution design and implementation of tenant subdomain routing and request-handling architecture.",
-            "Leveraged AI-assisted workflows (AIDLC) to improve feature delivery, security and performance."
-          ],
-          "stacks": [
-            "PHP",
-            "Laravel",
-            "Nginx",
-            "Node.js",
-            "Docker",
-            "Git"
-          ],
-          "aiTools": [
-            "Claude",
-            "Cursor",
-            "Antigravity"
-          ]
-        },
-        {
-          "id": "bs23-lead",
-          "companySlug": "brain-station-23-plc",
-          "role": "Technical Lead",
-          "period": "Jan 2022 — Dec 2024",
-          "summary": "Led solution design, feature delivery, backend development and code reviews for the Grameenphone MyGP squad — Redis optimization, async APIs, BFF/API Gateway and a large monolith-to-microservices migration.",
-          "details": [
-            "Custom internal PHP packages for Redis optimization, fail-over and asynchronous API calls across monolith and microservices.",
-            "Internal library for custom cURL handling, feature-toggled DB/query logging, mock services (Mockoon), Docker and Nginx header-based routing for safe testing.",
-            "Backend-for-Frontend (BFF) and API Gateway POC consolidating backend services into optimized async responses, cutting network latency.",
-            "Refactored and migrated a large monolith into microservices with design patterns and separation of concerns for scalability and resiliency.",
-            "Optimized a global-configuration API using Redis caching with microservice fallback to minimize redundant service calls.",
-            "Change Data Capture (CDC) POC with Go, MySQL and Elasticsearch Data Shipper for near real-time sync.",
-            "Owned quarterly Rocks and aligned technical execution across squads via L10 meetings.",
-            "Features: Auth, Card, Balance, Offers, Star Offers, Pack Purchase/Gifting, Live Score, API Gateway, one-tap payments, Usage History, Partner Integrations, SSO Journeys, Backoffice, PHP upgrade."
-          ],
-          "stacks": [
-            "PHP",
-            "Laravel",
-            "Lumen",
-            "Node.js",
-            "TypeScript",
-            "NestJS",
-            "MySQL",
-            "Redis",
-            "RediSearch",
-            "Elasticsearch",
-            "Kibana",
-            "RabbitMQ",
-            "MinIO",
-            "Mockoon",
-            "JMeter",
-            "Git",
-            "Docker"
-          ],
-          "aiTools": [
-            "ChatGPT",
-            "Claude",
-            "Gemini",
-            "Copilot",
-            "Antigravity"
-          ]
-        },
-        {
-          "id": "bs23-senior",
-          "companySlug": "brain-station-23-plc",
-          "role": "Senior Software Engineer (Permanent)",
-          "period": "Jan 2021 — Dec 2021",
-          "summary": "Refactored and segregated the monolithic MyGP back-end into microservices. Managed event queues, cron jobs and database query optimization.",
-          "details": [
-            "Refactored monolithic MyGP back-end into microservices for scalability.",
-            "Managed event queues, cron jobs and optimized database queries."
-          ],
-          "stacks": [
-            "PHP",
-            "Laravel",
-            "MySQL",
-            "Redis",
-            "RabbitMQ",
-            "Docker",
-            "Git"
-          ],
-          "aiTools": []
-        },
-        {
-          "id": "bs23-contract",
-          "companySlug": "brain-station-23-plc",
-          "role": "Senior Software Engineer (Contract)",
-          "period": "Oct 2020 — Dec 2020",
-          "summary": "Joined on contract and contributed to the initial phases of the MyGP back-end project.",
-          "details": [
-            "Contributed to initial phases of the MyGP back-end project."
-          ],
-          "stacks": [
-            "PHP",
-            "Laravel",
-            "MySQL",
-            "Docker",
-            "Git"
-          ],
-          "aiTools": []
-        }
-      ]
-    },
-    {
-      "slug": "grameenphone-limited",
-      "company": "Grameenphone — Digital Ninja",
-      "logo": "/assets/img/logos/grameenphone-official.svg",
-      "location": "Dhaka, Bangladesh",
-      "roles": [
-        {
-          "id": "gp-ninja",
-          "companySlug": "grameenphone-limited",
-          "role": "PHP Developer — Digital Ninja (Contract)",
-          "period": "Jan 2019 — Oct 2020",
-          "summary": "Built a Warehouse & Logistics Management System with dynamic, configurable workflow journeys and dynamic billing across multiple logistics companies under a single management point.",
-          "details": [
-            "Dynamic, configurable workflow journeys for warehouse & logistics operations.",
-            "Dynamic billing management streamlining operations for multiple logistics companies.",
-            "Developed a Firebase-based Cloud Messaging system."
-          ],
-          "stacks": [
-            "PHP",
-            "CakePHP",
-            "MySQL",
-            "jQuery",
-            "Vue",
-            "OpenStreetMap",
-            "Kendo UI",
-            "Handsontable",
-            "DataTables",
-            "Node.js",
-            "Express",
-            "TypeScript",
-            "Redis",
-            "RabbitMQ",
-            "MinIO",
-            "Git",
-            "Docker",
-            "Firebase"
-          ],
-          "aiTools": []
-        }
-      ]
-    },
-    {
-      "slug": "icddr-b",
-      "company": "icddr,b",
-      "logo": "/assets/img/logos/icddrb-official.png",
-      "location": "Dhaka, Bangladesh",
-      "roles": [
-        {
-          "id": "icddrb",
-          "companySlug": "icddr-b",
-          "role": "Consultant / Team Lead (Contract)",
-          "period": "Sep 2016 — Jan 2019",
-          "summary": "As Team Lead, delivered a comprehensive Human Resource Information System (HRIS) with Role-Based Access Control and efficient workflow management across multiple modules.",
-          "details": [
-            "HRIS modules: Performance Management Development System, Training Development Information System, E-recruitment System, Scientific Ranking System, Certificate Management System.",
-            "Role-Based Access Control and workflow management across modules.",
-            "Developed a research-based web application."
-          ],
-          "stacks": [
-            "PHP",
-            "Laravel",
-            "MSSQL",
-            "Vue",
-            "Webpack",
-            "Parcel",
-            "SVN"
-          ],
-          "aiTools": []
-        }
-      ]
-    },
-    {
-      "slug": "optimum-solution-services-ltd",
-      "company": "Optimum Solution & Services",
-      "logo": "/assets/img/logos/oss-official-transparent.png",
-      "location": "Dhaka, Bangladesh",
-      "roles": [
-        {
-          "id": "oss",
-          "companySlug": "optimum-solution-services-ltd",
-          "role": "Associate Software Engineer",
-          "period": "Mar 2014 — Aug 2016",
-          "summary": "Shipped responsive portals — news, jobs, online study/exam/result management and domain-registration automation — with desktop and mobile performance optimization.",
-          "details": [
-            "Responsive news portal and job portal.",
-            "Online study, exam and result management application.",
-            "Domain-registration automation with access control, reporting, auditing, payment gateway and DNS-via-cron.",
-            "Web performance optimization: render-blocking avoidance, browser caching, GZIP, minification, PageSpeed module."
-          ],
-          "stacks": [
-            "PHP",
-            "Laravel",
-            "WordPress",
-            "CodeIgniter",
-            "DataTables",
-            "Kendo UI",
-            "WYSIWYG Editor",
-            "MySQL",
-            "jQuery",
-            "Bootstrap",
-            "Form Wizard",
-            "Highcharts"
-          ],
-          "aiTools": []
-        }
-      ]
-    },
-    {
-      "slug": "runner-cyberlink-limited",
-      "company": "Runner Cyberlink",
-      "logo": "/assets/img/logos/runnercyberlink-official.svg",
-      "location": "Dhaka, Bangladesh",
-      "roles": [
-        {
-          "id": "runner",
-          "companySlug": "runner-cyberlink-limited",
-          "role": "PHP Programmer",
-          "period": "Sep 2012 — Feb 2014",
-          "summary": "Designed and developed responsive websites, a social-networking web application and e-commerce platforms for clients.",
-          "details": [
-            "Responsive websites with CodeIgniter and Joomla.",
-            "Social-networking web application on the Elgg PHP framework.",
-            "Garments portals, company sites and e-commerce platforms."
-          ],
-          "stacks": [
-            "PHP",
-            "CodeIgniter",
-            "Joomla",
-            "Elgg",
-            "MySQL",
-            "jQuery",
-            "Bootstrap",
-            "UIKit",
-            "WYSIWYG Editor"
-          ],
-          "aiTools": []
-        }
-      ]
     }
   ],
   "manifest": {

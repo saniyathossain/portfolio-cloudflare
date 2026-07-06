@@ -2,22 +2,32 @@
 .DS_Store
 Thumbs.db
 
-# Editor / IDE
-.cursor/
+# Editor / IDE (local only)
 .vscode/
 *.swp
 *~
 
-# Debug session logs
+# Cursor — commit .cursor/rules/ and .cursor/skills/portfolio/; ignore local/debug tooling
 .cursor/debug-*.log
+.cursor/hooks.json
+.cursor/skills/impeccable/
 
 # Local preview / tooling
 node_modules/
 .wrangler/
 .dev.vars
+.env
+.env.*
 
 # Tailwind standalone CLI (download via build-css.sh)
 bin/
 
 # Legacy dc-runtime site
 legacy/
+
+# Skills tooling — .agents/skills + skills-lock.json are committed; ignore per-machine state
+.impeccable/config.local.json
+*.local.json
+
+# generated image build cache (idempotency guard)
+scripts/.img-cache.json

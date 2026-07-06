@@ -6,3 +6,45 @@ compatibility_date = "2024-12-01"
 [assets]
 directory = "./public"
 binding = "ASSETS"
+
+# Bundle the maintenance page (src/maintenance.html) into the Worker as a text module so it can be
+# imported and rendered dynamically (see maintenanceResponse in src/index.js). Scoped to that one file.
+[[rules]]
+type = "Text"
+globs = ["**/maintenance.html"]
+
+# --- Contact form (POST /api/contact) --------------------------------------------------------------
+# All three backing services below are OPTIONAL and guarded in src/index.js: the endpoint validates
+# and returns success even before they're configured, so deploying in stages is safe.
+
+# Public, non-secret vars. CONTACT_FROM must be an address on a domain with Email Routing enabled;
+# CONTACT_TO must be a VERIFIED destination address in Email Routing.
+[vars]
+CONTACT_FROM = "contact@saniyat.com"
+CONTACT_TO = "saniyat1000@gmail.com"
+
+# Maintenance mode — site-wide hard gate (503). Set to "1"/"true"/"on" to enable (flip here + redeploy,
+# or override live in Dashboard → the Worker → Settings → Variables). Owner bypass while gated:
+# https://saniyat.com/?preview=<ADMIN_TOKEN>. Optional copy overrides: MAINTENANCE_TITLE / MAINTENANCE_MESSAGE.
+MAINTENANCE_MODE = "off"
+
+# Email Routing send_email binding — lets the Worker send the notification email.
+# Setup: Dashboard → your zone → Email → Email Routing → enable + verify the destination (CONTACT_TO).
+# `destination_address` restricts what this binding may send to (the verified address).
+[[send_email]]
+name = "CONTACT_EMAIL"
+destination_address = "saniyat1000@gmail.com"
+
+# KV — durable record of every submission (free tier).
+# Create it once, then paste the printed id here:  npx wrangler kv namespace create CONTACT_KV
+[[kv_namespaces]]
+binding = "CONTACT_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Turnstile SECRET key — set as an encrypted secret, NOT here:
+#   npx wrangler secret put TURNSTILE_SECRET
+# (Create the widget in Dashboard → Turnstile; put its SITE key in portfolio.json → site.turnstileSiteKey.)
+
+# Admin token for the read endpoint (GET /api/contact?token=... → recent submissions). Set via:
+#   npx wrangler secret put ADMIN_TOKEN
+# The GET endpoint returns 401 until this is set. Not linked from the UI.
