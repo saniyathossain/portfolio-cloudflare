@@ -2,10 +2,10 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
-./build-css.sh
+# Invoke shell steps via `bash` (not ./) so a missing git execute-bit can't break CI builds.
+bash "$ROOT/build-css.sh"
 node scripts/minify-css.js
-chmod +x scripts/setup-fonts.sh 2>/dev/null || true
-./scripts/setup-fonts.sh
+bash "$ROOT/scripts/setup-fonts.sh"
 node scripts/optimize-images.js
 node scripts/set-asset-version.js
 node scripts/minify-js.js

@@ -7,11 +7,9 @@ compatibility_date = "2024-12-01"
 directory = "./public"
 binding = "ASSETS"
 
-# Bundle the maintenance page (src/maintenance.html) into the Worker as a text module so it can be
-# imported and rendered dynamically (see maintenanceResponse in src/index.js). Scoped to that one file.
-[[rules]]
-type = "Text"
-globs = ["**/maintenance.html"]
+# src/maintenance.html is imported as a text module in src/index.js — wrangler's DEFAULT module rules
+# already treat **/*.html as Text, so no custom [[rules]] entry is needed (adding one overrides the
+# default and warns).
 
 # --- Contact form (POST /api/contact) --------------------------------------------------------------
 # All three backing services below are OPTIONAL and guarded in src/index.js: the endpoint validates
@@ -28,18 +26,23 @@ CONTACT_TO = "saniyat1000@gmail.com"
 # https://saniyat.com/?preview=<ADMIN_TOKEN>. Optional copy overrides: MAINTENANCE_TITLE / MAINTENANCE_MESSAGE.
 MAINTENANCE_MODE = "off"
 
+# ⚠️ The two bindings below are COMMENTED OUT so the first deploy succeeds with no setup.
+# They are OPTIONAL and guarded in src/index.js (the contact endpoint still validates + logs; it just
+# won't persist to KV or send email until you enable them). Uncomment each after its one-time setup:
+#
 # Email Routing send_email binding — lets the Worker send the notification email.
-# Setup: Dashboard → your zone → Email → Email Routing → enable + verify the destination (CONTACT_TO).
-# `destination_address` restricts what this binding may send to (the verified address).
-[[send_email]]
-name = "CONTACT_EMAIL"
-destination_address = "saniyat1000@gmail.com"
-
+#   1. Dashboard → your zone → Email → Email Routing → enable + verify the destination (CONTACT_TO).
+#   2. Uncomment the 3 lines below, then redeploy.
+# [[send_email]]
+# name = "CONTACT_EMAIL"
+# destination_address = "saniyat1000@gmail.com"
+#
 # KV — durable record of every submission (free tier).
-# Create it once, then paste the printed id here:  npx wrangler kv namespace create CONTACT_KV
-[[kv_namespaces]]
-binding = "CONTACT_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+#   1. Create it once:  npx wrangler kv namespace create CONTACT_KV
+#   2. Paste the printed id below, uncomment the 3 lines, then redeploy.
+# [[kv_namespaces]]
+# binding = "CONTACT_KV"
+# id = "PASTE_REAL_KV_NAMESPACE_ID"
 
 # Turnstile SECRET key — set as an encrypted secret, NOT here:
 #   npx wrangler secret put TURNSTILE_SECRET

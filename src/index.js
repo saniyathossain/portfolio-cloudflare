@@ -18,7 +18,7 @@
  */
 import { EmailMessage } from "cloudflare:email";
 // Maintenance page is authored as a real HTML file (src/maintenance.html) and bundled as a text
-// module (see the [[rules]] Text entry in wrangler.toml), then rendered by substituting {{TOKENS}}.
+// module (wrangler treats **/*.html as Text by default), then rendered by substituting {{TOKENS}}.
 import MAINTENANCE_TEMPLATE from "./maintenance.html";
 
 const TURNSTILE = "https://challenges.cloudflare.com";
