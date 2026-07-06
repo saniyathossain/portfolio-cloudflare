@@ -51,6 +51,25 @@ function fillTemplate(str, vars) {
   return String(str || "").replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : "{" + key + "}"));
 }
 
+// Opt-in analytics — emitted only when an id/token is set in portfolio.json (site.analytics).
+// Empty by default → nothing injected → zero external requests. Ids are sanitised to [\w-] so the
+// value can't break out of the tag. CSP hosts for these are allow-listed in src/index.js.
+function buildAnalytics(site) {
+  const a = (site && site.analytics) || {};
+  const gid = String(a.googleId || "").replace(/[^\w-]/g, "");
+  const cf = String(a.cloudflareToken || "").replace(/[^\w-]/g, "");
+  let out = "";
+  if (gid) {
+    out +=
+      `\n  <script async src="https://www.googletagmanager.com/gtag/js?id=${gid}"></script>` +
+      `\n  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gid}');</script>`;
+  }
+  if (cf) {
+    out += `\n  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"${cf}"}'></script>`;
+  }
+  return out;
+}
+
 function buildHead(data) {
   const { site, profile, socials } = data;
   const years = yearsSince(profile.experienceStartDate, profile.experienceYearsOffset);
@@ -100,7 +119,7 @@ ${heroWebpLink}  <meta property="og:type" content="website">
   <meta name="twitter:description" content="${esc(site.twitterDescription || site.description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
   <script type="application/ld+json" id="ld-person">${JSON.stringify(ld)}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=${ASSET_V}">`;
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=${ASSET_V}">${buildAnalytics(site)}`;
 }
 
 function buildH1(profile) {

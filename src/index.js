@@ -17,8 +17,19 @@
  * service is optional/guarded so the endpoint degrades gracefully before the bindings are configured.
  */
 import { EmailMessage } from "cloudflare:email";
+// Maintenance page is authored as a real HTML file (src/maintenance.html) and bundled as a text
+// module (see the [[rules]] Text entry in wrangler.toml), then rendered by substituting {{TOKENS}}.
+import MAINTENANCE_TEMPLATE from "./maintenance.html";
 
 const TURNSTILE = "https://challenges.cloudflare.com";
+
+// Opt-in analytics hosts — permitted in the CSP so that IF an id/token is configured in
+// portfolio.json (site.analytics.googleId / cloudflareToken), the GA4 + Cloudflare beacon scripts
+// injected by sync-head.js are allowed to load. With no id set nothing is injected and no request is
+// made, so the default build stays request-free — these hosts are simply allowed-but-unused.
+const ANALYTICS_SCRIPT = "https://www.googletagmanager.com https://static.cloudflareinsights.com";
+const ANALYTICS_CONNECT =
+  "https://www.google-analytics.com https://region1.google-analytics.com https://cloudflareinsights.com";
 
 const SECURITY_HEADERS = {
   "X-Content-Type-Options": "nosniff",
@@ -30,17 +41,50 @@ const SECURITY_HEADERS = {
   "Cross-Origin-Resource-Policy": "same-origin",
   "X-Permitted-Cross-Domain-Policies": "none",
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' " + TURNSTILE + "; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' " + TURNSTILE + "; frame-src " + TURNSTILE + "; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' " + TURNSTILE + " " + ANALYTICS_SCRIPT + "; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' " + TURNSTILE + " " + ANALYTICS_CONNECT + "; frame-src " + TURNSTILE + "; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
 };
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=292022bf7d27>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=292022bf7d27>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=281c8302e77d>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=281c8302e77d>; rel=preload; as=image; type=image/svg+xml",
 ].join(", ");
 
 // Field limits — reject obviously abusive payloads before doing any work.
 const LIMITS = { name: 120, email: 200, project: 4000 };
+
+// ── Maintenance mode ─────────────────────────────────────────────────────────────────────────────
+// Site-wide hard gate, toggled by the MAINTENANCE_MODE var (set "1"/"true"/"on" in wrangler.toml or
+// the dashboard). When on, every request gets a self-contained 503 page — EXCEPT a request carrying
+// ?preview=<ADMIN_TOKEN>, which lets the owner check the live site while it's gated.
+function maintenanceOn(env) {
+  const v = String(env.MAINTENANCE_MODE || "").toLowerCase();
+  return v === "1" || v === "true" || v === "on";
+}
+
+function maintenanceResponse(env) {
+  const esc = (s) =>
+    String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const vars = {
+    TITLE: env.MAINTENANCE_TITLE || "We’ll be right back",
+    MESSAGE:
+      env.MAINTENANCE_MESSAGE ||
+      "The site is down briefly for scheduled maintenance and a few improvements. Please check back shortly — or reach me by email in the meantime.",
+    EMAIL: env.CONTACT_TO || "saniyat1000@gmail.com",
+  };
+  const html = MAINTENANCE_TEMPLATE.replace(/\{\{(\w+)\}\}/g, (_, key) =>
+    key in vars ? esc(vars[key]) : ""
+  );
+  return new Response(html, {
+    status: 503,
+    headers: {
+      ...SECURITY_HEADERS,
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+      "Retry-After": "3600",
+    },
+  });
+}
 
 function isHtmlResponse(url, response) {
   const path = new URL(url).pathname;
@@ -240,6 +284,12 @@ async function handleContactList(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Maintenance mode — hard site-wide gate (503). Owner bypass: ?preview=<ADMIN_TOKEN>.
+    if (maintenanceOn(env)) {
+      const previewOk = env.ADMIN_TOKEN && url.searchParams.get("preview") === env.ADMIN_TOKEN;
+      if (!previewOk) return maintenanceResponse(env);
+    }
 
     // Contact API — handled before static assets; never cached, no early hints.
     // GET = token-gated admin read of stored submissions; POST = a new submission.

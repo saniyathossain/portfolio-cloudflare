@@ -113,7 +113,9 @@
   const SOCIAL_BASE = "/assets/icons/social/";
 
   function resolve(name) {
-    return MAP[name] || MAP.code;
+    if (MAP[name]) return MAP[name];
+    if (LUCIDE[name]) return name; // accept a raw Lucide id directly (e.g. "mail", "wrench")
+    return MAP.code;
   }
 
   function uiClass(className, social) {

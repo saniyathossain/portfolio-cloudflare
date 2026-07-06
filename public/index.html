@@ -13,9 +13,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=c83bcb472432">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=c83bcb472432">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=c83bcb472432">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=622e181e7829">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=622e181e7829">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=622e181e7829">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
   <meta property="og:type" content="website">
@@ -31,7 +31,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/og-image.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=c83bcb472432">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=622e181e7829">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -90,10 +90,10 @@
   <!-- Header -->
   <header class="site-header">
     <div class="shell">
-      <div class="glass-pill">
+      <div class="glass-pill" :class="scrolled && 'is-scrolled'">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
           <span class="brand-bismillah-wrap">
-            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=c83bcb472432" width="509" height="100" alt="" aria-hidden="true">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=622e181e7829" width="509" height="100" alt="" aria-hidden="true">
           </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
@@ -563,7 +563,7 @@
                 <span>Email</span>
               </a>
             </li>
-            <li>
+            <li class="hidden">
               <a :href="'tel:' + profile.phoneHref" aria-label="Call">
                 <span class="icon-chip icon-chip--sm icon-chip--on-dark" aria-hidden="true"><span x-html="iconSvg('phone', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
                 <span>Call</span>
@@ -630,11 +630,11 @@
       </div>
 
       <template x-if="!success">
-        <div>
+        <div class="modal-form-wrap" :class="uc('contactForm').enabled && 'is-uc'">
           <div class="mb-6 modal-header">
             <h2 id="modal-title" class="text-2xl font-semibold tracking-tight sm:text-3xl" x-text="site.contactModal.heading"></h2>
           </div>
-          <form class="flex flex-col gap-4" @submit="submitForm">
+          <form class="flex flex-col gap-4 modal-form" @submit="submitForm" :inert="!!uc('contactForm').enabled">
             <div class="modal-field"><label for="f-name"><span x-html="iconSvg('users', 'ui-icon ui-icon--sm')" aria-hidden="true"></span><span x-text="site.contactModal.fields.name.label"></span></label><input id="f-name" name="name" type="text" required :placeholder="site.contactModal.fields.name.placeholder" autocomplete="name"></div>
             <div class="modal-field"><label for="f-email"><span x-html="iconSvg('contact', 'ui-icon ui-icon--sm')" aria-hidden="true"></span><span x-text="site.contactModal.fields.email.label"></span></label><input id="f-email" name="email" type="email" required :placeholder="site.contactModal.fields.email.placeholder" autocomplete="email"></div>
             <div class="modal-field"><label for="f-project"><span x-html="iconSvg('rocket', 'ui-icon ui-icon--sm')" aria-hidden="true"></span><span x-text="site.contactModal.fields.project.label"></span></label><textarea id="f-project" name="project" rows="4" required :placeholder="site.contactModal.fields.project.placeholder"></textarea></div>
@@ -648,6 +648,18 @@
               </button>
             </div>
           </form>
+
+          <template x-if="uc('contactForm').enabled">
+            <div class="uc-panel" role="status">
+              <span class="uc-panel__icon icon-chip icon-chip--md" aria-hidden="true"><span x-html="iconSvg('wrench', 'ui-icon')" aria-hidden="true"></span></span>
+              <h3 class="uc-panel__title" x-text="uc('contactForm').title"></h3>
+              <p class="uc-panel__msg" x-text="uc('contactForm').message"></p>
+              <a class="pill-btn pill-btn-dark uc-panel__cta" :href="'mailto:' + profile.email">
+                <span x-text="uc('contactForm').mailLabel"></span>
+                <span class="pill-btn__icon" aria-hidden="true"><span x-html="iconSvg('mail', 'ui-icon ui-icon--sm')" aria-hidden="true"></span></span>
+              </a>
+            </div>
+          </template>
         </div>
       </template>
 
@@ -668,9 +680,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=c83bcb472432" defer></script>
-  <script src="/assets/js/icons.min.js?v=c83bcb472432" defer></script>
-  <script src="/assets/js/loader.min.js?v=c83bcb472432" defer></script>
-  <script src="/assets/js/boot.min.js?v=c83bcb472432" defer></script>
+  <script src="/assets/js/data.min.js?v=622e181e7829" defer></script>
+  <script src="/assets/js/icons.min.js?v=622e181e7829" defer></script>
+  <script src="/assets/js/loader.min.js?v=622e181e7829" defer></script>
+  <script src="/assets/js/boot.min.js?v=622e181e7829" defer></script>
 </body>
 </html>

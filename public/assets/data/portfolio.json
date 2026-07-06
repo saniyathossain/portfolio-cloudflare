@@ -36,6 +36,20 @@
         "message": "Thanks for reaching out — I'll get back to you within one business day.",
         "closeLabel": "Close"
       }
+    },
+    "features": {
+      "underConstruction": {
+        "contactForm": {
+          "enabled": true,
+          "title": "This page is under construction",
+          "message": "Our contact form is getting a tune-up. In the meantime, kindly email us directly — we reply within one business day.",
+          "mailLabel": "Email us"
+        }
+      }
+    },
+    "analytics": {
+      "googleId": "",
+      "cloudflareToken": ""
     }
   },
   "sections": {

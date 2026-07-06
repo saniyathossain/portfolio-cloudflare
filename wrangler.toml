@@ -7,6 +7,12 @@ compatibility_date = "2024-12-01"
 directory = "./public"
 binding = "ASSETS"
 
+# Bundle the maintenance page (src/maintenance.html) into the Worker as a text module so it can be
+# imported and rendered dynamically (see maintenanceResponse in src/index.js). Scoped to that one file.
+[[rules]]
+type = "Text"
+globs = ["**/maintenance.html"]
+
 # --- Contact form (POST /api/contact) --------------------------------------------------------------
 # All three backing services below are OPTIONAL and guarded in src/index.js: the endpoint validates
 # and returns success even before they're configured, so deploying in stages is safe.
@@ -16,6 +22,11 @@ binding = "ASSETS"
 [vars]
 CONTACT_FROM = "contact@saniyat.com"
 CONTACT_TO = "saniyat1000@gmail.com"
+
+# Maintenance mode — site-wide hard gate (503). Set to "1"/"true"/"on" to enable (flip here + redeploy,
+# or override live in Dashboard → the Worker → Settings → Variables). Owner bypass while gated:
+# https://saniyat.com/?preview=<ADMIN_TOKEN>. Optional copy overrides: MAINTENANCE_TITLE / MAINTENANCE_MESSAGE.
+MAINTENANCE_MODE = "off"
 
 # Email Routing send_email binding — lets the Worker send the notification email.
 # Setup: Dashboard → your zone → Email → Email Routing → enable + verify the destination (CONTACT_TO).

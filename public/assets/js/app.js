@@ -38,6 +38,7 @@ function portfolioApp() {
     menuOpen: false,
     modalOpen: false,
     showBackToTop: false,
+    scrolled: false,
     submitting: false,
     success: false,
     formError: "",
@@ -116,6 +117,8 @@ function portfolioApp() {
       const check = () => {
         raf = 0;
         this.showBackToTop = window.scrollY > T.BACK_TO_TOP_PX;
+        // Header glass intensifies once it floats over page content (past the very top).
+        this.scrolled = window.scrollY > 12;
       };
       window.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
       check();
@@ -575,6 +578,14 @@ function portfolioApp() {
     highlightExp(text) { return window.PORTFOLIO_DATA.highlightExp(text); },
 
     iconSvg(name, className) { return window.iconSvg(name, className); },
+
+    /** Named "under construction" feature flag lookup, e.g. uc('contactForm').
+     *  Config lives in portfolio.json → site.features.underConstruction.<key>. Returns a safe
+     *  object ({ enabled:false }) when the key is absent, so any section can be gated by name. */
+    uc(key) {
+      const map = (this.site && this.site.features && this.site.features.underConstruction) || {};
+      return map[key] || { enabled: false };
+    },
 
     roleEmployment(role) {
       if (role?.employment?.label) return role.employment;

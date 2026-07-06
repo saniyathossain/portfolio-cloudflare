@@ -27,6 +27,11 @@ system **SF Pro** fonts. No runtime build step.
 - **Non-negotiables:** keep Google **PageSpeed**/**SEO**/**CSP** intact, **no new network requests** (fonts/icons
   are local), light-only theme, every animation gated by `prefers-reduced-motion`, responsive rem/vw grid verified
   at 360 / 768 / 1024 / 1440. Deploy via `./deploy.sh` (Wrangler).
+- **Feature flags / maintenance / analytics** (see `docs/aidlc/39`): soft per-section "under construction" notices
+  live in `site.features.underConstruction.<key>` (read via Alpine `uc('<key>')`); site-wide **maintenance mode** is
+  the Worker `MAINTENANCE_MODE` var (503, `?preview=<ADMIN_TOKEN>` bypass). **Analytics** is opt-in via
+  `site.analytics` — empty = zero requests (the "no new network requests" rule holds for the default build); setting
+  a `googleId`/`cloudflareToken` is a deliberate exception (hosts already CSP-allow-listed in `src/index.js`).
 
 ## Skills (design / frontend)
 
