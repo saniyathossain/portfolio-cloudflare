@@ -117,8 +117,8 @@ html:not(.is-loading) #main.is-liquid-warp {
   --dur-swap: 0.18s;
   --dur-slow: 1.05s;
   --dur-reveal: 0.88s;
-  --dur-pill-reveal: 0.72s;
-  --ease-pill-reveal: cubic-bezier(0.22, 1, 0.36, 1); /* buttery decelerate — smoother stack/skill stagger */
+  --dur-pill-reveal: 0.82s;
+  --ease-pill-reveal: cubic-bezier(0.33, 1, 0.68, 1); /* easeOutCubic — gentle onset, no snap (smoother stack/skill stagger) */
   --dur-pill-expand: 0.4s;
   --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
   /* Inter-first on every platform → identical look on Mac/iOS/Windows/Android/Linux (see doc 19).
@@ -2016,17 +2016,11 @@ html.is-ready .hero__wm {
 /* Services rows — Lumora hover-fill inside faux-frost panel */
 .services-list { padding: 0.5rem; }
 .service-row {
-  display: grid; grid-template-columns: auto auto 1fr auto;
+  display: grid; grid-template-columns: auto 1fr auto;
   align-items: center; gap: 0.75rem 1rem;
   border-radius: var(--radius-card-sm);
-  padding: 1.35rem 1rem 1.35rem 0.65rem; position: relative;
+  padding: 1.35rem 1rem 1.35rem 0.9rem; position: relative;
   transition: background 0.35s var(--ease-glass);
-}
-.service-row__index {
-  flex: none; width: 2.25rem; text-align: center;
-  font-size: 0.72rem; font-weight: 650; letter-spacing: 0.06em;
-  color: rgba(17,17,17,.36); font-variant-numeric: tabular-nums;
-  transition: transform 0.35s var(--ease-glass), color 0.25s ease;
 }
 .service-row__icon {
   flex: none; width: 2.5rem; height: 2.5rem; display: grid; place-items: center;
@@ -2053,7 +2047,6 @@ html.is-ready .hero__wm {
 }
 @media (hover: hover) and (pointer: fine) {
   .service-row:hover { background: var(--surface); }
-  .service-row:hover .service-row__index { color: rgba(17,17,17,.52); transform: translateX(6px); }
   .service-row:hover .service-row__body { transform: translateX(6px); }
   .service-row:hover .service-row__title { color: var(--tint-deep); }
   .service-row:hover .service-row__arrow { opacity: 1; transform: translateX(5px); }
@@ -2503,9 +2496,9 @@ html.is-ready .hero__wm {
 .brand-pill::before {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(115deg, transparent 22%, rgba(255,255,255,.9) 48%, transparent 74%);
+  background: linear-gradient(115deg, transparent 14%, rgba(255,255,255,.55) 48%, transparent 84%);
   transform: translateX(-135%);
-  transition: transform 0.7s var(--ease-glass);
+  transition: transform 0.8s var(--ease-glass);
 }
 .brand-pill:hover::before,
 .brand-pill:focus-visible::before,
@@ -2560,7 +2553,7 @@ html.is-ready .hero__wm {
 }
 .brand-pill__badge img {
   width: 1.34rem; height: 1.34rem; object-fit: contain;
-  transition: transform 0.22s var(--ease-tile), filter 0.22s ease;
+  transition: transform 0.3s var(--ease-glass), filter 0.3s ease;
 }
 .brand-pill--sm .brand-pill__badge img { width: 1.12rem; height: 1.12rem; }
 
@@ -2575,7 +2568,7 @@ html.is-ready .hero__wm {
 .brand-pill:hover .brand-pill__badge img,
 .brand-pill:focus-visible .brand-pill__badge img,
 .brand-pill.is-open .brand-pill__badge img {
-  transform: scale(1.08);
+  transform: scale(1.05);
   filter: brightness(1.05) saturate(1.1);
 }
 .brand-pill:hover .brand-pill__label-in,
@@ -2627,6 +2620,7 @@ html.is-ready .hero__wm {
   background: radial-gradient(2.6rem 2.6rem at 0.9rem 50%,
               color-mix(in srgb, var(--brand) 34%, transparent), transparent 62%);
   opacity: 0;
+  transition: opacity 0.32s var(--ease-glass);
 }
 .brand-pill.spec:hover::after,
 .brand-pill.spec:focus-visible::after,
