@@ -27,21 +27,19 @@ This is a **Cloudflare Worker** (`wrangler.toml` → `main = src/index.js`, stat
 binding), so the git path is **Workers Builds**: Cloudflare builds + deploys on every push. Repo:
 `github.com/saniyathossain/portfolio-cloudflare` (production branch `main`).
 
-### One-time prerequisites (must be done before the first build, or deploy fails)
+### First deploy needs NO setup
+The KV + `send_email` bindings are **commented out** in `wrangler.toml`, so the first deploy succeeds with zero
+config (both are guarded in `src/index.js` — the contact endpoint still validates + logs; it just doesn't persist or
+email yet). The build command must be **`bash build.sh`** (see the CI note below); `build-css.sh` auto-detects the OS,
+so the Linux CI downloads the Linux Tailwind binary.
 
-1. **KV namespace** — `wrangler.toml` ships a placeholder id. Create it and commit the real id (git builds
-   read the committed `wrangler.toml`):
-   ```bash
-   npx wrangler kv namespace create CONTACT_KV
-   # paste the printed id into wrangler.toml → [[kv_namespaces]] id = "…"  (replace REPLACE_WITH_KV_NAMESPACE_ID)
-   ```
-2. **Executable bits** — mark the build scripts executable in git so the CI runner can invoke them:
-   ```bash
-   git update-index --chmod=+x build.sh build-css.sh scripts/setup-fonts.sh
-   ```
-3. **Email Routing / Turnstile** (optional — `POST /api/contact` no-ops safely until configured): enable Email
-   Routing on the `saniyat.com` zone + verify `CONTACT_TO`; create the Turnstile widget and put its **site** key in
-   `portfolio.json → site.turnstileSiteKey`.
+### Enable the contact backend later (each is independent, optional)
+1. **KV** — `npx wrangler kv namespace create CONTACT_KV`, paste the id, and uncomment the `[[kv_namespaces]]` block
+   in `wrangler.toml`; redeploy.
+2. **Email** — enable Email Routing on the `saniyat.com` zone + verify `CONTACT_TO`, then uncomment `[[send_email]]`;
+   redeploy.
+3. **Turnstile** — create the widget, put its **site** key in `portfolio.json → site.turnstileSiteKey`, and set the
+   secret: `npx wrangler secret put TURNSTILE_SECRET`.
 
 ### Connect the repo
 
@@ -149,3 +147,5 @@ npx wrangler dev
 | Empty meta tags | Run `node scripts/sync-head.js` |
 | SW stale cache | Bump deploy (hash-sw runs automatically) |
 | CSP blocks font | Ensure `font-src 'self'` in `src/index.js` |
+| CI build: `tailwindcss: cannot execute binary file: Exec format error` | The Tailwind standalone binary must match the build OS. `build-css.sh` detects OS+arch (`uname -s`/`-m`) and downloads `tailwindcss-linux-x64` on Cloudflare (Linux), `-macos-*` locally. `bin/` is gitignored so no wrong-arch binary is committed. |
+| CI: set the **build command** to `bash build.sh`, not `./deploy.sh` | Workers Builds runs its own deploy step (`npx wrangler deploy`). Using `./deploy.sh` as the build command nests a second `wrangler deploy` inside the build. |
