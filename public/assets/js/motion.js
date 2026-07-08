@@ -9,7 +9,10 @@
 (function () {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
   const canEnhance = finePointer && !reduce;
+  // Touch parallax is half the desktop ranges — present but cheap.
+  const parallaxScale = coarsePointer ? 0.5 : 1;
 
   if (reduce) return; // reduced-motion: nothing animates.
 
@@ -125,10 +128,11 @@
   let parallaxRaf = 0;
 
   function applyParallax(scrollY) {
-    if (!canEnhance || !heroInView) return;
-    const y = Math.min(scrollY * 0.10, 70);
-    const wm = Math.min(scrollY * 0.06, 48);
-    const liquid = Math.min(scrollY * 0.08, 56);
+    if (reduce || !heroInView) return;
+    const s = parallaxScale;
+    const y = Math.min(scrollY * 0.10 * s, 70 * s);
+    const wm = Math.min(scrollY * 0.06 * s, 48 * s);
+    const liquid = Math.min(scrollY * 0.08 * s, 56 * s);
     document.documentElement.style.setProperty("--aurora-y", y.toFixed(1) + "px");
     document.documentElement.style.setProperty("--wm-parallax-y", wm.toFixed(1) + "px");
     document.documentElement.style.setProperty("--hero-liquid-y", liquid.toFixed(1) + "px");
@@ -137,25 +141,31 @@
   }
 
   // Generic depth parallax for any [data-parallax] element — transform-only, in-view only, cheap.
+  // Speed is the attribute value (data-parallax="0.05"); data-parallax-speed kept as legacy alias.
   let parallaxEls = [];
   function collectParallax() {
     parallaxEls = Array.prototype.slice.call(document.querySelectorAll("[data-parallax]"));
   }
   function applyElementParallax() {
-    if (!canEnhance || !parallaxEls.length) return;
+    if (reduce || !parallaxEls.length) return;
     const vh = window.innerHeight;
     for (let i = 0; i < parallaxEls.length; i++) {
       const el = parallaxEls[i];
       const r = el.getBoundingClientRect();
       if (r.bottom < -240 || r.top > vh + 240) continue; // skip far off-screen
-      const speed = parseFloat(el.getAttribute("data-parallax-speed") || "0.12");
+      const raw = el.getAttribute("data-parallax");
+      const speed = parseFloat(
+        (raw && raw !== "" ? raw : null) ||
+          el.getAttribute("data-parallax-speed") ||
+          "0.12"
+      ) * parallaxScale;
       const offset = ((r.top + r.height / 2) - vh / 2) * -speed;
       el.style.setProperty("--parallax-y", offset.toFixed(1) + "px");
     }
   }
 
   function scrollParallax() {
-    if (!canEnhance) return;
+    if (reduce) return;
     collectParallax();
 
     const hero = document.getElementById("home");
@@ -331,6 +341,44 @@
     });
   }
 
+  // Touch brand-pill reveal — gated on html.touch-pills (boot.js). Mutually exclusive with pillFlip
+  // (fine-pointer). Opens one pill; auto-closes on other-pill / outside tap / scroll / timer.
+  function pillTap() {
+    if (!document.documentElement.classList.contains("touch-pills")) return;
+    const CLOSE_MS = 2500;
+    let openPill = null;
+    let timer = 0;
+
+    function clearTimer() {
+      if (timer) { clearTimeout(timer); timer = 0; }
+    }
+    function close() {
+      clearTimer();
+      if (!openPill) return;
+      openPill.classList.remove("is-open");
+      openPill = null;
+    }
+    function open(pill) {
+      if (openPill && openPill !== pill) openPill.classList.remove("is-open");
+      openPill = pill;
+      pill.classList.add("is-open");
+      clearTimer();
+      timer = setTimeout(close, CLOSE_MS);
+    }
+
+    document.addEventListener("click", (e) => {
+      const pill = e.target.closest && e.target.closest(".brand-pill");
+      if (pill && pill.parentElement && pill.parentElement.classList.contains("pill-row")) {
+        e.preventDefault();
+        if (openPill === pill) close();
+        else open(pill);
+        return;
+      }
+      if (openPill) close();
+    });
+    window.addEventListener("scroll", close, { passive: true });
+  }
+
   function boot() {
     if (canEnhance) {
       document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
@@ -341,7 +389,8 @@
     scrollParallax();
     heroSpatial();
     pillFlip();
-    if (canEnhance) applyParallax(window.scrollY || 0);
+    pillTap();
+    if (!reduce) applyParallax(window.scrollY || 0);
   }
 
   window.addEventListener("portfolio-ready", boot);

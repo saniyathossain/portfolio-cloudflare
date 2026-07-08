@@ -709,3 +709,81 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("portfolioApp", portfolioApp);
 });
 window.portfolioApp = portfolioApp;
+
+// Touch popover + partner-orb — must live here (not motion.js) so reduced-motion still gets
+// tap-toggle + dismissal. Fine-pointer devices keep CSS :hover / :focus-within.
+(function setupTouchReveal() {
+  const touch =
+    window.matchMedia("(pointer: coarse)").matches ||
+    window.matchMedia("(hover: none)").matches;
+  if (!touch) return;
+
+  let openPopover = null;
+  let openOrb = null;
+
+  function closePopover() {
+    if (!openPopover) return;
+    openPopover.classList.remove("is-open");
+    openPopover = null;
+  }
+  function closeOrb() {
+    if (!openOrb) return;
+    openOrb.classList.remove("is-open");
+    openOrb = null;
+  }
+  function dismissAll() {
+    closePopover();
+    closeOrb();
+  }
+
+  document.addEventListener("click", (e) => {
+    const orb = e.target.closest && e.target.closest(".partner-orb");
+    if (orb) {
+      if (openOrb === orb) {
+        closeOrb();
+        return; // second tap — allow navigation
+      }
+      e.preventDefault();
+      closePopover();
+      if (openOrb) openOrb.classList.remove("is-open");
+      openOrb = orb;
+      orb.classList.add("is-open");
+      return;
+    }
+
+    const pop = e.target.closest && e.target.closest(".popover");
+    if (pop) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeOrb();
+      if (openPopover === pop) {
+        closePopover();
+      } else {
+        if (openPopover) openPopover.classList.remove("is-open");
+        openPopover = pop;
+        pop.classList.add("is-open");
+      }
+      return;
+    }
+  });
+
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (!openPopover && !openOrb) return;
+      const t = e.target;
+      if (openPopover && openPopover.contains(t)) return;
+      if (openOrb && openOrb.contains(t)) return;
+      dismissAll();
+    },
+    true
+  );
+
+  window.addEventListener("scroll", dismissAll, { passive: true });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") dismissAll();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") dismissAll();
+  });
+})();

@@ -8,8 +8,12 @@
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
+  // Tap-reveal brand pills on touch / no-hover (static force-open remains the reduced/no-JS fallback).
+  if (!reduced && (window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(hover: none)").matches)) {
+    document.documentElement.classList.add("touch-pills");
+  }
 
-  const ASSET_V = "1b97ff67d952"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "3a6bd3162450"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
@@ -53,8 +57,10 @@
     else setTimeout(run, 800);
   }
 
+
   async function boot() {
     registerSw();
+
     // portfolio.json is same-origin but still a real network request — a transient failure here
     // (offline load, CDN hiccup) must not cascade into skipping Alpine/app.js entirely, since that
     // would leave the whole site inert with unevaluated x-data markup. app.js's `window.PORTFOLIO_DATA
