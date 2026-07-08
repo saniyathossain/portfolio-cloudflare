@@ -74,7 +74,7 @@ function buildHead(data) {
   const { site, profile, socials } = data;
   const years = yearsSince(profile.experienceStartDate, profile.experienceYearsOffset);
   const ogDescription = fillTemplate(site.ogDescription, { years });
-  const ogImage = absUrl(site.url, site.ogImage || "/assets/img/og-image.jpg");
+  const ogImage = absUrl(site.url, site.ogImage || "/assets/img/saniyat-hossain.jpg");
   const heroWebp480 = path.join(ROOT, "public/assets/img/saniyat-hossain-480.webp");
   const heroWebpLink = fs.existsSync(heroWebp480)
     ? '  <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">\n'

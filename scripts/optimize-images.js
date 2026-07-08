@@ -11,7 +11,6 @@ const crypto = require("crypto");
 const ROOT = path.join(__dirname, "..");
 const IMG = path.join(ROOT, "public/assets/img");
 const HERO = path.join(IMG, "saniyat-hossain.jpg");
-const OG = path.join(IMG, "og-image.jpg");
 const CACHE = path.join(__dirname, ".img-cache.json");
 
 function has(cmd) {
@@ -21,16 +20,6 @@ function has(cmd) {
   } catch {
     return false;
   }
-}
-
-function webp(src, dest, q) {
-  if (!fs.existsSync(src)) return;
-  if (has("cwebp")) {
-    execSync(`cwebp -q ${q} "${src}" -o "${dest}"`, { stdio: "ignore" });
-    console.log("WebP:", dest);
-    return;
-  }
-  console.warn("WARN: cwebp not found — skip", dest);
 }
 
 /** WebP resized to `width` (long edge), for the hero's responsive srcset. */
@@ -155,15 +144,6 @@ if (needsGen(HERO, [...heroSrcset, heroWebp, apple, i192, i512, fav32, favSvg]))
   record(HERO);
 } else {
   console.log("Hero derivatives up to date — skipped.");
-}
-
-// ── OG image → WebP ───────────────────────────────────────────────────────────
-const ogWebp = path.join(IMG, "og-image.webp");
-if (needsGen(OG, [ogWebp])) {
-  webp(OG, ogWebp, 85);
-  record(OG);
-} else {
-  console.log("OG derivative up to date — skipped.");
 }
 
 // ── Company/school logos → resized WebP ───────────────────────────────────────
