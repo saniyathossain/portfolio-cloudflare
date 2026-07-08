@@ -23,6 +23,12 @@
     return document.documentElement;
   }
 
+  // Only ever called twice (load start p=0, load end p=1) — the blur/dim/scale glide between those
+  // two states is a CSS transition (styles.css `html.is-loading .app-root`/`.load-scrim`, driven by
+  // --load-ms below), not a per-rAF-frame JS write. Writing these custom properties every frame used
+  // to force a style recalc that cascades expensive on a large DOM (measured as real main-thread
+  // blocking time); two writes + a CSS transition produce the same progressive-unblur look for a
+  // fraction of the cost.
   function setLoadVisuals(p) {
     const root = rootEl();
     const blur = (1 - p) * BLUR_MAX;
@@ -58,6 +64,7 @@
     resetPageState();
     const root = rootEl();
     root.classList.add("is-loading");
+    root.style.setProperty("--load-ms", FILL_MS + "ms");
     setLoadVisuals(0);
     ensureScrim();
   }
@@ -68,6 +75,7 @@
     root.style.removeProperty("--load-blur");
     root.style.removeProperty("--load-dim");
     root.style.removeProperty("--load-scale");
+    root.style.removeProperty("--load-ms");
   }
 
   function stopScroll() {
@@ -90,7 +98,8 @@
   }
 
   function finishLoader(loader) {
-    setLoadVisuals(1);
+    // Blur/dim/scale are already at p=1 (kicked off in runLoader(), transitioning in parallel with
+    // the fill loop) by the time this fires — no extra write needed.
     const complete = () => {
       endLoading();
       startScroll();
@@ -140,11 +149,17 @@
     if (reduced) {
       if (fill) fill.style.transform = "scaleX(1)";
       if (num) num.textContent = "100";
+      setLoadVisuals(1); // one-off, not per-frame — fine under reduced-motion
       finishLoader(loader);
       return;
     }
 
     stopScroll();
+    // Kick the blur/dim/scale CSS transition off now, running for --load-ms (== FILL_MS) in parallel
+    // with the fill-bar/count-up rAF loop below — not sequentially after it. A separate rAF tick
+    // guarantees the p=0 values set in beginLoading() actually commit a frame before this p=1 write,
+    // so the browser has something to transition *from* instead of skipping straight to the end state.
+    requestAnimationFrame(() => setLoadVisuals(1));
     const start = performance.now();
     let revealed = false;
 
@@ -152,7 +167,6 @@
       const t = Math.min((now - start) / FILL_MS, 1);
       const p = easeInOutCubic(t);
       const count = Math.round(p * 100);
-      setLoadVisuals(p);
       if (fill) fill.style.transform = "scaleX(" + p + ")";
       if (num) num.textContent = String(count).padStart(3, "0");
       if (!revealed && t >= REVEAL_AT) {

@@ -13,11 +13,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="canonical" href="https://saniyat.com/">
-  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=d3f5660ead63">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=d3f5660ead63">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=d3f5660ead63">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg?v=133014b3cba6">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=133014b3cba6">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=133014b3cba6">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
   <link rel="preload" href="/assets/img/saniyat-hossain-480.webp" as="image" type="image/webp" fetchpriority="high" imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w" imagesizes="(min-width: 1024px) 62vw, 100vw">
+  <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/inter-latin.woff2" crossorigin>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://saniyat.com/">
   <meta property="og:title" content="Saniyat Hossain — Staff Software Engineer">
@@ -31,7 +32,7 @@
   <meta name="twitter:description" content="Backend engineering, shipped with quiet precision.">
   <meta name="twitter:image" content="https://saniyat.com/assets/img/saniyat-hossain.jpg">
   <script type="application/ld+json" id="ld-person">{"@context":"https://schema.org","@type":"Person","name":"Mohammad Saniyat Hossain","alternateName":"Saniyat Hossain","jobTitle":"Staff Software Engineer","url":"https://saniyat.com","image":"https://saniyat.com/assets/img/saniyat-hossain.jpg","email":"mailto:saniyat1000@gmail.com","sameAs":["https://github.com/saniyathossain","https://linkedin.com/in/saniyathossain","https://dev.to/saniyathossain","https://saniyathossain.medium.com"]}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=d3f5660ead63">
+  <link rel="stylesheet" href="/assets/css/styles.min.css?v=133014b3cba6">
   <!-- SYNC:HEAD:END -->
 </head>
 
@@ -93,7 +94,7 @@
       <div class="glass-pill" :class="scrolled && 'is-scrolled'">
         <button type="button" class="brand-btn" @click="scrollTo('home')" aria-label="Mohammad Saniyat Hossain — home">
           <span class="brand-bismillah-wrap">
-            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=d3f5660ead63" width="509" height="100" alt="" aria-hidden="true">
+            <img class="brand-bismillah" src="/assets/img/bismillah.svg?v=133014b3cba6" width="509" height="100" alt="" aria-hidden="true">
           </span>
           <span class="brand-tooltip" role="tooltip">In the name of Allah, the Most Gracious, the Most Merciful</span>
         </button>
@@ -376,6 +377,15 @@
 
                     <div class="exp-details" :id="'exp-panel-' + role.id" :class="isRoleOpen(role.id) && 'is-open'" :inert="!isRoleOpen(role.id) ? '' : null">
                       <div class="exp-details__inner">
+                       <!-- Lazy-mounted: this accordion body (details list + up to ~10 stack/AI-tool
+                            pills per role, 8 roles total) is unconditionally in the DOM otherwise, even
+                            though at most one is open at a time — Alpine's init walk was paying to bind
+                            all of it upfront. hasOpenedOnce() flips true (and stays true) on first
+                            expand, sequenced in toggleRole() with an extra $nextTick before the
+                            scrollHeight measurement so the first-open height animation still measures
+                            the real, fully-mounted content. -->
+                       <template x-if="hasOpenedOnce(role.id)">
+                        <div>
                         <ul class="exp-details__list">
                           <template x-for="d in role.details" :key="d">
                             <li>
@@ -427,6 +437,8 @@
                             </div>
                           </div>
                         </div>
+                        </div>
+                       </template>
                       </div>
                     </div>
                   </li>
@@ -680,9 +692,9 @@
 
   </div><!-- /#app -->
 
-  <script src="/assets/js/data.min.js?v=d3f5660ead63" defer></script>
-  <script src="/assets/js/icons.min.js?v=d3f5660ead63" defer></script>
-  <script src="/assets/js/loader.min.js?v=d3f5660ead63" defer></script>
-  <script src="/assets/js/boot.min.js?v=d3f5660ead63" defer></script>
+  <script src="/assets/js/data.min.js?v=133014b3cba6" defer></script>
+  <script src="/assets/js/icons.min.js?v=133014b3cba6" defer></script>
+  <script src="/assets/js/loader.min.js?v=133014b3cba6" defer></script>
+  <script src="/assets/js/boot.min.js?v=133014b3cba6" defer></script>
 </body>
 </html>

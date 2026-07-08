@@ -7,56 +7,56 @@
  * @license Proprietary — all rights reserved.
  */
 (function () {
-  const M = window.Motion;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
   const canEnhance = finePointer && !reduce;
 
-  if (reduce) return; // reduced-motion: nothing animates. Specular/parallax below are vanilla; only magnetic/tilt need Motion One.
-  const hasMotion = !!(M && typeof M.animate === "function");
-  const animate = hasMotion ? M.animate : null;
+  if (reduce) return; // reduced-motion: nothing animates.
 
-  const springSnappy = { type: "spring", stiffness: 340, damping: 30, mass: 0.6 };
-  const springSoft = { type: "spring", stiffness: 220, damping: 28, mass: 0.7 };
+  // Shared rAF-lerp "spring" — same settle-toward-target idiom heroSpatial() below already hand-rolls
+  // for the hero parallax, reused here for magnetic()/tilt() instead of pulling in Motion One (a
+  // 65KB, desktop-only, fine-pointer-gated dependency) for what boils down to two pointer-follow
+  // effects. `stiffness` is the per-frame lerp fraction (higher = snappier); settle threshold stops
+  // the rAF loop once the values are visually at rest instead of looping forever at ~0.
+  function makeSpring(el, apply, stiffness) {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    function tick() {
+      cx += (tx - cx) * stiffness;
+      cy += (ty - cy) * stiffness;
+      apply(el, cx, cy);
+      raf = (Math.abs(tx - cx) > 0.02 || Math.abs(ty - cy) > 0.02) ? requestAnimationFrame(tick) : 0;
+    }
+    return {
+      set(x, y) { tx = x; ty = y; if (!raf) raf = requestAnimationFrame(tick); },
+    };
+  }
 
   function magnetic(el, strength) {
     strength = strength || 0.14;
-    let raf = 0;
-    function move(e) {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = el.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height / 2);
-        animate(el, { x: dx * strength, y: dy * strength }, springSnappy);
-      });
-    }
-    function leave() {
-      animate(el, { x: 0, y: 0 }, springSoft);
-    }
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerleave", leave);
+    const spring = makeSpring(el, (node, x, y) => {
+      node.style.transform = "translate(" + x.toFixed(2) + "px," + y.toFixed(2) + "px)";
+    }, 0.22);
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2);
+      const dy = e.clientY - (r.top + r.height / 2);
+      spring.set(dx * strength, dy * strength);
+    });
+    el.addEventListener("pointerleave", () => spring.set(0, 0));
   }
 
   function tilt(el, max) {
     max = max || 5;
-    let raf = 0;
-    function move(e) {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = el.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width - 0.5;
-        const py = (e.clientY - r.top) / r.height - 0.5;
-        animate(el, { rotateY: px * max, rotateX: -py * max }, springSoft);
-      });
-    }
-    function leave() {
-      animate(el, { rotateX: 0, rotateY: 0 }, springSoft);
-    }
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerleave", leave);
+    const spring = makeSpring(el, (node, rx, ry) => {
+      node.style.transform = "rotateY(" + rx.toFixed(2) + "deg) rotateX(" + ry.toFixed(2) + "deg)";
+    }, 0.18);
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      spring.set(px * max, -py * max);
+    });
+    el.addEventListener("pointerleave", () => spring.set(0, 0));
   }
 
   function specular() {
@@ -262,12 +262,22 @@
       }, ms + 100));
     }
 
+    // The row's own [data-stagger] scroll-reveal drives each pill's transform via a CSS transition
+    // (styles.css .pill-row[data-stagger] .brand-pill). flipRow() ALSO writes pill.style.transform
+    // directly (inline style always wins over a CSS transition), so opening a pill mid-reveal would
+    // clobber the stagger-in animation — visible stutter, worse on slow devices where the reveal
+    // window stays open longer relative to how fast a pointer can reach the row. Skip FLIP entirely
+    // while the row hasn't finished revealing; the pointer can still re-trigger it once settled.
+    function stillRevealing(row) {
+      return row.hasAttribute("data-stagger") && !row.classList.contains("is-visible");
+    }
+
     function setOpen(pill) {
       if (pill === openPill) return;
       const prev = openPill;
       const prevRow = prev && prev.parentElement;
       const row = pill.parentElement;
-      if (!row) return;
+      if (!row || stillRevealing(row)) return;
       // Different rows: collapse the old row separately (no conflict — disjoint pill sets).
       if (prev && prevRow && prevRow !== row) {
         flipRow(prevRow, () => prev.classList.remove("is-open"), CLOSE_MS);
@@ -322,7 +332,7 @@
   }
 
   function boot() {
-    if (canEnhance && hasMotion) {
+    if (canEnhance) {
       document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
       const card = document.querySelector(".hero-card");
       if (card) tilt(card);

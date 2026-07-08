@@ -1,18 +1,25 @@
 [x-cloak] { display: none !important; }
 .svg-sprite { display: none; }
 
-/* Loader stage — site painted + progressively unblurred during splash */
+/* Loader stage — site painted + progressively unblurred during splash. --load-blur/--load-dim/
+   --load-scale are set only twice by loader.js (load start, load end) — not per rAF frame — and
+   interpolated here by a CSS transition instead. Each JS write to a custom property used by filter/
+   transform on .app-root previously forced a style recalc that (on a large DOM) cascades expensive
+   enough to show up as measurable main-thread blocking time; a two-value CSS transition gets the
+   same progressive-unblur look for a fraction of the cost. Duration is set inline by loader.js to
+   match FILL_MS so the two stay in lockstep without a duplicated constant here. */
 html.is-loading .app-root {
   filter: blur(var(--load-blur, 16px));
   transform: scale(var(--load-scale, 1.012));
   transform-origin: center top;
   will-change: filter, transform;
+  transition: filter var(--load-ms, 1300ms) linear, transform var(--load-ms, 1300ms) linear;
 }
 .load-scrim {
   position: fixed; inset: 0; z-index: 119;
   pointer-events: auto;
   background: rgba(10, 10, 10, var(--load-dim, 0.48));
-  transition: background-color 80ms linear;
+  transition: background-color var(--load-ms, 1300ms) linear;
 }
 html:not(.is-loading) .load-scrim { display: none; }
 
@@ -384,10 +391,23 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   min-width: 0;
   color: inherit; text-decoration: none;
 }
-.edu-row__link:hover .edu-row__school,
-.edu-row__link:focus-visible .edu-row__school { color: var(--tint-deep); }
-.edu-row__link:hover .edu-row__logo,
-.edu-row__link:focus-visible .edu-row__logo { transform: scale(1.1); }
+/* Hover-only lift/logo/glow/sheen used to run at four different timings (card 0.7s var(--ease-glass),
+   link/logo 0.24s-0.28s var(--ease-tile), .spec glow a hardcoded 0.4s ease, .sheen 0.85s) so the card
+   read as un-choreographed — everything now shares .pill-btn-glass:hover's own 0.45s var(--ease-glass)
+   recipe, this codebase's most-polished existing hover timing. Gated to real hover-capable pointers
+   (matching .service-row's pattern) since :hover never fires on touch; touch gets a static always-on
+   equivalent below instead of a hover that can never show. */
+@media (hover: hover) and (pointer: fine) {
+  .edu-row__link:hover .edu-row__school,
+  .edu-row__link:focus-visible .edu-row__school { color: var(--tint-deep); }
+  .edu-row__link:hover .edu-row__logo,
+  .edu-row__link:focus-visible .edu-row__logo { transform: scale(1.1); }
+}
+@media (hover: none), (pointer: coarse) {
+  /* No hover on touch — keep the card reading "alive" with the lift + tint-border always applied at
+     rest, same touch-parity approach used for .brand-pill. */
+  .edu-row.glass-card { transform: translateY(-3px); border-color: rgba(255,255,255,.92); }
+}
 .edu-row .edu-place { display: none; }
 @media (min-width: 1024px) {
   /* Desktop: 3 education entries map cleanly onto a 3-up row, so the section uses the full width
@@ -467,7 +487,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   width: 3rem; height: 3rem;
   border: 1px solid color-mix(in srgb, var(--tint) 22%, rgba(255,255,255,.95));
   --logo-badge-shadow: color-mix(in srgb, var(--tint) 35%, rgba(24,30,56,.18));
-  transition: transform 0.28s var(--ease-tile);
+  transition: transform 0.45s var(--ease-glass);
 }
 .edu-row__logo img { width: 2rem; height: 2rem; object-fit: contain; }
 .edu-row__body { min-width: 0; }
@@ -482,7 +502,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
     linear-gradient(180deg, color-mix(in srgb, var(--chip) 20%, #fff), color-mix(in srgb, var(--chip) 9%, #fff));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 2px 7px -3px color-mix(in srgb, var(--chip) 45%, transparent);
 }
-.edu-row__school { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.24s var(--ease-tile); }
+.edu-row__school { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.45s var(--ease-glass); }
 .edu-row__degree { margin-top: 0.2rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); }
 .edu-row__place {
   align-items: center; border-radius: var(--radius-pill);
@@ -500,7 +520,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 /* Pointer-tracked specular used by pills + cards (JS sets --px/--py) */
 .spec::after {
   content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  border-radius: inherit; opacity: 0; transition: opacity 0.4s ease;
+  border-radius: inherit; opacity: 0; transition: opacity 0.45s var(--ease-glass);
   background: radial-gradient(16rem 16rem at var(--px,50%) var(--py,0%),
               rgba(255,255,255,.32), rgba(255,255,255,0) 62%);
 }
@@ -2855,7 +2875,7 @@ html.is-ready .hero__wm {
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 110;
   display: flex; align-items: flex-end; justify-content: center; padding: 1rem;
-  background: rgba(17,17,17,.3); backdrop-filter: blur(16px);
+  background: rgba(17,17,17,.3); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   opacity: 0; pointer-events: none; transition: opacity 0.4s;
 }
 @media (min-width: 640px) { .modal-backdrop { align-items: center; } }

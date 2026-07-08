@@ -106,7 +106,8 @@ function buildHead(data) {
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=${ASSET_V}">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=${ASSET_V}">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
-${heroWebpLink}  <meta property="og:type" content="website">
+${heroWebpLink}  <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/inter-latin.woff2" crossorigin>
+  <meta property="og:type" content="website">
   <meta property="og:url" content="${esc(absUrl(site.url, "/"))}">
   <meta property="og:title" content="${esc(site.title)}">
   <meta property="og:description" content="${esc(ogDescription || site.description)}">

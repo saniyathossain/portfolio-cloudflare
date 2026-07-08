@@ -11,6 +11,7 @@ Thumbs.db
 .cursor/debug-*.log
 .cursor/hooks.json
 .cursor/skills/impeccable/
+.cursor/work/
 
 # Local preview / tooling
 node_modules/
