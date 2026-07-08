@@ -70,6 +70,20 @@ function buildAnalytics(site) {
   return out;
 }
 
+function stylesheetLinks() {
+  const criticalPath = path.join(ROOT, "public/assets/css/critical.min.css");
+  const stylesHref = `/assets/css/styles.min.css?v=${ASSET_V}`;
+  if (!fs.existsSync(criticalPath)) {
+    console.warn("WARNING: sync-head — critical.min.css missing; falling back to blocking stylesheet");
+    return `  <link rel="stylesheet" href="${stylesHref}">`;
+  }
+  // Minified critical CSS only — source is our own build output (no </style> risk when clean).
+  const criticalMinCss = fs.readFileSync(criticalPath, "utf8").trim();
+  return `  <style>${criticalMinCss}</style>
+  <link rel="preload" href="${stylesHref}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="${stylesHref}"></noscript>`;
+}
+
 function buildHead(data) {
   const { site, profile, socials } = data;
   const years = yearsSince(profile.experienceStartDate, profile.experienceYearsOffset);
@@ -106,8 +120,7 @@ function buildHead(data) {
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png?v=${ASSET_V}">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png?v=${ASSET_V}">
   <link rel="manifest" href="/assets/data/manifest.webmanifest">
-${heroWebpLink}  <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/inter-latin.woff2" crossorigin>
-  <meta property="og:type" content="website">
+${heroWebpLink}  <meta property="og:type" content="website">
   <meta property="og:url" content="${esc(absUrl(site.url, "/"))}">
   <meta property="og:title" content="${esc(site.title)}">
   <meta property="og:description" content="${esc(ogDescription || site.description)}">
@@ -120,7 +133,23 @@ ${heroWebpLink}  <link rel="preload" as="font" type="font/woff2" href="/assets/f
   <meta name="twitter:description" content="${esc(site.twitterDescription || site.description)}">
   <meta name="twitter:image" content="${esc(ogImage)}">
   <script type="application/ld+json" id="ld-person">${JSON.stringify(ld)}</script>
-  <link rel="stylesheet" href="/assets/css/styles.min.css?v=${ASSET_V}">${buildAnalytics(site)}`;
+${stylesheetLinks()}${buildAnalytics(site)}`;
+}
+
+
+function buildHeroEyebrow(profile) {
+  return esc(profile.title + " · " + profile.location);
+}
+
+function buildHeroRating(profile) {
+  const years = yearsSince(profile.experienceStartDate, profile.experienceYearsOffset);
+  const tail = profile.heroRatingTail || "";
+  // Matches data.js: profile.years = years+"+" ; heroRating = years+" years · "+tail
+  return esc(years + "+ years · " + tail);
+}
+
+function buildHeroWm(profile) {
+  return esc(String(profile.shortName || "Saniyat").toUpperCase());
 }
 
 function buildH1(profile) {
@@ -128,8 +157,10 @@ function buildH1(profile) {
   return lines
     .map((line, i) => {
       const grad = i === lines.length - 1 ? " accent grad" : "";
+      // Static text only — no Alpine x-text. Replacing identical text at Alpine boot
+      // re-triggers LCP at ~3–4s under mobile throttle (AC1). sync-head keeps these in sync with JSON.
       return `              <span class="line-wrap">
-                <span class="line-inner${grad}" x-text="profile.nameLines[${i}]">${esc(line)}</span>
+                <span class="line-inner${grad}">${esc(line)}</span>
               </span>`;
     })
     .join("\n");
@@ -146,6 +177,9 @@ const data = JSON.parse(fs.readFileSync(JSON_PATH, "utf8"));
 let html = fs.readFileSync(HTML_PATH, "utf8");
 html = replaceBlock(html, "<!-- SYNC:HEAD:START -->", "<!-- SYNC:HEAD:END -->", buildHead(data));
 html = replaceBlock(html, "<!-- SYNC:H1:START -->", "<!-- SYNC:H1:END -->", buildH1(data.profile));
+html = replaceBlock(html, "<!-- SYNC:HERO-EYEBROW:START -->", "<!-- SYNC:HERO-EYEBROW:END -->", buildHeroEyebrow(data.profile));
+html = replaceBlock(html, "<!-- SYNC:HERO-RATING:START -->", "<!-- SYNC:HERO-RATING:END -->", buildHeroRating(data.profile));
+html = replaceBlock(html, "<!-- SYNC:HERO-WM:START -->", "<!-- SYNC:HERO-WM:END -->", buildHeroWm(data.profile));
 // Boot-loaded body scripts (data/icons/loader/boot .min.js) and the bismillah SVG carry the
 // same ?v= as the head links.
 html = html.replace(

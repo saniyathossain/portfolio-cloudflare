@@ -6,9 +6,9 @@
  * @license Proprietary — all rights reserved.
  */
 (function () {
-  const FILL_MS = 1300;
-  const REVEAL_AT = 0.28;
-  const BLUR_MAX = 16;
+  const FILL_MS = 650;
+  const REVEAL_AT = 0.12;
+  const BLUR_MAX = 10;
   const DIM_MAX = 0.48;
   const SCALE_MAX = 0.012;
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -112,7 +112,7 @@
       setTimeout(() => {
         loader.remove();
         complete();
-      }, reduced ? 0 : 720);
+      }, reduced ? 0 : 400);
     } else {
       complete();
     }
