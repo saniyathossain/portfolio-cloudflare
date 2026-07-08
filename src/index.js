@@ -46,8 +46,8 @@ const SECURITY_HEADERS = {
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=281c8302e77d>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=281c8302e77d>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=50d8280a15e6>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=50d8280a15e6>; rel=preload; as=image; type=image/svg+xml",
 ].join(", ");
 
 // Field limits — reject obviously abusive payloads before doing any work.

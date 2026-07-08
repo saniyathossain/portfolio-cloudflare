@@ -213,11 +213,11 @@ function _applySiteMeta(data) {
   _setMeta("property", "og:url", _absUrl(site.url, "/"));
   _setMeta("property", "og:title", site.title);
   _setMeta("property", "og:description", site.ogDescription || site.description);
-  _setMeta("property", "og:image", _absUrl(site.url, site.ogImage || "/assets/img/og-image.jpg"));
+  _setMeta("property", "og:image", _absUrl(site.url, site.ogImage || "/assets/img/saniyat-hossain.jpg"));
   _setMeta("name", "twitter:card", "summary_large_image");
   _setMeta("name", "twitter:title", site.title);
   _setMeta("name", "twitter:description", site.twitterDescription || site.description);
-  _setMeta("name", "twitter:image", _absUrl(site.url, site.ogImage || "/assets/img/og-image.jpg"));
+  _setMeta("name", "twitter:image", _absUrl(site.url, site.ogImage || "/assets/img/saniyat-hossain.jpg"));
 
   const canon = document.querySelector('link[rel="canonical"]');
   if (canon) canon.href = _absUrl(site.url, "/");
