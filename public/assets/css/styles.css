@@ -1935,6 +1935,7 @@ html.is-loading .site-header {
     transition:
       clip-path 0.52s var(--ease-smooth),
       padding-right 0.52s var(--ease-smooth),
+      background 0.52s var(--ease-smooth),
       box-shadow 0.4s var(--ease-glass),
       opacity var(--dur-reveal) var(--ease-reveal),
       transform var(--dur-reveal) var(--ease-reveal);
@@ -1956,19 +1957,22 @@ html.is-loading .site-header {
     transition: opacity 0.4s var(--ease-glass), transform 0.52s var(--ease-smooth);
   }
   /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
-     enter/exit duration otherwise. Real backdrop-filter here (not the faux-frost this file uses
-     elsewhere for scrolling glass) is safe precisely because it's scoped to :hover/:focus-within —
-     it only ever repaints while a desktop pointer is deliberately holding the card open, never
-     continuously while scrolling. */
+     enter/exit duration otherwise. Faux-frost (opaque tinted gradient), not a live backdrop-filter:
+     see the note on the background below — a hover-time blur layer was hitching the first frame of
+     the reveal. */
   .hero__aside .hero-card[data-reveal]:hover,
   .hero__aside .hero-card[data-reveal]:focus-within {
     padding-right: 0.5rem;
     clip-path: inset(0 0 0 0 round 1.35rem);
+    /* Faux-frost on open too — a live backdrop-filter: blur(32px) here was promoted to a new
+       compositor layer only at hover-start, so the very first frame of the reveal hitched ("stuck")
+       while that blur layer rasterized, then ran smooth once cached. A more-opaque tinted gradient
+       gives the same frosted read over the hero photo with zero layer setup, so the clip-path reveal
+       is smooth from frame one — and it matches the faux-frost the rest of this card already uses by
+       design (see the .hero-card base rule). */
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.4)) 0%,
-      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.18)) 100%);
-    backdrop-filter: blur(32px) saturate(190%);
-    -webkit-backdrop-filter: blur(32px) saturate(190%);
+      color-mix(in srgb, var(--tint, var(--accent)) 12%, rgba(255,255,255,.88)) 0%,
+      color-mix(in srgb, var(--tint, var(--accent)) 8%, rgba(255,255,255,.66)) 100%);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.9),
       0 0 0 1px rgba(230,229,226,.35),
