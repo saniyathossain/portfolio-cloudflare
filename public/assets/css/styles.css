@@ -687,6 +687,9 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   text-shadow: var(--text-sh-tint);
 }
 .sec-sub {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
   font-size: clamp(1.0625rem, 1.65vw, 1.25rem);
   font-weight: 500;
   letter-spacing: -0.012em;
@@ -699,6 +702,35 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
     0 1px 0 rgba(255,255,255,.92),
     0 2px 14px rgba(241,240,238,.85),
     0 1px 3px rgba(17,17,17,.05);
+}
+/* Leading tinted glass badge on each section subtitle — small shiny coin in the section's own hue,
+   same recipe family as .icon-chip so it reads as part of the liquid-glass system. Springs on hover. */
+.sec-sub__icon {
+  flex: none;
+  display: inline-grid; place-items: center;
+  width: 1.7rem; height: 1.7rem; margin-top: 0.06em;
+  border-radius: 0.62rem;
+  color: var(--tint-deep);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tint) 26%, #fff), color-mix(in srgb, var(--tint) 9%, #fff));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent),
+    0 3px 8px -3px color-mix(in srgb, var(--tint) 45%, transparent);
+  text-shadow: none;
+  transition: transform 0.45s var(--ease-liquid), box-shadow 0.4s var(--ease-glass);
+}
+.sec-sub__icon .ui-icon { width: 0.95rem; height: 0.95rem; }
+@media (hover: hover) and (pointer: fine) {
+  .sec-sub:hover .sec-sub__icon {
+    transform: scale(1.12) rotate(-5deg);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.95),
+      inset 0 0 0 1px color-mix(in srgb, var(--tint) 34%, transparent),
+      0 5px 14px -3px color-mix(in srgb, var(--tint) 55%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sec-sub__icon { transition: none; }
 }
 #experience .sec-sub {
   color: color-mix(in srgb, var(--accent-dark) 42%, rgba(17,17,17,.58));
@@ -946,21 +978,21 @@ html.is-loading .site-header {
   position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
   padding: 0.7rem 0.55rem 0.7rem 1.25rem; border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.36));
-  /* macOS Tahoe dock read: heavier blur + vibrancy than a plain translucent bar, so the desktop
-     genuinely refracts through it the way Dock icons sit on frosted glass. Base and .is-scrolled
-     use the SAME blur radius (only saturate/brightness/background/shadow differ) — backdrop-filter
-     is a step change, not transitioned (see below), so an identical radius means zero visible pop;
-     only the value itself needed to go up for the dock look. */
-  backdrop-filter: blur(26px) saturate(200%) brightness(1.08);
-  -webkit-backdrop-filter: blur(26px) saturate(200%) brightness(1.08);
-  border: 1px solid rgba(255,255,255,.58);
+  background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.3));
+  /* macOS Tahoe dock read: at rest over the hero the glass is light and airy (18px). Crossing into
+     content (.is-scrolled) the frost visibly thickens to a real 34px Dock-grade blur — a deliberate
+     step (backdrop-filter can't be smoothly transitioned; background/shadow carry the eased settle
+     around it), so the nav reads exactly like the Tahoe Dock condensing as the wallpaper scrolls
+     behind it. */
+  backdrop-filter: blur(18px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.05);
+  border: 1px solid rgba(255,255,255,.6);
   box-shadow:
-    0 12px 38px -14px rgba(17,17,17,.14),
-    0 2px 6px rgba(17,17,17,.05),
-    0 0 0 1px rgba(17,17,17,.045),
-    inset 0 1px 0 rgba(255,255,255,.9),
-    inset 0 -6px 16px -12px rgba(255,255,255,.55);
+    0 10px 30px -14px rgba(17,17,17,.12),
+    0 2px 6px rgba(17,17,17,.04),
+    0 0 0 1px rgba(17,17,17,.04),
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 -8px 20px -14px rgba(17,17,17,.12);
   transform: translateZ(0);
   /* backdrop-filter is intentionally NOT transitioned — animating its blur radius forces a re-blur
      of everything beneath the header on every frame of the transition, right as the user starts
@@ -989,16 +1021,19 @@ html.is-loading .site-header {
 .glass-pill > * { position: relative; z-index: 1; }
 /* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
 .glass-pill.is-scrolled {
-  background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.48));
-  backdrop-filter: blur(26px) saturate(220%) brightness(1.11);
-  -webkit-backdrop-filter: blur(26px) saturate(220%) brightness(1.11);
+  background: linear-gradient(180deg, rgba(255,255,255,.74), rgba(255,255,255,.52));
+  backdrop-filter: blur(34px) saturate(230%) brightness(1.12);
+  -webkit-backdrop-filter: blur(34px) saturate(230%) brightness(1.12);
+  border-color: rgba(255,255,255,.72);
   box-shadow:
-    0 20px 50px -16px rgba(17,17,17,.22),
-    0 3px 10px rgba(17,17,17,.07),
-    0 0 0 1px rgba(17,17,17,.06),
-    inset 0 1px 0 rgba(255,255,255,.96),
-    inset 0 -6px 18px -12px rgba(255,255,255,.6);
+    0 22px 54px -16px rgba(17,17,17,.24),
+    0 4px 12px rgba(17,17,17,.08),
+    0 0 0 1px rgba(17,17,17,.07),
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 0 -8px 22px -13px rgba(17,17,17,.16);
 }
+/* Scrolled dock rim reads crisper — the specular edge brightens as the frost thickens. */
+.glass-pill.is-scrolled::before { opacity: 1; }
 
 .brand-btn { position: relative; display: flex; align-items: center; gap: 0.5rem; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; transition: transform var(--dur-mid) var(--ease-hover); }
 .brand-btn:hover { transform: scale(1.03); }
@@ -1276,7 +1311,13 @@ html.is-loading .site-header {
     inset 0 1px 0 rgba(255,255,255,.14),
     0 6px 18px -3px rgba(17,17,17,.4),
     0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
-  transition: box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass);
+  /* transform included so the whole control squishes on press with the same liquid overshoot as the
+     iOS 26 music-app dock buttons (see .menu-btn.is-pressed). */
+  transition: box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass), transform 0.42s var(--ease-liquid);
+}
+.menu-btn.is-pressed { transform: scale(0.93); }
+@media (prefers-reduced-motion: reduce) {
+  .menu-btn.is-pressed { transform: none; }
 }
 .menu-btn:hover,
 .menu-btn:focus-visible {
@@ -1303,13 +1344,20 @@ html.is-loading .site-header {
    for — gloss sheen and the 44px invisible tap-target hit-area, respectively). */
 .menu-btn__ripple {
   position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
-  background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%), rgba(255,255,255,.7), transparent 62%);
+  background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%),
+    rgba(255,255,255,.85) 0%, color-mix(in srgb, var(--accent-bright) 55%, rgba(255,255,255,.4)) 26%, transparent 62%);
   opacity: 0; transform: scale(0.5);
   transition: opacity 0.5s var(--ease-glass), transform 0.55s var(--ease-liquid);
 }
+/* Desktop hover: the highlight tracks the cursor at a soft base intensity (--tx/--ty updated on
+   pointermove by motion.js) so the surface reads as wet liquid glass before any press. */
+@media (hover: hover) and (pointer: fine) {
+  .menu-btn:hover .menu-btn__ripple { opacity: 0.55; transform: scale(1); }
+}
+/* Press (touch or click): the blob blooms bigger and brighter from the exact contact point, fast. */
 .menu-btn.is-pressed .menu-btn__ripple {
-  opacity: 1; transform: scale(1.1);
-  transition-duration: 0.1s;
+  opacity: 1; transform: scale(1.35);
+  transition-duration: 0.12s;
 }
 @media (prefers-reduced-motion: reduce) {
   .menu-btn__ripple { transition: none; opacity: 0 !important; }
@@ -1521,15 +1569,6 @@ html.is-loading .site-header {
 
 
 .hero-rating { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.hero-rating__icon {
-  display: inline-grid; place-items: center; flex: none;
-  width: 1.35rem; height: 1.35rem; border-radius: var(--radius-pill);
-  color: var(--tint-deep);
-  background: linear-gradient(145deg, color-mix(in srgb, var(--tint) 30%, #fff), color-mix(in srgb, var(--tint) 12%, #fff));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 1px 4px -1px color-mix(in srgb, var(--tint) 35%, transparent);
-}
-.hero-rating__icon .ui-icon { width: 0.72rem; height: 0.72rem; }
-.hero__copy--on-dark .hero-rating__icon { color: #fff; background: linear-gradient(145deg, rgba(255,255,255,.3), rgba(255,255,255,.12)); }
 /* No max-width cap — the credentials line reads as one line on phone/tablet/desktop; the
    hero__copy column (36-42rem) is already comfortably wide enough, the old 22ch cap was forcing an
    unnecessary 3-line wrap on desktop. */

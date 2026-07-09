@@ -410,6 +410,9 @@
     };
     document.querySelectorAll(".menu-btn").forEach((el) => {
       if (!el.querySelector(".menu-btn__ripple")) return;
+      // Cursor-following liquid highlight (desktop hover) AND press bloom (touch/click) both read
+      // --tx/--ty — so the glass "wets" under the pointer as it moves and blooms brighter on press.
+      el.addEventListener("pointermove", (e) => setPos(el, e), { passive: true });
       el.addEventListener("pointerdown", (e) => { setPos(el, e); el.classList.add("is-pressed"); }, { passive: true });
       const release = () => el.classList.remove("is-pressed");
       el.addEventListener("pointerup", release, { passive: true });
