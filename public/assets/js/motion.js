@@ -395,6 +395,29 @@
     targets.forEach((el) => io.observe(el));
   }
 
+  // iOS 26 "Liquid Glass" touch feedback for .menu-btn (header Menu button + the overlay's Close
+  // button, same shared control) — a soft blob blooms from the exact press point and springs back
+  // out on release (CSS: .menu-btn__ripple, driven by --tx/--ty here). Pointer Events cover
+  // mouse/touch/pen in one listener; unconditional (not gated by canEnhance) since touch is the
+  // primary target, not desktop hover.
+  function liquidTouch() {
+    const setPos = (el, e) => {
+      const r = el.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100;
+      const y = ((e.clientY - r.top) / r.height) * 100;
+      el.style.setProperty("--tx", x.toFixed(1) + "%");
+      el.style.setProperty("--ty", y.toFixed(1) + "%");
+    };
+    document.querySelectorAll(".menu-btn").forEach((el) => {
+      if (!el.querySelector(".menu-btn__ripple")) return;
+      el.addEventListener("pointerdown", (e) => { setPos(el, e); el.classList.add("is-pressed"); }, { passive: true });
+      const release = () => el.classList.remove("is-pressed");
+      el.addEventListener("pointerup", release, { passive: true });
+      el.addEventListener("pointerleave", release, { passive: true });
+      el.addEventListener("pointercancel", release, { passive: true });
+    });
+  }
+
   function boot() {
     if (canEnhance) {
       document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
@@ -407,6 +430,7 @@
     pillFlip();
     pillTap();
     pauseOffscreenDecor();
+    liquidTouch();
     if (!reduce) applyParallax(window.scrollY || 0);
   }
 

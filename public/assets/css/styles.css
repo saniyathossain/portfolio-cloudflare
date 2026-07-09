@@ -927,31 +927,40 @@ html.is-loading .site-header {
   position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
   padding: 0.7rem 0.55rem 0.7rem 1.25rem; border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.34));
-  backdrop-filter: blur(20px) saturate(190%) brightness(1.06);
-  -webkit-backdrop-filter: blur(20px) saturate(190%) brightness(1.06);
-  border: 1px solid rgba(255,255,255,.5);
+  background: linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.36));
+  /* macOS Tahoe dock read: heavier blur + vibrancy than a plain translucent bar, so the desktop
+     genuinely refracts through it the way Dock icons sit on frosted glass. Base and .is-scrolled
+     use the SAME blur radius (only saturate/brightness/background/shadow differ) — backdrop-filter
+     is a step change, not transitioned (see below), so an identical radius means zero visible pop;
+     only the value itself needed to go up for the dock look. */
+  backdrop-filter: blur(26px) saturate(200%) brightness(1.08);
+  -webkit-backdrop-filter: blur(26px) saturate(200%) brightness(1.08);
+  border: 1px solid rgba(255,255,255,.58);
   box-shadow:
     0 12px 38px -14px rgba(17,17,17,.14),
     0 2px 6px rgba(17,17,17,.05),
+    0 0 0 1px rgba(17,17,17,.045),
     inset 0 1px 0 rgba(255,255,255,.9),
     inset 0 -6px 16px -12px rgba(255,255,255,.55);
   transform: translateZ(0);
   /* backdrop-filter is intentionally NOT transitioned — animating its blur radius forces a re-blur
      of everything beneath the header on every frame of the transition, right as the user starts
-     scrolling. The radius stays fixed; only background/shadow deepen on .is-scrolled. */
-  transition: background 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass);
+     scrolling. Background/shadow carry the whole scroll transition instead, on the same bouncy
+     --ease-liquid curve the nav's sliding pill indicator uses, so crossing .is-scrolled reads as
+     one continuous liquid settle rather than a flat cross-fade. */
+  transition: background 0.6s var(--ease-liquid), box-shadow 0.6s var(--ease-liquid);
 }
-/* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round). */
+/* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round),
+   tuned toward the Dock's crisper edge: a touch more opaque at the highlight, more presence overall. */
 .glass-pill::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 0;
   background: linear-gradient(135deg,
-    rgba(255,255,255,.95) 0%, rgba(255,255,255,.36) 26%,
-    rgba(255,255,255,.06) 52%, rgba(255,255,255,.5) 100%);
+    rgba(255,255,255,.98) 0%, rgba(255,255,255,.42) 26%,
+    rgba(255,255,255,.08) 52%, rgba(255,255,255,.55) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  pointer-events: none; opacity: 0.85;
+  pointer-events: none; opacity: 0.9;
 }
 .glass-pill::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
@@ -961,12 +970,13 @@ html.is-loading .site-header {
 .glass-pill > * { position: relative; z-index: 1; }
 /* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
 .glass-pill.is-scrolled {
-  background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
-  backdrop-filter: blur(20px) saturate(205%) brightness(1.08);
-  -webkit-backdrop-filter: blur(20px) saturate(205%) brightness(1.08);
+  background: linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.48));
+  backdrop-filter: blur(26px) saturate(220%) brightness(1.11);
+  -webkit-backdrop-filter: blur(26px) saturate(220%) brightness(1.11);
   box-shadow:
     0 20px 50px -16px rgba(17,17,17,.22),
     0 3px 10px rgba(17,17,17,.07),
+    0 0 0 1px rgba(17,17,17,.06),
     inset 0 1px 0 rgba(255,255,255,.96),
     inset 0 -6px 18px -12px rgba(255,255,255,.6);
 }
@@ -1268,6 +1278,23 @@ html.is-loading .site-header {
 .menu-btn:hover .menu-btn__bar,
 .menu-btn:focus-visible .menu-btn__bar,
 .menu-btn[aria-expanded="true"] .menu-btn__bar { background: var(--accent-bright); }
+/* iOS 26 "Liquid Glass" touch feedback — a soft light blob blooms from the exact touch/press point
+   (--tx/--ty, set by motion.js on pointerdown) and springs back out on release. Transform+opacity
+   only, positioned via a real element (both ::before and ::after on .menu-btn are already spoken
+   for — gloss sheen and the 44px invisible tap-target hit-area, respectively). */
+.menu-btn__ripple {
+  position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%), rgba(255,255,255,.7), transparent 62%);
+  opacity: 0; transform: scale(0.5);
+  transition: opacity 0.5s var(--ease-glass), transform 0.55s var(--ease-liquid);
+}
+.menu-btn.is-pressed .menu-btn__ripple {
+  opacity: 1; transform: scale(1.1);
+  transition-duration: 0.1s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-btn__ripple { transition: none; opacity: 0 !important; }
+}
 /* Direct-child combinator, not a bare descendant selector: this must only style the one wrapper
    span, not the .menu-btn__icon/.menu-btn__bar spans nested inside it below (a bare `.menu-btn
    span` matched those too, inflating each 1.5px bar into a full padded flex box). */
@@ -1287,7 +1314,9 @@ html.is-loading .site-header {
 .menu-btn__bar {
   display: block; height: 1.5px; width: 100%; border-radius: 1px;
   background: currentColor;
-  transition: transform 0.35s var(--ease-glass), opacity 0.25s var(--ease-glass);
+  /* --ease-liquid (the same overshoot the nav's sliding pill indicator uses) so the hamburger-to-X
+     morph reads as a springy liquid shift rather than a flat mechanical rotate. */
+  transition: transform 0.4s var(--ease-liquid), opacity 0.25s var(--ease-glass);
 }
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(1) { transform: translateY(4.3px) rotate(45deg); }
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(2) { opacity: 0; }
