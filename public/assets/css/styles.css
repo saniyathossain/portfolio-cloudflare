@@ -1954,7 +1954,14 @@ html.is-loading .site-header {
   }
   .hero-card__body {
     opacity: 0; transform: translateX(-8px);
-    transition: opacity 0.4s var(--ease-glass), transform 0.52s var(--ease-smooth);
+    /* Fast opacity kill on CLOSE (this base rule governs the close direction only — the :hover/
+       :focus-within rule below sets its own 0.45s fade for open). The badge slides right, in sync
+       with the clip, back across this body's area as the card collapses; the old backdrop blur used
+       to smear that pass, but with faux-frost the colored body text would otherwise still be visibly
+       fading *under* the translucent badge icon crossing it — reading as two overlapping UIs. Killing
+       the body's opacity in 0.16s means it's gone before the icon reaches it, so only one thing (the
+       settling badge) is ever on screen. */
+    transition: opacity 0.16s var(--ease-glass), transform 0.4s var(--ease-smooth);
   }
   /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
      enter/exit duration otherwise. Faux-frost (opaque tinted gradient), not a live backdrop-filter:
