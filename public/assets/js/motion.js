@@ -410,15 +410,42 @@
     };
     document.querySelectorAll(".menu-btn").forEach((el) => {
       if (!el.querySelector(".menu-btn__ripple")) return;
-      // Cursor-following liquid highlight (desktop hover) AND press bloom (touch/click) both read
-      // --tx/--ty — so the glass "wets" under the pointer as it moves and blooms brighter on press.
-      el.addEventListener("pointermove", (e) => setPos(el, e), { passive: true });
+      // Press bloom only (no cursor-following hover glow — removed by request): the ripple springs
+      // from the exact press point, set here on pointerdown.
       el.addEventListener("pointerdown", (e) => { setPos(el, e); el.classList.add("is-pressed"); }, { passive: true });
       const release = () => el.classList.remove("is-pressed");
       el.addEventListener("pointerup", release, { passive: true });
       el.addEventListener("pointerleave", release, { passive: true });
       el.addEventListener("pointercancel", release, { passive: true });
     });
+  }
+
+  // Touch devices have no :hover, so the clock's grow-on-hover never fires. Tapping the analog face
+  // toggles .is-zoomed (the same enlarged state the CSS applies on desktop hover); tapping anywhere
+  // else closes it. Desktop keeps pure :hover — gating on (hover:none) avoids a click leaving the
+  // clock stuck open there.
+  function clockTapZoom() {
+    const face = document.querySelector(".clock-face");
+    if (!face) return;
+    // Gate on the pointer that actually fired, not a media query: a mouse pointerup is left to the
+    // CSS :hover path (so a desktop click never sticks the zoom), while touch/pen taps toggle it.
+    // This is what makes the grow work on phones, where there is no :hover.
+    const header = document.querySelector(".site-header");
+    const setZoom = (on) => {
+      face.classList.toggle("is-zoomed", on);
+      // Flag the header too: on phones the enlarged face would overlap the brand mark to its left, so
+      // CSS fades the brand out while zoomed (see .site-header.clock-zoomed .brand-btn).
+      if (header) header.classList.toggle("clock-zoomed", on);
+    };
+    face.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      e.stopPropagation();
+      setZoom(!face.classList.contains("is-zoomed"));
+    });
+    document.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      if (!(e.target && e.target.closest && e.target.closest(".clock-face"))) setZoom(false);
+    }, { passive: true });
   }
 
   function boot() {
@@ -434,6 +461,7 @@
     pillTap();
     pauseOffscreenDecor();
     liquidTouch();
+    clockTapZoom();
     if (!reduce) applyParallax(window.scrollY || 0);
   }
 

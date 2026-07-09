@@ -167,14 +167,36 @@ function portfolioApp() {
       let activeIdx = 0;
       let hoverIdx = -1;
 
+      // iOS Music-app droplet squash: whenever the lens actually changes destination, flag it
+      // "traveling" for the flight duration — CSS squashes it scaleY mid-flight and the transition's
+      // own overshoot springs it back on arrival. Class-toggle only; visuals are reduced-motion
+      // gated in CSS, and the guard here spares the timer churn for reduce users too.
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let lastX = null;
+      let travelTimer = 0;
       const place = (idx) => {
         const btn = btns[idx];
         if (!btn || !btn.offsetWidth) { nav.style.setProperty("--pill-o", "0"); return; }
-        nav.style.setProperty("--pill-x", btn.offsetLeft + "px");
+        const x = btn.offsetLeft;
+        if (!reduceMotion && lastX !== null && Math.abs(x - lastX) > 4) {
+          nav.classList.add("is-traveling");
+          clearTimeout(travelTimer);
+          travelTimer = setTimeout(() => nav.classList.remove("is-traveling"), 440);
+        }
+        lastX = x;
+        nav.style.setProperty("--pill-x", x + "px");
         nav.style.setProperty("--pill-w", btn.offsetWidth + "px");
         nav.style.setProperty("--pill-h", btn.offsetHeight + "px");
         nav.style.setProperty("--pill-o", "1");
       };
+      // Music-app press: holding a tab inflates the lens under the finger/cursor; release springs
+      // it back (CSS handles the spring via --ease-liquid).
+      nav.addEventListener("pointerdown", (e) => {
+        if (e.target.closest("button")) nav.classList.add("is-pressing");
+      }, { passive: true });
+      ["pointerup", "pointerleave", "pointercancel"].forEach((t) =>
+        nav.addEventListener(t, () => nav.classList.remove("is-pressing"), { passive: true })
+      );
       // Coalesced into a single rAF: several triggers can fire in the same tick (e.g. every
       // intersecting section reporting at once on load) — each `place()` reads layout
       // (offsetWidth/Left/Height) right after a previous call's style write, which would force a
@@ -432,8 +454,39 @@ function portfolioApp() {
       setTimeout(() => this.scrollTo(item.id), T.NAV_SCROLL);
     },
 
-    openMenu() { this.menuOpen = true; this.scrollLock(true); },
+    openMenu() {
+      this.menuOpen = true;
+      this.scrollLock(true);
+      // Lay the overlay's Close button exactly over the header's Menu button so the drawer reads as
+      // the same control morphing in place. The Menu button's on-screen position isn't a fixed
+      // constant (the glass-pill's height — and thus the vertically-centred button's top — shifts
+      // between breakpoints), so mirror its live rect rather than hard-coding offsets. nextTick +
+      // rAF lets the overlay lay out first. A one-time resize hook keeps it aligned if the viewport
+      // changes while open.
+      requestAnimationFrame(() => requestAnimationFrame(() => this.syncCloseBtn()));
+      if (!this._closeSync) {
+        this._closeSync = () => { if (this.menuOpen) this.syncCloseBtn(); };
+        window.addEventListener("resize", this._closeSync, { passive: true });
+      }
+    },
     closeMenu() { this.menuOpen = false; this.scrollLock(false); },
+    syncCloseBtn() {
+      // document.querySelector (not this.$el): this runs from a detached rAF callback where Alpine's
+      // $el magic isn't in scope and resolves undefined. Both elements are unique on the page.
+      const menu = document.querySelector(".site-header .menu-btn");
+      const close = document.querySelector(".nav-overlay__close");
+      if (!menu || !close) return;
+      const r = menu.getBoundingClientRect();
+      if (!r.width) return;
+      Object.assign(close.style, {
+        position: "fixed",
+        top: r.top + "px",
+        left: r.left + "px",
+        width: r.width + "px",
+        height: r.height + "px",
+        margin: "0",
+      });
+    },
 
     openModal() {
       this.modalOpen = true;

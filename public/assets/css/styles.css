@@ -977,28 +977,24 @@ html.is-loading .site-header {
 .glass-pill {
   position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
-  padding: 0.7rem 0.55rem 0.7rem 1.25rem; border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.3));
-  /* macOS Tahoe dock read: at rest over the hero the glass is light and airy (18px). Crossing into
-     content (.is-scrolled) the frost visibly thickens to a real 34px Dock-grade blur — a deliberate
-     step (backdrop-filter can't be smoothly transitioned; background/shadow carry the eased settle
-     around it), so the nav reads exactly like the Tahoe Dock condensing as the wallpaper scrolls
-     behind it. */
-  backdrop-filter: blur(18px) saturate(180%) brightness(1.05);
-  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.05);
-  border: 1px solid rgba(255,255,255,.6);
+  padding: 0.8rem 0.6rem 0.8rem 1.35rem; border-radius: var(--radius-pill);
+  /* macOS Tahoe dock read: CLEAR glass, not a milky bar — a light white wash over one constant
+     Dock-grade blur, so whatever sits behind visibly refracts through with boosted saturation.
+     The blur radius is IDENTICAL in base and .is-scrolled (blur can't transition — any radius
+     difference lands as an instant pop right as scrolling starts, the opposite of liquid). The
+     entire scroll cross is carried by fill/shadow on --ease-liquid instead: the glass visibly
+     densifies and lifts, dock-condensing-over-wallpaper style, with zero blur snap. No solid
+     border (per request); the soft ::before sheen + inset highlights carry the glass edge. */
+  background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
+  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  border: 0;
   box-shadow:
-    0 10px 30px -14px rgba(17,17,17,.12),
+    0 10px 32px -14px rgba(17,17,17,.14),
     0 2px 6px rgba(17,17,17,.04),
-    0 0 0 1px rgba(17,17,17,.04),
-    inset 0 1px 0 rgba(255,255,255,.92),
-    inset 0 -8px 20px -14px rgba(17,17,17,.12);
+    inset 0 1px 1px rgba(255,255,255,.85),
+    inset 0 -10px 22px -16px rgba(17,17,17,.14);
   transform: translateZ(0);
-  /* backdrop-filter is intentionally NOT transitioned — animating its blur radius forces a re-blur
-     of everything beneath the header on every frame of the transition, right as the user starts
-     scrolling. Background/shadow carry the whole scroll transition instead, on the same bouncy
-     --ease-liquid curve the nav's sliding pill indicator uses, so crossing .is-scrolled reads as
-     one continuous liquid settle rather than a flat cross-fade. */
   transition: background 0.6s var(--ease-liquid), box-shadow 0.6s var(--ease-liquid);
 }
 /* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round),
@@ -1021,16 +1017,15 @@ html.is-loading .site-header {
 .glass-pill > * { position: relative; z-index: 1; }
 /* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
 .glass-pill.is-scrolled {
-  background: linear-gradient(180deg, rgba(255,255,255,.74), rgba(255,255,255,.52));
-  backdrop-filter: blur(34px) saturate(230%) brightness(1.12);
-  -webkit-backdrop-filter: blur(34px) saturate(230%) brightness(1.12);
-  border-color: rgba(255,255,255,.72);
+  background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
+  /* SAME radius as base — the blur must never step (see note above). */
+  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
   box-shadow:
-    0 22px 54px -16px rgba(17,17,17,.24),
+    0 22px 54px -16px rgba(17,17,17,.26),
     0 4px 12px rgba(17,17,17,.08),
-    0 0 0 1px rgba(17,17,17,.07),
-    inset 0 1px 0 rgba(255,255,255,.98),
-    inset 0 -8px 22px -13px rgba(17,17,17,.16);
+    inset 0 1px 1px rgba(255,255,255,.96),
+    inset 0 -10px 24px -15px rgba(17,17,17,.18);
 }
 /* Scrolled dock rim reads crisper — the specular edge brightens as the frost thickens. */
 .glass-pill.is-scrolled::before { opacity: 1; }
@@ -1121,36 +1116,41 @@ html.is-loading .site-header {
 /* Primary nav with a sliding "liquid" pill (see setupNavPill in app.js). The pill sits BEHIND the
    buttons (z-0) and glides via its own CSS transition on transform/width — JS only writes the
    --pill-* custom props. Buttons stay crisp on top (z-1). */
-.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.875rem; font-weight: 500; }
+.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.98rem; font-weight: 500; }
 @media (min-width: 1024px) { .nav-desktop { display: flex; } }
-/* Shiny tile treatment — the EXACT .icon-chip recipe (same gradient/border/box-shadow formulas,
-   same diagonal specular gloss), just with --tint swapped for --accent so it stays copper/on-brand
-   in the header instead of picking up whatever section happens to be scrolled into view. */
+/* iOS 26 Music-app tab lens: a CLEAR glass capsule (not an opaque tinted chip) — bright specular
+   rim, light glassy fill with a whisper of copper so it stays on-brand, riding on the frosted dock.
+   Faux-glass fill (no nested backdrop-filter: it would rasterize a second live blur inside the
+   already-blurred header for near-zero visual gain on a flat frosted background). */
 .nav-desktop__pill {
   position: absolute; top: 50%; left: 0; z-index: 0; overflow: hidden;
   height: var(--pill-h, 2rem); width: var(--pill-w, 0);
   transform: translate(var(--pill-x, 0), -50%);
   border-radius: var(--radius-pill);
-  background: linear-gradient(145deg,
-    color-mix(in srgb, var(--accent) 32%, #fff),
-    color-mix(in srgb, var(--accent) 12%, #fff));
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--accent) 7%, rgba(255,255,255,.8)),
+    color-mix(in srgb, var(--accent) 5%, rgba(255,255,255,.42)));
+  border: 0;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.65),
-    0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+    inset 0 1px 1px rgba(255,255,255,.95),
+    inset 0 -6px 12px -8px color-mix(in srgb, var(--accent) 28%, transparent),
+    0 3px 10px -2px rgba(17,17,17,.14),
+    0 1px 3px rgba(17,17,17,.07);
   opacity: var(--pill-o, 0);
   pointer-events: none;
   /* Liquid morph: position and width overshoot on a "back-out" curve (slightly staggered
-     durations) before settling, so the pill reads as a fluid glass blob stretching toward the
+     durations) before settling, so the lens reads as a fluid glass droplet stretching toward the
      destination rather than a rigid slide — same idea as iOS's tab-bar indicator. */
-  transition: transform 0.48s var(--ease-liquid), width 0.7s var(--ease-liquid),
+  transition: transform 0.5s var(--ease-liquid), width 0.66s var(--ease-liquid),
     opacity 0.3s ease, box-shadow 0.35s var(--ease-glass);
 }
 .nav-desktop:hover .nav-desktop__pill,
 .nav-desktop:focus-within .nav-desktop__pill {
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.82),
-    0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
+    inset 0 1px 1px rgba(255,255,255,.98),
+    inset 0 -6px 12px -8px color-mix(in srgb, var(--accent) 36%, transparent),
+    0 5px 16px -2px rgba(17,17,17,.18),
+    0 1px 3px rgba(17,17,17,.08);
 }
 .nav-desktop__pill::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -1158,6 +1158,23 @@ html.is-loading .site-header {
   opacity: 0.72;
 }
 .nav-desktop:hover .nav-desktop__pill::before { opacity: 1; }
+/* Music-app touch physics — motion-gated. While the lens is mid-flight between buttons it squashes
+   like a sliding droplet (the transform transition's overshoot then springs it back on arrival);
+   while a button is held down the lens inflates under the press and springs back on release.
+   Both classes are toggled by setupNavPill() in app.js; transform-only, compositor-safe. */
+@media (prefers-reduced-motion: no-preference) {
+  .nav-desktop.is-traveling .nav-desktop__pill {
+    transform: translate(var(--pill-x, 0), -50%) scaleY(0.82);
+  }
+  .nav-desktop.is-pressing .nav-desktop__pill {
+    transform: translate(var(--pill-x, 0), -50%) scale(1.07);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,1),
+      inset 0 -6px 14px -8px color-mix(in srgb, var(--accent) 42%, transparent),
+      0 7px 20px -2px rgba(17,17,17,.22),
+      0 1px 3px rgba(17,17,17,.09);
+  }
+}
 .nav-desktop button {
   position: relative; z-index: 1;
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -1169,7 +1186,7 @@ html.is-loading .site-header {
 .nav-desktop button:focus-visible { opacity: 1; color: var(--accent-dark); }
 .nav-desktop button.is-active { opacity: 1; color: var(--accent-dark); font-weight: 600; }
 .nav-desktop button .ui-icon {
-  width: 0.9rem; height: 0.9rem; opacity: 0.6;
+  width: 1rem; height: 1rem; opacity: 0.6;
   transition: opacity var(--dur-mid) ease, transform 0.3s var(--ease-spring);
 }
 .nav-desktop button.is-active .ui-icon,
@@ -1181,9 +1198,18 @@ html.is-loading .site-header {
 }
 
 .header-right { display: flex; align-items: center; gap: 0.65rem; }
-.clock-chip { display: flex; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
+.clock-chip { display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: rgba(17,17,17,.6); white-space: nowrap; }
 .clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
 .clock-sep { color: rgba(17,17,17,.3); }
+/* Phones: the larger clock face + type would push the date onto extra lines and crowd the pill —
+   drop the date (keep the analog face + digital time) so the header stays a clean single row. */
+@media (max-width: 640px) {
+  .clock-sep, .clock-date { display: none; }
+  /* Tapped-open (zoomed) clock grows leftward over the brand mark on a narrow pill — fade the brand
+     out for the moment it's open so nothing is covered; it returns when the clock closes. */
+  .brand-btn { transition: opacity 0.25s var(--ease-glass); }
+  .site-header.clock-zoomed .brand-btn { opacity: 0; pointer-events: none; }
+}
 
 /* Live analog clock — an extremely frosted "liquid glass" disc (heavy backdrop-blur; allowed here
    because the navbar is fixed chrome) with understated graphite hands + a slate second hand. Hover
@@ -1196,7 +1222,7 @@ html.is-loading .site-header {
   --hand: #2a2f38;          /* charcoal hour/minute hands */
   --hand-second: #5b6472;   /* slate second hand — understated, no bright color */
   position: relative; flex: none; overflow: hidden;
-  width: 2.6rem; height: 2.6rem; /* was 2.2rem — bigger by default */
+  width: 3rem; height: 3rem;
   border-radius: 50%;
   background:
     radial-gradient(circle at 34% 26%, rgba(255,255,255,.6), rgba(255,255,255,.1) 72%),
@@ -1223,15 +1249,27 @@ html.is-loading .site-header {
   opacity: 0.85;
   transition: opacity 0.35s var(--ease-glass);
 }
+/* Enlarged state — desktop reveals it on :hover; touch devices toggle it by tapping the face
+   (.is-zoomed, set in motion.js) so the "hover" grow works on mobile too. Grows from the right edge
+   so the bigger face expands left/up/down and never covers the time text to its right. */
+.clock-face.is-zoomed {
+  transform-origin: 100% 50%;
+  transform: scale(2.1);
+  box-shadow:
+    inset 0 1px 1.5px rgba(255,255,255,.98),
+    0 9px 26px rgba(17,17,17,.22);
+}
+.clock-face.is-zoomed::before { opacity: 1; }
+.clock-face.is-zoomed .clock-tick { opacity: 1; }
 @media (hover: hover) and (pointer: fine) {
   /* Hover trigger is the analog face itself, not the whole .clock-chip (which also wraps the
      digital time/date text) — hovering the date shouldn't pop the clock open. */
   .clock-face:hover {
     transform-origin: 100% 50%;   /* grow away from the clock-time text to the right */
-    transform: scale(1.9);
+    transform: scale(2.1);
     box-shadow:
       inset 0 1px 1.5px rgba(255,255,255,.98),
-      0 8px 22px rgba(17,17,17,.2);
+      0 9px 26px rgba(17,17,17,.22);
   }
   .clock-face:hover::before { opacity: 1; }
   .clock-face:hover .clock-tick { opacity: 1; }
@@ -1301,9 +1339,11 @@ html.is-loading .site-header {
 .menu-btn {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
-  /* Fixed footprint so "Menu" and "Close" (the same control, open vs. closed) render at the exact
-     same width instead of each shrinking to its own label's intrinsic width. */
-  min-width: 6rem;
+  /* FIXED (not min-) width + flex:none so the header "Menu" button and the overlay "Close" button —
+     which have different label + icon widths — render as the exact same box. Equal box + matched
+     right edge (see .nav-overlay__close) means Close lands perfectly over Menu when the drawer opens.
+     Sized to fit "Close" snugly; content is centered, so left/right space stays symmetric. */
+  width: 5.75rem; flex: none;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
   background: linear-gradient(145deg, #2b2b2b, #060606);
   border-radius: var(--radius-pill);
@@ -1349,12 +1389,8 @@ html.is-loading .site-header {
   opacity: 0; transform: scale(0.5);
   transition: opacity 0.5s var(--ease-glass), transform 0.55s var(--ease-liquid);
 }
-/* Desktop hover: the highlight tracks the cursor at a soft base intensity (--tx/--ty updated on
-   pointermove by motion.js) so the surface reads as wet liquid glass before any press. */
-@media (hover: hover) and (pointer: fine) {
-  .menu-btn:hover .menu-btn__ripple { opacity: 0.55; transform: scale(1); }
-}
-/* Press (touch or click): the blob blooms bigger and brighter from the exact contact point, fast. */
+/* No hover glow — the cursor-following copper highlight was removed by request; the ripple now only
+   blooms on an actual press (touch/click) below. */
 .menu-btn.is-pressed .menu-btn__ripple {
   opacity: 1; transform: scale(1.35);
   transition-duration: 0.12s;
@@ -1365,10 +1401,16 @@ html.is-loading .site-header {
 /* Direct-child combinator, not a bare descendant selector: this must only style the one wrapper
    span, not the .menu-btn__icon/.menu-btn__bar spans nested inside it below (a bare `.menu-btn
    span` matched those too, inflating each 1.5px bar into a full padded flex box). */
-.menu-btn > span {
+/* :not(.menu-btn__ripple) is load-bearing: a bare `.menu-btn > span` (0,1,1) also matched the ripple
+   span and — outranking `.menu-btn__ripple` (0,1,0) — forced it position:relative, so the ripple
+   became an in-flow flex item eating half the width and shoving the label off-centre. Excluding it
+   leaves the ripple absolutely-positioned and the label wrapper as the only flex item, so flex:1 +
+   the button's justify-content:center land the icon+label dead-centre for both "Menu" and "Close". */
+.menu-btn > span:not(.menu-btn__ripple) {
   position: relative; z-index: 2;
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.48rem 0.85rem; font-size: 0.6875rem; font-weight: 500;
+  flex: 1 1 auto; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 0.36rem;
+  padding: 0.48rem 0.72rem; font-size: 0.6875rem; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
 }
 /* Hamburger-to-X morph — 3 plain bars instead of a single SVG (CSS can't interpolate between two
@@ -1612,7 +1654,8 @@ html.is-loading .site-header {
   border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
   background: linear-gradient(145deg, #2b2b2b, #060606);
   color: #fff; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(17,17,17,.18);
+  /* Shinier rim: brighter top highlight + a thin bright inset ring wrapping the whole edge. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 0 0 1px rgba(255,255,255,.1), 0 10px 24px rgba(17,17,17,.18);
   transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-dark::after {
@@ -1624,7 +1667,7 @@ html.is-loading .site-header {
 .pill-btn-dark > * { position: relative; z-index: 2; }
 .pill-btn-dark:hover {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 16px 34px rgba(17,17,17,.24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.18), 0 16px 34px rgba(17,17,17,.24);
 }
 .pill-btn-dark:hover::after { opacity: 1; }
 .pill-btn-dark:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
@@ -1634,7 +1677,8 @@ html.is-loading .site-header {
   border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
   background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
   color: #111; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px -7px rgba(17,17,17,.14);
+  /* Shinier rim: crisp bright inset ring around the whole edge. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 0 0 1px rgba(255,255,255,.7), 0 4px 14px -7px rgba(17,17,17,.14);
   transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-glass::after {
@@ -1647,7 +1691,7 @@ html.is-loading .site-header {
 .pill-btn-glass:hover {
   transform: translateY(-2px) scale(1.03);
   background: linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 12px 28px -8px rgba(17,17,17,.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1px rgba(255,255,255,.85), 0 12px 28px -8px rgba(17,17,17,.14);
 }
 .pill-btn-glass:hover::after { opacity: 1; }
 .pill-btn-glass:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
@@ -1658,25 +1702,35 @@ html.is-loading .site-header {
 /* Outline pill brought into the shiny-glass family — it shipped as flat Tailwind (no states) while
    every other control on the site is tinted glass; this closes that gap without a new material. */
 .pill-btn-outline {
+  /* Distinct, aesthetic teal→cyan "aurora glass" — the other CTAs are copper / black / frosted, so
+     this one gets its own hue. --tint pinned to teal so the arrow coin, .beam rim and .sheen sweep
+     all recolour to match instead of the section's copper. Bright rim = the shiny border. */
+  --tint: var(--teal);
   position: relative; overflow: hidden;
   border-color: transparent !important;
   /* Sized to match .pill-btn-dark/.pill-btn-glass exactly (same control-pad-* tokens, same icon
      coin) instead of the taller symmetric Tailwind default padding it shipped with. */
   padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x) !important;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--tint, var(--accent)) 10%, #fff) 0%,
-    color-mix(in srgb, var(--tint, var(--accent)) 4%, #fff) 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), inset 0 0 0 1px color-mix(in srgb, var(--tint, var(--accent)) 30%, transparent),
-    0 4px 14px -8px color-mix(in srgb, var(--tint, var(--accent)) 25%, transparent);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--teal) 24%, #fff) 0%,
+    color-mix(in srgb, var(--c-cyan) 20%, #fff) 52%,
+    color-mix(in srgb, var(--c-teal) 22%, #fff) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 0 0 1px color-mix(in srgb, var(--teal) 46%, rgba(255,255,255,.55)),
+    0 5px 18px -8px color-mix(in srgb, var(--teal) 42%, transparent);
   transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-outline:hover {
   transform: translateY(-2px) scale(1.03);
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--tint, var(--accent)) 16%, #fff) 0%,
-    color-mix(in srgb, var(--tint, var(--accent)) 7%, #fff) 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 0 0 1px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent),
-    0 10px 22px -8px color-mix(in srgb, var(--tint, var(--accent)) 32%, transparent);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--teal) 32%, #fff) 0%,
+    color-mix(in srgb, var(--c-cyan) 26%, #fff) 52%,
+    color-mix(in srgb, var(--c-teal) 28%, #fff) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 0 0 1px color-mix(in srgb, var(--teal) 62%, rgba(255,255,255,.6)),
+    0 12px 26px -8px color-mix(in srgb, var(--teal) 50%, transparent);
 }
 .pill-btn-outline:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
 /* The outline pill's fill is near-white, so its coin needs its own contrast — tint-tinted ring
@@ -1931,6 +1985,12 @@ html.is-loading .site-header {
     height: 8rem;
     padding: 0.5rem 0 0.5rem 0.5rem;
     clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
+    /* Near-opaque frosted tile for ALL drawer states (rest/open/mid-transition). Without a live
+       backdrop blur the card is see-through, and while it's wide mid-close the grayscale hero photo
+       bled through and the icon's copper glow + drop-shadow ghosted against it — reading as a second
+       icon layer during fallback. Keeping the surface opaque means the icon always sits on a clean
+       frosted tile (like a macOS app icon), never on the photo, so nothing ghosts as it collapses. */
+    background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.88) 100%);
     box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
     transition:
       clip-path 0.52s var(--ease-smooth),
@@ -1954,14 +2014,14 @@ html.is-loading .site-header {
   }
   .hero-card__body {
     opacity: 0; transform: translateX(-8px);
-    /* Fast opacity kill on CLOSE (this base rule governs the close direction only — the :hover/
-       :focus-within rule below sets its own 0.45s fade for open). The badge slides right, in sync
-       with the clip, back across this body's area as the card collapses; the old backdrop blur used
-       to smear that pass, but with faux-frost the colored body text would otherwise still be visibly
-       fading *under* the translucent badge icon crossing it — reading as two overlapping UIs. Killing
-       the body's opacity in 0.16s means it's gone before the icon reaches it, so only one thing (the
-       settling badge) is ever on screen. */
-    transition: opacity 0.16s var(--ease-glass), transform 0.4s var(--ease-smooth);
+    /* CLOSE direction only (the :hover/:focus-within rule below owns the open fade). The badge
+       slides right, in sync with the clip, back across this body's whole area as the card collapses.
+       A *fade* here can't win that race — measured, the body is still painting while the icon is
+       already mid-slide over it, so with faux-frost (no blur to smear it) you see the icon ghosted on
+       top of the still-readable text: two overlapping UIs. So don't fade on close at all — drop the
+       body instantly (opacity 0s). The collapsing pill has no room for the text anyway, and the icon
+       then glides over an empty frosted surface with nothing behind it to overlap. */
+    transition: opacity 0s, transform 0.4s var(--ease-smooth);
   }
   /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
      enter/exit duration otherwise. Faux-frost (opaque tinted gradient), not a live backdrop-filter:
@@ -1978,8 +2038,8 @@ html.is-loading .site-header {
        is smooth from frame one — and it matches the faux-frost the rest of this card already uses by
        design (see the .hero-card base rule). */
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--tint, var(--accent)) 12%, rgba(255,255,255,.88)) 0%,
-      color-mix(in srgb, var(--tint, var(--accent)) 8%, rgba(255,255,255,.66)) 100%);
+      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.96)) 0%,
+      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.86)) 100%);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.9),
       0 0 0 1px rgba(230,229,226,.35),
@@ -3678,20 +3738,22 @@ body.scroll-lock { position: fixed; width: 100%; }
 }
 .pill-btn-outline.sheen {
   background-image:
-    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--tint, var(--accent)) 10%, #fff) 0%,
-      color-mix(in srgb, var(--tint, var(--accent)) 4%, #fff) 100%);
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.92) 50%, transparent 62%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--teal) 24%, #fff) 0%,
+      color-mix(in srgb, var(--c-cyan) 20%, #fff) 52%,
+      color-mix(in srgb, var(--c-teal) 22%, #fff) 100%);
   background-size: 260% 260%, 100% 100%;
   background-position: -40% -40%, 0 0;
 }
 @media (hover: hover) {
   .pill-btn-outline.sheen:hover {
     background-image:
-      linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
-      linear-gradient(180deg,
-        color-mix(in srgb, var(--tint, var(--accent)) 16%, #fff) 0%,
-        color-mix(in srgb, var(--tint, var(--accent)) 7%, #fff) 100%);
+      linear-gradient(115deg, transparent 38%, rgba(255,255,255,.92) 50%, transparent 62%),
+      linear-gradient(135deg,
+        color-mix(in srgb, var(--teal) 32%, #fff) 0%,
+        color-mix(in srgb, var(--c-cyan) 26%, #fff) 52%,
+        color-mix(in srgb, var(--c-teal) 28%, #fff) 100%);
     background-position: 140% 140%, 0 0;
   }
 }
@@ -3732,13 +3794,12 @@ body.scroll-lock { position: fixed; width: 100%; }
     backdrop-filter: blur(20px) saturate(190%);
     -webkit-backdrop-filter: blur(20px) saturate(190%);
   }
-  .glass-pill {
-    backdrop-filter: blur(18px) saturate(190%) brightness(1.06);
-    -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.06);
-  }
+  /* One identical backdrop-filter for BOTH states — any base/scrolled difference in blur, saturate
+     or brightness is a hard step (backdrop-filter never transitions); fill/shadow carry the cross. */
+  .glass-pill,
   .glass-pill.is-scrolled {
-    backdrop-filter: blur(18px) saturate(205%) brightness(1.08);
-    -webkit-backdrop-filter: blur(18px) saturate(205%) brightness(1.08);
+    backdrop-filter: blur(32px) saturate(205%) brightness(1.07);
+    -webkit-backdrop-filter: blur(32px) saturate(205%) brightness(1.07);
   }
   .hero__aside .hero-card[data-reveal]:hover,
   .hero__aside .hero-card[data-reveal]:focus-within {
