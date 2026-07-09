@@ -416,19 +416,22 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   color: inherit; text-decoration: none;
 }
 /* Unified 0.65s glass choreography (card/logo/school/spec) + trailing sheen — real hover only.
-   Coarse gets an :active press instead of the old always-on lift (which fought press physics). */
+   Coarse gets an :active press instead of the old always-on lift (which fought press physics).
+   All four properties live on ONE rule deliberately: .edu-row.glass-card and .edu-row.sheen are
+   equal specificity (0,2,0) and match the same element, so two separate `transition` shorthands
+   don't merge — the later one (source order) replaced the whole list, silently dropping
+   transform/box-shadow/border-color (the hover-lift + top-border fade snapped instantly instead of
+   easing) and leaving only the sheen sweep animated. */
 .edu-row.glass-card {
   transition:
     transform 0.65s var(--ease-glass),
     box-shadow 0.65s var(--ease-glass),
-    border-color 0.65s var(--ease-glass);
+    border-color 0.65s var(--ease-glass),
+    background-position 0.65s var(--ease-glass);
 }
 .edu-row__logo { transition: transform 0.65s var(--ease-glass); }
 .edu-row__school { transition: color 0.65s var(--ease-glass); }
 .edu-row.spec::after { transition: opacity 0.65s var(--ease-glass); }
-.edu-row.sheen {
-  transition: background-position 1s var(--ease-glass) 0.08s;
-}
 @media (hover: hover) and (pointer: fine) {
   .edu-row.glass-card:hover {
     transform: translateY(-3px);
@@ -694,6 +697,10 @@ img { display: block; max-width: 100%; height: auto; }
 }
 
 h1, h2, h3, h4 { text-shadow: var(--text-sh); text-wrap: balance; }
+/* Section headings read slightly more embossed than sub-headings — one extra soft, diffuse layer
+   for depth (text-shadow only, no filter/backdrop-filter — renders identically and cheaply on
+   every browser/OS, unlike blur-based "glow" text effects which vary or are unsupported). */
+h2 { text-shadow: var(--text-sh), 0 10px 26px rgba(17,17,17,.07); }
 p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { text-wrap: pretty; }
 .eyebrow, .hero-rating__text, .hero-card__caption, .hero-partners__label,
 .exp-row__desc, .service-row__desc, .exp-group__loc, .edu-row__degree,
@@ -1221,6 +1228,9 @@ html.is-loading .site-header {
 .menu-btn {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
+  /* Fixed footprint so "Menu" and "Close" (the same control, open vs. closed) render at the exact
+     same width instead of each shrinking to its own label's intrinsic width. */
+  min-width: 6rem;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
   background: linear-gradient(145deg, #2b2b2b, #060606);
   border-radius: var(--radius-pill);
@@ -1454,7 +1464,10 @@ html.is-loading .site-header {
 
 
 .hero-rating { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.hero-rating__text { max-width: 22ch; /* keep LCP area below H1 */
+/* No max-width cap — the credentials line reads as one line on phone/tablet/desktop; the
+   hero__copy column (36-42rem) is already comfortably wide enough, the old 22ch cap was forcing an
+   unnecessary 3-line wrap on desktop. */
+.hero-rating__text {
   font-size: 0.875rem; font-weight: 500;
   color: color-mix(in srgb, var(--primary-deep) 65%, var(--ink));
   text-shadow: 0 1px 2px rgba(255,255,255,.75);
@@ -1492,23 +1505,21 @@ html.is-loading .site-header {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center; gap: var(--control-gap);
   border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
-  /* Copper-tinted glass primary — the single brand action across hero/modal/footer. Stops kept to
-     --accent/--accent-dark (not --accent-bright) so white label text clears WCAG AA (~4.6:1 / 6:1). */
-  background: linear-gradient(145deg, var(--accent) 0%, var(--accent-dark) 100%);
+  background: linear-gradient(145deg, #2b2b2b, #060606);
   color: #fff; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 10px 24px -6px color-mix(in srgb, var(--accent-dark) 55%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(17,17,17,.18);
   transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-dark::after {
   content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(125deg, rgba(255,255,255,.4) 0%, rgba(255,255,255,.08) 30%, transparent 58%);
+  background: linear-gradient(125deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.1) 30%, transparent 58%);
   opacity: 0.92;
   transition: opacity var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-dark > * { position: relative; z-index: 2; }
 .pill-btn-dark:hover {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.26), 0 16px 34px -6px color-mix(in srgb, var(--accent-dark) 60%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 16px 34px rgba(17,17,17,.24);
 }
 .pill-btn-dark:hover::after { opacity: 1; }
 .pill-btn-dark:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
@@ -1544,6 +1555,9 @@ html.is-loading .site-header {
 .pill-btn-outline {
   position: relative; overflow: hidden;
   border-color: transparent !important;
+  /* Sized to match .pill-btn-dark/.pill-btn-glass exactly (same control-pad-* tokens, same icon
+     coin) instead of the taller symmetric Tailwind default padding it shipped with. */
+  padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x) !important;
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--tint, var(--accent)) 10%, #fff) 0%,
     color-mix(in srgb, var(--tint, var(--accent)) 4%, #fff) 100%);
@@ -3165,18 +3179,10 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
 .nav-overlay__gutter {
   flex: none; min-width: 2rem;
 }
-.nav-overlay__close {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  border: 1px solid rgba(255,255,255,.15); border-radius: var(--radius-control);
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
-  color: rgba(255,255,255,.7);
-  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-}
-.nav-overlay__close .ui-icon { width: 0.7rem; height: 0.7rem; }
-.nav-overlay__close:hover {
-  color: #fff; border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06);
-}
+/* Same control as the header's .menu-btn (identical size/shape/black+copper glass recipe) — reusing
+   the class instead of a bespoke ghost-outline button so the open/close pair reads as one control
+   that morphs in place, not two different buttons. .nav-overlay__close itself only carries the
+   positioning row context now (it sits in the overlay's own top bar, not the fixed header). */
 
 /* Modal */
 /* Closed modal must not participate in layout (Alpine may leave it in DOM) */
@@ -3517,7 +3523,7 @@ body.scroll-lock { position: fixed; width: 100%; }
 .pill-btn-dark.sheen {
   background-image:
     linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
-    linear-gradient(145deg, var(--accent) 0%, var(--accent-dark) 100%);
+    linear-gradient(145deg, #2b2b2b, #060606);
   background-size: 260% 260%, 100% 100%;
   background-position: -40% -40%, 0 0;
 }
@@ -3546,8 +3552,30 @@ body.scroll-lock { position: fixed; width: 100%; }
     linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
   background-position: 140% 140%, 0 0;
 }
+.pill-btn-outline.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--tint, var(--accent)) 10%, #fff) 0%,
+      color-mix(in srgb, var(--tint, var(--accent)) 4%, #fff) 100%);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+@media (hover: hover) {
+  .pill-btn-outline.sheen:hover {
+    background-image:
+      linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--tint, var(--accent)) 16%, #fff) 0%,
+        color-mix(in srgb, var(--tint, var(--accent)) 7%, #fff) 100%);
+    background-position: 140% 140%, 0 0;
+  }
+}
+.pill-btn-outline.sheen:focus-visible {
+  background-position: 140% 140%, 0 0;
+}
 @media (prefers-reduced-motion: reduce) {
-  .pill-btn-dark.sheen, .pill-btn-glass.sheen { background-position: -40% -40%, 0 0; }
+  .pill-btn-dark.sheen, .pill-btn-glass.sheen, .pill-btn-outline.sheen { background-position: -40% -40%, 0 0; }
 }
 
 /* Coarse-pointer press — short tactile feedback (desktop keeps hover lift). */

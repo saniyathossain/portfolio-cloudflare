@@ -557,7 +557,7 @@ html.is-loading .site-header {
 }
 .hero__copy--on-dark .eyebrow { color: rgba(255,255,255,.84); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
 .hero__copy--on-dark .eyebrow-dot { background: rgba(255,255,255,.55); }
-.hero__copy--on-dark .hero-rating__text { max-width: 22ch; /* keep LCP area below H1 */ color: rgba(255,255,255,.8); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+.hero__copy--on-dark .hero-rating__text { color: rgba(255,255,255,.8); text-shadow: 0 1px 8px rgba(0,0,0,.35); }
 
 /* Above-fold SSR copy sizing — must live in critical (async styles.min.css was delaying LCP on .hero-rating__text) */
 
