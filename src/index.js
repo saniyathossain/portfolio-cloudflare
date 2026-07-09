@@ -41,13 +41,14 @@ const SECURITY_HEADERS = {
   "Cross-Origin-Resource-Policy": "same-origin",
   "X-Permitted-Cross-Domain-Policies": "none",
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' " + TURNSTILE + " " + ANALYTICS_SCRIPT + "; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' " + TURNSTILE + " " + ANALYTICS_CONNECT + "; frame-src " + TURNSTILE + "; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' " + TURNSTILE + " " + ANALYTICS_SCRIPT + "; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' " + TURNSTILE + " " + ANALYTICS_CONNECT + "; frame-src " + TURNSTILE + "; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
 };
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=50d8280a15e6>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=50d8280a15e6>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=11f198264a82>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=11f198264a82>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/fonts/inter-latin.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
 ].join(", ");
 
 // Field limits — reject obviously abusive payloads before doing any work.
@@ -126,6 +127,35 @@ function reqMeta(request) {
   };
 }
 
+// Constant-time string compare for admin-token checks — avoids a timing side-channel on `===`.
+// Length is compared normally (leaking length isn't the sensitive part; the token content is), then
+// every char is XOR-accumulated so the loop's runtime doesn't depend on where a mismatch occurs.
+function timingSafeEqual(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// Per-IP submission throttle for POST /api/contact — guarded (works before CONTACT_KV is bound, same
+// graceful-degradation pattern as the rest of the contact flow). Free-tier Workers have no managed
+// rate-limiting, so an unbounded /api/contact can burn the daily Workers-request quota, the KV
+// daily-write quota, and spam the destination inbox. One KV key per IP with a short TTL is enough to
+// stop a naive hammer without needing a paid WAF rule.
+async function checkRateLimit(env, ip) {
+  if (!env.CONTACT_KV || !ip) return true;
+  const key = "ratelimit:contact:" + ip;
+  try {
+    const hit = await env.CONTACT_KV.get(key);
+    if (hit) return false;
+    await env.CONTACT_KV.put(key, "1", { expirationTtl: 60 });
+    return true;
+  } catch (err) {
+    console.error("rate limit check failed:", err && err.message);
+    return true; // fail open — a KV hiccup shouldn't block legitimate submissions
+  }
+}
+
 // UTF-8-safe base64 (btoa only handles latin1) — used for the email subject/body encoding.
 function b64utf8(str) {
   const bytes = new TextEncoder().encode(str);
@@ -188,6 +218,7 @@ async function handleContact(request, env) {
   if (!(request.headers.get("content-type") || "").includes("application/json")) {
     return finish(415, { error: "bad_content_type" });
   }
+  if (!(await checkRateLimit(env, meta.ip))) return finish(429, { error: "rate_limited" });
 
   let body;
   try {
@@ -209,10 +240,12 @@ async function handleContact(request, env) {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return finish(422, { error: "bad_email" }, { name, email });
 
   // Anti-spam — enforced only once a Turnstile secret is configured, so the form works pre-setup.
+  // turnstile_configured is logged on every accepted submission so an unset secret (anti-spam
+  // silently OFF) is visible in Workers Logs instead of a gap nobody notices until it's abused.
   let turnstile = "skipped";
   if (env.TURNSTILE_SECRET) {
     const ok = await verifyTurnstile(env.TURNSTILE_SECRET, token, meta.ip);
-    if (!ok) return finish(403, { error: "captcha_failed" }, { name, email, turnstile: "failed" });
+    if (!ok) return finish(403, { error: "captcha_failed" }, { name, email, turnstile: "failed", turnstile_configured: true });
     turnstile = "passed";
   }
 
@@ -255,7 +288,14 @@ async function handleContact(request, env) {
     }
   }
 
-  return finish(200, { ok: true, emailed }, { name, email, turnstile, kvStored, emailed });
+  return finish(200, { ok: true, emailed }, {
+    name,
+    email,
+    turnstile,
+    turnstile_configured: !!env.TURNSTILE_SECRET,
+    kvStored,
+    emailed,
+  });
 }
 
 // Admin read endpoint: GET /api/contact?token=<ADMIN_TOKEN> → the most recent stored submissions.
@@ -264,7 +304,7 @@ async function handleContactList(request, env) {
   const meta = reqMeta(request);
   const url = new URL(request.url);
   const token = url.searchParams.get("token") || (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-  if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) {
+  if (!env.ADMIN_TOKEN || !timingSafeEqual(token, env.ADMIN_TOKEN)) {
     logApi(Object.assign({ status: 401, outcome: "unauthorized" }, meta));
     return jsonResponse({ error: "unauthorized" }, 401);
   }
@@ -286,9 +326,10 @@ export default {
     const url = new URL(request.url);
 
     // Maintenance mode — hard site-wide gate (503). Owner bypass: ?preview=<ADMIN_TOKEN>.
+    let previewBypass = false;
     if (maintenanceOn(env)) {
-      const previewOk = env.ADMIN_TOKEN && url.searchParams.get("preview") === env.ADMIN_TOKEN;
-      if (!previewOk) return maintenanceResponse(env);
+      previewBypass = env.ADMIN_TOKEN && timingSafeEqual(url.searchParams.get("preview") || "", env.ADMIN_TOKEN);
+      if (!previewBypass) return maintenanceResponse(env);
     }
 
     // Contact API — handled before static assets; never cached, no early hints.
@@ -311,6 +352,10 @@ export default {
     } else if (path === "/" || path.endsWith(".html")) {
       headers.set("Cache-Control", "public, max-age=0, must-revalidate");
     }
+    // The ?preview=<ADMIN_TOKEN> maintenance-bypass request must never be cached/shared — the token
+    // querystring already makes the URL unique per-owner, but set this explicitly rather than rely on
+    // that incidental behavior.
+    if (previewBypass) headers.set("Cache-Control", "no-store");
     if (isHtmlResponse(request.url, response)) {
       headers.set("Link", EARLY_HINTS);
     }

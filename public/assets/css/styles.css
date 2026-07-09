@@ -1,18 +1,25 @@
 [x-cloak] { display: none !important; }
 .svg-sprite { display: none; }
 
-/* Loader stage — site painted + progressively unblurred during splash */
+/* Loader stage — site painted + progressively unblurred during splash. --load-blur/--load-dim/
+   --load-scale are set only twice by loader.js (load start, load end) — not per rAF frame — and
+   interpolated here by a CSS transition instead. Each JS write to a custom property used by filter/
+   transform on .app-root previously forced a style recalc that (on a large DOM) cascades expensive
+   enough to show up as measurable main-thread blocking time; a two-value CSS transition gets the
+   same progressive-unblur look for a fraction of the cost. Duration is set inline by loader.js to
+   match FILL_MS so the two stay in lockstep without a duplicated constant here. */
 html.is-loading .app-root {
   filter: blur(var(--load-blur, 16px));
   transform: scale(var(--load-scale, 1.012));
   transform-origin: center top;
   will-change: filter, transform;
+  transition: filter var(--load-ms, 1300ms) linear, transform var(--load-ms, 1300ms) linear;
 }
 .load-scrim {
   position: fixed; inset: 0; z-index: 119;
   pointer-events: auto;
   background: rgba(10, 10, 10, var(--load-dim, 0.48));
-  transition: background-color 80ms linear;
+  transition: background-color var(--load-ms, 1300ms) linear;
 }
 html:not(.is-loading) .load-scrim { display: none; }
 
@@ -121,6 +128,16 @@ html:not(.is-loading) #main.is-liquid-warp {
   --ease-pill-reveal: cubic-bezier(0.33, 1, 0.68, 1); /* easeOutCubic — gentle onset, no snap (smoother stack/skill stagger) */
   --dur-pill-expand: 0.4s;
   --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
+  /* Shared button/control sizing + motion tokens — nothing owned this before this rule, so every
+     pill hard-coded its own padding/height/font and hover took an un-snappy 0.45s. */
+  --control-pad-x: 1.5rem;
+  --control-pad-y: 0.375rem;
+  --control-gap: 0.75rem;
+  --btn-icon-size: 2.25rem;
+  --btn-radius: var(--radius-pill);
+  --dur-btn-hover: 0.22s;
+  --dur-btn-press: 0.13s;
+  --ease-btn: var(--ease-hover);
   /* Inter-first on every platform → identical look on Mac/iOS/Windows/Android/Linux (see doc 19).
      "Inter Fallback" is metric-matched so there's no CLS before Inter loads. */
   --font-sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -147,13 +164,18 @@ html:not(.is-loading) #main.is-liquid-warp {
   --shadow-outset-sm: 0 1px 0 rgba(255,255,255,.95), 0 2px 5px rgba(17,17,17,.07), 0 6px 14px rgba(17,17,17,.06);
   --shadow-outset-md: 0 1px 0 rgba(255,255,255,.98), 0 4px 10px rgba(17,17,17,.08), 0 12px 28px rgba(17,17,17,.08);
   --shadow-outset-hover: 0 2px 0 rgba(255,255,255,.98), 0 8px 22px rgba(17,17,17,.1), 0 16px 36px rgba(17,17,17,.08);
+  /* Fluid section rhythm — tablet↔desktop interpolates; used by .sec-pad / .sec-pad-b (not blanket .sec). */
+  --sec-py: clamp(5rem, 3.4rem + 3.2vw, 7rem);
 }
+
+.sec-pad { padding-block: var(--sec-py); }
+.sec-pad-b { padding-bottom: var(--sec-py); }
 
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-weight: 400 700;
-  font-display: swap;
+  font-display: optional;
   src: url("/assets/fonts/inter-latin.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
@@ -273,6 +295,14 @@ html.is-idle .brand-bismillah-wrap::after,
 html.is-idle .beam::before {
   animation-play-state: paused;
 }
+/* Same idea, scoped to viewport instead of tab-focus (motion.js's pauseOffscreenDecor): stops the
+   conic beam repaint + create-band pulse/float the moment their section scrolls out of view. */
+.beam.is-paused::before,
+.create-band--flow.is-paused .create-band__tile,
+.create-band--flow.is-paused .create-band__icon,
+.create-band--flow.is-paused .create-band__arrow-ico {
+  animation-play-state: paused;
+}
 
 /* Aurora canvas — real flowing gradient field (desktop/fine-pointer only, injected by aurora.js).
    Paints on top of the ::before orbs (same z-layer, later in DOM), under the ::after veil. Low-res
@@ -373,7 +403,8 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   contain: none;
 }
 .edu-row:has(.popover:hover),
-.edu-row:has(.popover:focus-within) { z-index: 200; }
+.edu-row:has(.popover:focus-within),
+.edu-row:has(.popover.is-open) { z-index: 200; }
 /* Logo + years/school/degree wrapped in a link to the institute's site — its own nested grid
    replicates the auto/1fr logo+body split the outer row used to apply directly, since merging
    them into one link changed the outer row from 2-3 direct children down to 2 (link + place). */
@@ -384,11 +415,47 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   min-width: 0;
   color: inherit; text-decoration: none;
 }
-.edu-row__link:hover .edu-row__school,
-.edu-row__link:focus-visible .edu-row__school { color: var(--tint-deep); }
-.edu-row__link:hover .edu-row__logo,
-.edu-row__link:focus-visible .edu-row__logo { transform: scale(1.1); }
+/* Unified 0.65s glass choreography (card/logo/school/spec) + trailing sheen — real hover only.
+   Coarse gets an :active press instead of the old always-on lift (which fought press physics).
+   All four properties live on ONE rule deliberately: .edu-row.glass-card and .edu-row.sheen are
+   equal specificity (0,2,0) and match the same element, so two separate `transition` shorthands
+   don't merge — the later one (source order) replaced the whole list, silently dropping
+   transform/box-shadow/border-color (the hover-lift + top-border fade snapped instantly instead of
+   easing) and leaving only the sheen sweep animated. */
+.edu-row.glass-card {
+  transition:
+    transform 0.65s var(--ease-glass),
+    box-shadow 0.65s var(--ease-glass),
+    border-color 0.65s var(--ease-glass),
+    background-position 0.65s var(--ease-glass);
+}
+.edu-row__logo { transition: transform 0.65s var(--ease-glass); }
+.edu-row__school { transition: color 0.65s var(--ease-glass); }
+.edu-row.spec::after { transition: opacity 0.65s var(--ease-glass); }
+@media (hover: hover) and (pointer: fine) {
+  .edu-row.glass-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--glass-shadow-hover), var(--glass-highlight);
+    border-color: rgba(255,255,255,.92);
+    transition-duration: 0.65s;
+  }
+  .edu-row__link:hover .edu-row__school,
+  .edu-row__link:focus-visible .edu-row__school { color: var(--tint-deep); }
+  .edu-row__link:hover .edu-row__logo,
+  .edu-row__link:focus-visible .edu-row__logo { transform: scale(1.06); }
+}
+@media (hover: none), (pointer: coarse) {
+  .edu-row.glass-card:active {
+    transform: translateY(-1px) scale(0.99);
+    transition-duration: 0.12s;
+  }
+}
 .edu-row .edu-place { display: none; }
+/* Tablet: 2-up; last card spans full width (last-of-type — Alpine <template> may sit in the DOM). */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .edu-grid { grid-template-columns: repeat(2, 1fr); }
+  .edu-row:last-of-type { grid-column: 1 / -1; }
+}
 @media (min-width: 1024px) {
   /* Desktop: 3 education entries map cleanly onto a 3-up row, so the section uses the full width
      instead of leaving the right half of each full-width row empty. Each becomes a vertical card
@@ -467,46 +534,92 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   width: 3rem; height: 3rem;
   border: 1px solid color-mix(in srgb, var(--tint) 22%, rgba(255,255,255,.95));
   --logo-badge-shadow: color-mix(in srgb, var(--tint) 35%, rgba(24,30,56,.18));
-  transition: transform 0.28s var(--ease-tile);
 }
 .edu-row__logo img { width: 2rem; height: 2rem; object-fit: contain; }
 .edu-row__body { min-width: 0; }
 .edu-row__years {
   --chip: var(--tint);
-  display: inline-flex; align-items: center; margin-bottom: 0.45rem;
+  display: inline-flex; align-items: center; gap: 0.28rem; margin-bottom: 0.45rem;
   border-radius: var(--radius-pill); padding: 0.2rem 0.62rem;
   font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: #1a4d24;
   color: color-mix(in srgb, var(--chip) 74%, #0a0a0a);
   background:
     linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.15) 55%, transparent 78%),
+    linear-gradient(180deg, #e8f6eb, #f3faf5);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.15) 55%, transparent 78%),
     linear-gradient(180deg, color-mix(in srgb, var(--chip) 20%, #fff), color-mix(in srgb, var(--chip) 9%, #fff));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 2px 7px -3px rgba(48, 209, 88, 0.45);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 2px 7px -3px color-mix(in srgb, var(--chip) 45%, transparent);
 }
-.edu-row__school { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.24s var(--ease-tile); }
-.edu-row__degree { margin-top: 0.2rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); }
+.edu-row__school { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+.edu-row__degree { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); }
 .edu-row__place {
-  align-items: center; border-radius: var(--radius-pill);
+  align-items: center; gap: 0.3rem; border-radius: var(--radius-pill);
   padding: 0.16rem 0.62rem; font-size: 0.7rem; font-weight: 600; color: rgba(17,17,17,.64);
   white-space: nowrap;
   background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.45));
   box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 1px 5px -2px rgba(17,17,17,.16);
 }
-.glass-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--glass-shadow-hover), var(--glass-highlight);
-  border-color: rgba(255,255,255,.92);
-  transition-duration: var(--dur-mid);
+/* Small inline glyph shared by the location/tenure meta badges (edu-row__place, exp-group__loc,
+   exp-group__tenure-badge) — subtler than .exp-row__type-icon, sized to sit inline with 0.7-0.8rem
+   label text without dominating it. */
+.meta-icon {
+  display: inline-grid; place-items: center;
+  width: 0.75rem; height: 0.75rem; flex: none;
+  opacity: 0.62;
+  transition: transform 0.4s var(--ease-liquid), opacity 0.3s var(--ease-glass);
+}
+.meta-icon .ui-icon { width: 0.62rem; height: 0.62rem; }
+/* Hover/focus on whichever parent already owns the interaction (card, link, or popover trigger)
+   gives its meta-icon a small liquid pop — consistent with the site's other icon-on-hover tiles
+   (.exp-row__icon, .edu-row__logo) instead of a static glyph. */
+@media (hover: hover) and (pointer: fine) {
+  .edu-row.glass-card:hover .meta-icon,
+  .exp-group__link:hover .meta-icon,
+  .exp-group__link:focus-visible .meta-icon,
+  .exp-row:hover .meta-icon,
+  .exp-row[aria-expanded="true"] .meta-icon {
+    opacity: 0.95;
+    transform: scale(1.18) rotate(-8deg);
+  }
+  .exp-group__tenure:hover .meta-icon,
+  .exp-group__tenure:focus-within .meta-icon {
+    opacity: 0.95;
+    transform: scale(1.18) rotate(8deg);
+  }
+}
+@media (hover: hover) {
+  .glass-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--glass-shadow-hover), var(--glass-highlight);
+    border-color: rgba(255,255,255,.92);
+    transition-duration: var(--dur-mid);
+  }
 }
 /* Pointer-tracked specular used by pills + cards (JS sets --px/--py) */
 .spec::after {
   content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  border-radius: inherit; opacity: 0; transition: opacity 0.4s ease;
+  border-radius: inherit; opacity: 0; transition: opacity 0.45s var(--ease-glass);
   background: radial-gradient(16rem 16rem at var(--px,50%) var(--py,0%),
               rgba(255,255,255,.32), rgba(255,255,255,0) 62%);
 }
-.spec:hover::after, .spec:focus-visible::after { opacity: 1; }
+@media (hover: hover) {
+  .spec:hover::after { opacity: 1; }
+}
+.spec:focus-visible::after { opacity: 1; }
 
 .sec { position: relative; }
+
+/* Stats: 2-col mobile, 4-col from tablet up (replaces Tailwind lg:grid-cols-4). */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
 
 /* Per-section Tahoe tints — drive each section's eyebrow / icon-chip / hairline / hover via --tint.
    Hero (#home) uses the default azure --primary. --tint = light hue for fills, --tint-deep = readable ink.
@@ -574,6 +687,9 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   text-shadow: var(--text-sh-tint);
 }
 .sec-sub {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
   font-size: clamp(1.0625rem, 1.65vw, 1.25rem);
   font-weight: 500;
   letter-spacing: -0.012em;
@@ -586,6 +702,35 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
     0 1px 0 rgba(255,255,255,.92),
     0 2px 14px rgba(241,240,238,.85),
     0 1px 3px rgba(17,17,17,.05);
+}
+/* Leading tinted glass badge on each section subtitle — small shiny coin in the section's own hue,
+   same recipe family as .icon-chip so it reads as part of the liquid-glass system. Springs on hover. */
+.sec-sub__icon {
+  flex: none;
+  display: inline-grid; place-items: center;
+  width: 1.7rem; height: 1.7rem; margin-top: 0.06em;
+  border-radius: 0.62rem;
+  color: var(--tint-deep);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tint) 26%, #fff), color-mix(in srgb, var(--tint) 9%, #fff));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 0 0 1px color-mix(in srgb, var(--tint) 22%, transparent),
+    0 3px 8px -3px color-mix(in srgb, var(--tint) 45%, transparent);
+  text-shadow: none;
+  transition: transform 0.45s var(--ease-liquid), box-shadow 0.4s var(--ease-glass);
+}
+.sec-sub__icon .ui-icon { width: 0.95rem; height: 0.95rem; }
+@media (hover: hover) and (pointer: fine) {
+  .sec-sub:hover .sec-sub__icon {
+    transform: scale(1.12) rotate(-5deg);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.95),
+      inset 0 0 0 1px color-mix(in srgb, var(--tint) 34%, transparent),
+      0 5px 14px -3px color-mix(in srgb, var(--tint) 55%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sec-sub__icon { transition: none; }
 }
 #experience .sec-sub {
   color: color-mix(in srgb, var(--accent-dark) 42%, rgba(17,17,17,.58));
@@ -611,14 +756,11 @@ img { display: block; max-width: 100%; height: auto; }
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 
-.skip-link {
-  position: fixed; left: -999px; top: 1rem; z-index: 200;
-  border-radius: var(--radius-control); background: var(--ink);
-  padding: 0.5rem 1rem; font-size: 0.875rem; color: #fff;
-}
-.skip-link:focus { left: 1rem; outline: 2px solid var(--primary); outline-offset: 2px; }
-
 h1, h2, h3, h4 { text-shadow: var(--text-sh); text-wrap: balance; }
+/* Section headings read slightly more embossed than sub-headings — one extra soft, diffuse layer
+   for depth (text-shadow only, no filter/backdrop-filter — renders identically and cheaply on
+   every browser/OS, unlike blur-based "glow" text effects which vary or are unsupported). */
+h2 { text-shadow: var(--text-sh), 0 10px 26px rgba(17,17,17,.07); }
 p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { text-wrap: pretty; }
 .eyebrow, .hero-rating__text, .hero-card__caption, .hero-partners__label,
 .exp-row__desc, .service-row__desc, .exp-group__loc, .edu-row__degree,
@@ -626,8 +768,14 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
   text-shadow: var(--text-sh-sm);
 }
 
+
 .eyebrow {
-  display: inline-flex; align-items: center; gap: 0.55rem;
+  /* align-items: flex-start (not center) — the hero eyebrow text wraps to 2 lines on narrow phones
+     (e.g. "Staff Software Engineer · Dhaka, Bangladesh" at 390px), and center-aligning a flex row
+     centers the short dot item against the FULL 2-line block height, leaving it floating between
+     the lines instead of beside the first word. flex-start pins it to the top of the line box; the
+     dot's own margin-top nudges it down from the line-box top to the text's visual cap-height. */
+  display: inline-flex; align-items: flex-start; gap: 0.55rem;
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--tint-deep);
@@ -636,6 +784,7 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
 .eyebrow-dot {
   width: 0.375rem; height: 0.375rem; border-radius: var(--radius-pill);
   background: var(--tint); flex: none;
+  margin-top: 0.4em;
 }
 /* Hero designation — minimal template-style eyebrow in warm beige (harmonises with the copper name) */
 #home .eyebrow {
@@ -828,30 +977,37 @@ html.is-loading .site-header {
 .glass-pill {
   position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
-  padding: 0.7rem 0.55rem 0.7rem 1.25rem; border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.34));
-  backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
-  border: 1px solid rgba(255,255,255,.5);
+  padding: 0.8rem 0.6rem 0.8rem 1.35rem; border-radius: var(--radius-pill);
+  /* macOS Tahoe dock read: CLEAR glass, not a milky bar — a light white wash over one constant
+     Dock-grade blur, so whatever sits behind visibly refracts through with boosted saturation.
+     The blur radius is IDENTICAL in base and .is-scrolled (blur can't transition — any radius
+     difference lands as an instant pop right as scrolling starts, the opposite of liquid). The
+     entire scroll cross is carried by fill/shadow on --ease-liquid instead: the glass visibly
+     densifies and lifts, dock-condensing-over-wallpaper style, with zero blur snap. No solid
+     border (per request); the soft ::before sheen + inset highlights carry the glass edge. */
+  background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
+  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  border: 0;
   box-shadow:
-    0 12px 38px -14px rgba(17,17,17,.14),
-    0 2px 6px rgba(17,17,17,.05),
-    inset 0 1px 0 rgba(255,255,255,.9),
-    inset 0 -6px 16px -12px rgba(255,255,255,.55);
+    0 10px 32px -14px rgba(17,17,17,.14),
+    0 2px 6px rgba(17,17,17,.04),
+    inset 0 1px 1px rgba(255,255,255,.85),
+    inset 0 -10px 22px -16px rgba(17,17,17,.14);
   transform: translateZ(0);
-  transition: background 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass),
-    -webkit-backdrop-filter 0.5s var(--ease-glass), backdrop-filter 0.5s var(--ease-glass);
+  transition: background 0.6s var(--ease-liquid), box-shadow 0.6s var(--ease-liquid);
 }
-/* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round). */
+/* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round),
+   tuned toward the Dock's crisper edge: a touch more opaque at the highlight, more presence overall. */
 .glass-pill::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 0;
   background: linear-gradient(135deg,
-    rgba(255,255,255,.95) 0%, rgba(255,255,255,.36) 26%,
-    rgba(255,255,255,.06) 52%, rgba(255,255,255,.5) 100%);
+    rgba(255,255,255,.98) 0%, rgba(255,255,255,.42) 26%,
+    rgba(255,255,255,.08) 52%, rgba(255,255,255,.55) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  pointer-events: none; opacity: 0.85;
+  pointer-events: none; opacity: 0.9;
 }
 .glass-pill::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
@@ -862,14 +1018,17 @@ html.is-loading .site-header {
 /* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
 .glass-pill.is-scrolled {
   background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
-  backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
-  -webkit-backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
+  /* SAME radius as base — the blur must never step (see note above). */
+  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
   box-shadow:
-    0 20px 50px -16px rgba(17,17,17,.22),
-    0 3px 10px rgba(17,17,17,.07),
-    inset 0 1px 0 rgba(255,255,255,.96),
-    inset 0 -6px 18px -12px rgba(255,255,255,.6);
+    0 22px 54px -16px rgba(17,17,17,.26),
+    0 4px 12px rgba(17,17,17,.08),
+    inset 0 1px 1px rgba(255,255,255,.96),
+    inset 0 -10px 24px -15px rgba(17,17,17,.18);
 }
+/* Scrolled dock rim reads crisper — the specular edge brightens as the frost thickens. */
+.glass-pill.is-scrolled::before { opacity: 1; }
 
 .brand-btn { position: relative; display: flex; align-items: center; gap: 0.5rem; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; transition: transform var(--dur-mid) var(--ease-hover); }
 .brand-btn:hover { transform: scale(1.03); }
@@ -957,36 +1116,41 @@ html.is-loading .site-header {
 /* Primary nav with a sliding "liquid" pill (see setupNavPill in app.js). The pill sits BEHIND the
    buttons (z-0) and glides via its own CSS transition on transform/width — JS only writes the
    --pill-* custom props. Buttons stay crisp on top (z-1). */
-.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.875rem; font-weight: 500; }
+.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.98rem; font-weight: 500; }
 @media (min-width: 1024px) { .nav-desktop { display: flex; } }
-/* Shiny tile treatment — the EXACT .icon-chip recipe (same gradient/border/box-shadow formulas,
-   same diagonal specular gloss), just with --tint swapped for --accent so it stays copper/on-brand
-   in the header instead of picking up whatever section happens to be scrolled into view. */
+/* iOS 26 Music-app tab lens: a CLEAR glass capsule (not an opaque tinted chip) — bright specular
+   rim, light glassy fill with a whisper of copper so it stays on-brand, riding on the frosted dock.
+   Faux-glass fill (no nested backdrop-filter: it would rasterize a second live blur inside the
+   already-blurred header for near-zero visual gain on a flat frosted background). */
 .nav-desktop__pill {
   position: absolute; top: 50%; left: 0; z-index: 0; overflow: hidden;
   height: var(--pill-h, 2rem); width: var(--pill-w, 0);
   transform: translate(var(--pill-x, 0), -50%);
   border-radius: var(--radius-pill);
-  background: linear-gradient(145deg,
-    color-mix(in srgb, var(--accent) 32%, #fff),
-    color-mix(in srgb, var(--accent) 12%, #fff));
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--accent) 7%, rgba(255,255,255,.8)),
+    color-mix(in srgb, var(--accent) 5%, rgba(255,255,255,.42)));
+  border: 0;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.65),
-    0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+    inset 0 1px 1px rgba(255,255,255,.95),
+    inset 0 -6px 12px -8px color-mix(in srgb, var(--accent) 28%, transparent),
+    0 3px 10px -2px rgba(17,17,17,.14),
+    0 1px 3px rgba(17,17,17,.07);
   opacity: var(--pill-o, 0);
   pointer-events: none;
   /* Liquid morph: position and width overshoot on a "back-out" curve (slightly staggered
-     durations) before settling, so the pill reads as a fluid glass blob stretching toward the
+     durations) before settling, so the lens reads as a fluid glass droplet stretching toward the
      destination rather than a rigid slide — same idea as iOS's tab-bar indicator. */
-  transition: transform 0.48s var(--ease-liquid), width 0.7s var(--ease-liquid),
+  transition: transform 0.5s var(--ease-liquid), width 0.66s var(--ease-liquid),
     opacity 0.3s ease, box-shadow 0.35s var(--ease-glass);
 }
 .nav-desktop:hover .nav-desktop__pill,
 .nav-desktop:focus-within .nav-desktop__pill {
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.82),
-    0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
+    inset 0 1px 1px rgba(255,255,255,.98),
+    inset 0 -6px 12px -8px color-mix(in srgb, var(--accent) 36%, transparent),
+    0 5px 16px -2px rgba(17,17,17,.18),
+    0 1px 3px rgba(17,17,17,.08);
 }
 .nav-desktop__pill::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -994,6 +1158,23 @@ html.is-loading .site-header {
   opacity: 0.72;
 }
 .nav-desktop:hover .nav-desktop__pill::before { opacity: 1; }
+/* Music-app touch physics — motion-gated. While the lens is mid-flight between buttons it squashes
+   like a sliding droplet (the transform transition's overshoot then springs it back on arrival);
+   while a button is held down the lens inflates under the press and springs back on release.
+   Both classes are toggled by setupNavPill() in app.js; transform-only, compositor-safe. */
+@media (prefers-reduced-motion: no-preference) {
+  .nav-desktop.is-traveling .nav-desktop__pill {
+    transform: translate(var(--pill-x, 0), -50%) scaleY(0.82);
+  }
+  .nav-desktop.is-pressing .nav-desktop__pill {
+    transform: translate(var(--pill-x, 0), -50%) scale(1.07);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,1),
+      inset 0 -6px 14px -8px color-mix(in srgb, var(--accent) 42%, transparent),
+      0 7px 20px -2px rgba(17,17,17,.22),
+      0 1px 3px rgba(17,17,17,.09);
+  }
+}
 .nav-desktop button {
   position: relative; z-index: 1;
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -1005,7 +1186,7 @@ html.is-loading .site-header {
 .nav-desktop button:focus-visible { opacity: 1; color: var(--accent-dark); }
 .nav-desktop button.is-active { opacity: 1; color: var(--accent-dark); font-weight: 600; }
 .nav-desktop button .ui-icon {
-  width: 0.9rem; height: 0.9rem; opacity: 0.6;
+  width: 1rem; height: 1rem; opacity: 0.6;
   transition: opacity var(--dur-mid) ease, transform 0.3s var(--ease-spring);
 }
 .nav-desktop button.is-active .ui-icon,
@@ -1017,9 +1198,18 @@ html.is-loading .site-header {
 }
 
 .header-right { display: flex; align-items: center; gap: 0.65rem; }
-.clock-chip { display: flex; align-items: center; gap: 0.55rem; font-size: 0.75rem; color: rgba(17,17,17,.6); }
+.clock-chip { display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: rgba(17,17,17,.6); white-space: nowrap; }
 .clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
 .clock-sep { color: rgba(17,17,17,.3); }
+/* Phones: the larger clock face + type would push the date onto extra lines and crowd the pill —
+   drop the date (keep the analog face + digital time) so the header stays a clean single row. */
+@media (max-width: 640px) {
+  .clock-sep, .clock-date { display: none; }
+  /* Tapped-open (zoomed) clock grows leftward over the brand mark on a narrow pill — fade the brand
+     out for the moment it's open so nothing is covered; it returns when the clock closes. */
+  .brand-btn { transition: opacity 0.25s var(--ease-glass); }
+  .site-header.clock-zoomed .brand-btn { opacity: 0; pointer-events: none; }
+}
 
 /* Live analog clock — an extremely frosted "liquid glass" disc (heavy backdrop-blur; allowed here
    because the navbar is fixed chrome) with understated graphite hands + a slate second hand. Hover
@@ -1032,7 +1222,7 @@ html.is-loading .site-header {
   --hand: #2a2f38;          /* charcoal hour/minute hands */
   --hand-second: #5b6472;   /* slate second hand — understated, no bright color */
   position: relative; flex: none; overflow: hidden;
-  width: 2.6rem; height: 2.6rem; /* was 2.2rem — bigger by default */
+  width: 3rem; height: 3rem;
   border-radius: 50%;
   background:
     radial-gradient(circle at 34% 26%, rgba(255,255,255,.6), rgba(255,255,255,.1) 72%),
@@ -1059,15 +1249,27 @@ html.is-loading .site-header {
   opacity: 0.85;
   transition: opacity 0.35s var(--ease-glass);
 }
+/* Enlarged state — desktop reveals it on :hover; touch devices toggle it by tapping the face
+   (.is-zoomed, set in motion.js) so the "hover" grow works on mobile too. Grows from the right edge
+   so the bigger face expands left/up/down and never covers the time text to its right. */
+.clock-face.is-zoomed {
+  transform-origin: 100% 50%;
+  transform: scale(2.1);
+  box-shadow:
+    inset 0 1px 1.5px rgba(255,255,255,.98),
+    0 9px 26px rgba(17,17,17,.22);
+}
+.clock-face.is-zoomed::before { opacity: 1; }
+.clock-face.is-zoomed .clock-tick { opacity: 1; }
 @media (hover: hover) and (pointer: fine) {
   /* Hover trigger is the analog face itself, not the whole .clock-chip (which also wraps the
      digital time/date text) — hovering the date shouldn't pop the clock open. */
   .clock-face:hover {
     transform-origin: 100% 50%;   /* grow away from the clock-time text to the right */
-    transform: scale(1.9);
+    transform: scale(2.1);
     box-shadow:
       inset 0 1px 1.5px rgba(255,255,255,.98),
-      0 8px 22px rgba(17,17,17,.2);
+      0 9px 26px rgba(17,17,17,.22);
   }
   .clock-face:hover::before { opacity: 1; }
   .clock-face:hover .clock-tick { opacity: 1; }
@@ -1137,6 +1339,11 @@ html.is-loading .site-header {
 .menu-btn {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
+  /* FIXED (not min-) width + flex:none so the header "Menu" button and the overlay "Close" button —
+     which have different label + icon widths — render as the exact same box. Equal box + matched
+     right edge (see .nav-overlay__close) means Close lands perfectly over Menu when the drawer opens.
+     Sized to fit "Close" snugly; content is centered, so left/right space stays symmetric. */
+  width: 5.75rem; flex: none;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
   background: linear-gradient(145deg, #2b2b2b, #060606);
   border-radius: var(--radius-pill);
@@ -1144,7 +1351,13 @@ html.is-loading .site-header {
     inset 0 1px 0 rgba(255,255,255,.14),
     0 6px 18px -3px rgba(17,17,17,.4),
     0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
-  transition: box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass);
+  /* transform included so the whole control squishes on press with the same liquid overshoot as the
+     iOS 26 music-app dock buttons (see .menu-btn.is-pressed). */
+  transition: box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass), transform 0.42s var(--ease-liquid);
+}
+.menu-btn.is-pressed { transform: scale(0.93); }
+@media (prefers-reduced-motion: reduce) {
+  .menu-btn.is-pressed { transform: none; }
 }
 .menu-btn:hover,
 .menu-btn:focus-visible {
@@ -1165,13 +1378,39 @@ html.is-loading .site-header {
 .menu-btn:hover .menu-btn__bar,
 .menu-btn:focus-visible .menu-btn__bar,
 .menu-btn[aria-expanded="true"] .menu-btn__bar { background: var(--accent-bright); }
+/* iOS 26 "Liquid Glass" touch feedback — a soft light blob blooms from the exact touch/press point
+   (--tx/--ty, set by motion.js on pointerdown) and springs back out on release. Transform+opacity
+   only, positioned via a real element (both ::before and ::after on .menu-btn are already spoken
+   for — gloss sheen and the 44px invisible tap-target hit-area, respectively). */
+.menu-btn__ripple {
+  position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%),
+    rgba(255,255,255,.85) 0%, color-mix(in srgb, var(--accent-bright) 55%, rgba(255,255,255,.4)) 26%, transparent 62%);
+  opacity: 0; transform: scale(0.5);
+  transition: opacity 0.5s var(--ease-glass), transform 0.55s var(--ease-liquid);
+}
+/* No hover glow — the cursor-following copper highlight was removed by request; the ripple now only
+   blooms on an actual press (touch/click) below. */
+.menu-btn.is-pressed .menu-btn__ripple {
+  opacity: 1; transform: scale(1.35);
+  transition-duration: 0.12s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-btn__ripple { transition: none; opacity: 0 !important; }
+}
 /* Direct-child combinator, not a bare descendant selector: this must only style the one wrapper
    span, not the .menu-btn__icon/.menu-btn__bar spans nested inside it below (a bare `.menu-btn
    span` matched those too, inflating each 1.5px bar into a full padded flex box). */
-.menu-btn > span {
+/* :not(.menu-btn__ripple) is load-bearing: a bare `.menu-btn > span` (0,1,1) also matched the ripple
+   span and — outranking `.menu-btn__ripple` (0,1,0) — forced it position:relative, so the ripple
+   became an in-flow flex item eating half the width and shoving the label off-centre. Excluding it
+   leaves the ripple absolutely-positioned and the label wrapper as the only flex item, so flex:1 +
+   the button's justify-content:center land the icon+label dead-centre for both "Menu" and "Close". */
+.menu-btn > span:not(.menu-btn__ripple) {
   position: relative; z-index: 2;
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.48rem 0.85rem; font-size: 0.6875rem; font-weight: 500;
+  flex: 1 1 auto; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 0.36rem;
+  padding: 0.48rem 0.72rem; font-size: 0.6875rem; font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
 }
 /* Hamburger-to-X morph — 3 plain bars instead of a single SVG (CSS can't interpolate between two
@@ -1184,7 +1423,9 @@ html.is-loading .site-header {
 .menu-btn__bar {
   display: block; height: 1.5px; width: 100%; border-radius: 1px;
   background: currentColor;
-  transition: transform 0.35s var(--ease-glass), opacity 0.25s var(--ease-glass);
+  /* --ease-liquid (the same overshoot the nav's sliding pill indicator uses) so the hamburger-to-X
+     morph reads as a springy liquid shift rather than a flat mechanical rotate. */
+  transition: transform 0.4s var(--ease-liquid), opacity 0.25s var(--ease-glass);
 }
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(1) { transform: translateY(4.3px) rotate(45deg); }
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(2) { opacity: 0; }
@@ -1201,7 +1442,13 @@ html.is-loading .site-header {
     radial-gradient(38rem 30rem at 88% -8%, rgba(255,214,164,.16), transparent 62%),
     linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0) 38%),
     linear-gradient(160deg, var(--hero-from) 0%, var(--hero-to) 100%);
-  min-height: 100dvh;
+  /* Fixed, not min-height: the "Inter Fallback" metric-override isn't pixel-perfect, so when real
+     Inter swaps in (font-display: optional can still swap on a cached/fast repeat load), the H1's
+     rendered height nudges by a few px. With min-height, that growth resizes .hero itself, and
+     everything absolute+inset:0 inside it (incl. the full-bleed #heroCanvas) visibly shifts with it —
+     measured as a reproducible ~0.43 CLS hit tied to "Web font loaded" across many Lighthouse runs.
+     A fixed height + the existing overflow:hidden absorbs that sub-pixel text growth invisibly. */
+  height: 100dvh;
 }
 
 /* Portrait spread — full-height banner on the right, face-safe crop */
@@ -1266,19 +1513,16 @@ html.is-loading .site-header {
   transform: translate(-50%, -50%) translate3d(0, var(--glow-y, 0px), 0); pointer-events: none;
   opacity: 0; transition: opacity 0.6s ease; filter: blur(10px);
 }
+/* watermark stays opacity:0 — decorative; fade-in was late LCP */
 .hero__wm {
   position: absolute; inset-inline: 0; bottom: 7rem; z-index: 1;
-  text-align: center; pointer-events: none; user-select: none;
+  text-align: center; pointer-events: none; -webkit-user-select: none; user-select: none;
   font-weight: 700; line-height: 1; letter-spacing: 0.06em;
-  font-size: clamp(5.5rem, 16vw, var(--watermark));
-  color: color-mix(in srgb, var(--ink) 6%, transparent);
-  opacity: 0;
-  transform: translate3d(0, calc(20px + var(--wm-parallax-y, 0px)), 0);
-}
-html.is-ready .hero__wm {
-  opacity: 1;
+  font-size: clamp(3rem, 10vw, 8rem); /* kept modest so hero H1 remains LCP */
+  color: color-mix(in srgb, var(--ink) 4%, transparent);
+  /* Paint immediately — delayed fade was re-recording LCP as SANIYAT and driving CLS */
+  opacity: 0.55;
   transform: translate3d(0, var(--wm-parallax-y, 0px), 0);
-  transition: opacity 0.9s var(--ease-spring) 0.3s, transform 0.9s var(--ease-spring) 0.3s;
 }
 [data-parallax] {
   transform: translate3d(0, var(--parallax-y, 0px), 0);
@@ -1298,6 +1542,32 @@ html.is-ready .hero__wm {
   pointer-events: none;
 }
 .hero__grid > * { pointer-events: auto; }
+/* Tablet: real 2-col hero (between phone stack and desktop proportions). */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero__grid {
+    grid-template-columns: 1.15fr .85fr;
+    gap: 2.25rem;
+    align-items: end;
+    padding-block: clamp(7.5rem, 10vw, 8.5rem) 5rem;
+  }
+  .hero__copy { max-width: 36rem; }
+  .hero h1 {
+    font-size: clamp(2.65rem, 4.8vw, 3.85rem);
+    max-width: 11ch;
+  }
+  .hero__aside {
+    margin-top: 0;
+    align-items: flex-end;
+  }
+  .hero__wm {
+    text-align: right;
+    padding-inline-end: 3%;
+    bottom: 6.5rem;
+    font-size: clamp(4.5rem, 12vw, 9rem);
+    color: color-mix(in srgb, var(--ink) 5.5%, transparent);
+  }
+  .hero__actions { margin-top: 0; }
+}
 @media (min-width: 1024px) {
   .hero__grid {
     grid-template-columns: 1.22fr 0.78fr;
@@ -1333,13 +1603,17 @@ html.is-ready .hero__wm {
    and the Now-card/partners can land on the subject's face. Push them down — a gap above the actions
    clears the mouth/beard, and a larger copy↔aside gap drops the card/partners onto the shirt — so the
    face reads clearly between the headline and the buttons. */
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   .hero__grid { gap: 3.5rem; padding-block: 8rem 5.5rem; align-items: start; }
   .hero__actions { margin-top: 1.75rem; }
   .hero__aside { margin-top: 1rem; }
 }
 
+
 .hero-rating { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+/* No max-width cap — the credentials line reads as one line on phone/tablet/desktop; the
+   hero__copy column (36-42rem) is already comfortably wide enough, the old 22ch cap was forcing an
+   unnecessary 3-line wrap on desktop. */
 .hero-rating__text {
   font-size: 0.875rem; font-weight: 500;
   color: color-mix(in srgb, var(--primary-deep) 65%, var(--ink));
@@ -1347,9 +1621,10 @@ html.is-ready .hero__wm {
 }
 
 .pill-btn__icon {
-  width: 2.25rem; height: 2.25rem; display: grid; place-items: center;
-  border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 1rem; line-height: 0;
+  width: var(--btn-icon-size); height: var(--btn-icon-size); display: grid; place-items: center;
+  border-radius: var(--btn-radius); background: #fff; color: var(--ink); font-size: 1rem; line-height: 0;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 1px 3px rgba(17,17,17,.12);
+  transition: transform var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn__icon .ui-icon { width: 1rem; height: 1rem; color: var(--ink); stroke-width: 2.25; }
 /* Opposite-contrast pairing for a light-surface button: dark circle + white glyph, mirroring
@@ -1359,49 +1634,111 @@ html.is-ready .hero__wm {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 1px 3px rgba(17,17,17,.3);
 }
 .pill-btn__icon--dark .ui-icon { color: #fff; }
+/* Kinetic coin — nudges toward the direction of travel on hover ("internal kinetic tension"),
+   reset on press so the whole button reads as one solid unit while held down. */
+.pill-btn-dark:hover .pill-btn__icon,
+.pill-btn-glass:hover .pill-btn__icon,
+.pill-btn-outline:hover .pill-btn__icon {
+  transform: translateX(3px) scale(1.06);
+}
+.pill-btn-dark:active .pill-btn__icon,
+.pill-btn-glass:active .pill-btn__icon,
+.pill-btn-outline:active .pill-btn__icon {
+  transform: translateX(1px) scale(0.96);
+}
 /* Both CTAs below add the icon-chip "shiny tile" gloss via ::after (not ::before — .beam already
    claims that pseudo-element for its rotating conic border on these same buttons). */
 .pill-btn-dark {
   position: relative; overflow: hidden;
-  display: inline-flex; align-items: center; gap: 0.75rem;
-  border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
-  background: linear-gradient(145deg, #2b2b2b, #060606); color: #fff; padding: 0.375rem 0.375rem 0.375rem 1.5rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(17,17,17,.18);
-  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
+  display: inline-flex; align-items: center; gap: var(--control-gap);
+  border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  color: #fff; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
+  /* Shinier rim: brighter top highlight + a thin bright inset ring wrapping the whole edge. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 0 0 1px rgba(255,255,255,.1), 0 10px 24px rgba(17,17,17,.18);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-dark::after {
   content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
   background: linear-gradient(125deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.1) 30%, transparent 58%);
   opacity: 0.92;
-  transition: opacity 0.35s var(--ease-glass);
+  transition: opacity var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-dark > * { position: relative; z-index: 2; }
-.pill-btn-dark:hover { transform: translateY(-2px) scale(1.03); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 16px 34px rgba(17,17,17,.24); }
+.pill-btn-dark:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.18), 0 16px 34px rgba(17,17,17,.24);
+}
 .pill-btn-dark:hover::after { opacity: 1; }
-.pill-btn-dark:active { transform: translateY(0) scale(0.985); transition-duration: 0.12s; }
+.pill-btn-dark:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
 .pill-btn-glass {
   position: relative; overflow: hidden;
-  display: inline-flex; align-items: center; gap: 0.75rem;
-  border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
+  display: inline-flex; align-items: center; gap: var(--control-gap);
+  border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
   background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
-  color: #111; padding: 0.375rem 0.375rem 0.375rem 1.5rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px -7px rgba(17,17,17,.14);
-  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
+  color: #111; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
+  /* Shinier rim: crisp bright inset ring around the whole edge. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 0 0 1px rgba(255,255,255,.7), 0 4px 14px -7px rgba(17,17,17,.14);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-glass::after {
   content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
   background: linear-gradient(125deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.32) 30%, transparent 58%);
   opacity: 0.88;
-  transition: opacity 0.35s var(--ease-glass);
+  transition: opacity var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-glass > * { position: relative; z-index: 2; }
 .pill-btn-glass:hover {
   transform: translateY(-2px) scale(1.03);
   background: linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 12px 28px -8px rgba(17,17,17,.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1px rgba(255,255,255,.85), 0 12px 28px -8px rgba(17,17,17,.14);
 }
 .pill-btn-glass:hover::after { opacity: 1; }
-.pill-btn-glass:active { transform: translateY(0) scale(0.985); transition-duration: 0.12s; }
+.pill-btn-glass:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
+.pill-btn-dark, .pill-btn-glass, .pill-btn-outline { touch-action: manipulation; }
+.pill-btn-dark:focus-visible, .pill-btn-glass:focus-visible, .pill-btn-outline:focus-visible {
+  transform: translateY(-2px) scale(1.03);
+}
+/* Outline pill brought into the shiny-glass family — it shipped as flat Tailwind (no states) while
+   every other control on the site is tinted glass; this closes that gap without a new material. */
+.pill-btn-outline {
+  /* Distinct, aesthetic teal→cyan "aurora glass" — the other CTAs are copper / black / frosted, so
+     this one gets its own hue. --tint pinned to teal so the arrow coin, .beam rim and .sheen sweep
+     all recolour to match instead of the section's copper. Bright rim = the shiny border. */
+  --tint: var(--teal);
+  position: relative; overflow: hidden;
+  border-color: transparent !important;
+  /* Sized to match .pill-btn-dark/.pill-btn-glass exactly (same control-pad-* tokens, same icon
+     coin) instead of the taller symmetric Tailwind default padding it shipped with. */
+  padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x) !important;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--teal) 24%, #fff) 0%,
+    color-mix(in srgb, var(--c-cyan) 20%, #fff) 52%,
+    color-mix(in srgb, var(--c-teal) 22%, #fff) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 0 0 1px color-mix(in srgb, var(--teal) 46%, rgba(255,255,255,.55)),
+    0 5px 18px -8px color-mix(in srgb, var(--teal) 42%, transparent);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
+}
+.pill-btn-outline:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--teal) 32%, #fff) 0%,
+    color-mix(in srgb, var(--c-cyan) 26%, #fff) 52%,
+    color-mix(in srgb, var(--c-teal) 28%, #fff) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 0 0 1px color-mix(in srgb, var(--teal) 62%, rgba(255,255,255,.6)),
+    0 12px 26px -8px color-mix(in srgb, var(--teal) 50%, transparent);
+}
+.pill-btn-outline:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
+/* The outline pill's fill is near-white, so its coin needs its own contrast — tint-tinted ring
+   instead of the flat white .pill-btn__icon (which would nearly disappear on this background). */
+.pill-btn-outline .pill-btn__icon {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tint, var(--accent)) 30%, #fff), color-mix(in srgb, var(--tint, var(--accent)) 12%, #fff));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 1px 3px color-mix(in srgb, var(--tint, var(--accent)) 25%, transparent);
+}
 
 .hero h1 {
   max-width: 16ch;
@@ -1419,13 +1756,16 @@ html.is-ready .hero__wm {
 }
 .hero h1 .line-inner {
   display: block;
-  transform: translateY(110%);
+  /* Visible from first paint — translateY(110%) hid LCP until loader/Alpine (~4s under mobile throttle). */
+  transform: none;
   padding-bottom: 0.02em;
 }
-.hero.is-ready h1 .line-inner { transform: none; transition: transform 1.05s var(--ease-reveal); }
-.hero.is-ready h1 .line-inner:nth-child(1) { transition-delay: 280ms; }
-.hero.is-ready h1 .line-inner:nth-child(2) { transition-delay: 420ms; }
-.hero.is-ready h1 .line-inner:nth-child(3) { transition-delay: 560ms; }
+/* Soft polish only after ready: opacity wipe — LCP already counted the painted text. */
+.hero:not(.is-ready) h1 .line-inner { opacity: 1; }
+.hero.is-ready h1 .line-inner { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .hero h1 .line-inner { transform: none; transition: none; opacity: 1; }
+}
 .hero h1 .accent { color: var(--accent); }
 
 .hero__copy--on-dark .hero h1 .line-inner:not(.grad) {
@@ -1451,15 +1791,15 @@ html.is-ready .hero__wm {
     0 0 1px rgba(17,17,17,.08);
 }
 .hero h1 .line-inner.grad {
-  filter:
-    drop-shadow(0 1px 1px rgba(255,255,255,.8))
-    drop-shadow(0 2px 10px color-mix(in srgb, var(--accent) 22%, transparent));
+  text-shadow:
+    0 1px 1px rgba(255,255,255,.8),
+    0 2px 10px color-mix(in srgb, var(--accent) 22%, transparent);
   -webkit-font-smoothing: antialiased;
 }
 .hero__copy--on-dark .hero h1 .line-inner.grad {
-  filter:
-    drop-shadow(0 2px 12px rgba(0,0,0,.48))
-    drop-shadow(0 0 16px color-mix(in srgb, var(--accent-bright) 30%, transparent));
+  text-shadow:
+    0 2px 12px rgba(0,0,0,.48),
+    0 0 16px color-mix(in srgb, var(--accent-bright) 30%, transparent);
 }
 
 /* Hero name (3 lines: "Mohammad" / "Saniyat" / "Hossain") — first 2 lines stay plain ink; only the
@@ -1593,10 +1933,15 @@ html.is-ready .hero__wm {
 .hero-card__arrow {
   width: 1.75rem; height: 1.75rem; display: grid; place-items: center;
   border-radius: var(--radius-pill); color: var(--accent-dark);
+  background: linear-gradient(145deg, #e8d5c8, #f4ebe4);
   background: linear-gradient(145deg,
     color-mix(in srgb, var(--accent) 32%, #fff),
     color-mix(in srgb, var(--accent) 12%, #fff));
+  border: 1px solid rgba(177, 95, 44, 0.24);
   border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px rgba(177, 95, 44, 0.45);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.65),
     0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
@@ -1640,11 +1985,20 @@ html.is-ready .hero__wm {
     height: 8rem;
     padding: 0.5rem 0 0.5rem 0.5rem;
     clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
+    /* Near-opaque frosted tile for ALL drawer states (rest/open/mid-transition). Without a live
+       backdrop blur the card is see-through, and while it's wide mid-close the grayscale hero photo
+       bled through and the icon's copper glow + drop-shadow ghosted against it — reading as a second
+       icon layer during fallback. Keeping the surface opaque means the icon always sits on a clean
+       frosted tile (like a macOS app icon), never on the photo, so nothing ghosts as it collapses. */
+    background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.88) 100%);
     box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
     transition:
       clip-path 0.52s var(--ease-smooth),
       padding-right 0.52s var(--ease-smooth),
-      box-shadow 0.4s var(--ease-glass);
+      background 0.52s var(--ease-smooth),
+      box-shadow 0.4s var(--ease-glass),
+      opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal);
   }
   .hero-card__inner { height: 100%; align-items: center; }
   .hero__aside .hero-card[data-reveal]::after { opacity: 0; transition: opacity 0.5s var(--ease-glass); }
@@ -1660,22 +2014,32 @@ html.is-ready .hero__wm {
   }
   .hero-card__body {
     opacity: 0; transform: translateX(-8px);
-    transition: opacity 0.4s var(--ease-glass), transform 0.52s var(--ease-smooth);
+    /* CLOSE direction only (the :hover/:focus-within rule below owns the open fade). The badge
+       slides right, in sync with the clip, back across this body's whole area as the card collapses.
+       A *fade* here can't win that race — measured, the body is still painting while the icon is
+       already mid-slide over it, so with faux-frost (no blur to smear it) you see the icon ghosted on
+       top of the still-readable text: two overlapping UIs. So don't fade on close at all — drop the
+       body instantly (opacity 0s). The collapsing pill has no room for the text anyway, and the icon
+       then glides over an empty frosted surface with nothing behind it to overlap. */
+    transition: opacity 0s, transform 0.4s var(--ease-smooth);
   }
   /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
-     enter/exit duration otherwise. Real backdrop-filter here (not the faux-frost this file uses
-     elsewhere for scrolling glass) is safe precisely because it's scoped to :hover/:focus-within —
-     it only ever repaints while a desktop pointer is deliberately holding the card open, never
-     continuously while scrolling. */
+     enter/exit duration otherwise. Faux-frost (opaque tinted gradient), not a live backdrop-filter:
+     see the note on the background below — a hover-time blur layer was hitching the first frame of
+     the reveal. */
   .hero__aside .hero-card[data-reveal]:hover,
   .hero__aside .hero-card[data-reveal]:focus-within {
     padding-right: 0.5rem;
     clip-path: inset(0 0 0 0 round 1.35rem);
+    /* Faux-frost on open too — a live backdrop-filter: blur(32px) here was promoted to a new
+       compositor layer only at hover-start, so the very first frame of the reveal hitched ("stuck")
+       while that blur layer rasterized, then ran smooth once cached. A more-opaque tinted gradient
+       gives the same frosted read over the hero photo with zero layer setup, so the clip-path reveal
+       is smooth from frame one — and it matches the faux-frost the rest of this card already uses by
+       design (see the .hero-card base rule). */
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.4)) 0%,
-      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.18)) 100%);
-    backdrop-filter: blur(32px) saturate(190%);
-    -webkit-backdrop-filter: blur(32px) saturate(190%);
+      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.96)) 0%,
+      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.86)) 100%);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.9),
       0 0 0 1px rgba(230,229,226,.35),
@@ -1729,10 +2093,15 @@ html.is-ready .hero__wm {
   width: 2.35rem; height: 2.35rem; border-radius: 50%;
   overflow: visible;
   cursor: pointer; outline: none;
+  background: linear-gradient(145deg, #d9e4f0, #eef3f8);
   background: linear-gradient(145deg,
     color-mix(in srgb, var(--brand) 34%, #fff),
     color-mix(in srgb, var(--brand) 12%, #fff));
+  border: 1px solid rgba(80, 120, 180, 0.26);
   border: 1px solid color-mix(in srgb, var(--brand) 26%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 2px 8px -3px rgba(80, 120, 180, 0.45);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.7),
     0 2px 8px -3px color-mix(in srgb, var(--brand) 45%, transparent);
@@ -1774,9 +2143,18 @@ html.is-ready .hero__wm {
   border: 5px solid transparent; border-top-color: rgba(255,255,255,.96);
 }
 .partner-orb:hover .partner-orb__tip,
-.partner-orb:focus-visible .partner-orb__tip {
+.partner-orb:focus-visible .partner-orb__tip,
+.partner-orb.is-open .partner-orb__tip {
   opacity: 1; transform: translate(-50%, 0) scale(1);
 }
+.partner-orb.is-open {
+  transform: translateY(-3px) scale(1.1);
+  z-index: 2;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 10px 22px -8px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+.partner-orb.is-open::before { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .partner-orb, .partner-orb::before, .partner-orb__tip { transition: none; }
 }
@@ -1809,10 +2187,16 @@ html.is-ready .hero__wm {
   display: inline-grid; place-items: center; flex: none;
   width: 1.5rem; height: 1.5rem; border-radius: 0.5rem;
   color: var(--tint-deep);
+  /* Literal fallbacks first — browsers without color-mix keep tinted glass readable. */
+  background: linear-gradient(145deg, #e8d5c8, #f4ebe4);
   background: linear-gradient(145deg,
     color-mix(in srgb, var(--tint) 32%, #fff),
     color-mix(in srgb, var(--tint) 12%, #fff));
+  border: 1px solid rgba(177, 95, 44, 0.24);
   border: 1px solid color-mix(in srgb, var(--tint) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px rgba(177, 95, 44, 0.45);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.65),
     0 2px 8px -3px color-mix(in srgb, var(--tint) 45%, transparent);
@@ -1961,22 +2345,24 @@ html.is-ready .hero__wm {
 }
 .create-band[data-stagger] .create-band__tile {
   opacity: 0;
-  transform: translate3d(0, 30px, 0) scale(0.965);
+  transform: translate3d(0, calc(30px + var(--parallax-y, 0px)), 0) scale(0.965);
   transition: none;
 }
 .create-band[data-stagger].is-visible .create-band__tile {
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
+  transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1);
   transition:
     opacity var(--dur-pill-reveal) var(--ease-pill-reveal),
     transform var(--dur-pill-reveal) var(--ease-pill-reveal);
   transition-delay: var(--reveal-delay, 0ms);
 }
-.create-band[data-stagger].is-visible .create-band__tile:hover {
-  transform: translate3d(0, 0, 0) scale(1.03);
-  transition:
-    transform 0.45s var(--ease-glass),
-    box-shadow 0.45s var(--ease-glass);
+@media (hover: hover) {
+  .create-band[data-stagger].is-visible .create-band__tile:hover {
+    transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1.03);
+    transition:
+      transform 0.45s var(--ease-glass),
+      box-shadow 0.45s var(--ease-glass);
+  }
 }
 @media (min-width: 640px) { .create-band__tile { height: 10rem; font-size: 2.25rem; } }
 @media (max-width: 639px) {
@@ -1997,11 +2383,15 @@ html.is-ready .hero__wm {
 }
 .create-band__tile > * { position: relative; z-index: 2; }
 .create-band__tile--code {
+  background: linear-gradient(165deg, #dcdbfa, #f1f1fd);
   background: linear-gradient(165deg,
     color-mix(in srgb, var(--c-violet) 22%, #fff),
     color-mix(in srgb, var(--c-violet) 7%, #fff));
   color: #4a48a8;
   text-shadow: var(--text-sh-emboss);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 8px 22px -10px rgba(110, 108, 240, 0.35);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.85),
     0 8px 22px -10px color-mix(in srgb, var(--c-violet) 35%, transparent);
@@ -2012,17 +2402,23 @@ html.is-ready .hero__wm {
   text-shadow: 0 1px 3px rgba(17,17,17,.22);
   box-shadow: 0 10px 28px rgba(151, 80, 31, .28), 0 2px 8px rgba(151, 80, 31, .18);
 }
-.create-band__tile--accent:hover {
-  box-shadow: 0 16px 40px rgba(151, 80, 31, .34), 0 4px 12px rgba(151, 80, 31, .22);
+@media (hover: hover) {
+  .create-band__tile--accent:hover {
+    box-shadow: 0 16px 40px rgba(151, 80, 31, .34), 0 4px 12px rgba(151, 80, 31, .22);
+  }
 }
 .create-band__tile--dark { background: linear-gradient(165deg, #2b2b2b, #060606); color: #fff; }
 .create-band__tile--dark .create-band__arrow-ico { width: 2.25rem; height: 2.25rem; color: #fff; }
 .create-band__tile--scale {
+  background: linear-gradient(165deg, #c5e0e4, #ebf5f6);
   background: linear-gradient(165deg,
     color-mix(in srgb, var(--teal) 26%, #fff),
     color-mix(in srgb, var(--teal) 8%, #fff));
   color: var(--teal-deep);
   text-shadow: var(--text-sh-emboss);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 8px 22px -10px rgba(43, 140, 154, 0.30);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.85),
     0 8px 22px -10px color-mix(in srgb, var(--teal) 30%, transparent);
@@ -2034,15 +2430,114 @@ html.is-ready .hero__wm {
    solid copper fill — a tinted-light chip would barely register against it. */
 .create-band__tile--code .create-band__icon { --tint: var(--c-violet); --tint-deep: #4a48a8; }
 .create-band__tile--scale .create-band__icon { --tint: var(--teal); --tint-deep: var(--teal-deep); }
+.create-band__tile--code.beam { --tint: var(--c-violet); }
+.create-band__tile--accent.beam { --tint: var(--accent); }
+.create-band__tile--dark.beam { --tint: #cfcfcf; }
+.create-band__tile--scale.beam { --tint: var(--teal); }
 /* Icon pops a touch further than the tile's own scale(1.03) so it reads as its own responsive
    element, not just along for the ride. */
 .create-band__icon { transition: transform 0.4s var(--ease-spring); }
-.create-band[data-stagger].is-visible .create-band__tile:hover .create-band__icon {
-  transform: scale(1.12) rotate(-4deg);
+@media (hover: hover) {
+  .create-band[data-stagger].is-visible .create-band__tile:hover .create-band__icon {
+    animation: none;
+    transform: scale(1.12) rotate(-4deg);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .create-band__icon { transition: none; }
   .create-band[data-stagger].is-visible .create-band__tile:hover .create-band__icon { transform: none; }
+}
+
+/* Pipeline-flow modifier — traveling light pulse + floating icons + parallax-folded transforms.
+   Pulse is a background-image sweep (sheen technique) so it never collides with ::after gloss. */
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile {
+  background-repeat: no-repeat;
+  background-size: 260% 260%, auto;
+  background-position: -40% -40%, 0 0;
+}
+/* Hand ::after to .spec specular — pulse sheen + beam rim replace the old static gloss film. */
+.create-band--flow .create-band__tile.spec::after {
+  background: radial-gradient(16rem 16rem at var(--px,50%) var(--py,0%),
+              rgba(255,255,255,.32), rgba(255,255,255,0) 62%);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-glass);
+  z-index: 3;
+}
+@media (hover: hover) {
+  .create-band--flow .create-band__tile.spec:hover::after { opacity: 1; }
+}
+.create-band--flow .create-band__tile.spec:focus-visible::after { opacity: 1; }
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile--code {
+  background-image:
+    linear-gradient(115deg, transparent 42%, rgba(255,255,255,.55) 50%, transparent 58%),
+    linear-gradient(165deg,
+      color-mix(in srgb, var(--c-violet) 22%, #fff),
+      color-mix(in srgb, var(--c-violet) 7%, #fff));
+  background-size: 260% 260%, 100% 100%;
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile--accent {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.7) 50%, transparent 62%),
+    linear-gradient(145deg, var(--accent-dark) 0%, var(--accent) 42%, var(--accent-bright) 100%);
+  background-size: 260% 260%, 100% 100%;
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile--dark {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.45) 50%, transparent 62%),
+    linear-gradient(165deg, #2b2b2b, #060606);
+  background-size: 260% 260%, 100% 100%;
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile--scale {
+  background-image:
+    linear-gradient(115deg, transparent 42%, rgba(255,255,255,.55) 50%, transparent 58%),
+    linear-gradient(165deg,
+      color-mix(in srgb, var(--teal) 26%, #fff),
+      color-mix(in srgb, var(--teal) 8%, #fff));
+  background-size: 260% 260%, 100% 100%;
+}
+@keyframes create-band-pulse {
+  0% { background-position: -40% -40%, 0 0; }
+  8% { background-position: 140% 140%, 0 0; }
+  20% { background-position: 140% 140%, 0 0; }
+  20.1%, 100% { background-position: -40% -40%, 0 0; }
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile {
+  animation: create-band-pulse 7s var(--ease-glass) infinite;
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(1) { animation-delay: 0s; }
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(2) { animation-delay: 0.35s; }
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(3) { animation-delay: 0.7s; }
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(4) { animation-delay: 1.05s; }
+@keyframes create-band-float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__icon {
+  animation: create-band-float 3s ease-in-out alternate infinite;
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(1) .create-band__icon { animation-delay: 0s; }
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(2) .create-band__icon { animation-delay: 0.4s; }
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(3) .create-band__icon,
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(3) .create-band__arrow-ico {
+  animation: create-band-float 3s ease-in-out alternate infinite;
+  animation-delay: 0.8s;
+}
+.create-band--flow.create-band[data-stagger].is-visible .create-band__tile:nth-child(4) .create-band__icon { animation-delay: 1.2s; }
+html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-band__tile,
+html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-band__icon,
+html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-band__arrow-ico {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .create-band--flow.create-band[data-stagger].is-visible .create-band__tile,
+  .create-band--flow.create-band[data-stagger].is-visible .create-band__icon,
+  .create-band--flow.create-band[data-stagger].is-visible .create-band__arrow-ico {
+    animation: none;
+  }
+  .create-band--flow.create-band[data-stagger] .create-band__tile,
+  .create-band--flow.create-band[data-stagger].is-visible .create-band__tile {
+    transform: none;
+  }
 }
 
 /* Services rows — Lumora hover-fill inside faux-frost panel */
@@ -2207,11 +2702,11 @@ html.is-ready .hero__wm {
 .exp-group__logo img { width: 1.6rem; height: 1.6rem; object-fit: contain; }
 .exp-group__meta { flex: 1; min-width: 0; }
 .exp-group__name { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; transition: color 0.24s var(--ease-tile); }
-.exp-group__loc { margin-top: 0.15rem; font-size: 0.8rem; color: rgba(17,17,17,.52); }
+.exp-group__loc { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.15rem; font-size: 0.8rem; color: rgba(17,17,17,.52); }
 .exp-group__tenure { flex: none; }
 .exp-group__tenure-badge {
   --chip: var(--tint);
-  display: inline-flex; align-items: center; border-radius: var(--radius-pill);
+  display: inline-flex; align-items: center; gap: 0.3rem; border-radius: var(--radius-pill);
   padding: 0.26rem 0.72rem;
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap;
   color: color-mix(in srgb, var(--chip) 80%, #0a0a0a);
@@ -2238,7 +2733,7 @@ html.is-ready .hero__wm {
   width: 100%; text-align: left;
   display: flex; align-items: center; gap: 0.85rem;
   border-radius: var(--radius-card-sm);
-  padding: 1.2rem 1rem; position: relative;
+  padding: 1.45rem 1rem; position: relative;
   transition: background 0.5s var(--ease-glass), transform 0.5s var(--ease-glass);
 }
 .exp-row__gutter {
@@ -2311,16 +2806,21 @@ html.is-ready .hero__wm {
 .exp-row__type-icon {
   display: inline-grid; place-items: center;
   width: 0.95rem; height: 0.95rem; flex: none;
+  transition: transform 0.4s var(--ease-liquid);
 }
 .exp-row__type-icon .ui-icon { width: 0.72rem; height: 0.72rem; }
 .exp-row__type--contract { --chip: #0a84ff; }
 .exp-row__type--permanent { --chip: #12a8c4; }
 .exp-row__type-icon { color: var(--chip); }
+@media (hover: hover) and (pointer: fine) {
+  .exp-row:hover .exp-row__type-icon,
+  .exp-row[aria-expanded="true"] .exp-row__type-icon { transform: scale(1.15) rotate(-8deg); }
+}
 .exp-row__title { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; transition: color 0.3s var(--ease-glass); }
 .exp-row:hover .exp-row__title,
 .exp-row[aria-expanded="true"] .exp-row__title { color: var(--tint-deep); }
 .exp-row__period {
-  display: inline-flex; align-items: center; border-radius: var(--radius-pill);
+  display: inline-flex; align-items: center; gap: 0.28rem; border-radius: var(--radius-pill);
   color: rgba(17,17,17,.64);
   padding: 0.16rem 0.6rem; font-size: 0.7rem; font-weight: 600;
   letter-spacing: 0.01em; white-space: nowrap; cursor: default; outline: none;
@@ -2335,7 +2835,8 @@ html.is-ready .hero__wm {
   box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 3px 9px -3px rgba(17,17,17,.22);
 }
 .exp-row__desc {
-  margin-top: 0.4rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); line-height: 1.5;
+  margin-top: 0.65rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); line-height: 1.65;
+  letter-spacing: -0.006em;
 }
 .exp-row__arrow {
   flex: none; opacity: 0.45; transform: translateX(-4px);
@@ -2355,10 +2856,11 @@ html.is-ready .hero__wm {
 .exp-details.is-open:not([style*="height"]) { height: auto; overflow: visible; }
 .exp-details__inner {
   min-height: 0;
-  padding: 0 1rem 1.15rem 4.75rem;
+  padding: 0 1rem 1.4rem 4.75rem;
 }
 .exp-details__list {
-  padding-top: 0.25rem; font-size: 0.9375rem; color: rgba(17,17,17,.72); line-height: 1.65;
+  padding-top: 0.5rem; font-size: 0.9375rem; color: rgba(17,17,17,.72); line-height: 1.7;
+  letter-spacing: -0.006em;
 }
 /* Term/keyword highlight in role summaries + detail bullets (site.experienceHighlights in
    portfolio.json, matched + wrapped by data.js's highlightExp()) — weight only, no color/shadow,
@@ -2368,12 +2870,13 @@ html.is-ready .hero__wm {
 .exp-details__list li {
   display: flex;
   align-items: flex-start;
-  gap: 0.55rem;
-  margin-bottom: 0.55rem;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
   list-style: none;
   margin-left: 0;
   padding-left: 0;
 }
+.exp-details__list li:last-child { margin-bottom: 0; }
 .point-chip {
   flex: none;
   display: inline-grid;
@@ -2416,7 +2919,8 @@ html.is-ready .hero__wm {
 /* Popover — tenure tooltips & reusable triggers */
 .popover { position: relative; display: inline-flex; vertical-align: middle; }
 .popover:hover,
-.popover:focus-within { z-index: 9999; }
+.popover:focus-within,
+.popover.is-open { z-index: 9999; }
 .popover__trigger { cursor: default; }
 .popover__panel {
   position: absolute; z-index: 9999; left: 50%; bottom: calc(100% + 0.5rem);
@@ -2446,7 +2950,8 @@ html.is-ready .hero__wm {
   filter: drop-shadow(0 2px 2px rgba(10,10,10,.06));
 }
 .popover:hover .popover__panel,
-.popover:focus-within .popover__panel {
+.popover:focus-within .popover__panel,
+.popover.is-open .popover__panel {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: translateX(-50%) translateY(0);
 }
@@ -2461,9 +2966,16 @@ html.is-ready .hero__wm {
    actually being interacted with — fixes it at the source instead of chasing ever-higher z-index
    values that can never actually escape. */
 .exp-group:has(.popover:hover),
-.exp-group:has(.popover:focus-within) { z-index: 200; }
+.exp-group:has(.popover:focus-within),
+.exp-group:has(.popover.is-open) { z-index: 200; }
 .hero__grid:has(.partner-orb:hover),
-.hero__grid:has(.partner-orb:focus-within) { z-index: 200; }
+.hero__grid:has(.partner-orb:focus-within),
+.hero__grid:has(.partner-orb.is-open) { z-index: 200; }
+@supports not selector(:has(*)) {
+  .edu-row:focus-within,
+  .exp-group:focus-within,
+  .hero__grid:focus-within { z-index: 200; }
+}
 
 /* Expand-on-hover label (pills + view-details button) */
 .pill-expand__label {
@@ -2500,8 +3012,16 @@ html.is-ready .hero__wm {
      "wet" top catchlight in ::after and the animated sheen in ::before. */
   background:
     linear-gradient(125deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.34) 27%, transparent 52%),
+    linear-gradient(160deg, #f0f0f0, #fafafa);
+  background:
+    linear-gradient(125deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.34) 27%, transparent 52%),
     linear-gradient(160deg, color-mix(in srgb, var(--brand) 16%, #fff), color-mix(in srgb, var(--brand) 6%, #fff));
+  border: 1px solid rgba(107, 107, 107, 0.22);
   border: 1px solid color-mix(in srgb, var(--brand) 22%, rgba(255,255,255,.5));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 2px 8px -3px rgba(107, 107, 107, 0.34),
+    0 1px 2px rgba(17,17,17,.05);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.92),
     0 2px 8px -3px color-mix(in srgb, var(--brand) 34%, transparent),
@@ -2672,21 +3192,26 @@ html.is-ready .hero__wm {
   transition-delay: var(--reveal-delay, 0ms);
 }
 
-/* Touch / no-hover devices (real phones): no hover to reveal on, so force the label OPEN and in flow —
-   the pill just carries its label statically. Zero JS (pillFlip is gated out) and zero animation; the
-   hover polish is neutralised so a tap-synthesised sticky :hover can't nudge a pill. */
+/* Touch / no-hover, no touch-pills class (reduced-motion or no-JS): force labels OPEN statically.
+   With html.touch-pills (boot.js), labels stay closed until .is-open via pillTap — grid transition
+   mirrors desktop reveal without FLIP. */
 @media (hover: none), (pointer: coarse) {
-  .brand-pill__label { grid-template-columns: 1fr; }
-  .brand-pill__label-in {
+  html:not(.touch-pills) .brand-pill__label { grid-template-columns: 1fr; }
+  html:not(.touch-pills) .brand-pill__label-in {
     opacity: 1; transform: none; transition: none;
     padding: 0 0.55rem 0 0.44rem;
   }
-  .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
-  .brand-pill:hover { transform: none; z-index: auto; }
-  .brand-pill:hover::before { transform: translateX(-135%); }
-  .brand-pill.spec:hover::after { opacity: 0; }
-  .brand-pill:hover .brand-pill__badge img { transform: none; filter: none; }
+  html:not(.touch-pills) .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
+  /* Kill sticky-hover polish unless the pill is deliberately open (pillTap). */
+  .brand-pill:hover:not(.is-open) { transform: none; z-index: auto; }
+  .brand-pill:hover:not(.is-open)::before { transform: translateX(-135%); }
+  .brand-pill.spec:hover:not(.is-open)::after { opacity: 0; }
+  .brand-pill:hover:not(.is-open) .brand-pill__badge img { transform: none; filter: none; }
 }
+html.touch-pills .brand-pill__label {
+  transition: grid-template-columns 0.42s var(--ease-glass);
+}
+html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns: 1fr; }
 
 /* Role stacks / AI groups */
 .role-tags { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
@@ -2838,24 +3363,18 @@ html.is-ready .hero__wm {
 .nav-overlay__gutter {
   flex: none; min-width: 2rem;
 }
-.nav-overlay__close {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  border: 1px solid rgba(255,255,255,.15); border-radius: var(--radius-control);
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
-  color: rgba(255,255,255,.7);
-  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-}
-.nav-overlay__close .ui-icon { width: 0.7rem; height: 0.7rem; }
-.nav-overlay__close:hover {
-  color: #fff; border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.06);
-}
+/* Same control as the header's .menu-btn (identical size/shape/black+copper glass recipe) — reusing
+   the class instead of a bespoke ghost-outline button so the open/close pair reads as one control
+   that morphs in place, not two different buttons. .nav-overlay__close itself only carries the
+   positioning row context now (it sits in the overlay's own top bar, not the fixed header). */
 
 /* Modal */
+/* Closed modal must not participate in layout (Alpine may leave it in DOM) */
+.modal-backdrop:not(.is-open) { display: none !important; }
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 110;
   display: flex; align-items: flex-end; justify-content: center; padding: 1rem;
-  background: rgba(17,17,17,.3); backdrop-filter: blur(16px);
+  background: rgba(17,17,17,.3); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   opacity: 0; pointer-events: none; transition: opacity 0.4s;
 }
 @media (min-width: 640px) { .modal-backdrop { align-items: center; } }
@@ -2955,6 +3474,7 @@ html.is-ready .hero__wm {
   opacity: 0.5;
   transform: scale(0.99);
   pointer-events: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 .modal-form-wrap.is-uc .modal-header { filter: blur(1.5px); opacity: 0.7; }
@@ -3143,9 +3663,28 @@ body.scroll-lock { position: fixed; width: 100%; }
   background-position: -40% -40%;
   transition: background-position 0.85s var(--ease-glass);
 }
-.sheen:hover, .sheen:focus-visible { background-position: 140% 140%; }
+@media (hover: hover) {
+  .sheen:hover { background-position: 140% 140%; }
+}
+.sheen:focus-visible { background-position: 140% 140%; }
 @media (prefers-reduced-motion: reduce) {
   .sheen { transition: none; background-position: -40% -40%; }
+}
+/* Touch scroll-sheen — view-timeline drives the same background-position as hover, zero JS. */
+@supports (animation-timeline: view()) {
+  @media (hover: none) {
+    @media (prefers-reduced-motion: no-preference) {
+      .glass-card.sheen {
+        animation: sheen-scroll linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 60%;
+      }
+      @keyframes sheen-scroll {
+        from { background-position: -40% -40%; }
+        to { background-position: 140% 140%; }
+      }
+    }
+  }
 }
 /* .hero-card already layers --grad-soft as a background-image (ambient wash) — combine both
    layers here instead of letting .sheen's single-layer image replace it. */
@@ -3155,7 +3694,10 @@ body.scroll-lock { position: fixed; width: 100%; }
   background-size: 260% 260%;
   background-position: -40% -40%;
 }
-.hero-card.sheen:hover, .hero-card.sheen:focus-visible { background-position: 140% 140%; }
+@media (hover: hover) {
+  .hero-card.sheen:hover { background-position: 140% 140%; }
+}
+.hero-card.sheen:focus-visible { background-position: 140% 140%; }
 /* .pill-btn-dark/.pill-btn-glass paint their own color via the `background` shorthand, which sets
    background-image too — .sheen's bare `background-image` (equal specificity, later in source)
    was fully replacing that gradient instead of layering over it, leaving the button looking blank/
@@ -3169,7 +3711,10 @@ body.scroll-lock { position: fixed; width: 100%; }
   background-size: 260% 260%, 100% 100%;
   background-position: -40% -40%, 0 0;
 }
-.pill-btn-dark.sheen:hover, .pill-btn-dark.sheen:focus-visible { background-position: 140% 140%, 0 0; }
+@media (hover: hover) {
+  .pill-btn-dark.sheen:hover { background-position: 140% 140%, 0 0; }
+}
+.pill-btn-dark.sheen:focus-visible { background-position: 140% 140%, 0 0; }
 .pill-btn-glass.sheen {
   background-image:
     linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
@@ -3177,12 +3722,134 @@ body.scroll-lock { position: fixed; width: 100%; }
   background-size: 260% 260%, 100% 100%;
   background-position: -40% -40%, 0 0;
 }
-.pill-btn-glass.sheen:hover, .pill-btn-glass.sheen:focus-visible {
+@media (hover: hover) {
+  .pill-btn-glass.sheen:hover {
+    background-image:
+      linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+      linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
+    background-position: 140% 140%, 0 0;
+  }
+}
+.pill-btn-glass.sheen:focus-visible {
   background-image:
     linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
     linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
   background-position: 140% 140%, 0 0;
 }
+.pill-btn-outline.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.92) 50%, transparent 62%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--teal) 24%, #fff) 0%,
+      color-mix(in srgb, var(--c-cyan) 20%, #fff) 52%,
+      color-mix(in srgb, var(--c-teal) 22%, #fff) 100%);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+@media (hover: hover) {
+  .pill-btn-outline.sheen:hover {
+    background-image:
+      linear-gradient(115deg, transparent 38%, rgba(255,255,255,.92) 50%, transparent 62%),
+      linear-gradient(135deg,
+        color-mix(in srgb, var(--teal) 32%, #fff) 0%,
+        color-mix(in srgb, var(--c-cyan) 26%, #fff) 52%,
+        color-mix(in srgb, var(--c-teal) 28%, #fff) 100%);
+    background-position: 140% 140%, 0 0;
+  }
+}
+.pill-btn-outline.sheen:focus-visible {
+  background-position: 140% 140%, 0 0;
+}
 @media (prefers-reduced-motion: reduce) {
-  .pill-btn-dark.sheen, .pill-btn-glass.sheen { background-position: -40% -40%, 0 0; }
+  .pill-btn-dark.sheen, .pill-btn-glass.sheen, .pill-btn-outline.sheen { background-position: -40% -40%, 0 0; }
+}
+
+/* Coarse-pointer press — short tactile feedback (desktop keeps hover lift). */
+@media (hover: none), (pointer: coarse) {
+  .service-row,
+  .create-band__tile,
+  .social-link,
+  .partner-orb {
+    transition: transform 0.12s var(--ease-glass), box-shadow 0.12s var(--ease-glass);
+  }
+  .service-row:active,
+  .create-band__tile:active,
+  .social-link:active,
+  .partner-orb:active {
+    transform: scale(0.985);
+  }
+  .partner-orb:active { transform: translateY(-1px) scale(0.985); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .service-row:active,
+  .create-band__tile:active,
+  .social-link:active,
+  .partner-orb:active { transform: none; }
+}
+
+
+/* Coarse-pointer blur caps — heavy backdrop-filter is costly on phones/tablets. */
+@media (pointer: coarse) {
+  .nav-overlay {
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+  }
+  /* One identical backdrop-filter for BOTH states — any base/scrolled difference in blur, saturate
+     or brightness is a hard step (backdrop-filter never transitions); fill/shadow carry the cross. */
+  .glass-pill,
+  .glass-pill.is-scrolled {
+    backdrop-filter: blur(32px) saturate(205%) brightness(1.07);
+    -webkit-backdrop-filter: blur(32px) saturate(205%) brightness(1.07);
+  }
+  .hero__aside .hero-card[data-reveal]:hover,
+  .hero__aside .hero-card[data-reveal]:focus-within {
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+  }
+}
+
+
+/* ——— Plan 41 Phases 7–8: tap targets, popover width, mobile justify ——— */
+
+/* 44px tap targets — invisible hit-area extension. Parent needs a positioning context
+   (relative, or absolute like .modal-close — do NOT force relative on absolute controls). */
+.menu-btn,
+.hero-card__arrow,
+.social-link,
+.popover__trigger,
+.site-footer li a,
+.site-footer li button {
+  position: relative;
+}
+.menu-btn::after,
+.hero-card__arrow::after,
+.social-link::after,
+.modal-titlebar > .modal-close::after,
+.popover__trigger::after,
+.site-footer li a::after,
+.site-footer li button::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+/* Gloss uses ::before + border-radius; allow ::after hit-area to extend past the tile edge. */
+.menu-btn,
+.hero-card__arrow {
+  overflow: visible;
+}
+
+.popover__panel { max-width: min(80vw, 18rem); }
+@media (max-width: 480px) {
+  .popover__panel { white-space: normal; }
+}
+
+/* Phase 8 — justified experience copy on phones */
+@media (max-width: 767px) {
+  .exp-row__desc,
+  .exp-details__list {
+    text-align: justify;
+    text-justify: inter-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+  }
 }

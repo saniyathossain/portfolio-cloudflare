@@ -7,56 +7,59 @@
  * @license Proprietary — all rights reserved.
  */
 (function () {
-  const M = window.Motion;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
   const canEnhance = finePointer && !reduce;
+  // Touch parallax is half the desktop ranges — present but cheap.
+  const parallaxScale = coarsePointer ? 0.5 : 1;
 
-  if (reduce) return; // reduced-motion: nothing animates. Specular/parallax below are vanilla; only magnetic/tilt need Motion One.
-  const hasMotion = !!(M && typeof M.animate === "function");
-  const animate = hasMotion ? M.animate : null;
+  if (reduce) return; // reduced-motion: nothing animates.
 
-  const springSnappy = { type: "spring", stiffness: 340, damping: 30, mass: 0.6 };
-  const springSoft = { type: "spring", stiffness: 220, damping: 28, mass: 0.7 };
+  // Shared rAF-lerp "spring" — same settle-toward-target idiom heroSpatial() below already hand-rolls
+  // for the hero parallax, reused here for magnetic()/tilt() instead of pulling in Motion One (a
+  // 65KB, desktop-only, fine-pointer-gated dependency) for what boils down to two pointer-follow
+  // effects. `stiffness` is the per-frame lerp fraction (higher = snappier); settle threshold stops
+  // the rAF loop once the values are visually at rest instead of looping forever at ~0.
+  function makeSpring(el, apply, stiffness) {
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    function tick() {
+      cx += (tx - cx) * stiffness;
+      cy += (ty - cy) * stiffness;
+      apply(el, cx, cy);
+      raf = (Math.abs(tx - cx) > 0.02 || Math.abs(ty - cy) > 0.02) ? requestAnimationFrame(tick) : 0;
+    }
+    return {
+      set(x, y) { tx = x; ty = y; if (!raf) raf = requestAnimationFrame(tick); },
+    };
+  }
 
   function magnetic(el, strength) {
     strength = strength || 0.14;
-    let raf = 0;
-    function move(e) {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = el.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height / 2);
-        animate(el, { x: dx * strength, y: dy * strength }, springSnappy);
-      });
-    }
-    function leave() {
-      animate(el, { x: 0, y: 0 }, springSoft);
-    }
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerleave", leave);
+    const spring = makeSpring(el, (node, x, y) => {
+      node.style.transform = "translate(" + x.toFixed(2) + "px," + y.toFixed(2) + "px)";
+    }, 0.22);
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2);
+      const dy = e.clientY - (r.top + r.height / 2);
+      spring.set(dx * strength, dy * strength);
+    });
+    el.addEventListener("pointerleave", () => spring.set(0, 0));
   }
 
   function tilt(el, max) {
     max = max || 5;
-    let raf = 0;
-    function move(e) {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = el.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width - 0.5;
-        const py = (e.clientY - r.top) / r.height - 0.5;
-        animate(el, { rotateY: px * max, rotateX: -py * max }, springSoft);
-      });
-    }
-    function leave() {
-      animate(el, { rotateX: 0, rotateY: 0 }, springSoft);
-    }
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerleave", leave);
+    const spring = makeSpring(el, (node, rx, ry) => {
+      node.style.transform = "rotateY(" + rx.toFixed(2) + "deg) rotateX(" + ry.toFixed(2) + "deg)";
+    }, 0.18);
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      spring.set(px * max, -py * max);
+    });
+    el.addEventListener("pointerleave", () => spring.set(0, 0));
   }
 
   function specular() {
@@ -125,10 +128,11 @@
   let parallaxRaf = 0;
 
   function applyParallax(scrollY) {
-    if (!canEnhance || !heroInView) return;
-    const y = Math.min(scrollY * 0.10, 70);
-    const wm = Math.min(scrollY * 0.06, 48);
-    const liquid = Math.min(scrollY * 0.08, 56);
+    if (reduce || !heroInView) return;
+    const s = parallaxScale;
+    const y = Math.min(scrollY * 0.10 * s, 70 * s);
+    const wm = Math.min(scrollY * 0.06 * s, 48 * s);
+    const liquid = Math.min(scrollY * 0.08 * s, 56 * s);
     document.documentElement.style.setProperty("--aurora-y", y.toFixed(1) + "px");
     document.documentElement.style.setProperty("--wm-parallax-y", wm.toFixed(1) + "px");
     document.documentElement.style.setProperty("--hero-liquid-y", liquid.toFixed(1) + "px");
@@ -137,25 +141,31 @@
   }
 
   // Generic depth parallax for any [data-parallax] element — transform-only, in-view only, cheap.
+  // Speed is the attribute value (data-parallax="0.05"); data-parallax-speed kept as legacy alias.
   let parallaxEls = [];
   function collectParallax() {
     parallaxEls = Array.prototype.slice.call(document.querySelectorAll("[data-parallax]"));
   }
   function applyElementParallax() {
-    if (!canEnhance || !parallaxEls.length) return;
+    if (reduce || !parallaxEls.length) return;
     const vh = window.innerHeight;
     for (let i = 0; i < parallaxEls.length; i++) {
       const el = parallaxEls[i];
       const r = el.getBoundingClientRect();
       if (r.bottom < -240 || r.top > vh + 240) continue; // skip far off-screen
-      const speed = parseFloat(el.getAttribute("data-parallax-speed") || "0.12");
+      const raw = el.getAttribute("data-parallax");
+      const speed = parseFloat(
+        (raw && raw !== "" ? raw : null) ||
+          el.getAttribute("data-parallax-speed") ||
+          "0.12"
+      ) * parallaxScale;
       const offset = ((r.top + r.height / 2) - vh / 2) * -speed;
       el.style.setProperty("--parallax-y", offset.toFixed(1) + "px");
     }
   }
 
   function scrollParallax() {
-    if (!canEnhance) return;
+    if (reduce) return;
     collectParallax();
 
     const hero = document.getElementById("home");
@@ -262,12 +272,22 @@
       }, ms + 100));
     }
 
+    // The row's own [data-stagger] scroll-reveal drives each pill's transform via a CSS transition
+    // (styles.css .pill-row[data-stagger] .brand-pill). flipRow() ALSO writes pill.style.transform
+    // directly (inline style always wins over a CSS transition), so opening a pill mid-reveal would
+    // clobber the stagger-in animation — visible stutter, worse on slow devices where the reveal
+    // window stays open longer relative to how fast a pointer can reach the row. Skip FLIP entirely
+    // while the row hasn't finished revealing; the pointer can still re-trigger it once settled.
+    function stillRevealing(row) {
+      return row.hasAttribute("data-stagger") && !row.classList.contains("is-visible");
+    }
+
     function setOpen(pill) {
       if (pill === openPill) return;
       const prev = openPill;
       const prevRow = prev && prev.parentElement;
       const row = pill.parentElement;
-      if (!row) return;
+      if (!row || stillRevealing(row)) return;
       // Different rows: collapse the old row separately (no conflict — disjoint pill sets).
       if (prev && prevRow && prevRow !== row) {
         flipRow(prevRow, () => prev.classList.remove("is-open"), CLOSE_MS);
@@ -321,8 +341,115 @@
     });
   }
 
+  // Touch brand-pill reveal — gated on html.touch-pills (boot.js). Mutually exclusive with pillFlip
+  // (fine-pointer). Opens one pill; auto-closes on other-pill / outside tap / scroll / timer.
+  function pillTap() {
+    if (!document.documentElement.classList.contains("touch-pills")) return;
+    const CLOSE_MS = 2500;
+    let openPill = null;
+    let timer = 0;
+
+    function clearTimer() {
+      if (timer) { clearTimeout(timer); timer = 0; }
+    }
+    function close() {
+      clearTimer();
+      if (!openPill) return;
+      openPill.classList.remove("is-open");
+      openPill = null;
+    }
+    function open(pill) {
+      if (openPill && openPill !== pill) openPill.classList.remove("is-open");
+      openPill = pill;
+      pill.classList.add("is-open");
+      clearTimer();
+      timer = setTimeout(close, CLOSE_MS);
+    }
+
+    document.addEventListener("click", (e) => {
+      const pill = e.target.closest && e.target.closest(".brand-pill");
+      if (pill && pill.parentElement && pill.parentElement.classList.contains("pill-row")) {
+        e.preventDefault();
+        if (openPill === pill) close();
+        else open(pill);
+        return;
+      }
+      if (openPill) close();
+    });
+    window.addEventListener("scroll", close, { passive: true });
+  }
+
+  // Decorative infinite CSS animations (.beam conic-rotate, create-band pulse/float) only paused on
+  // html.is-idle today — they keep repainting while merely scrolled off-screen. One shared observer
+  // adds .is-paused (CSS: animation-play-state: paused) so scrolling past them costs nothing.
+  function pauseOffscreenDecor() {
+    if (reduce || !("IntersectionObserver" in window)) return;
+    const targets = document.querySelectorAll(".beam, .create-band--flow");
+    if (!targets.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.target.classList.toggle("is-paused", !e.isIntersecting);
+      },
+      { root: null, threshold: 0, rootMargin: "200px 0px" }
+    );
+    targets.forEach((el) => io.observe(el));
+  }
+
+  // iOS 26 "Liquid Glass" touch feedback for .menu-btn (header Menu button + the overlay's Close
+  // button, same shared control) — a soft blob blooms from the exact press point and springs back
+  // out on release (CSS: .menu-btn__ripple, driven by --tx/--ty here). Pointer Events cover
+  // mouse/touch/pen in one listener; unconditional (not gated by canEnhance) since touch is the
+  // primary target, not desktop hover.
+  function liquidTouch() {
+    const setPos = (el, e) => {
+      const r = el.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100;
+      const y = ((e.clientY - r.top) / r.height) * 100;
+      el.style.setProperty("--tx", x.toFixed(1) + "%");
+      el.style.setProperty("--ty", y.toFixed(1) + "%");
+    };
+    document.querySelectorAll(".menu-btn").forEach((el) => {
+      if (!el.querySelector(".menu-btn__ripple")) return;
+      // Press bloom only (no cursor-following hover glow — removed by request): the ripple springs
+      // from the exact press point, set here on pointerdown.
+      el.addEventListener("pointerdown", (e) => { setPos(el, e); el.classList.add("is-pressed"); }, { passive: true });
+      const release = () => el.classList.remove("is-pressed");
+      el.addEventListener("pointerup", release, { passive: true });
+      el.addEventListener("pointerleave", release, { passive: true });
+      el.addEventListener("pointercancel", release, { passive: true });
+    });
+  }
+
+  // Touch devices have no :hover, so the clock's grow-on-hover never fires. Tapping the analog face
+  // toggles .is-zoomed (the same enlarged state the CSS applies on desktop hover); tapping anywhere
+  // else closes it. Desktop keeps pure :hover — gating on (hover:none) avoids a click leaving the
+  // clock stuck open there.
+  function clockTapZoom() {
+    const face = document.querySelector(".clock-face");
+    if (!face) return;
+    // Gate on the pointer that actually fired, not a media query: a mouse pointerup is left to the
+    // CSS :hover path (so a desktop click never sticks the zoom), while touch/pen taps toggle it.
+    // This is what makes the grow work on phones, where there is no :hover.
+    const header = document.querySelector(".site-header");
+    const setZoom = (on) => {
+      face.classList.toggle("is-zoomed", on);
+      // Flag the header too: on phones the enlarged face would overlap the brand mark to its left, so
+      // CSS fades the brand out while zoomed (see .site-header.clock-zoomed .brand-btn).
+      if (header) header.classList.toggle("clock-zoomed", on);
+    };
+    face.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      e.stopPropagation();
+      setZoom(!face.classList.contains("is-zoomed"));
+    });
+    document.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "mouse") return;
+      if (!(e.target && e.target.closest && e.target.closest(".clock-face"))) setZoom(false);
+    }, { passive: true });
+  }
+
   function boot() {
-    if (canEnhance && hasMotion) {
+    if (canEnhance) {
       document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
       const card = document.querySelector(".hero-card");
       if (card) tilt(card);
@@ -331,7 +458,11 @@
     scrollParallax();
     heroSpatial();
     pillFlip();
-    if (canEnhance) applyParallax(window.scrollY || 0);
+    pillTap();
+    pauseOffscreenDecor();
+    liquidTouch();
+    clockTapZoom();
+    if (!reduce) applyParallax(window.scrollY || 0);
   }
 
   window.addEventListener("portfolio-ready", boot);

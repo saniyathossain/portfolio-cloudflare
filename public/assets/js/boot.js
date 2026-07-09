@@ -8,8 +8,12 @@
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(pointer: fine)").matches;
+  // Tap-reveal brand pills on touch / no-hover (static force-open remains the reduced/no-JS fallback).
+  if (!reduced && (window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(hover: none)").matches)) {
+    document.documentElement.classList.add("touch-pills");
+  }
 
-  const ASSET_V = "50d8280a15e6"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "11f198264a82"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
@@ -36,11 +40,9 @@
   }
 
   function loadIdleScripts() {
-    // Motion One drives magnetic CTAs + hero tilt — desktop/fine-pointer only. Gating it here keeps
-    // its 22 KB (gz) off touch devices, where motion.js no-ops (→ zero unused bytes on mobile).
-    // Ordered before motion.js so window.Motion is defined when motion.js runs (loadScript is async=false).
+    // motion.js hand-rolls its own rAF-lerp spring for magnetic CTAs + hero tilt (no external
+    // library) — desktop/fine-pointer only, so it no-ops and costs nothing on touch devices.
     const idleScripts = [];
-    if (finePointer && !reduced) idleScripts.push("/assets/js/vendor/motion.min.js");
     idleScripts.push("/assets/js/motion.min.js");
     if (finePointer && !reduced) {
       idleScripts.push("/assets/js/liquid-hero.min.js");
@@ -55,8 +57,10 @@
     else setTimeout(run, 800);
   }
 
+
   async function boot() {
     registerSw();
+
     // portfolio.json is same-origin but still a real network request — a transient failure here
     // (offline load, CDN hiccup) must not cascade into skipping Alpine/app.js entirely, since that
     // would leave the whole site inert with unevaluated x-data markup. app.js's `window.PORTFOLIO_DATA

@@ -50,6 +50,8 @@ function portfolioApp() {
     clockAngleS: 0,
     clockSecondDelay: "0s",
     openRoles: {},
+    // Sticky, never reverts on re-collapse — see hasOpenedOnce()/toggleRole() below.
+    openedRoles: {},
     currentYear: new Date().getFullYear(),
     heroCards: D.heroCards,
     nav: D.nav,
@@ -103,7 +105,20 @@ function portfolioApp() {
     // (The aurora *canvas* pauses itself in aurora.js; this covers the CSS-driven animations.)
     setupIdlePause() {
       const root = document.documentElement;
-      const idle = () => root.classList.add("is-idle");
+      const idle = () => {
+        root.classList.add("is-idle");
+        // `is-idle` only pauses @keyframes-driven decorations (browsers can't pause a CSS
+        // transition). A transition mid-flight when the tab loses focus would otherwise freeze at
+        // whatever value it happened to reach and resume from there on return — jarring for the
+        // #main liquid-warp blur/scale pulse specifically, since a very-mid-blur frozen frame reads
+        // as a rendering glitch, not a paused effect. Settle it to its resting state immediately
+        // instead of waiting for its own scrollend/timeout cleanup to eventually fire.
+        const main = document.getElementById("main");
+        if (main && main.classList.contains("is-liquid-warp")) {
+          clearTimeout(this._warpTimer);
+          main.classList.remove("is-liquid-warp");
+        }
+      };
       const active = () => root.classList.remove("is-idle");
       document.addEventListener("visibilitychange", () => { if (document.hidden) idle(); else active(); });
       window.addEventListener("blur", idle);
@@ -152,14 +167,36 @@ function portfolioApp() {
       let activeIdx = 0;
       let hoverIdx = -1;
 
+      // iOS Music-app droplet squash: whenever the lens actually changes destination, flag it
+      // "traveling" for the flight duration — CSS squashes it scaleY mid-flight and the transition's
+      // own overshoot springs it back on arrival. Class-toggle only; visuals are reduced-motion
+      // gated in CSS, and the guard here spares the timer churn for reduce users too.
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let lastX = null;
+      let travelTimer = 0;
       const place = (idx) => {
         const btn = btns[idx];
         if (!btn || !btn.offsetWidth) { nav.style.setProperty("--pill-o", "0"); return; }
-        nav.style.setProperty("--pill-x", btn.offsetLeft + "px");
+        const x = btn.offsetLeft;
+        if (!reduceMotion && lastX !== null && Math.abs(x - lastX) > 4) {
+          nav.classList.add("is-traveling");
+          clearTimeout(travelTimer);
+          travelTimer = setTimeout(() => nav.classList.remove("is-traveling"), 440);
+        }
+        lastX = x;
+        nav.style.setProperty("--pill-x", x + "px");
         nav.style.setProperty("--pill-w", btn.offsetWidth + "px");
         nav.style.setProperty("--pill-h", btn.offsetHeight + "px");
         nav.style.setProperty("--pill-o", "1");
       };
+      // Music-app press: holding a tab inflates the lens under the finger/cursor; release springs
+      // it back (CSS handles the spring via --ease-liquid).
+      nav.addEventListener("pointerdown", (e) => {
+        if (e.target.closest("button")) nav.classList.add("is-pressing");
+      }, { passive: true });
+      ["pointerup", "pointerleave", "pointercancel"].forEach((t) =>
+        nav.addEventListener(t, () => nav.classList.remove("is-pressing"), { passive: true })
+      );
       // Coalesced into a single rAF: several triggers can fire in the same tick (e.g. every
       // intersecting section reporting at once on load) — each `place()` reads layout
       // (offsetWidth/Left/Height) right after a previous call's style write, which would force a
@@ -417,8 +454,39 @@ function portfolioApp() {
       setTimeout(() => this.scrollTo(item.id), T.NAV_SCROLL);
     },
 
-    openMenu() { this.menuOpen = true; this.scrollLock(true); },
+    openMenu() {
+      this.menuOpen = true;
+      this.scrollLock(true);
+      // Lay the overlay's Close button exactly over the header's Menu button so the drawer reads as
+      // the same control morphing in place. The Menu button's on-screen position isn't a fixed
+      // constant (the glass-pill's height — and thus the vertically-centred button's top — shifts
+      // between breakpoints), so mirror its live rect rather than hard-coding offsets. nextTick +
+      // rAF lets the overlay lay out first. A one-time resize hook keeps it aligned if the viewport
+      // changes while open.
+      requestAnimationFrame(() => requestAnimationFrame(() => this.syncCloseBtn()));
+      if (!this._closeSync) {
+        this._closeSync = () => { if (this.menuOpen) this.syncCloseBtn(); };
+        window.addEventListener("resize", this._closeSync, { passive: true });
+      }
+    },
     closeMenu() { this.menuOpen = false; this.scrollLock(false); },
+    syncCloseBtn() {
+      // document.querySelector (not this.$el): this runs from a detached rAF callback where Alpine's
+      // $el magic isn't in scope and resolves undefined. Both elements are unique on the page.
+      const menu = document.querySelector(".site-header .menu-btn");
+      const close = document.querySelector(".nav-overlay__close");
+      if (!menu || !close) return;
+      const r = menu.getBoundingClientRect();
+      if (!r.width) return;
+      Object.assign(close.style, {
+        position: "fixed",
+        top: r.top + "px",
+        left: r.left + "px",
+        width: r.width + "px",
+        height: r.height + "px",
+        margin: "0",
+      });
+    },
 
     openModal() {
       this.modalOpen = true;
@@ -654,10 +722,21 @@ function portfolioApp() {
 
       if (opening) {
         this.openRoles[id] = true;
+        // First open of this role: the x-if-gated content (details list + stack/AI-tool pills, see
+        // hasOpenedOnce()) isn't mounted yet. Setting openedRoles here and waiting a *second*
+        // $nextTick lets Alpine actually mount that template before scrollHeight is read below —
+        // otherwise the very first expand would animate to the pre-content (too-short) height.
+        // Every subsequent open of the same role skips straight through (already mounted, already
+        // true) so the animation is unaffected once past first-open.
+        const firstOpen = !this.openedRoles[id];
+        if (firstOpen) this.openedRoles[id] = true;
         this.$nextTick(() => {
-          panel.style.overflow = "hidden";
-          panel.style.height = "0px";
-          this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish);
+          const mountReady = firstOpen ? new Promise((r) => this.$nextTick(r)) : Promise.resolve();
+          mountReady.then(() => {
+            panel.style.overflow = "hidden";
+            panel.style.height = "0px";
+            this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish);
+          });
         });
         return;
       }
@@ -671,6 +750,7 @@ function portfolioApp() {
     },
 
     isRoleOpen(id) { return !!this.openRoles[id]; },
+    hasOpenedOnce(id) { return !!this.openedRoles[id]; },
 
     roleToggleLabel(id) {
       return this.isRoleOpen(id) ? "Hide details" : "View details";
@@ -682,3 +762,81 @@ document.addEventListener("alpine:init", () => {
   Alpine.data("portfolioApp", portfolioApp);
 });
 window.portfolioApp = portfolioApp;
+
+// Touch popover + partner-orb — must live here (not motion.js) so reduced-motion still gets
+// tap-toggle + dismissal. Fine-pointer devices keep CSS :hover / :focus-within.
+(function setupTouchReveal() {
+  const touch =
+    window.matchMedia("(pointer: coarse)").matches ||
+    window.matchMedia("(hover: none)").matches;
+  if (!touch) return;
+
+  let openPopover = null;
+  let openOrb = null;
+
+  function closePopover() {
+    if (!openPopover) return;
+    openPopover.classList.remove("is-open");
+    openPopover = null;
+  }
+  function closeOrb() {
+    if (!openOrb) return;
+    openOrb.classList.remove("is-open");
+    openOrb = null;
+  }
+  function dismissAll() {
+    closePopover();
+    closeOrb();
+  }
+
+  document.addEventListener("click", (e) => {
+    const orb = e.target.closest && e.target.closest(".partner-orb");
+    if (orb) {
+      if (openOrb === orb) {
+        closeOrb();
+        return; // second tap — allow navigation
+      }
+      e.preventDefault();
+      closePopover();
+      if (openOrb) openOrb.classList.remove("is-open");
+      openOrb = orb;
+      orb.classList.add("is-open");
+      return;
+    }
+
+    const pop = e.target.closest && e.target.closest(".popover");
+    if (pop) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeOrb();
+      if (openPopover === pop) {
+        closePopover();
+      } else {
+        if (openPopover) openPopover.classList.remove("is-open");
+        openPopover = pop;
+        pop.classList.add("is-open");
+      }
+      return;
+    }
+  });
+
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (!openPopover && !openOrb) return;
+      const t = e.target;
+      if (openPopover && openPopover.contains(t)) return;
+      if (openOrb && openOrb.contains(t)) return;
+      dismissAll();
+    },
+    true
+  );
+
+  window.addEventListener("scroll", dismissAll, { passive: true });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") dismissAll();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") dismissAll();
+  });
+})();

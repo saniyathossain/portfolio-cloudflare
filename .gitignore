@@ -11,6 +11,7 @@ Thumbs.db
 .cursor/debug-*.log
 .cursor/hooks.json
 .cursor/skills/impeccable/
+.cursor/work/
 
 # Local preview / tooling
 node_modules/
@@ -27,6 +28,8 @@ legacy/
 
 # Skills tooling — .agents/skills + skills-lock.json are committed; ignore per-machine state
 .impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/hook.pending.json
 *.local.json
 
 # generated image build cache (idempotency guard)

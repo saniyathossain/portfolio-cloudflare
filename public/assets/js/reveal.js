@@ -8,32 +8,45 @@
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function initReveals() {
-    const els = document.querySelectorAll("[data-reveal]");
+  // Shared across initReveals/initStagger and the late-mount watcher below: Alpine's x-for sections
+  // (services/experience/skills/stats/education) don't exist in the DOM yet when boot() first runs —
+  // they're created moments later once portfolioDataReady resolves and Alpine finishes its init walk.
+  // A single querySelectorAll pass here would permanently miss them (still carrying the CSS
+  // opacity:0 default, no observer ever attached) on any device slow enough that Alpine's walk
+  // outlasts the loader's fixed timer. reveal-io.js's MutationObserver (wired in boot()) re-runs
+  // these same observe-functions for anything Alpine mounts after this first pass.
+  let revealIO = null;
+  function observeReveal(el) {
     if (reduced) {
-      els.forEach((el) => el.classList.add("is-visible"));
+      el.classList.add("is-visible");
       return;
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            const el = e.target;
-            const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
-            el.style.setProperty("--reveal-delay", delay + "ms");
-            if (delay) el.style.transitionDelay = delay + "ms";
-            requestAnimationFrame(() => {
+    if (!revealIO) {
+      revealIO = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              const el2 = e.target;
+              const delay = parseInt(el2.getAttribute("data-delay") || "0", 10);
+              el2.style.setProperty("--reveal-delay", delay + "ms");
+              if (delay) el2.style.transitionDelay = delay + "ms";
               requestAnimationFrame(() => {
-                el.classList.add("is-visible");
+                requestAnimationFrame(() => {
+                  el2.classList.add("is-visible");
+                });
               });
-            });
-            io.unobserve(el);
+              revealIO.unobserve(el2);
+            }
           }
-        }
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
-    );
-    els.forEach((el) => io.observe(el));
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      );
+    }
+    revealIO.observe(el);
+  }
+
+  function initReveals() {
+    document.querySelectorAll("[data-reveal]").forEach(observeReveal);
   }
 
   function initWordReveal() {
@@ -76,23 +89,29 @@
     });
   }
 
-  function initStagger() {
-    const rows = document.querySelectorAll("[data-stagger]");
+  let staggerIO = null;
+  function observeStagger(row) {
     if (reduced) {
-      rows.forEach((r) => r.classList.add("is-visible"));
+      row.classList.add("is-visible");
       return;
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          revealStaggerRow(e.target);
-          io.unobserve(e.target);
-        }
-      },
-      { threshold: 0.08, rootMargin: "0px 0px -4% 0px" }
-    );
-    rows.forEach((r) => io.observe(r));
+    if (!staggerIO) {
+      staggerIO = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            revealStaggerRow(e.target);
+            staggerIO.unobserve(e.target);
+          }
+        },
+        { threshold: 0.08, rootMargin: "0px 0px -4% 0px" }
+      );
+    }
+    staggerIO.observe(row);
+  }
+
+  function initStagger() {
+    document.querySelectorAll("[data-stagger]").forEach(observeStagger);
   }
 
   function initCountUp() {
@@ -155,12 +174,33 @@
     update();
   }
 
+  // Watches for [data-reveal]/[data-stagger] elements mounted after the first pass (Alpine's x-for
+  // sections land here on a slow device/network — see the comment above observeReveal). One shared
+  // observer for the whole document: DOM mutations are infrequent post-load, so this is not a
+  // per-frame cost, just a safety net for late arrivals.
+  function initLateMountWatcher() {
+    if (reduced || !("MutationObserver" in window)) return;
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node.nodeType !== 1) continue;
+          if (node.matches("[data-reveal]")) observeReveal(node);
+          if (node.matches("[data-stagger]")) observeStagger(node);
+          node.querySelectorAll?.("[data-reveal]").forEach(observeReveal);
+          node.querySelectorAll?.("[data-stagger]").forEach(observeStagger);
+        }
+      }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+
   function boot() {
     initReveals();
     initWordReveal();
     initStagger();
     initCountUp();
     initScrollProgress();
+    initLateMountWatcher();
     applyAdaptiveGrid();
     // rAF-coalesced: writes documentElement's own font-size, which cascades a size recalc through
     // every rem-based rule in the document — a resize-drag must collapse to one write per frame,

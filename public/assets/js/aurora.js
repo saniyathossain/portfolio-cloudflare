@@ -70,21 +70,22 @@
       ctx.globalCompositeOperation = "source-over";
     }
 
-    let raf = 0, last = 0, running = false;
-    function loop(now) {
-      raf = requestAnimationFrame(loop);
-      if (now - last < FRAME_MS) return;
-      last = now;
+    // setTimeout-paced (not a 60fps rAF poll that skips most frames) — the main thread only wakes
+    // ~24x/sec to draw, instead of 60x/sec to check-and-mostly-skip.
+    let timer = 0, raf = 0, running = false;
+    function tick() {
+      const now = performance.now();
       draw(now * 0.06);
+      raf = requestAnimationFrame(() => { timer = window.setTimeout(tick, FRAME_MS); });
     }
     function start() {
       if (running) return;
       running = true;
-      last = 0;
-      raf = requestAnimationFrame(loop);
+      tick();
     }
     function stop() {
       running = false;
+      clearTimeout(timer);
       cancelAnimationFrame(raf);
     }
 
