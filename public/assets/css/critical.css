@@ -317,8 +317,8 @@ html.is-loading .site-header {
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
   padding: 0.7rem 0.55rem 0.7rem 1.25rem; border-radius: var(--radius-pill);
   background: linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.34));
-  backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
+  backdrop-filter: blur(20px) saturate(190%) brightness(1.06);
+  -webkit-backdrop-filter: blur(20px) saturate(190%) brightness(1.06);
   border: 1px solid rgba(255,255,255,.5);
   box-shadow:
     0 12px 38px -14px rgba(17,17,17,.14),
@@ -326,8 +326,7 @@ html.is-loading .site-header {
     inset 0 1px 0 rgba(255,255,255,.9),
     inset 0 -6px 16px -12px rgba(255,255,255,.55);
   transform: translateZ(0);
-  transition: background 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass),
-    -webkit-backdrop-filter 0.5s var(--ease-glass), backdrop-filter 0.5s var(--ease-glass);
+  transition: background 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass);
 }
 /* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round). */
 .glass-pill::before {
@@ -349,8 +348,8 @@ html.is-loading .site-header {
 /* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
 .glass-pill.is-scrolled {
   background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
-  backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
-  -webkit-backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
+  backdrop-filter: blur(20px) saturate(205%) brightness(1.08);
+  -webkit-backdrop-filter: blur(20px) saturate(205%) brightness(1.08);
   box-shadow:
     0 20px 50px -16px rgba(17,17,17,.22),
     0 3px 10px rgba(17,17,17,.07),

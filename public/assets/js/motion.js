@@ -379,6 +379,22 @@
     window.addEventListener("scroll", close, { passive: true });
   }
 
+  // Decorative infinite CSS animations (.beam conic-rotate, create-band pulse/float) only paused on
+  // html.is-idle today — they keep repainting while merely scrolled off-screen. One shared observer
+  // adds .is-paused (CSS: animation-play-state: paused) so scrolling past them costs nothing.
+  function pauseOffscreenDecor() {
+    if (reduce || !("IntersectionObserver" in window)) return;
+    const targets = document.querySelectorAll(".beam, .create-band--flow");
+    if (!targets.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) e.target.classList.toggle("is-paused", !e.isIntersecting);
+      },
+      { root: null, threshold: 0, rootMargin: "200px 0px" }
+    );
+    targets.forEach((el) => io.observe(el));
+  }
+
   function boot() {
     if (canEnhance) {
       document.querySelectorAll("[data-magnetic]").forEach((el) => magnetic(el));
@@ -390,6 +406,7 @@
     heroSpatial();
     pillFlip();
     pillTap();
+    pauseOffscreenDecor();
     if (!reduce) applyParallax(window.scrollY || 0);
   }
 
