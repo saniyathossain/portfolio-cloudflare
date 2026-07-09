@@ -128,6 +128,16 @@ html:not(.is-loading) #main.is-liquid-warp {
   --ease-pill-reveal: cubic-bezier(0.33, 1, 0.68, 1); /* easeOutCubic — gentle onset, no snap (smoother stack/skill stagger) */
   --dur-pill-expand: 0.4s;
   --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
+  /* Shared button/control sizing + motion tokens — nothing owned this before this rule, so every
+     pill hard-coded its own padding/height/font and hover took an un-snappy 0.45s. */
+  --control-pad-x: 1.5rem;
+  --control-pad-y: 0.375rem;
+  --control-gap: 0.75rem;
+  --btn-icon-size: 2.25rem;
+  --btn-radius: var(--radius-pill);
+  --dur-btn-hover: 0.22s;
+  --dur-btn-press: 0.13s;
+  --ease-btn: var(--ease-hover);
   /* Inter-first on every platform → identical look on Mac/iOS/Windows/Android/Linux (see doc 19).
      "Inter Fallback" is metric-matched so there's no CLS before Inter loads. */
   --font-sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -283,6 +293,14 @@ html.is-idle body::before,
 html.is-idle .brand-bismillah,
 html.is-idle .brand-bismillah-wrap::after,
 html.is-idle .beam::before {
+  animation-play-state: paused;
+}
+/* Same idea, scoped to viewport instead of tab-focus (motion.js's pauseOffscreenDecor): stops the
+   conic beam repaint + create-band pulse/float the moment their section scrolls out of view. */
+.beam.is-paused::before,
+.create-band--flow.is-paused .create-band__tile,
+.create-band--flow.is-paused .create-band__icon,
+.create-band--flow.is-paused .create-band__arrow-ico {
   animation-play-state: paused;
 }
 
@@ -894,8 +912,8 @@ html.is-loading .site-header {
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
   padding: 0.7rem 0.55rem 0.7rem 1.25rem; border-radius: var(--radius-pill);
   background: linear-gradient(180deg, rgba(255,255,255,.56), rgba(255,255,255,.34));
-  backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.06);
+  backdrop-filter: blur(20px) saturate(190%) brightness(1.06);
+  -webkit-backdrop-filter: blur(20px) saturate(190%) brightness(1.06);
   border: 1px solid rgba(255,255,255,.5);
   box-shadow:
     0 12px 38px -14px rgba(17,17,17,.14),
@@ -903,8 +921,10 @@ html.is-loading .site-header {
     inset 0 1px 0 rgba(255,255,255,.9),
     inset 0 -6px 16px -12px rgba(255,255,255,.55);
   transform: translateZ(0);
-  transition: background 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass),
-    -webkit-backdrop-filter 0.5s var(--ease-glass), backdrop-filter 0.5s var(--ease-glass);
+  /* backdrop-filter is intentionally NOT transitioned — animating its blur radius forces a re-blur
+     of everything beneath the header on every frame of the transition, right as the user starts
+     scrolling. The radius stays fixed; only background/shadow deepen on .is-scrolled. */
+  transition: background 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass);
 }
 /* Lensed gradient-border rim — the signature liquid-glass edge (bright top-left, wrapping round). */
 .glass-pill::before {
@@ -926,8 +946,8 @@ html.is-loading .site-header {
 /* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
 .glass-pill.is-scrolled {
   background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
-  backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
-  -webkit-backdrop-filter: blur(34px) saturate(205%) brightness(1.08);
+  backdrop-filter: blur(20px) saturate(205%) brightness(1.08);
+  -webkit-backdrop-filter: blur(20px) saturate(205%) brightness(1.08);
   box-shadow:
     0 20px 50px -16px rgba(17,17,17,.22),
     0 3px 10px rgba(17,17,17,.07),
@@ -1441,9 +1461,10 @@ html.is-loading .site-header {
 }
 
 .pill-btn__icon {
-  width: 2.25rem; height: 2.25rem; display: grid; place-items: center;
-  border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 1rem; line-height: 0;
+  width: var(--btn-icon-size); height: var(--btn-icon-size); display: grid; place-items: center;
+  border-radius: var(--btn-radius); background: #fff; color: var(--ink); font-size: 1rem; line-height: 0;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 1px 3px rgba(17,17,17,.12);
+  transition: transform var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn__icon .ui-icon { width: 1rem; height: 1rem; color: var(--ink); stroke-width: 2.25; }
 /* Opposite-contrast pairing for a light-surface button: dark circle + white glyph, mirroring
@@ -1453,40 +1474,58 @@ html.is-loading .site-header {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 1px 3px rgba(17,17,17,.3);
 }
 .pill-btn__icon--dark .ui-icon { color: #fff; }
+/* Kinetic coin — nudges toward the direction of travel on hover ("internal kinetic tension"),
+   reset on press so the whole button reads as one solid unit while held down. */
+.pill-btn-dark:hover .pill-btn__icon,
+.pill-btn-glass:hover .pill-btn__icon,
+.pill-btn-outline:hover .pill-btn__icon {
+  transform: translateX(3px) scale(1.06);
+}
+.pill-btn-dark:active .pill-btn__icon,
+.pill-btn-glass:active .pill-btn__icon,
+.pill-btn-outline:active .pill-btn__icon {
+  transform: translateX(1px) scale(0.96);
+}
 /* Both CTAs below add the icon-chip "shiny tile" gloss via ::after (not ::before — .beam already
    claims that pseudo-element for its rotating conic border on these same buttons). */
 .pill-btn-dark {
   position: relative; overflow: hidden;
-  display: inline-flex; align-items: center; gap: 0.75rem;
-  border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
-  background: linear-gradient(145deg, #2b2b2b, #060606); color: #fff; padding: 0.375rem 0.375rem 0.375rem 1.5rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(17,17,17,.18);
-  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
+  display: inline-flex; align-items: center; gap: var(--control-gap);
+  border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
+  /* Copper-tinted glass primary — the single brand action across hero/modal/footer. Stops kept to
+     --accent/--accent-dark (not --accent-bright) so white label text clears WCAG AA (~4.6:1 / 6:1). */
+  background: linear-gradient(145deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 10px 24px -6px color-mix(in srgb, var(--accent-dark) 55%, transparent);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-dark::after {
   content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(125deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.1) 30%, transparent 58%);
+  background: linear-gradient(125deg, rgba(255,255,255,.4) 0%, rgba(255,255,255,.08) 30%, transparent 58%);
   opacity: 0.92;
-  transition: opacity 0.35s var(--ease-glass);
+  transition: opacity var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-dark > * { position: relative; z-index: 2; }
-.pill-btn-dark:hover { transform: translateY(-2px) scale(1.03); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 16px 34px rgba(17,17,17,.24); }
+.pill-btn-dark:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.26), 0 16px 34px -6px color-mix(in srgb, var(--accent-dark) 60%, transparent);
+}
 .pill-btn-dark:hover::after { opacity: 1; }
-.pill-btn-dark:active { transform: translateY(0) scale(0.985); transition-duration: 0.12s; }
+.pill-btn-dark:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
 .pill-btn-glass {
   position: relative; overflow: hidden;
-  display: inline-flex; align-items: center; gap: 0.75rem;
-  border-radius: var(--radius-pill); font-size: 0.875rem; font-weight: 500;
+  display: inline-flex; align-items: center; gap: var(--control-gap);
+  border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
   background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
-  color: #111; padding: 0.375rem 0.375rem 0.375rem 1.5rem;
+  color: #111; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 14px -7px rgba(17,17,17,.14);
-  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass), background 0.45s var(--ease-glass);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-glass::after {
   content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
   background: linear-gradient(125deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.32) 30%, transparent 58%);
   opacity: 0.88;
-  transition: opacity 0.35s var(--ease-glass);
+  transition: opacity var(--dur-btn-hover) var(--ease-btn);
 }
 .pill-btn-glass > * { position: relative; z-index: 2; }
 .pill-btn-glass:hover {
@@ -1495,7 +1534,38 @@ html.is-loading .site-header {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 12px 28px -8px rgba(17,17,17,.14);
 }
 .pill-btn-glass:hover::after { opacity: 1; }
-.pill-btn-glass:active { transform: translateY(0) scale(0.985); transition-duration: 0.12s; }
+.pill-btn-glass:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
+.pill-btn-dark, .pill-btn-glass, .pill-btn-outline { touch-action: manipulation; }
+.pill-btn-dark:focus-visible, .pill-btn-glass:focus-visible, .pill-btn-outline:focus-visible {
+  transform: translateY(-2px) scale(1.03);
+}
+/* Outline pill brought into the shiny-glass family — it shipped as flat Tailwind (no states) while
+   every other control on the site is tinted glass; this closes that gap without a new material. */
+.pill-btn-outline {
+  position: relative; overflow: hidden;
+  border-color: transparent !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tint, var(--accent)) 10%, #fff) 0%,
+    color-mix(in srgb, var(--tint, var(--accent)) 4%, #fff) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), inset 0 0 0 1px color-mix(in srgb, var(--tint, var(--accent)) 30%, transparent),
+    0 4px 14px -8px color-mix(in srgb, var(--tint, var(--accent)) 25%, transparent);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
+}
+.pill-btn-outline:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tint, var(--accent)) 16%, #fff) 0%,
+    color-mix(in srgb, var(--tint, var(--accent)) 7%, #fff) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 0 0 1px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent),
+    0 10px 22px -8px color-mix(in srgb, var(--tint, var(--accent)) 32%, transparent);
+}
+.pill-btn-outline:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
+/* The outline pill's fill is near-white, so its coin needs its own contrast — tint-tinted ring
+   instead of the flat white .pill-btn__icon (which would nearly disappear on this background). */
+.pill-btn-outline .pill-btn__icon {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tint, var(--accent)) 30%, #fff), color-mix(in srgb, var(--tint, var(--accent)) 12%, #fff));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 1px 3px color-mix(in srgb, var(--tint, var(--accent)) 25%, transparent);
+}
 
 .hero h1 {
   max-width: 16ch;
@@ -1746,7 +1816,9 @@ html.is-loading .site-header {
     transition:
       clip-path 0.52s var(--ease-smooth),
       padding-right 0.52s var(--ease-smooth),
-      box-shadow 0.4s var(--ease-glass);
+      box-shadow 0.4s var(--ease-glass),
+      opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal);
   }
   .hero-card__inner { height: 100%; align-items: center; }
   .hero__aside .hero-card[data-reveal]::after { opacity: 0; transition: opacity 0.5s var(--ease-glass); }
@@ -3445,7 +3517,7 @@ body.scroll-lock { position: fixed; width: 100%; }
 .pill-btn-dark.sheen {
   background-image:
     linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
-    linear-gradient(145deg, #2b2b2b, #060606);
+    linear-gradient(145deg, var(--accent) 0%, var(--accent-dark) 100%);
   background-size: 260% 260%, 100% 100%;
   background-position: -40% -40%, 0 0;
 }

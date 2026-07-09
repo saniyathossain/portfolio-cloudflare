@@ -13,7 +13,7 @@
     document.documentElement.classList.add("touch-pills");
   }
 
-  const ASSET_V = "6cbbd3bb2318"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "64a2e0be6c98"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
