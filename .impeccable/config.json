@@ -1,0 +1,29 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [
+      "public/assets/css/styles.css",
+      "public/index.html"
+    ],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "reason": "Design system: self-hosted Inter is SF Pro fallback (CLAUDE.md / portfolio skill)",
+        "createdAt": "2026-07-08T12:54:19.555Z"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "var(--ease-spring)",
+        "reason": "Tahoe design token --ease-spring is intentional sitewide motion language",
+        "createdAt": "2026-07-08T12:54:19.590Z"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0.3, 1.9, 0.6, 1)",
+        "reason": "Token definition for --ease-spring; intentional Tahoe spring",
+        "createdAt": "2026-07-08T12:54:19.625Z"
+      }
+    ]
+  }
+}
