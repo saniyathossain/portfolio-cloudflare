@@ -17,7 +17,20 @@
 | 10 | Aurora rAF re-arm | **Verified + doc fix** — the rAF→setTimeout chain was already optimal (not a 60fps poll); fixed a stale header comment (said "~30fps", `FRAME_MS=42` is ~24fps) |
 | 11 | Hero-card entrance transition | **Verified, no change** — `opacity`/`transform` were already in the `transition` list alongside `clip-path`/`padding-right`/`background`/`box-shadow` |
 
-**Build:** `bash build.sh` clean (only the 2 pre-existing expected containment warnings); `preflight-check.js` OK. **Not committed** — awaiting explicit permission, per standing instruction. Deploy (and therefore real header/Early-Hints verification) remains blocked on Cloudflare auth.
+**Build:** `bash build.sh` clean (only the 2 pre-existing expected containment warnings); `preflight-check.js` OK. **Not committed** — awaiting explicit permission, per standing instruction.
+
+### 🔴 Post-deploy incident: `run_worker_first` exposed a pre-existing CSP gap — fixed
+
+Once `run_worker_first = true` actually shipped, the Worker's CSP was enforced live for the first time —
+and it broke the entire site. `script-src` never included `'unsafe-eval'`, which the standard Alpine.js
+build (not `@alpinejs/csp`) requires: it evaluates every directive expression (`x-data`, `x-text`, `x-on`,
+`x-for`, `:class`, …) via `new Function()`. Every single directive on the page threw "Evaluating a string
+as JavaScript violates CSP" and Alpine never initialized — nothing rendered reactively, no click handlers,
+no clock, no nav. This defect was **already latent in `src/index.js`** (see its own header comment claiming
+"CSP keeps `'unsafe-inline'` by design" — `'unsafe-eval'` was simply never added) but invisible until this
+plan made the Worker authoritative for the first time. **Fixed:** added `'unsafe-eval'` to `script-src` in
+both `src/index.js` (`SECURITY_HEADERS`) and `public/_headers` (fallback), rebuilt (`ASSET_V` restamped to
+`4901ab17859f`). **Redeploy immediately** — the previous deploy is currently broken in production.
 
 ---
 
