@@ -1,5 +1,11 @@
 # Plan: Aesthetic-motion refinement — aurora canvas, smooth-scroll parallax, Lumora-template fidelity, 100/100
 
+> **Stale note (added in the plan-44 cleanup pass):** the Lenis smooth-scroll proposal below (vendoring
+> `vendor/lenis.min.js`, wiring `Lenis({smoothWheel:true})` into `boot.js`/`motion.js`) was implemented and then
+> **fully reverted** — see this doc's own later Tranche 2b/2c notes. Neither the vendor file nor any Lenis code
+> exists in the repo today; native scroll only, per `docs/aidlc/40` and `docs/aidlc/42`. Kept here as history —
+> do not re-add Lenis from this doc's top-level plan.
+
 ## Context
 The portfolio (Lumora template, restyled as macOS Tahoe liquid glass) already tracks the template's structure —
 liquid-reveal hero, hero-card carousel, We/Build/→/Better band, service rows, ink stats panel — and **Tranche 1**
