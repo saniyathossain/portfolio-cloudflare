@@ -142,25 +142,32 @@
 
   // Generic depth parallax for any [data-parallax] element — transform-only, in-view only, cheap.
   // Speed is the attribute value (data-parallax="0.05"); data-parallax-speed kept as legacy alias.
-  let parallaxEls = [];
+  // Position/height/speed are read once per collect (load + resize), not per scroll frame — calling
+  // getBoundingClientRect() inside the scroll rAF forces a synchronous layout every frame for every
+  // element. Instead cache each element's document-relative top (rect.top + scrollY at collect time,
+  // which stays valid as the page scrolls since document coordinates don't shift) and derive the
+  // viewport-relative top per frame with plain arithmetic (docTop - scrollY).
+  let parallaxData = [];
   function collectParallax() {
-    parallaxEls = Array.prototype.slice.call(document.querySelectorAll("[data-parallax]"));
-  }
-  function applyElementParallax() {
-    if (reduce || !parallaxEls.length) return;
-    const vh = window.innerHeight;
-    for (let i = 0; i < parallaxEls.length; i++) {
-      const el = parallaxEls[i];
+    const scrollY = window.scrollY;
+    parallaxData = Array.prototype.map.call(document.querySelectorAll("[data-parallax]"), (el) => {
       const r = el.getBoundingClientRect();
-      if (r.bottom < -240 || r.top > vh + 240) continue; // skip far off-screen
       const raw = el.getAttribute("data-parallax");
       const speed = parseFloat(
-        (raw && raw !== "" ? raw : null) ||
-          el.getAttribute("data-parallax-speed") ||
-          "0.12"
+        (raw && raw !== "" ? raw : null) || el.getAttribute("data-parallax-speed") || "0.12"
       ) * parallaxScale;
-      const offset = ((r.top + r.height / 2) - vh / 2) * -speed;
-      el.style.setProperty("--parallax-y", offset.toFixed(1) + "px");
+      return { el, docTop: r.top + scrollY, height: r.height, speed };
+    });
+  }
+  function applyElementParallax(scrollY) {
+    if (reduce || !parallaxData.length) return;
+    const vh = window.innerHeight;
+    for (let i = 0; i < parallaxData.length; i++) {
+      const d = parallaxData[i];
+      const top = d.docTop - scrollY;
+      if (top + d.height < -240 || top > vh + 240) continue; // skip far off-screen
+      const offset = ((top + d.height / 2) - vh / 2) * -d.speed;
+      d.el.style.setProperty("--parallax-y", offset.toFixed(1) + "px");
     }
   }
 
@@ -190,15 +197,16 @@
         if (!parallaxRaf) {
           parallaxRaf = requestAnimationFrame(() => {
             parallaxRaf = 0;
-            applyParallax(window.scrollY);
-            applyElementParallax();
+            const scrollY = window.scrollY;
+            applyParallax(scrollY);
+            applyElementParallax(scrollY);
           });
         }
       },
       { passive: true }
     );
     window.addEventListener("resize", collectParallax, { passive: true });
-    applyElementParallax();
+    applyElementParallax(window.scrollY);
   }
 
   // Icon→label hover reveal, smoothed with FLIP (First, Last, Invert, Play). The label is an IN-FLOW

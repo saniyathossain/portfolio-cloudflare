@@ -6,6 +6,11 @@ compatibility_date = "2024-12-01"
 [assets]
 directory = "./public"
 binding = "ASSETS"
+# Without this the Static-Assets router serves public/ directly and src/index.js never runs for
+# HTML/asset requests — silently dropping the CSP/COOP/CORP headers, the Early-Hints Link header,
+# and normalized Cache-Control (see docs/aidlc/43-pagespeed-cloudflare-edge.md). Forces the Worker
+# to run for every request so those always apply.
+run_worker_first = true
 
 # src/maintenance.html is imported as a text module in src/index.js — wrangler's DEFAULT module rules
 # already treat **/*.html as Text, so no custom [[rules]] entry is needed (adding one overrides the
