@@ -2,16 +2,22 @@
 /** Sync <head> SEO, preloads, JSON-LD, and h1 fallbacks from portfolio.json */
 const fs = require("fs");
 const path = require("path");
-const { computeHash } = require("./lib/build-hash");
 
 const ROOT = path.join(__dirname, "..");
 const JSON_PATH = path.join(ROOT, "public/assets/data/portfolio.json");
 const HTML_PATH = path.join(ROOT, "public/index.html");
-// Same content hash set-asset-version.js stamps into boot.js — computed independently here (both
-// exclude index.html/boot.js/sw.js from the hash, so this always matches without file-read order
-// dependence). Applied to favicon/icon links too: browsers cache favicons very aggressively
-// per-origin and otherwise won't pick up a regenerated icon on refresh.
-const ASSET_V = computeHash(["index.html", "assets/js/boot.js", "sw.js"]);
+const BOOT_PATH = path.join(ROOT, "public/assets/js/boot.js");
+// Read the version set-asset-version.js already stamped into boot.js (build.sh runs that script
+// first) rather than recomputing an independent hash here. Two independent computeHash() calls with
+// their own exclusion sets previously diverged the moment boot.min.js's content changed between the
+// two runs (minify-js.js bakes the new ASSET_V into it in between) — reading the single
+// already-computed value instead makes divergence structurally impossible. Applied to favicon/icon
+// links too: browsers cache favicons very aggressively per-origin and otherwise won't pick up a
+// regenerated icon on refresh.
+const bootSrc = fs.readFileSync(BOOT_PATH, "utf8");
+const assetVMatch = bootSrc.match(/const ASSET_V = "([^"]+)";/);
+if (!assetVMatch) throw new Error("sync-head: could not read ASSET_V from boot.js — run set-asset-version.js first");
+const ASSET_V = assetVMatch[1];
 
 function absUrl(siteUrl, p) {
   if (!p) return "";
