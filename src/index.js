@@ -40,14 +40,20 @@ const SECURITY_HEADERS = {
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Resource-Policy": "same-origin",
   "X-Permitted-Cross-Domain-Policies": "none",
+  // script-src needs 'unsafe-eval': Alpine.js (the standard build, not @alpinejs/csp) evaluates every
+  // directive expression (x-data, x-text, x-on, x-for, …) via `new Function()`. Without this the CSP
+  // silently kills the entire app — Alpine throws "Evaluating a string as JavaScript violates CSP" on
+  // every single directive and nothing renders or responds to clicks. This went unnoticed because the
+  // Worker (and therefore this CSP) was being bypassed in production until run_worker_first was added
+  // (see docs/aidlc/43-pagespeed-cloudflare-edge.md) — the CSP had never actually been enforced live.
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' " + TURNSTILE + " " + ANALYTICS_SCRIPT + "; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' " + TURNSTILE + " " + ANALYTICS_CONNECT + "; frame-src " + TURNSTILE + "; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' " + TURNSTILE + " " + ANALYTICS_SCRIPT + "; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' " + TURNSTILE + " " + ANALYTICS_CONNECT + "; frame-src " + TURNSTILE + "; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
 };
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=99b1e17a5092>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=99b1e17a5092>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=4901ab17859f>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=4901ab17859f>; rel=preload; as=image; type=image/svg+xml",
   "</assets/fonts/inter-latin.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
 ].join(", ");
 
