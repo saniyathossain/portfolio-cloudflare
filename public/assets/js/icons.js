@@ -113,9 +113,6 @@
   }
 };
 
-  const LUCIDE_BASE = "/assets/icons/lucide/";
-  const SOCIAL_BASE = "/assets/icons/social/";
-
   function resolve(name) {
     if (MAP[name]) return MAP[name];
     if (LUCIDE[name]) return name; // accept a raw Lucide id directly (e.g. "mail", "wrench")
@@ -157,14 +154,5 @@
     }
     const id = typeof entry === "string" ? entry : "code";
     return lucideSvg(id, className || "");
-  };
-
-  window.iconSrc = function (name) {
-    const entry = resolve(name);
-    if (entry && typeof entry === "object" && entry.social) {
-      return SOCIAL_BASE + entry.social + ".svg";
-    }
-    const id = typeof entry === "string" ? entry : "code";
-    return LUCIDE_BASE + id + ".svg";
   };
 })();

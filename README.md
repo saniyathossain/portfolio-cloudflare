@@ -50,7 +50,6 @@ portfolio-cloudflare/
 ├── scripts/                   # sync-head.js, optimize-images.js, hash-sw.js
 ├── skills-lock.json           # locked design-taste skills
 ├── .agents/ .codex/ .cursor/  # agent skills, impeccable hook, Cursor rules
-├── shots/                     # screenshots
 └── docs/aidlc/                # Design system + content mapping notes
 ```
 
