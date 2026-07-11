@@ -137,7 +137,7 @@
     document.documentElement.style.setProperty("--wm-parallax-y", wm.toFixed(1) + "px");
     document.documentElement.style.setProperty("--hero-liquid-y", liquid.toFixed(1) + "px");
     const glow = document.getElementById("heroGlow");
-    if (glow) glow.style.setProperty("--glow-y", (y * 1.4).toFixed(1) + "px");
+    if (glow) glow.style.setProperty("--glow-parallax-y", (y * 1.4).toFixed(1) + "px");
   }
 
   // Generic depth parallax for any [data-parallax] element — transform-only, in-view only, cheap.
@@ -767,6 +767,20 @@
     targets.forEach((el) => io.observe(el));
   }
 
+  /* Hero card's conic beam is decorative post-entrance — freeze once visible so it doesn't repaint
+     for the entire time the hero stays on screen. */
+  function settleHeroBeam() {
+    const card = document.querySelector(".hero-card.beam");
+    if (!card) return;
+    const settle = () => card.classList.add("beam-is-settled");
+    if (card.classList.contains("is-visible")) { settle(); return; }
+    if (!("MutationObserver" in window)) return;
+    const mo = new MutationObserver(() => {
+      if (card.classList.contains("is-visible")) { settle(); mo.disconnect(); }
+    });
+    mo.observe(card, { attributes: true, attributeFilter: ["class"] });
+  }
+
   // iOS 26 "Liquid Glass" touch feedback for .menu-btn (header Menu button + the overlay's Close
   // button, same shared control) — a soft blob blooms from the exact press point and springs back
   // out on release (CSS: .menu-btn__ripple, driven by --tx/--ty here). Pointer Events cover
@@ -833,6 +847,7 @@
     pillFlip(reflowPanel);
     pillTap(reflowPanel);
     pauseOffscreenDecor();
+    settleHeroBeam();
     liquidTouch();
     clockTapZoom();
     if (!reduce) applyParallax(window.scrollY || 0);

@@ -38,12 +38,14 @@ html:not(.is-loading) .load-scrim { display: none; }
    "fast entry" transition would silently never apply and everything would run at the slow (exit)
    speed both ways. Same class of specificity bug as the hero-card's reveal-system conflict. */
 html:not(.is-loading) #main {
-  transition: filter 0.55s var(--ease-glass), transform 0.55s var(--ease-glass);
+  transition: opacity 0.5s var(--ease-glass), transform 0.5s var(--ease-glass);
 }
 html:not(.is-loading) #main.is-liquid-warp {
-  transition: filter 0.18s var(--ease-glass), transform 0.18s var(--ease-glass);
-  filter: blur(6px) saturate(165%);
-  transform: scale(1.008);
+  transition: opacity 0.16s var(--ease-glass), transform 0.16s var(--ease-glass);
+  /* Scale/opacity only — filter:blur() on <main> re-rasterizes the whole page subtree every frame
+     during nav smooth-scroll and reads as jank on Safari; the warp is still perceptible without it. */
+  opacity: 0.94;
+  transform: scale(0.996);
 }
 
 /* Saniyat Portfolio — Lumora design system + cursor-presentation polish */
@@ -123,7 +125,7 @@ html:not(.is-loading) #main.is-liquid-warp {
      "dropdown/select" range a text-content swap calls for; --dur-fast (450ms) is 2-3x too slow. */
   --dur-swap: 0.18s;
   --dur-slow: 1.05s;
-  --dur-reveal: 0.88s;
+  --dur-reveal: 0.62s;
   --dur-pill-reveal: 0.88s;
   --ease-pill-reveal: cubic-bezier(0.28, 0.92, 0.38, 1);
   --dur-pill-expand: 0.48s;
@@ -289,7 +291,10 @@ body::before {
 }
 body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(180deg, rgba(241,240,238,.06), rgba(241,240,238,.22));
+  background:
+    radial-gradient(120vmax 80vmax at 50% -10%, rgba(255,255,255,.14), transparent 55%),
+    radial-gradient(90vmax 70vmax at 100% 100%, rgba(177,95,44,.04), transparent 62%),
+    linear-gradient(180deg, rgba(241,240,238,.06), rgba(241,240,238,.22));
 }
 /* Translate-only (no scale): scaling a filter:blur() layer makes WebKit re-rasterize the blur every
    frame — a constant Safari cost on this full-viewport blurred pseudo. Translation just moves the
@@ -300,6 +305,8 @@ body::after {
   100% { transform: translate3d(2%, calc(-1.5% + var(--aurora-y, 0px)), 0); }
 }
 @media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+/* Desktop canvas aurora supersedes the CSS drift — running both stacks two full-viewport blurs. */
+html.has-aurora body::before { animation: none; opacity: 0.82; }
 /* Battery: freeze every always-on decorative animation while the page is hidden or the window is
    blurred (app.js toggles html.is-idle). They resume seamlessly on return, so nothing visible
    changes — it just stops burning GPU/battery compositing them in the background. The clock is
@@ -341,6 +348,9 @@ html.is-idle .beam::before {
   opacity: 0.038; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
+}
+@media (pointer: coarse) {
+  .grain { opacity: 0.024; }
 }
 
 /* Scroll-progress hairline — reflects page scroll; hidden under reduced motion */
@@ -503,11 +513,24 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
    same color treatment added back, and a single nested double-bezel card) — going cardless was a
    deliberate choice this time, not a default. */
 #about .shell { position: relative; }
-.about-plain { padding-block: 2rem 1rem; }
+#about .shell::before {
+  content: ""; position: absolute; inset: -8% -4% auto; height: 70%; z-index: 0; pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--tint) 14%, transparent), transparent 72%);
+  opacity: 0.9;
+}
+.about-plain { position: relative; z-index: 1; padding-block: 2rem 1rem; }
 @media (min-width: 640px) { .about-plain { padding-block: 2.5rem 1rem; } }
 .about-plain__kicker {
   font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
   color: var(--accent-dark); margin-bottom: 1.25rem;
+}
+.about-plain__lead {
+  max-width: 40rem; margin-top: 1.35rem;
+  font-size: clamp(1rem, 1.35vw, 1.125rem); font-weight: 450; line-height: 1.65;
+  letter-spacing: -0.008em;
+  color: color-mix(in srgb, var(--ink) 72%, rgba(17,17,17,.45));
+  text-shadow: 0 1px 0 rgba(255,255,255,.85);
 }
 .about-plain .about-plain__statement {
   /* Two-class selector, not the bare class alone — .sec h2 (class+element, 0,1,1) already
@@ -636,26 +659,27 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
    once a section scrolls near the viewport it renders normally regardless of this placeholder,
    including any user-expanded accordion rows in #experience. Hero (#home) is intentionally excluded
    — it holds the LCP element and must never be skip-rendered. */
-#about        { content-visibility: auto; contain-intrinsic-size: auto 725px; }
+#about        { content-visibility: auto; contain-intrinsic-size: auto 820px; }
 #services     { content-visibility: auto; contain-intrinsic-size: auto 775px; }
 #experience   { content-visibility: auto; contain-intrinsic-size: auto 1803px; }
 /* #skills excluded — height changes from pill FLIP reflow + mobile "View more"; placeholder
    caused a size swap that read as a jump for Editorial / Stats below. Near the fold anyway. */
 /* #editorial excluded — sits directly below Skills; same reflow jump as #skills. */
 #education    { content-visibility: auto; contain-intrinsic-size: auto 542px; }
+#stats        { content-visibility: auto; contain-intrinsic-size: auto 420px; }
 @media (max-width: 640px) {
-  #about      { contain-intrinsic-size: auto 743px; }
+  #about      { contain-intrinsic-size: auto 860px; }
   #services   { contain-intrinsic-size: auto 933px; }
   #experience { contain-intrinsic-size: auto 3435px; }
   #education  { contain-intrinsic-size: auto 713px; }
 }
 
-/* Stats: 2-col mobile, 4-col from tablet up (replaces Tailwind lg:grid-cols-4). */
+/* Stats: 2-col mobile/tablet, 4-col from desktop up. */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
 }
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .stats-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
@@ -743,7 +767,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
     0 1px 3px rgba(17,17,17,.05);
 }
 /* Editorial's subtitle is short enough to read better as one line than wrapped at 48ch. */
-@media (min-width: 480px) {
+@media (min-width: 900px) {
   .sec-sub--nowrap { max-width: none; white-space: nowrap; }
 }
 /* Leading tinted glass badge on each section subtitle — small shiny coin in the section's own hue,
@@ -922,8 +946,8 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
   animation: loaderPanelIn 0.75s var(--ease-glass) both;
 }
 @keyframes loaderPanelIn {
-  from { opacity: 0; transform: translateY(10px) scale(0.975); filter: blur(7px); }
-  to   { opacity: 1; transform: none; filter: blur(0); }
+  from { opacity: 0; transform: translateY(10px) scale(0.975); }
+  to   { opacity: 1; transform: none; }
 }
 @media (max-width: 640px) { .loader__panel { padding: 2.4rem 1.6rem; border-radius: 1.5rem; } }
 .loader.is-exit { transform: translateY(-100%); opacity: 0; }
@@ -951,11 +975,11 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
 .loader__sk--tag { width: 16.5rem; height: 0.72rem; border-radius: 0.5rem; animation-delay: 0.12s; }
 .loader__content {
   grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
-  opacity: 0; transform: translateY(8px); filter: blur(10px);
-  transition: opacity 0.65s var(--ease-glass), transform 0.65s var(--ease-glass), filter 0.65s var(--ease-glass);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.55s var(--ease-glass), transform 0.55s var(--ease-glass);
 }
-.loader.is-revealed .loader__skeleton { opacity: 0; transform: translateY(-8px); filter: blur(6px); pointer-events: none; }
-.loader.is-revealed .loader__content { opacity: 1; transform: none; filter: blur(0); }
+.loader.is-revealed .loader__skeleton { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.loader.is-revealed .loader__content { opacity: 1; transform: none; }
 .loader.is-fade-center .loader__center { opacity: 0; transform: translateY(-12px); }
 .loader__brand { display: flex; align-items: center; gap: 0.65rem; font-weight: 600; font-size: 1.875rem; letter-spacing: -0.01em; }
 .loader__tagline { max-width: 26ch; font-size: 0.9375rem; color: rgba(255,255,255,.55); line-height: 1.5; }
@@ -1032,6 +1056,7 @@ html.is-loading .site-header {
 .glass-pill {
   position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
+  min-width: 0;
   padding: 0.8rem 0.6rem 0.8rem 1.35rem; border-radius: var(--radius-pill);
   /* macOS Tahoe dock read: CLEAR glass, not a milky bar — a light white wash over one constant
      Dock-grade blur, so whatever sits behind visibly refracts through with boosted saturation.
@@ -1228,8 +1253,16 @@ html.is-loading .site-header {
 /* Primary nav with a sliding "liquid" pill (see setupNavPill in app.js). The pill sits BEHIND the
    buttons (z-0) and glides via its own CSS transition on transform/width — JS only writes the
    --pill-* custom props. Buttons stay crisp on top (z-1). */
-.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.98rem; font-weight: 500; }
+.nav-desktop { position: relative; display: none; align-items: center; gap: 0.15rem; font-size: 0.98rem; font-weight: 500; min-width: 0; flex-shrink: 1; }
 @media (min-width: 1024px) { .nav-desktop { display: flex; } }
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .nav-desktop { font-size: 0.9rem; gap: 0.05rem; }
+  .nav-desktop button { padding-inline: 0.55rem; }
+  .nav-desktop button > span + span { display: none; }
+}
+@media (min-width: 1024px) {
+  .menu-btn { display: none; }
+}
 /* iOS 26 Music-app tab lens: a CLEAR glass capsule (not an opaque tinted chip) — bright specular
    rim, light glassy fill with a whisper of copper so it stays on-brand, riding on the frosted dock.
    Faux-glass fill (no nested backdrop-filter: it would rasterize a second live blur inside the
@@ -1309,7 +1342,7 @@ html.is-loading .site-header {
   .nav-desktop button .ui-icon { transition: opacity var(--dur-mid) ease; }
 }
 
-.header-right { display: flex; align-items: center; gap: 0.65rem; }
+.header-right { display: flex; align-items: center; gap: 0.65rem; flex-shrink: 0; }
 .clock-chip { display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: rgba(17,17,17,.6); white-space: nowrap; }
 .clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
 .clock-sep { color: rgba(17,17,17,.3); }
@@ -1562,6 +1595,13 @@ html.is-loading .site-header {
      A fixed height + the existing overflow:hidden absorbs that sub-pixel text growth invisibly. */
   height: 100dvh;
 }
+@media (max-width: 1023px) {
+  .hero {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+}
 
 /* Portrait spread — full-height banner on the right, face-safe crop */
 .hero__backdrop {
@@ -1616,13 +1656,15 @@ html.is-loading .site-header {
   .hero__backdrop-liquid #heroBaseImg { filter: saturate(1.08) contrast(1.04); }
 }
 .hero__glow {
-  position: absolute; left: 62%; top: 40%; z-index: 0;
+  position: absolute; left: 0; top: 0; z-index: 0;
   width: 44rem; height: 44rem; border-radius: var(--radius-pill);
   background:
     radial-gradient(circle at 40% 40%, rgba(255,255,255,.22), transparent 60%),
     radial-gradient(circle at 65% 60%, rgba(255,248,240,.18), transparent 62%),
     radial-gradient(circle at 55% 75%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%);
-  transform: translate(-50%, -50%) translate3d(0, var(--glow-y, 0px), 0); pointer-events: none;
+  transform: translate3d(calc(var(--glow-x, 62%) - 50%), calc(var(--glow-y, 40%) - 50%), 0)
+    translate3d(0, var(--glow-parallax-y, 0px), 0);
+  pointer-events: none;
   opacity: 0; transition: opacity 0.6s ease; filter: blur(10px);
 }
 /* watermark stays opacity:0 — decorative; fade-in was late LCP */
@@ -1711,16 +1753,6 @@ html.is-loading .site-header {
   perspective: 1000px;
 }
 @media (min-width: 1024px) { .hero__aside { align-items: flex-end; } }
-/* Mobile/tablet: the portrait is a full-bleed background behind a single content column, so the CTA
-   and the Now-card/partners can land on the subject's face. Push them down — a gap above the actions
-   clears the mouth/beard, and a larger copy↔aside gap drops the card/partners onto the shirt — so the
-   face reads clearly between the headline and the buttons. */
-@media (max-width: 767px) {
-  .hero__grid { gap: 3.5rem; padding-block: 8rem 5.5rem; align-items: start; }
-  .hero__actions { margin-top: 1.75rem; }
-  .hero__aside { margin-top: 1rem; }
-}
-
 
 .hero-rating { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 /* No max-width cap — the credentials line reads as one line on phone/tablet/desktop; the
@@ -2527,12 +2559,6 @@ html.is-loading .site-header {
   color: var(--ink); font-weight: 800;
 }
 
-.word-reveal span.word { display: inline-block; opacity: 0; transform: translateY(18px); }
-.word-reveal.is-visible span.word {
-  opacity: 1; transform: none;
-  transition: opacity 0.85s var(--ease-word), transform 0.85s var(--ease-word);
-}
-
 /* Create band — parent stagger, one transition path (no animation/transition fight) */
 /* Single row at every width, incl. phones — was column-stacked (one tile per row) below 640px,
    which read as 4 separate full-width buttons instead of the "Code · Ship · Scale" band it is on
@@ -3087,7 +3113,11 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   .editorial-tabs {
     gap: 0.24rem;
     padding: 0.34rem 0.38rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .editorial-tabs::-webkit-scrollbar { display: none; }
   .editorial-tabs__btn {
     min-height: 2rem;
     padding: 0.34rem 0.5rem;
@@ -4038,6 +4068,10 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   background: linear-gradient(100deg, color-mix(in srgb, var(--tint) 12%, rgba(255,255,255,.5)), rgba(255,255,255,.35));
   transform: translateX(4px);
 }
+@media (max-width: 767px) {
+  .exp-row:hover,
+  .exp-row[aria-expanded="true"] { transform: none; }
+}
 .exp-row:hover::before,
 .exp-row[aria-expanded="true"]::before,
 .exp-row:hover + .exp-row::before,
@@ -4963,57 +4997,6 @@ body.scroll-lock .back-to-top { opacity: 0; pointer-events: none; }
   .back-to-top { right: 1rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
 }
 
-/* Scroll ring (skiper89-inspired) — sits beside .back-to-top, fills as the page scrolls.
-   Ring fill + % text are written directly via app.js's existing rAF-coalesced scroll handler
-   (setupBackToTop) as raw DOM writes, not Alpine reactivity — same "cheap direct style write on a
-   cached node ref" pattern already used for hero parallax, so a fast scroll never floods Alpine. */
-.scroll-ring {
-  position: fixed; right: 4.75rem; bottom: 1.25rem; z-index: 105;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 2.75rem; height: 2.75rem; border-radius: 50%;
-  border: 1px solid rgba(24,30,56,.08);
-  background: var(--frost-bg);
-  box-shadow: var(--glass-highlight), 0 6px 18px -6px rgba(17,17,17,.18);
-  cursor: pointer; padding: 0;
-  color: var(--ink);
-  opacity: 0; transform: translateY(0.6rem) scale(0.92); pointer-events: none;
-  transition: opacity 0.3s var(--ease-glass), transform 0.3s var(--ease-glass), box-shadow 0.3s var(--ease-glass);
-}
-.scroll-ring.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-.scroll-ring:hover,
-.scroll-ring:focus-visible { box-shadow: var(--glass-highlight), 0 8px 22px -6px rgba(17,17,17,.24); }
-.scroll-ring__ring {
-  position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg);
-}
-.scroll-ring__track {
-  fill: none; stroke: rgba(24,30,56,.1); stroke-width: 2.4;
-}
-.scroll-ring__bar {
-  fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round;
-  stroke-dasharray: 106.8; stroke-dashoffset: 106.8;
-  transition: stroke-dashoffset 0.1s linear;
-}
-.scroll-ring__pct {
-  position: relative; z-index: 2;
-  display: inline-block;
-  min-width: 1.35rem;
-  font-size: 0.68rem; font-weight: 750; line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--ink); font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-.scroll-ring__pct::after { content: "%"; font-size: 0.54rem; margin-left: 0.03rem; opacity: 0.82; }
-body.scroll-lock .scroll-ring { opacity: 0; pointer-events: none; }
-@media (prefers-reduced-motion: reduce) {
-  .scroll-ring { transition: opacity 0.2s linear; }
-  .scroll-ring,
-  .scroll-ring.is-visible { transform: none; }
-  .scroll-ring__bar { transition: none; }
-}
-@media (max-width: 767px) {
-  .scroll-ring { right: 4rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
-}
-
 /* Utilities */
 .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; }
 /* !important: must beat body's own overflow-x rule and any other layout rule regardless of load
@@ -5036,6 +5019,7 @@ body.scroll-lock { position: fixed; width: 100%; }
    image directly under the H1 to flip text to its on-dark variant when needed — that logic is
    geometry-driven, not breakpoint-specific, so it keeps working unchanged. */
 @media (max-width: 1023px) {
+  .hero__backdrop-liquid { touch-action: pan-y; }
   .hero__backdrop-liquid img { object-position: 50% 20%; }
   .hero__backdrop-scrim {
     background:
@@ -5100,6 +5084,11 @@ body.scroll-lock { position: fixed; width: 100%; }
     animation: none;
     background: linear-gradient(120deg, color-mix(in srgb, var(--tint, var(--primary)) 55%, transparent), transparent 62%);
   }
+}
+/* Hero card beam is a one-shot entrance accent — freeze after reveal so it doesn't repaint forever. */
+.hero-card.beam.beam-is-settled::before {
+  animation: none;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--tint, var(--primary)) 55%, transparent), transparent 62%);
 }
 
 /* 2) Panel cursor spotlight — reuses .spec (motion.js sets --px/--py); a larger, softer
@@ -5296,7 +5285,13 @@ body.scroll-lock { position: fixed; width: 100%; }
 .social-link,
 .popover__trigger,
 .site-footer li a,
-.site-footer li button {
+.site-footer li button,
+.partner-orb,
+.editorial-tabs__btn,
+.editorial-search__orb,
+.editorial-search__clear,
+.brand-btn,
+.nav-desktop button {
   position: relative;
 }
 .menu-btn::after,
@@ -5305,7 +5300,13 @@ body.scroll-lock { position: fixed; width: 100%; }
 .modal-titlebar > .modal-close::after,
 .popover__trigger::after,
 .site-footer li a::after,
-.site-footer li button::after {
+.site-footer li button::after,
+.partner-orb::after,
+.editorial-tabs__btn::after,
+.editorial-search__orb::after,
+.editorial-search__clear::after,
+.brand-btn::after,
+.nav-desktop button::after {
   content: "";
   position: absolute;
   inset: -6px;
@@ -5314,6 +5315,13 @@ body.scroll-lock { position: fixed; width: 100%; }
 .menu-btn,
 .hero-card__arrow {
   overflow: visible;
+}
+
+/* Fixed floats — ::after hit areas use absolute inset on the fixed box (no position:relative override). */
+.back-to-top::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
 }
 
 .popover__panel { max-width: min(80vw, 18rem); }

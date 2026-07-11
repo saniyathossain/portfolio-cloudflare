@@ -83,7 +83,6 @@ function portfolioApp() {
       this.tickClock();
       this.initClockSweep();
       setInterval(() => this.tickClock(), T.CLOCK_TICK);
-      this.setupHeroGlow();
       this.setupHeroContrast();
       this.$nextTick(() => this.setupNavPill());
       // Guard against a second registration if init() ever runs twice — Alpine inits a component
@@ -123,7 +122,7 @@ function portfolioApp() {
         // `is-idle` only pauses @keyframes-driven decorations (browsers can't pause a CSS
         // transition). A transition mid-flight when the tab loses focus would otherwise freeze at
         // whatever value it happened to reach and resume from there on return — jarring for the
-        // #main liquid-warp blur/scale pulse specifically, since a very-mid-blur frozen frame reads
+        // #main liquid-warp scale/opacity pulse specifically, since a mid-transition frozen frame reads
         // as a rendering glitch, not a paused effect. Settle it to its resting state immediately
         // instead of waiting for its own scrollend/timeout cleanup to eventually fire.
         const main = document.getElementById("main");
@@ -142,43 +141,15 @@ function portfolioApp() {
     // per scroll event, so a fast wheel-fling can't flood Alpine's reactivity with redundant writes.
     setupBackToTop() {
       let raf = 0;
-      // Ring circumference (2πr, r=17 — matches the SVG's viewBox in index.html); cached refs +
-      // raw DOM writes here (not x-text/Alpine) for the same reason the rest of this handler
-      // avoids reactivity on a scroll-driven value — direct style/text writes are cheap per-frame,
-      // an Alpine re-render per scroll frame is not.
-      const CIRCUMFERENCE = 106.8;
-      const bar = document.getElementById("scrollRingBar");
-      const pct = document.getElementById("scrollRingPct");
       const check = () => {
         raf = 0;
         this.showBackToTop = window.scrollY > T.BACK_TO_TOP_PX;
         // Header glass intensifies once it floats over page content (past the very top).
         this.scrolled = window.scrollY > 12;
-        if (bar || pct) {
-          const max = document.documentElement.scrollHeight - window.innerHeight;
-          const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-          if (bar) bar.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - ratio));
-          if (pct) pct.textContent = String(Math.round(ratio * 100));
-        }
       };
       window.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
       window.addEventListener("resize", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
       check();
-    },
-
-    setupHeroGlow() {
-      const hero = document.getElementById("home");
-      const glow = document.getElementById("heroGlow");
-      if (!hero || !glow) return;
-      hero.addEventListener("pointermove", (e) => {
-        const r = hero.getBoundingClientRect();
-        const x = ((e.clientX - r.left) / r.width) * 100;
-        const y = ((e.clientY - r.top) / r.height) * 100;
-        glow.style.left = x + "%";
-        glow.style.top = y + "%";
-        glow.style.opacity = "1";
-      });
-      hero.addEventListener("pointerleave", () => { glow.style.opacity = "0"; });
     },
 
     /** Sliding "liquid" nav pill: rests under the active section, glides to the hovered/focused item.
@@ -465,7 +436,6 @@ function portfolioApp() {
     },
 
     scrollToTop() {
-      this._liquidWarp();
       window.scrollTo({ top: 0, behavior: "smooth" });
       this.setHash("home", { replace: true });
     },

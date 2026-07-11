@@ -5,10 +5,13 @@
     "url": "https://saniyat.com",
     "themeColor": "#0a0a0a",
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
-    "aboutHeading": "{years}+ years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
+    "aboutHeading": "{years}+ years turning ambitious platforms into backends that carry telco-scale traffic without blinking — monoliths, microservices, and AI-assisted delivery, all shipped with quiet precision.",
+    "aboutKicker": "{years}+ years · Staff Software Engineer · Dhaka",
+    "aboutLead": "Backend architecture, APIs, and platform engineering — hands-on from design through production, across telco-scale systems, SaaS, and coaching products.",
     "aboutHighlights": [
       "telco-scale",
-      "quiet precision"
+      "quiet precision",
+      "AI-assisted"
     ],
     "experienceHighlights": [
       "PHP",
@@ -93,7 +96,7 @@
     "services": "Backend, architecture, APIs, and AI-assisted delivery.",
     "experience": "{years}+ years · {roles} roles across {companies} companies.",
     "skills": "Languages, frameworks, data, platform, dev tools, and AI in the flow.",
-    "editorial": "Selected notes on backend engineering — full archive on dev.to and Medium.",
+    "editorial": "Backend engineering notes — full archive on dev.to and Medium.",
     "education": "Electronics & Telecommunication Engineering — Dhaka."
   },
   "editorialOutbound": {
@@ -350,7 +353,7 @@
       "readMin": null,
       "excerpt": "",
       "tags": [],
-      "active": true
+      "active": false
     },
     {
       "id": "medium:https://saniyathossain.medium.com/mastering-laravels-tag-management-an-in-depth-exploration-of-managing-tags-in-database-c2ca2763ba94",

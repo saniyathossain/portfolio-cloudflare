@@ -570,6 +570,9 @@ function _hydrate(raw) {
   if (data.site && data.site.aboutHeading) {
     data.site.aboutHeading = _fillTemplate(data.site.aboutHeading, tplVars);
   }
+  if (data.site && data.site.aboutKicker) {
+    data.site.aboutKicker = _fillTemplate(data.site.aboutKicker, tplVars);
+  }
   // Same reasoning as the experience subtitle above — this used to be a hand-typed string
   // duplicating education[0]'s own subject/place fields, which could silently go stale if the
   // highest degree ever changed without someone remembering to update this separate copy too.
