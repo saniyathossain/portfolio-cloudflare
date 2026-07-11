@@ -13,7 +13,7 @@
     document.documentElement.classList.add("touch-pills");
   }
 
-  const ASSET_V = "a244ebf3ccca"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "2ff847ba5c06"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
@@ -60,6 +60,16 @@
 
   async function boot() {
     registerSw();
+
+    // app.js reads window.PORTFOLIO_DATA synchronously at module-parse time (`const D =
+    // window.PORTFOLIO_DATA || {}`), so its EXECUTION must genuinely wait for the data fetch — that
+    // ordering can't change. But the DOWNLOAD of app.min.js/alpine.min.js has zero dependency on the
+    // data fetch; warm the HTTP cache for both now, in parallel with the data round-trip, so that by
+    // the time the serial load below runs, script insertion is a cache hit instead of a fresh
+    // network request stacked serially after the json fetch. Fire-and-forget: any failure here just
+    // means the later loadScript() falls back to a normal (uncached) fetch.
+    fetch("/assets/js/app.min.js?v=" + ASSET_V).catch(() => {});
+    fetch("/assets/js/vendor/alpine.min.js?v=" + ASSET_V).catch(() => {});
 
     // portfolio.json is same-origin but still a real network request — a transient failure here
     // (offline load, CDN hiccup) must not cascade into skipping Alpine/app.js entirely, since that

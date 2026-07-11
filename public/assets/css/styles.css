@@ -1,19 +1,19 @@
 [x-cloak] { display: none !important; }
 .svg-sprite { display: none; }
 
-/* Loader stage — site painted + progressively unblurred during splash. --load-blur/--load-dim/
-   --load-scale are set only twice by loader.js (load start, load end) — not per rAF frame — and
-   interpolated here by a CSS transition instead. Each JS write to a custom property used by filter/
-   transform on .app-root previously forced a style recalc that (on a large DOM) cascades expensive
-   enough to show up as measurable main-thread blocking time; a two-value CSS transition gets the
-   same progressive-unblur look for a fraction of the cost. Duration is set inline by loader.js to
-   match FILL_MS so the two stay in lockstep without a duplicated constant here. */
+/* Loader stage — site painted + progressively settled during splash. --load-dim/--load-scale are
+   set only twice by loader.js (load start, load end) — not per rAF frame — and interpolated here by
+   a CSS transition instead. GPU-safe channels only: `transform: scale` (compositor) carries the
+   settle; the dark .load-scrim overlay (own opacity/background-color transition, below) carries the
+   veil. `filter: blur()` was dropped from this rule — animating blur is not GPU-accelerated in
+   WebKit and was re-rasterizing the *entire* page subtree every frame for the loader's duration, the
+   single largest one-shot paint cost on first load. Duration is set inline by loader.js to match
+   FILL_MS so this stays in lockstep without a duplicated constant here. */
 html.is-loading .app-root {
-  filter: blur(var(--load-blur, 16px));
   transform: scale(var(--load-scale, 1.012));
   transform-origin: center top;
-  will-change: filter, transform;
-  transition: filter var(--load-ms, 1300ms) linear, transform var(--load-ms, 1300ms) linear;
+  will-change: transform;
+  transition: transform var(--load-ms, 1300ms) linear;
 }
 .load-scrim {
   position: fixed; inset: 0; z-index: 119;
@@ -265,7 +265,10 @@ body::before {
     radial-gradient(42vmax 42vmax at 4% 90%, rgba(255,159,10,.07), transparent 58%),
     radial-gradient(32vmax 32vmax at 48% 48%, rgba(255,92,138,.035), transparent 62%),
     radial-gradient(28vmax 28vmax at 72% 38%, rgba(177,95,44,.03), transparent 65%);
-  filter: blur(28px) saturate(118%);
+  /* Radius halved (28px→14px): the blurred raster covers this layer's full inset(-25vmax) box — a
+     far larger area than the viewport — so blur cost scales with that huge area × radius even though
+     it's painted once, not per frame. 14px still reads as a soft ambient wash at this size. */
+  filter: blur(14px) saturate(118%);
   /* Only the transform drift animates — the old auroraHue keyframe animated `filter: hue-rotate()`
      on this full-viewport blurred layer every frame, which WebKit repaints continuously (a real,
      always-on Safari cost). The 8deg hue shift over 52s was imperceptible; dropping it leaves the
@@ -311,9 +314,10 @@ html.is-idle .beam::before {
   position: fixed; inset: 0; width: 100%; height: 100%;
   z-index: -2; pointer-events: none;
   opacity: 0; transition: opacity 1.4s var(--ease-glass, ease);
-  /* 44px, not 62px: the canvas is already a low-res upscaled buffer, so a lighter blur reads the
-     same but is a much cheaper filtered layer for WebKit to composite as it parallaxes on scroll. */
-  filter: blur(44px) saturate(110%);
+  /* 26px, not 44px/62px: the canvas is already a low-res upscaled buffer, so a lighter blur reads
+     nearly identical but is a much cheaper filtered layer for WebKit to composite on every ~24fps
+     canvas redraw (aurora.js) as it parallaxes on scroll. */
+  filter: blur(26px) saturate(110%);
   transform: translate3d(0, var(--aurora-y, 0px), 0);
   will-change: transform, opacity;
 }
@@ -611,6 +615,27 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .spec:focus-visible::after { opacity: 1; }
 
 .sec { position: relative; }
+
+/* Below-fold sections skip initial layout/paint until they scroll near the viewport — cuts
+   main-thread render work + speeds first paint. `contain-intrinsic-size` values are REAL measured
+   heights (headless-Chrome CDP, desktop 1440px + mobile 390px, collapsed/default accordion state) —
+   a wrong placeholder size here is a CLS regression, so these must be re-measured if the underlying
+   content changes materially. `content-visibility: auto` only affects rendering while off-screen;
+   once a section scrolls near the viewport it renders normally regardless of this placeholder,
+   including any user-expanded accordion rows in #experience. Hero (#home) is intentionally excluded
+   — it holds the LCP element and must never be skip-rendered. */
+#about        { content-visibility: auto; contain-intrinsic-size: auto 725px; }
+#services     { content-visibility: auto; contain-intrinsic-size: auto 775px; }
+#experience   { content-visibility: auto; contain-intrinsic-size: auto 1803px; }
+#skills       { content-visibility: auto; contain-intrinsic-size: auto 935px; }
+#education    { content-visibility: auto; contain-intrinsic-size: auto 542px; }
+@media (max-width: 640px) {
+  #about      { contain-intrinsic-size: auto 743px; }
+  #services   { contain-intrinsic-size: auto 933px; }
+  #experience { contain-intrinsic-size: auto 3435px; }
+  #skills     { contain-intrinsic-size: auto 1293px; }
+  #education  { contain-intrinsic-size: auto 713px; }
+}
 
 /* Stats: 2-col mobile, 4-col from tablet up (replaces Tailwind lg:grid-cols-4). */
 .stats-grid {
@@ -986,8 +1011,12 @@ html.is-loading .site-header {
      densifies and lifts, dock-condensing-over-wallpaper style, with zero blur snap. No solid
      border (per request); the soft ::before sheen + inset highlights carry the glass edge. */
   background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
-  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
-  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  /* GPU-cheap radius: 50px re-samples + re-blurs the full page behind this fixed header on every
+     scroll frame — the single largest steady-state paint cost on the site. 18px still reads as
+     clear refractive glass (boosted saturation carries the "liquid" look) at a fraction of the
+     compositing cost, and the element stays on its own layer via transform: translateZ(0) below. */
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
   border: 0;
   box-shadow:
     0 10px 32px -14px rgba(17,17,17,.14),
@@ -1019,8 +1048,8 @@ html.is-loading .site-header {
 .glass-pill.is-scrolled {
   background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
   /* SAME radius as base — the blur must never step (see note above). */
-  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
-  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
   box-shadow:
     0 22px 54px -16px rgba(17,17,17,.26),
     0 4px 12px rgba(17,17,17,.08),
@@ -1055,9 +1084,14 @@ html.is-loading .site-header {
 @media (prefers-reduced-motion: no-preference) {
   .brand-btn .brand-bismillah { animation: bismSheen 5.5s ease-in-out infinite; }
 }
+/* drop-shadow() dropped from the animated stop — it's a real blur+alpha pass, not a cheap filter
+   primitive, and this keyframe loops continuously in the fixed header. brightness()/saturate() alone
+   read almost identically (both are lightweight value remaps) at a fraction of the paint cost. The
+   drop-shadow glow still appears on hover/focus below — a discrete, interaction-only state change,
+   not a continuous loop. */
 @keyframes bismSheen {
   0%, 100% { filter: brightness(1) saturate(1.02); }
-  50%      { filter: brightness(1.26) saturate(1.2) drop-shadow(0 1px 5px color-mix(in srgb, var(--accent) 30%, transparent)); }
+  50%      { filter: brightness(1.26) saturate(1.2); }
 }
 /* Hover: a brighter, more saturated glow layered on top of the ambient sheen — the calligraphy's
    metallic gradient catches more "light" the way real engraved copper would under a lamp. */
@@ -3798,8 +3832,8 @@ body.scroll-lock { position: fixed; width: 100%; }
      or brightness is a hard step (backdrop-filter never transitions); fill/shadow carry the cross. */
   .glass-pill,
   .glass-pill.is-scrolled {
-    backdrop-filter: blur(32px) saturate(205%) brightness(1.07);
-    -webkit-backdrop-filter: blur(32px) saturate(205%) brightness(1.07);
+    backdrop-filter: blur(16px) saturate(190%) brightness(1.07);
+    -webkit-backdrop-filter: blur(16px) saturate(190%) brightness(1.07);
   }
   .hero__aside .hero-card[data-reveal]:hover,
   .hero__aside .hero-card[data-reveal]:focus-within {

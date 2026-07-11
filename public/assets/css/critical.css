@@ -1,19 +1,19 @@
 [x-cloak] { display: none !important; }
 .svg-sprite { display: none; }
 
-/* Loader stage — site painted + progressively unblurred during splash. --load-blur/--load-dim/
-   --load-scale are set only twice by loader.js (load start, load end) — not per rAF frame — and
-   interpolated here by a CSS transition instead. Each JS write to a custom property used by filter/
-   transform on .app-root previously forced a style recalc that (on a large DOM) cascades expensive
-   enough to show up as measurable main-thread blocking time; a two-value CSS transition gets the
-   same progressive-unblur look for a fraction of the cost. Duration is set inline by loader.js to
-   match FILL_MS so the two stay in lockstep without a duplicated constant here. */
+/* Loader stage — site painted + progressively settled during splash. --load-dim/--load-scale are
+   set only twice by loader.js (load start, load end) — not per rAF frame — and interpolated here by
+   a CSS transition instead. GPU-safe channels only: `transform: scale` (compositor) carries the
+   settle; the dark .load-scrim overlay (own opacity/background-color transition, below) carries the
+   veil. `filter: blur()` was dropped from this rule — animating blur is not GPU-accelerated in
+   WebKit and was re-rasterizing the *entire* page subtree every frame for the loader's duration, the
+   single largest one-shot paint cost on first load. Duration is set inline by loader.js to match
+   FILL_MS so this stays in lockstep without a duplicated constant here. */
 html.is-loading .app-root {
-  filter: blur(var(--load-blur, 16px));
   transform: scale(var(--load-scale, 1.012));
   transform-origin: center top;
-  will-change: filter, transform;
-  transition: filter var(--load-ms, 1300ms) linear, transform var(--load-ms, 1300ms) linear;
+  will-change: transform;
+  transition: transform var(--load-ms, 1300ms) linear;
 }
 .load-scrim {
   position: fixed; inset: 0; z-index: 119;
@@ -317,8 +317,8 @@ html.is-loading .site-header {
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
   padding: 0.92rem 0.62rem 0.92rem 1.4rem; border-radius: var(--radius-pill);
   background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
-  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
-  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
   border: 0;
   box-shadow:
     0 10px 32px -14px rgba(17,17,17,.14),
@@ -348,8 +348,8 @@ html.is-loading .site-header {
 /* Floating over content: denser glass + deeper lift, like the Tahoe dock rising off the wallpaper. */
 .glass-pill.is-scrolled {
   background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.44));
-  backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
-  -webkit-backdrop-filter: blur(50px) saturate(215%) brightness(1.08);
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
   box-shadow:
     0 22px 54px -16px rgba(17,17,17,.26),
     0 4px 12px rgba(17,17,17,.08),
