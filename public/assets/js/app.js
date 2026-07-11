@@ -668,7 +668,7 @@ function portfolioApp() {
     // complete naturally; without the fallback, a missed event would leave the panel's inline
     // height/overflow/transition styles stuck instead of cleared. Timer/listener are stashed
     // directly on the element so concurrent panels (different accordion rows) never share state.
-    _animateHeight(panel, toHeight, durationMs, onDone) {
+    _animateHeight(panel, toHeight, durationMs, onDone, easing) {
       clearTimeout(panel._heightTimer);
       panel.removeEventListener("transitionend", panel._heightOnEnd);
 
@@ -695,7 +695,7 @@ function portfolioApp() {
         // the cached layer, so the glossy content repaints every frame as the clip grows. An explicit
         // 3D transform forces a real compositor layer — content rasterized once, then only clipped.
         if (inner) { inner.style.willChange = "transform"; inner.style.transform = "translateZ(0)"; }
-        panel.style.transition = "height " + durationMs + "ms cubic-bezier(0.32, 0.72, 0, 1)";
+        panel.style.transition = "height " + durationMs + "ms " + (easing || "cubic-bezier(0.32, 0.72, 0, 1)");
         panel.style.height = toHeight;
       });
     },
@@ -735,7 +735,11 @@ function portfolioApp() {
           mountReady.then(() => {
             panel.style.overflow = "hidden";
             panel.style.height = "0px";
-            this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish);
+            // Overshoot on open only (skiper103 "bouncy accordion" read) — a back-out curve with
+            // y>1 makes `height` genuinely stretch a few % past scrollHeight then settle, a real
+            // spring bounce. Close stays on the flat decel curve (default) — bouncing right before
+            // fully collapsing would read as a glitch, not a spring.
+            this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish, "cubic-bezier(0.34, 1.56, 0.64, 1)");
           });
         });
         return;

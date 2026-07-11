@@ -1135,17 +1135,59 @@ html.is-loading .site-header {
   padding: 0.5rem 0.85rem; border-radius: 0.6rem;
   box-shadow: 0 12px 28px -10px rgba(17,17,17,.4), inset 0 1px 0 rgba(255,255,255,.08);
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.3s var(--ease-spring);
+  /* Materializing pop (skiper43 read) — opacity + scale/translate spring only. A clip-path wipe was
+     tried here and pulled in this session, but it clipped part of the text after the reveal
+     completed even with left/right insets at exactly 0 (a real clip-path + ancestor-transform
+     rendering interaction — .brand-btn carries its own hover scale — not worth chasing further for a
+     decorative reveal detail). Confirmed via clip-path:none that the plain opacity/transform spring
+     alone renders the full text correctly with no regression. */
+  transition: opacity 0.18s ease, transform 0.3s var(--ease-spring);
 }
+/* Callout tail — a rotated square straddling the panel's top edge, same fill + a matching corner of
+   shadow, replacing the old flat CSS-border-triangle for a more premium "speech bubble" read that
+   carries real depth instead of a razor-flat wedge. */
 .brand-tooltip::before {
-  content: ""; position: absolute; bottom: 100%; left: 1.1rem;
-  border: 5px solid transparent; border-bottom-color: rgba(17,17,17,.92);
+  content: ""; position: absolute; top: -0.3rem; left: 1.1rem; z-index: -1;
+  width: 0.62rem; height: 0.62rem; border-radius: 0.14rem;
+  background: rgba(17,17,17,.92);
+  box-shadow: -1px -1px 3px -1px rgba(0,0,0,.25);
+  transform: rotate(45deg);
 }
 .brand-btn:hover .brand-tooltip,
 .brand-btn:focus-visible .brand-tooltip {
   opacity: 1; transform: translateY(0) scale(1);
 }
 @media (prefers-reduced-motion: reduce) { .brand-tooltip { transition: opacity 0.2s ease; } }
+/* Shared tooltip text shine — a slow metallic sweep clipped to the glyphs (same idiom as the header
+   logo's bismSheen/bismSweep, reused for visual consistency across the site's "premium" motion
+   language). `color` is the fallback for browsers without background-clip:text support; supporting
+   browsers override visible glyph color via -webkit-text-fill-color, so the fallback never shows
+   there. Cheap to animate — a small text-sized gradient, not a page-scale filtered layer. */
+.tooltip-shine {
+  display: inline-block;
+  background-repeat: no-repeat; background-size: 220% 100%; background-position: 200% 0;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tooltip-shine { animation: tooltipShineSweep 2.8s ease-in-out infinite; }
+}
+@keyframes tooltipShineSweep {
+  0%, 15%  { background-position: 200% 0; }
+  60%, 100% { background-position: -40% 0; }
+}
+/* Dark-bg variant (brand-tooltip: white text on near-black) — warm gold highlight sweeping through,
+   engraved-metal read matching the header calligraphy's own sheen treatment. */
+.brand-tooltip .tooltip-shine {
+  color: #fff;
+  background-image: linear-gradient(100deg, #fff 32%, #ffe9c8 48%, #fff 64%);
+}
+/* Light-bg variant (popover labels + partner-orb tips: dark ink on white) — copper accent highlight,
+   ties the shine into the site's one locked accent color instead of a generic white glint. */
+.popover__label.tooltip-shine,
+.partner-orb__tip .tooltip-shine {
+  color: var(--ink);
+  background-image: linear-gradient(100deg, var(--ink) 32%, var(--accent-bright) 48%, var(--ink) 64%);
+}
 
 /* Primary nav with a sliding "liquid" pill (see setupNavPill in app.js). The pill sits BEHIND the
    buttons (z-0) and glides via its own CSS transition on transform/width — JS only writes the
@@ -1886,6 +1928,21 @@ html.is-loading .site-header {
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
   color: var(--tint-ink, var(--accent-bright));
 }
+/* Second-stage cascade: the badge pops in a beat after the card itself settles (the layered-stack
+   read carries through into the card's own contents, not just its outer shell). --reveal-delay is
+   set by reveal.js as an inline custom property on .hero-card and inherits down to this descendant.
+   fill-mode: backwards (not both/forwards) — holds the pre-start state so there's no flash before
+   the delay elapses, but releases control once the animation completes instead of holding
+   `transform: none` forever, which would otherwise silently block the badge's own
+   :hover/:focus-within drawer-flip transform (below) after the one-shot entrance finishes. The
+   animation's end state already matches the badge's natural rest style, so releasing is seamless. */
+.hero-card.is-visible .hero-card__badge {
+  animation: heroCardBadgePop 0.5s var(--ease-spring) calc(var(--reveal-delay, 0ms) + var(--dur-reveal) + 60ms) backwards;
+}
+@keyframes heroCardBadgePop {
+  from { opacity: 0; transform: scale(0.7) translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
 /* Soft ambient color bloom behind the icon — a real "spotlight," not just a drop-shadow — so the
    icon reads as a featured, lit element rather than a flat glyph sitting on the photo. */
 .hero-card__badge::before {
@@ -2170,16 +2227,26 @@ html.is-loading .site-header {
   border: 1px solid rgba(17,17,17,.06);
   box-shadow: 0 10px 24px -8px rgba(17,17,17,.28), inset 0 1px 0 rgba(255,255,255,.9);
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.32s var(--ease-spring);
+  /* Wipes up from the bottom edge (arrow origin) in lockstep with the scale/translate spring —
+     unfurls into place instead of just fading. See .brand-tooltip for the same technique + the
+     negative-inset note (visible-state bottom inset must go negative or the callout tail below,
+     painted outside the border-box, gets clipped away and never shows). */
+  clip-path: inset(100% 0 0 0 round 0.55rem);
+  transition: opacity 0.18s ease, transform 0.32s var(--ease-spring), clip-path 0.36s var(--ease-spring);
 }
+/* Callout tail — rotated-square speech-bubble read, replacing the flat border-triangle. */
 .partner-orb__tip::after {
-  content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-  border: 5px solid transparent; border-top-color: rgba(255,255,255,.96);
+  content: ""; position: absolute; bottom: -0.28rem; left: 50%; z-index: -1;
+  width: 0.56rem; height: 0.56rem; border-radius: 0.13rem;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(255,255,255,.96);
+  box-shadow: 2px 2px 3px -1px rgba(17,17,17,.14);
 }
 .partner-orb:hover .partner-orb__tip,
 .partner-orb:focus-visible .partner-orb__tip,
 .partner-orb.is-open .partner-orb__tip {
   opacity: 1; transform: translate(-50%, 0) scale(1);
+  clip-path: inset(0% 0 -0.6rem 0 round 0.55rem);
 }
 .partner-orb.is-open {
   transform: translateY(-3px) scale(1.1);
@@ -2204,10 +2271,25 @@ html.is-loading .site-header {
 [data-reveal="scale"] { transform: translateY(14px) scale(0.97); }
 [data-reveal="fade"] { transform: none; }
 [data-reveal="fade"].is-visible { transform: none; }
+/* "Stack" reveal (skiper52 read) — the card un-stacks off the hero, not just fades up: a 3D tilt +
+   lift + scale, using .hero__aside's existing perspective:1000px (previously unused scaffolding).
+   transform-origin: bottom center so it reads as pivoting up off a surface rather than sliding. */
+[data-reveal="stack"] {
+  transform-origin: bottom center;
+  transform: translateY(34px) translateZ(-60px) rotateX(-12deg) scale(0.93);
+  backface-visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) { [data-reveal="stack"] { transform: none; } }
 
 /* UI icons — Lucide stroke + Simple Icons social via currentColor */
 .ui-icon {
   display: block; flex: none; width: 1em; height: 1em;
+  /* Universal response base — every icon site-wide gets a cheap transform-only spring by default, so
+     any hover/toggle rule that sets a transform on a .ui-icon (many already do, with their own more
+     specific transition — this is purely a fallback for the ones that don't) animates smoothly
+     instead of snapping. Icons with their own explicit transition (chevron, nav, service-row, etc.)
+     simply override this via normal cascade specificity. */
+  transition: transform 0.24s var(--ease-spring);
 }
 .ui-icon--sm { width: 0.8125rem; height: 0.8125rem; }
 .ui-icon--md { width: 1rem; height: 1rem; }
@@ -2234,10 +2316,13 @@ html.is-loading .site-header {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.65),
     0 2px 8px -3px color-mix(in srgb, var(--tint) 45%, transparent);
-  transition: box-shadow 0.35s var(--ease-glass);
+  transition: box-shadow 0.28s var(--ease-tile), transform 0.28s var(--ease-tile);
 }
 .icon-chip:hover,
 .icon-chip:focus-within {
+  /* Same lift language as .service-row__icon (shares this component's visual family) — a hover on
+     an icon-only chip previously deepened the shadow but never moved at all. */
+  transform: scale(1.08) translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.82),
     0 3px 12px -2px color-mix(in srgb, var(--tint) 52%, transparent);
@@ -2593,7 +2678,10 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.7),
     0 3px 10px -3px color-mix(in srgb, var(--tint) 42%, transparent);
-  transition: transform 0.5s var(--ease-glass), box-shadow 0.5s var(--ease-glass);
+  /* Snappier than the old 0.5s ease-glass — that's well past the ~300ms ceiling a hover response
+     should live under before it starts reading as sluggish; --ease-tile is tuned for exactly this
+     (small tile/icon lift), same curve family as the icon-chip lift below. */
+  transition: transform 0.28s var(--ease-tile), box-shadow 0.28s var(--ease-tile);
 }
 @media (hover: hover) and (pointer: fine) {
   .service-row:hover .service-row__icon { transform: scale(1.06) translateX(4px); }
@@ -2879,7 +2967,15 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 .exp-row:hover .exp-row__arrow,
 .exp-row[aria-expanded="true"] .exp-row__arrow { opacity: 1; transform: none; }
 .exp-row__chev { color: var(--accent); opacity: 0.75; transition: transform 0.2s var(--ease-spring), opacity 0.2s ease; }
-.exp-row__chev.is-open { transform: rotate(180deg); opacity: 1; }
+/* Opening gets its own overshoot transition (a back-out curve with y>1 genuinely rotates past 180deg
+   before settling back — a real bounce, not just an ease) matching the accordion panel's own
+   overshoot-on-open language. Closing falls back to the base rule's flat curve above (CSS transitions
+   use the TARGET state's transition declaration, so removing .is-open reverts to it automatically) —
+   same reasoning as the height animation: a bounce right at close reads as a glitch, not a spring. */
+.exp-row__chev.is-open {
+  transform: rotate(180deg); opacity: 1;
+  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
 .exp-row:hover .exp-row__chev,
 .exp-row[aria-expanded="true"] .exp-row__chev { opacity: 1; }
 
@@ -2971,23 +3067,35 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
     inset 0 1px 0 rgba(255,255,255,.95);
   opacity: 0; visibility: hidden; pointer-events: none;
   transform: translateX(-50%) translateY(4px);
-  transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+  /* Wipes up from the bottom edge (arrow origin), same spring language as .brand-tooltip /
+     .partner-orb__tip — the 3 tooltip variants now read as one consistent materializing reveal
+     instead of 2 spring + 1 plain-ease. Visible-state inset goes NEGATIVE on the bottom edge
+     (-0.6rem, not 0) — clip-path's default reference box is the border-box, so an inset of exactly 0
+     clips away anything painted outside it, including the ::after callout tail below (positioned via
+     bottom:-0.3rem, straddling the box's own bottom edge). See .brand-tooltip for the same fix. */
+  clip-path: inset(100% 0 0 0 round 0.55rem);
+  transition: opacity 0.16s ease, transform 0.28s var(--ease-spring), clip-path 0.3s var(--ease-spring), visibility 0.28s;
 }
 .popover__meta {
   font-size: 0.62rem; font-weight: 500; color: rgba(17,17,17,.55);
   letter-spacing: 0.02em; text-transform: uppercase;
 }
+/* Callout tail — rotated-square speech-bubble read, replacing the flat border-triangle. See
+   .brand-tooltip::before for the technique; this one straddles the panel's BOTTOM edge (panel sits
+   above its trigger here) instead of the top. */
 .popover__panel::after {
-  content: ""; position: absolute; top: 100%; left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent; border-top-color: #fff;
-  filter: drop-shadow(0 2px 2px rgba(10,10,10,.06));
+  content: ""; position: absolute; bottom: -0.3rem; left: 50%; z-index: -1;
+  width: 0.6rem; height: 0.6rem; border-radius: 0.14rem;
+  transform: translateX(-50%) rotate(45deg);
+  background: #fff;
+  box-shadow: 2px 2px 3px -1px rgba(10,10,10,.1);
 }
 .popover:hover .popover__panel,
 .popover:focus-within .popover__panel,
 .popover.is-open .popover__panel {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: translateX(-50%) translateY(0);
+  clip-path: inset(0% 0 -0.6rem 0 round 0.55rem);
 }
 /* z-index:9999 on the panel only wins within its own LOCAL stacking context — an ancestor with
    position:relative/absolute + its own explicit z-index (not "auto") starts a new one, and the
@@ -3469,23 +3577,57 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   .modal-titlebar > .modal-close:hover,
   .modal-titlebar > .modal-close:focus-visible { transform: none; }
 }
+.modal-field {
+  /* Anchors the spring-underline ::after below the control. */
+  position: relative;
+}
 .modal-field label {
   display: flex; align-items: center; gap: 0.35rem;
   font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em;
   color: rgba(17,17,17,.5); margin-bottom: 0.35rem;
+  transition: color 0.22s var(--ease-hover);
 }
 .modal-field label .ui-icon { width: 0.8rem; height: 0.8rem; opacity: 0.75; }
 .modal-field input, .modal-field textarea {
   width: 100%; border: 1px solid var(--line); background: rgba(241,240,238,.5);
   border-radius: var(--radius-control); padding: 0.75rem 1rem; font-size: 0.875rem;
-  font-family: inherit; outline: none; transition: border-color 0.2s, background 0.2s;
+  font-family: inherit; outline: none;
+  transition: border-color 0.22s var(--ease-hover), background 0.22s var(--ease-hover),
+    transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-spring);
 }
-.modal-field input:focus, .modal-field textarea:focus { border-color: rgba(17,17,17,.3); background: #fff; }
+.modal-field input:focus, .modal-field textarea:focus {
+  border-color: rgba(17,17,17,.3); background: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tint) 14%, transparent), 0 4px 14px -6px rgba(17,17,17,.18);
+}
+.modal-field:focus-within label { color: var(--tint-deep); }
+/* Spring underline — draws in from center on focus, a livelier focus indicator than the flat
+   border-color fade alone. transform-only (scaleX), GPU-cheap regardless of field count. */
+.modal-field::after {
+  content: ""; position: absolute; left: 1rem; right: 1rem; bottom: -0.15rem; height: 2px;
+  border-radius: 2px; background: var(--tint);
+  transform: scaleX(0); transform-origin: center;
+  transition: transform 0.36s var(--ease-spring);
+  pointer-events: none;
+}
+.modal-field:focus-within::after { transform: scaleX(1); }
 /* Contact submit error (shown only if the POST to /api/contact fails). */
 .modal-error {
   margin: -0.25rem 0 0.15rem;
   font-size: 0.82rem; font-weight: 500;
   color: color-mix(in srgb, var(--c-rose) 62%, #7a1020);
+}
+/* Alpine x-transition classes — was a hard x-show pop/vanish with zero transition; now slides+fades
+   in on a spring, drops flat on the way out (errors should feel dismissed, not bounced). */
+.modal-error-enter { transition: opacity 0.32s var(--ease-spring), transform 0.32s var(--ease-spring); }
+.modal-error-enter-start { opacity: 0; transform: translateY(-4px); }
+.modal-error-enter-end { opacity: 1; transform: translateY(0); }
+.modal-error-leave { transition: opacity 0.16s ease, transform 0.16s ease; }
+.modal-error-leave-start { opacity: 1; transform: translateY(0); }
+.modal-error-leave-end { opacity: 0; transform: translateY(-4px); }
+@media (prefers-reduced-motion: reduce) {
+  .modal-error-enter, .modal-error-leave { transition: opacity 0.15s linear; }
+  .modal-error-enter-start, .modal-error-leave-end { transform: none; }
 }
 /* Footer row: stacked on narrow modals (the disclaimer + pill button used to share one row via
    Tailwind's flex utilities and would wrap the button's own text mid-word once the row got tight —
