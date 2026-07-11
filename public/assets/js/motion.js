@@ -209,9 +209,9 @@
     applyElementParallax(window.scrollY);
   }
 
-  // When pill rows wrap (label reveal), glide their container height so everything below — the next
-  // Experience role, Skills section, or the Stats ("Proof in the work") panel — slides instead of
-  // jumping. Experience: .exp-details; Skills flat: .skills-flat; Skills cards: .glass-panel.
+  // When pill rows wrap (label reveal), glide their container height so everything below slides
+  // instead of jumping — next-element-agnostic via document flow (Editorial, Stats, or any future
+  // section). Experience: .exp-details; Skills flat: .skills-flat; Skills cards: .glass-panel.
   function setupPillRowReflow() {
     const panelState = new WeakMap();
     const rootStyle = () => getComputedStyle(document.documentElement);

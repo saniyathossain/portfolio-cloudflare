@@ -13,7 +13,7 @@
     document.documentElement.classList.add("touch-pills");
   }
 
-  const ASSET_V = "500e6a8a0b3f"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+  const ASSET_V = "d2955807193d"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
   function loadScript(src) {
     const url = src.indexOf("?") === -1 ? src + "?v=" + ASSET_V : src;
     return new Promise((resolve, reject) => {
@@ -70,6 +70,7 @@
     // means the later loadScript() falls back to a normal (uncached) fetch.
     fetch("/assets/js/app.min.js?v=" + ASSET_V).catch(() => {});
     fetch("/assets/js/skills-flat.min.js?v=" + ASSET_V).catch(() => {});
+    fetch("/assets/js/editorial.min.js?v=" + ASSET_V).catch(() => {});
     fetch("/assets/js/vendor/alpine.min.js?v=" + ASSET_V).catch(() => {});
 
     // portfolio.json is same-origin but still a real network request — a transient failure here
@@ -80,6 +81,7 @@
     await window.portfolioDataReady.catch((err) => console.error("portfolio.json failed to load:", err));
     await loadScript("/assets/js/app.min.js");
     await loadScript("/assets/js/skills-flat.min.js");
+    await loadScript("/assets/js/editorial.min.js");
     await loadScript("/assets/js/vendor/alpine.min.js");
     await loadDeferredScripts();
     scheduleIdle();

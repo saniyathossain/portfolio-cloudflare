@@ -456,6 +456,7 @@ const DEFAULT_SECTIONS = {
   services: "Backend, architecture, APIs, and AI-assisted delivery.",
   experience: "{years}+ years · {roles} roles across {companies} companies.",
   skills: "Languages, frameworks, data, platform, and AI in the flow.",
+  editorial: "Notes on backend engineering, published on dev.to and Medium.",
   education: "Electronics & Telecommunication Engineering — Dhaka.",
 };
 

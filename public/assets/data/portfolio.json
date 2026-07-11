@@ -93,6 +93,7 @@
     "services": "Backend, architecture, APIs, and AI-assisted delivery.",
     "experience": "{years}+ years · {roles} roles across {companies} companies.",
     "skills": "Languages, frameworks, data, platform, dev tools, and AI in the flow.",
+    "editorial": "Notes on backend engineering, published on dev.to and Medium.",
     "education": "Electronics & Telecommunication Engineering — Dhaka."
   },
   "profile": {
@@ -216,7 +217,7 @@
       "readMin": 6,
       "excerpt": "Problem Statement   Efficient MySQL query monitoring is essential to identify performance...",
       "tags": [],
-      "active": false
+      "active": true
     },
     {
       "id": "devto:2246074",
@@ -243,7 +244,7 @@
         "productivity",
         "automation"
       ],
-      "active": false
+      "active": true
     },
     {
       "id": "devto:2111808",
@@ -254,7 +255,7 @@
       "readMin": 4,
       "excerpt": "Comprehensive Git Diff Analysis: A Developer’s Guide   Analyzing changes between Git...",
       "tags": [],
-      "active": false
+      "active": true
     },
     {
       "id": "devto:1999795",
@@ -265,7 +266,7 @@
       "readMin": 4,
       "excerpt": "Managing databases within a containerized environment can be both tedious and error-prone, especially...",
       "tags": [],
-      "active": false
+      "active": true
     },
     {
       "id": "devto:1894506",
@@ -298,7 +299,7 @@
       "readMin": null,
       "excerpt": "",
       "tags": [],
-      "active": false
+      "active": true
     },
     {
       "id": "medium:https://saniyathossain.medium.com/implementing-basic-authentication-middleware-in-laravel-and-lumen-dbc9125530d6",
@@ -309,7 +310,7 @@
       "readMin": null,
       "excerpt": "",
       "tags": [],
-      "active": false
+      "active": true
     },
     {
       "id": "medium:https://saniyathossain.medium.com/unleashing-typescripts-pipeline-library-f3942594ff9d",
@@ -320,7 +321,7 @@
       "readMin": null,
       "excerpt": "",
       "tags": [],
-      "active": false
+      "active": true
     },
     {
       "id": "medium:https://saniyathossain.medium.com/enhancing-code-documentation-with-mermaid-js-a-guide-to-visualizing-code-in-markdown-1502d3406bc9",
@@ -331,7 +332,7 @@
       "readMin": null,
       "excerpt": "",
       "tags": [],
-      "active": false
+      "active": true
     },
     {
       "id": "medium:https://saniyathossain.medium.com/mastering-laravels-tag-management-an-in-depth-exploration-of-managing-tags-in-database-c2ca2763ba94",

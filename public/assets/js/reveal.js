@@ -16,6 +16,21 @@
   // outlasts the loader's fixed timer. reveal-io.js's MutationObserver (wired in boot()) re-runs
   // these same observe-functions for anything Alpine mounts after this first pass.
   let revealIO = null;
+
+  function revealIfAlreadyVisible(el) {
+    if (reduced || el.classList.contains("is-visible")) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const margin = Math.round(vh * 0.08);
+    if (rect.top < vh - margin && rect.bottom > margin) {
+      const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
+      el.style.setProperty("--reveal-delay", delay + "ms");
+      if (delay) el.style.transitionDelay = delay + "ms";
+      el.classList.add("is-visible");
+      revealIO?.unobserve(el);
+    }
+  }
+
   function observeReveal(el) {
     if (reduced) {
       el.classList.add("is-visible");
@@ -43,6 +58,9 @@
       );
     }
     revealIO.observe(el);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => revealIfAlreadyVisible(el));
+    });
   }
 
   function initReveals() {

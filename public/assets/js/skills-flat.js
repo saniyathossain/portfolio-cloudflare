@@ -83,9 +83,7 @@ function skillsFlatPanel() {
     },
 
     skillsFlatToggleLabel() {
-      if (this.skillsFlatOpen) return "View less";
-      const n = this.skillsFlatMoreCount();
-      return n ? "View more · " + n + " tools" : "View more";
+      return this.skillsFlatOpen ? "View less" : "View more";
     },
 
     brandOf(name) {
