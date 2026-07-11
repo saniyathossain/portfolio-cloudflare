@@ -1158,35 +1158,41 @@ html.is-loading .site-header {
   opacity: 1; transform: translateY(0) scale(1);
 }
 @media (prefers-reduced-motion: reduce) { .brand-tooltip { transition: opacity 0.2s ease; } }
-/* Shared tooltip text shine — a slow metallic sweep clipped to the glyphs (same idiom as the header
-   logo's bismSheen/bismSweep, reused for visual consistency across the site's "premium" motion
-   language). `color` is the fallback for browsers without background-clip:text support; supporting
-   browsers override visible glyph color via -webkit-text-fill-color, so the fallback never shows
-   there. Cheap to animate — a small text-sized gradient, not a page-scale filtered layer. */
+/* Shared tooltip text shine — one metallic sweep when the tooltip opens (not a loop). `color` is the
+   fallback for browsers without background-clip:text support. */
 .tooltip-shine {
   display: inline-block;
-  background-repeat: no-repeat; background-size: 220% 100%; background-position: 200% 0;
+  background-repeat: no-repeat; background-size: 240% 100%; background-position: 0% 0;
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .tooltip-shine { animation: tooltipShineSweep 2.8s ease-in-out infinite; }
-}
 @keyframes tooltipShineSweep {
-  0%, 15%  { background-position: 200% 0; }
-  60%, 100% { background-position: -40% 0; }
+  0%   { background-position: 130% 0; }
+  100% { background-position: 0% 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .brand-btn:hover .brand-tooltip .tooltip-shine,
+  .brand-btn:focus-visible .brand-tooltip .tooltip-shine,
+  .partner-orb:hover .partner-orb__tip .tooltip-shine,
+  .partner-orb:focus-visible .partner-orb__tip .tooltip-shine,
+  .partner-orb.is-open .partner-orb__tip .tooltip-shine,
+  .popover:hover .popover__label.tooltip-shine,
+  .popover:focus-within .popover__label.tooltip-shine,
+  .popover.is-open .popover__label.tooltip-shine {
+    animation: tooltipShineSweep 1.45s var(--ease-glass) 0.2s 1 forwards;
+  }
 }
 /* Dark-bg variant (brand-tooltip: white text on near-black) — warm gold highlight sweeping through,
    engraved-metal read matching the header calligraphy's own sheen treatment. */
 .brand-tooltip .tooltip-shine {
   color: #fff;
-  background-image: linear-gradient(100deg, #fff 32%, #ffe9c8 48%, #fff 64%);
+  background-image: linear-gradient(100deg, #fff 28%, #ffe9c8 50%, #fff 72%);
 }
 /* Light-bg variant (popover labels + partner-orb tips: dark ink on white) — copper accent highlight,
    ties the shine into the site's one locked accent color instead of a generic white glint. */
 .popover__label.tooltip-shine,
 .partner-orb__tip .tooltip-shine {
   color: var(--ink);
-  background-image: linear-gradient(100deg, var(--ink) 32%, var(--accent-bright) 48%, var(--ink) 64%);
+  background-image: linear-gradient(100deg, var(--ink) 28%, var(--accent-bright) 50%, var(--ink) 72%);
 }
 
 /* Primary nav with a sliding "liquid" pill (see setupNavPill in app.js). The pill sits BEHIND the
@@ -2227,12 +2233,10 @@ html.is-loading .site-header {
   border: 1px solid rgba(17,17,17,.06);
   box-shadow: 0 10px 24px -8px rgba(17,17,17,.28), inset 0 1px 0 rgba(255,255,255,.9);
   opacity: 0;
-  /* Wipes up from the bottom edge (arrow origin) in lockstep with the scale/translate spring —
-     unfurls into place instead of just fading. See .brand-tooltip for the same technique + the
-     negative-inset note (visible-state bottom inset must go negative or the callout tail below,
-     painted outside the border-box, gets clipped away and never shows). */
-  clip-path: inset(100% 0 0 0 round 0.55rem);
-  transition: opacity 0.18s ease, transform 0.32s var(--ease-spring), clip-path 0.36s var(--ease-spring);
+  /* Opacity + scale/translate spring only — clip-path inset wipes clipped glyph edges after the
+     reveal settled (same rendering bug as .brand-tooltip; negative bottom inset fixed the tail but
+     not the text). */
+  transition: opacity 0.18s ease, transform 0.32s var(--ease-spring);
 }
 /* Callout tail — rotated-square speech-bubble read, replacing the flat border-triangle. */
 .partner-orb__tip::after {
@@ -2246,7 +2250,6 @@ html.is-loading .site-header {
 .partner-orb:focus-visible .partner-orb__tip,
 .partner-orb.is-open .partner-orb__tip {
   opacity: 1; transform: translate(-50%, 0) scale(1);
-  clip-path: inset(0% 0 -0.6rem 0 round 0.55rem);
 }
 .partner-orb.is-open {
   transform: translateY(-3px) scale(1.1);
@@ -3067,14 +3070,9 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
     inset 0 1px 0 rgba(255,255,255,.95);
   opacity: 0; visibility: hidden; pointer-events: none;
   transform: translateX(-50%) translateY(4px);
-  /* Wipes up from the bottom edge (arrow origin), same spring language as .brand-tooltip /
-     .partner-orb__tip — the 3 tooltip variants now read as one consistent materializing reveal
-     instead of 2 spring + 1 plain-ease. Visible-state inset goes NEGATIVE on the bottom edge
-     (-0.6rem, not 0) — clip-path's default reference box is the border-box, so an inset of exactly 0
-     clips away anything painted outside it, including the ::after callout tail below (positioned via
-     bottom:-0.3rem, straddling the box's own bottom edge). See .brand-tooltip for the same fix. */
-  clip-path: inset(100% 0 0 0 round 0.55rem);
-  transition: opacity 0.16s ease, transform 0.28s var(--ease-spring), clip-path 0.3s var(--ease-spring), visibility 0.28s;
+  /* Opacity + translate spring only — clip-path inset wipes clipped tenure text after reveal
+     (confirmed on .brand-tooltip: inset(0) still truncates glyphs once the animation completes). */
+  transition: opacity 0.16s ease, transform 0.28s var(--ease-spring), visibility 0.28s;
 }
 .popover__meta {
   font-size: 0.62rem; font-weight: 500; color: rgba(17,17,17,.55);
@@ -3095,7 +3093,6 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 .popover.is-open .popover__panel {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: translateX(-50%) translateY(0);
-  clip-path: inset(0% 0 -0.6rem 0 round 0.55rem);
 }
 /* z-index:9999 on the panel only wins within its own LOCAL stacking context — an ancestor with
    position:relative/absolute + its own explicit z-index (not "auto") starts a new one, and the
