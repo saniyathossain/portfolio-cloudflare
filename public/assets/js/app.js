@@ -65,6 +65,7 @@ function portfolioApp() {
     profile: D.profile,
     site: D.site,
     sections,
+    articles: D.articles,
 
     init() {
       const live = window.PORTFOLIO_DATA;
@@ -78,6 +79,7 @@ function portfolioApp() {
       }
       if (live?.skills) this.skills = live.skills;
       if (live?.site) this.site = live.site;
+      if (live?.articles) this.articles = live.articles;
       this.tickClock();
       this.initClockSweep();
       setInterval(() => this.tickClock(), T.CLOCK_TICK);
@@ -140,13 +142,27 @@ function portfolioApp() {
     // per scroll event, so a fast wheel-fling can't flood Alpine's reactivity with redundant writes.
     setupBackToTop() {
       let raf = 0;
+      // Ring circumference (2πr, r=17 — matches the SVG's viewBox in index.html); cached refs +
+      // raw DOM writes here (not x-text/Alpine) for the same reason the rest of this handler
+      // avoids reactivity on a scroll-driven value — direct style/text writes are cheap per-frame,
+      // an Alpine re-render per scroll frame is not.
+      const CIRCUMFERENCE = 106.8;
+      const bar = document.getElementById("scrollRingBar");
+      const pct = document.getElementById("scrollRingPct");
       const check = () => {
         raf = 0;
         this.showBackToTop = window.scrollY > T.BACK_TO_TOP_PX;
         // Header glass intensifies once it floats over page content (past the very top).
         this.scrolled = window.scrollY > 12;
+        if (bar || pct) {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+          if (bar) bar.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - ratio));
+          if (pct) pct.textContent = String(Math.round(ratio * 100));
+        }
       };
       window.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
+      window.addEventListener("resize", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
       check();
     },
 

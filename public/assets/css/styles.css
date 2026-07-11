@@ -734,6 +734,10 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
     0 2px 14px rgba(241,240,238,.85),
     0 1px 3px rgba(17,17,17,.05);
 }
+/* Editorial's subtitle is short enough to read better as one line than wrapped at 48ch. */
+@media (min-width: 480px) {
+  .sec-sub--nowrap { max-width: none; white-space: nowrap; }
+}
 /* Leading tinted glass badge on each section subtitle — small shiny coin in the section's own hue,
    same recipe family as .icon-chip so it reads as part of the liquid-glass system. Springs on hover. */
 .sec-sub__icon {
@@ -2329,8 +2333,7 @@ html.is-loading .site-header {
 }
 .icon-chip:hover,
 .icon-chip:focus-within {
-  /* Same lift language as .service-row__icon (shares this component's visual family) — a hover on
-     an icon-only chip previously deepened the shadow but never moved at all. */
+  /* A hover on an icon-only chip previously deepened the shadow but never moved at all. */
   transform: scale(1.08) translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.82),
@@ -2668,7 +2671,52 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   }
 }
 
-/* Services rows — Lumora hover-fill inside faux-frost panel */
+/* Editorial — calm bento grid (doc 46 revision). Was a flex-grow "expand on hover" squeeze; dropped
+   that entirely (disorienting siblings-compress interaction) for a plain equal-width card grid with
+   content always visible and the same restrained hover-lift used by .service-row elsewhere on the
+   page — consistent, and correct on touch/no-hover by construction since nothing is
+   hidden behind a hover state. */
+.editorial-grid {
+  display: grid; grid-template-columns: 1fr; gap: 1rem; list-style: none; padding: 0; margin: 0;
+}
+@media (min-width: 640px) { .editorial-grid { grid-template-columns: repeat(2, 1fr); gap: 1.1rem; } }
+@media (min-width: 1024px) { .editorial-grid { grid-template-columns: repeat(3, 1fr); } }
+.editorial-card {
+  padding: 1.5rem 1.4rem; display: flex; flex-direction: column; gap: 0.6rem;
+  transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass);
+}
+.editorial-card[data-reveal] { opacity: 0; transform: translate3d(0, 20px, 0) scale(0.97); transition: none; }
+.editorial-card[data-reveal].is-visible {
+  opacity: 1; transform: none;
+  transition: opacity var(--dur-pill-reveal) var(--ease-pill-reveal), transform var(--dur-pill-reveal) var(--ease-pill-reveal);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+@media (hover: hover) and (pointer: fine) {
+  .editorial-card:hover { transform: translateY(-3px); box-shadow: var(--glass-shadow-hover); }
+}
+.editorial-card__link { display: flex; flex-direction: column; gap: 0.6rem; color: inherit; text-decoration: none; height: 100%; }
+.editorial-card__head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.editorial-card__platform {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tint-deep);
+}
+.editorial-card__date { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.editorial-card__title {
+  margin: 0; font-size: 1.05rem; font-weight: 650; letter-spacing: -0.015em; color: var(--ink);
+  line-height: 1.3;
+}
+.editorial-card__excerpt { margin: 0; font-size: 0.875rem; line-height: 1.55; color: var(--muted); }
+.editorial-card__tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: auto; }
+.editorial-card__read {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.8rem; font-weight: 600; color: var(--tint-deep);
+}
+@media (prefers-reduced-motion: reduce) {
+  .editorial-card { transition: none; }
+  .editorial-card:hover { transform: none; box-shadow: var(--glass-shadow); }
+  .editorial-card[data-reveal] { opacity: 1; transform: none; }
+}
+
 .services-list { padding: 0.5rem; }
 .service-row {
   display: grid; grid-template-columns: auto 1fr auto;
@@ -2787,7 +2835,6 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   text-transform: uppercase; color: rgba(17,17,17,.48);
 }
 
-/* Shiny pill shell — skills-flat + experience stack/AI (sec-sub / icon-chip recipe) */
 .skills-flat .brand-pill,
 .role-tags__group .brand-pill {
   background: linear-gradient(145deg,
@@ -3582,7 +3629,6 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
       0 6px 18px color-mix(in srgb, var(--brand) 8%, transparent);
   }
   .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
-  .create-band[data-stagger] .create-band__tile { opacity: 1; transform: none; }
   .pill-row[data-stagger] .brand-pill { opacity: 1; transform: none; }
 }
 
@@ -3917,6 +3963,52 @@ body.scroll-lock .back-to-top { opacity: 0; pointer-events: none; }
   .back-to-top { right: 1rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
 }
 
+/* Scroll ring (skiper89-inspired) — sits beside .back-to-top, fills as the page scrolls.
+   Ring fill + % text are written directly via app.js's existing rAF-coalesced scroll handler
+   (setupBackToTop) as raw DOM writes, not Alpine reactivity — same "cheap direct style write on a
+   cached node ref" pattern already used for hero parallax, so a fast scroll never floods Alpine. */
+.scroll-ring {
+  position: fixed; right: 4.5rem; bottom: 1.25rem; z-index: 90;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  border: 1px solid rgba(24,30,56,.08);
+  background: var(--frost-bg);
+  box-shadow: var(--glass-highlight), 0 6px 18px -6px rgba(17,17,17,.18);
+  cursor: pointer; padding: 0;
+  opacity: 0; transform: translateY(0.6rem) scale(0.92); pointer-events: none;
+  transition: opacity 0.3s var(--ease-glass), transform 0.3s var(--ease-glass), box-shadow 0.3s var(--ease-glass);
+}
+.scroll-ring.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.scroll-ring:hover,
+.scroll-ring:focus-visible { box-shadow: var(--glass-highlight), 0 8px 22px -6px rgba(17,17,17,.24); }
+.scroll-ring__ring {
+  position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg);
+}
+.scroll-ring__track {
+  fill: none; stroke: rgba(24,30,56,.1); stroke-width: 2.4;
+}
+.scroll-ring__bar {
+  fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round;
+  stroke-dasharray: 106.8; stroke-dashoffset: 106.8;
+  transition: stroke-dashoffset 0.1s linear;
+}
+.scroll-ring__pct {
+  position: relative; z-index: 2;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--tint-deep); font-variant-numeric: tabular-nums;
+}
+.scroll-ring__pct::after { content: "%"; font-size: 0.5rem; margin-left: 0.03rem; opacity: 0.7; }
+body.scroll-lock .scroll-ring { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .scroll-ring { transition: opacity 0.2s linear; }
+  .scroll-ring,
+  .scroll-ring.is-visible { transform: none; }
+  .scroll-ring__bar { transition: none; }
+}
+@media (max-width: 767px) {
+  .scroll-ring { right: 3.75rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
+}
+
 /* Utilities */
 .icon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; }
 /* !important: must beat body's own overflow-x rule and any other layout rule regardless of load
@@ -4144,12 +4236,14 @@ body.scroll-lock { position: fixed; width: 100%; }
 @media (hover: none), (pointer: coarse) {
   .service-row,
   .create-band__tile,
+  .editorial-card,
   .social-link,
   .partner-orb {
     transition: transform 0.12s var(--ease-glass), box-shadow 0.12s var(--ease-glass);
   }
   .service-row:active,
   .create-band__tile:active,
+  .editorial-card:active,
   .social-link:active,
   .partner-orb:active {
     transform: scale(0.985);
@@ -4159,6 +4253,7 @@ body.scroll-lock { position: fixed; width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   .service-row:active,
   .create-band__tile:active,
+  .editorial-card:active,
   .social-link:active,
   .partner-orb:active { transform: none; }
 }

@@ -588,6 +588,7 @@ function _hydrate(raw) {
   data.partners = _partnersFromExperience(data);
   const expTerms = (data.site && data.site.experienceHighlights) || [];
   data.highlightExp = (text) => _highlightTerms(text, expTerms);
+  data.articles = raw.articles || [];
   if (data.site && data.site.features) {
     data.site.features.flags = data.site.features.flags || {};
     const v = data.site.features.flags.skillsScrollDesign;

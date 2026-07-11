@@ -6,12 +6,35 @@
     "themeColor": "#0a0a0a",
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
     "aboutHeading": "{years}+ years turning ambitious ideas into backends that carry telco-scale traffic without blinking — monoliths, microservices, and everything shipped with quiet precision.",
-    "aboutHighlights": ["telco-scale", "quiet precision"],
+    "aboutHighlights": [
+      "telco-scale",
+      "quiet precision"
+    ],
     "experienceHighlights": [
-      "PHP", "Laravel", "Node.js", "MySQL", "Redis", "Docker", "Nginx", "Elasticsearch",
-      "Firebase", "CodeIgniter", "Joomla", "Elgg", "Go",
-      "microservices", "monolith", "API Gateway", "BFF", "AIDLC", "AI-assisted",
-      "Role-Based Access Control", "Change Data Capture", "SSO", "async APIs", "GZIP"
+      "PHP",
+      "Laravel",
+      "Node.js",
+      "MySQL",
+      "Redis",
+      "Docker",
+      "Nginx",
+      "Elasticsearch",
+      "Firebase",
+      "CodeIgniter",
+      "Joomla",
+      "Elgg",
+      "Go",
+      "microservices",
+      "monolith",
+      "API Gateway",
+      "BFF",
+      "AIDLC",
+      "AI-assisted",
+      "Role-Based Access Control",
+      "Change Data Capture",
+      "SSO",
+      "async APIs",
+      "GZIP"
     ],
     "footerTagline": "Staff Software Engineer crafting backends, products, and the systems that connect them.",
     "ogDescription": "Backend engineering, shipped with quiet precision. {years}+ years building PHP/Laravel and Node.js services at scale.",
@@ -23,9 +46,18 @@
       "closeAriaLabel": "Close",
       "heading": "Tell us what you're building.",
       "fields": {
-        "name": { "label": "Name", "placeholder": "Your name" },
-        "email": { "label": "Email", "placeholder": "you@company.com" },
-        "project": { "label": "Project", "placeholder": "A few words about your project, timeline, and budget." }
+        "name": {
+          "label": "Name",
+          "placeholder": "Your name"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "you@company.com"
+        },
+        "project": {
+          "label": "Project",
+          "placeholder": "A few words about your project, timeline, and budget."
+        }
       },
       "footerNote": "We reply within one business day.",
       "errorNote": "Couldn't send just now — please email me directly.",
@@ -98,6 +130,11 @@
       "icon": "skills"
     },
     {
+      "label": "Editorial",
+      "id": "editorial",
+      "icon": "code"
+    },
+    {
       "label": "Education",
       "id": "education",
       "icon": "education"
@@ -167,6 +204,200 @@
     {
       "text": "Scale",
       "variant": "scale"
+    }
+  ],
+  "articles": [
+    {
+      "id": "devto:2345888",
+      "platform": "dev.to",
+      "title": "Comprehensive Guide to MySQL Query Monitoring: Configuration, Debugging, and Advanced Setup with Docker",
+      "href": "https://dev.to/saniyathossain/comprehensive-guide-to-mysql-query-monitoring-configuration-debugging-and-advanced-setup-with-1abl",
+      "date": "2025-03-25",
+      "readMin": 6,
+      "excerpt": "Problem Statement   Efficient MySQL query monitoring is essential to identify performance...",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "devto:2246074",
+      "platform": "dev.to",
+      "title": "Mastering Cache-Control Headers for High-Traffic REST APIs 🚀📦",
+      "href": "https://dev.to/saniyathossain/mastering-cache-control-headers-for-high-traffic-rest-apis-2g5n",
+      "date": "2025-01-28",
+      "readMin": 17,
+      "excerpt": "Optimizing your REST APIs with effective caching strategies can significantly enhance performance,...",
+      "tags": [],
+      "active": true
+    },
+    {
+      "id": "devto:2214413",
+      "platform": "dev.to",
+      "title": "🌿 Simplifying Git Branch Management: A Comprehensive Multi-Branch Update Guide",
+      "href": "https://dev.to/saniyathossain/simplifying-git-branch-management-a-comprehensive-multi-branch-update-guide-45fl",
+      "date": "2025-01-16",
+      "readMin": 8,
+      "excerpt": "One-stop guide to automating Git branch updates with style, flexibility, and efficiency. 🚀          ...",
+      "tags": [
+        "git",
+        "webdev",
+        "productivity",
+        "automation"
+      ],
+      "active": false
+    },
+    {
+      "id": "devto:2111808",
+      "platform": "dev.to",
+      "title": "Efficient Git Diff Analysis: A Comprehensive Guide",
+      "href": "https://dev.to/saniyathossain/efficient-git-diff-analysis-a-comprehensive-guide-2hd1",
+      "date": "2024-11-19",
+      "readMin": 4,
+      "excerpt": "Comprehensive Git Diff Analysis: A Developer’s Guide   Analyzing changes between Git...",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "devto:1999795",
+      "platform": "dev.to",
+      "title": "Automating MySQL Database Creation and Import in Docker: A Comprehensive Guide",
+      "href": "https://dev.to/saniyathossain/automating-mysql-database-creation-and-import-in-docker-a-comprehensive-guide-2ejf",
+      "date": "2024-09-13",
+      "readMin": 4,
+      "excerpt": "Managing databases within a containerized environment can be both tedious and error-prone, especially...",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "devto:1894506",
+      "platform": "dev.to",
+      "title": "Essential Debugging Techniques for Network and Service Connectivity",
+      "href": "https://dev.to/saniyathossain/essential-debugging-techniques-for-network-and-service-connectivity-55ei",
+      "date": "2024-06-20",
+      "readMin": 8,
+      "excerpt": "In the fast-paced world of software development, effective debugging is crucial for ensuring smooth...",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "devto:1885452",
+      "platform": "dev.to",
+      "title": "Essential Guide to Troubleshooting Operational Issues for Full-Stack Developers",
+      "href": "https://dev.to/saniyathossain/essential-guide-to-troubleshooting-operational-issues-for-full-stack-developers-4a70",
+      "date": "2024-06-12",
+      "readMin": 17,
+      "excerpt": "In the ever-evolving landscape of software development, back-end development and operation related...",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/automate-redis-key-by-pattern-deletion-631e809169ab",
+      "platform": "Medium",
+      "title": "Automate Redis Key Deletion by Pattern",
+      "href": "https://saniyathossain.medium.com/automate-redis-key-by-pattern-deletion-631e809169ab",
+      "date": "2023-12-11",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/implementing-basic-authentication-middleware-in-laravel-and-lumen-dbc9125530d6",
+      "platform": "Medium",
+      "title": "Implementing Basic Authentication Middleware in Laravel and Lumen",
+      "href": "https://saniyathossain.medium.com/implementing-basic-authentication-middleware-in-laravel-and-lumen-dbc9125530d6",
+      "date": "2023-10-08",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/unleashing-typescripts-pipeline-library-f3942594ff9d",
+      "platform": "Medium",
+      "title": "Unleashing TypeScript’s Pipeline Library",
+      "href": "https://saniyathossain.medium.com/unleashing-typescripts-pipeline-library-f3942594ff9d",
+      "date": "2023-09-23",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/enhancing-code-documentation-with-mermaid-js-a-guide-to-visualizing-code-in-markdown-1502d3406bc9",
+      "platform": "Medium",
+      "title": "Enhancing Code Documentation with Mermaid.js: A Guide to Visualizing Code in Markdown",
+      "href": "https://saniyathossain.medium.com/enhancing-code-documentation-with-mermaid-js-a-guide-to-visualizing-code-in-markdown-1502d3406bc9",
+      "date": "2023-09-12",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/mastering-laravels-tag-management-an-in-depth-exploration-of-managing-tags-in-database-c2ca2763ba94",
+      "platform": "Medium",
+      "title": "Simplify Tag Handling in Laravel Models: An In-Depth Guide",
+      "href": "https://saniyathossain.medium.com/mastering-laravels-tag-management-an-in-depth-exploration-of-managing-tags-in-database-c2ca2763ba94",
+      "date": "2023-08-21",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/running-php-on-ubuntu-using-docker-a-hassle-free-approach-21f00c0dc782",
+      "platform": "Medium",
+      "title": "Running PHP on Ubuntu Using Docker: A Hassle-free Approach",
+      "href": "https://saniyathossain.medium.com/running-php-on-ubuntu-using-docker-a-hassle-free-approach-21f00c0dc782",
+      "date": "2023-08-21",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/simplifying-property-access-in-php-dynamic-setter-and-getter-methods-590bdeb7f967",
+      "platform": "Medium",
+      "title": "Simplifying Property Access in PHP: Dynamic Setter and Getter Methods",
+      "href": "https://saniyathossain.medium.com/simplifying-property-access-in-php-dynamic-setter-and-getter-methods-590bdeb7f967",
+      "date": "2023-08-21",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/supercharging-laravel-authentication-turbocharging-performance-with-advanced-caching-46d29b32884",
+      "platform": "Medium",
+      "title": "Supercharging Laravel Authentication Performance: A Deep Dive into Advanced Caching",
+      "href": "https://saniyathossain.medium.com/supercharging-laravel-authentication-turbocharging-performance-with-advanced-caching-46d29b32884",
+      "date": "2023-08-04",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": true
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/mastering-data-transfer-objects-dtos-in-php-simplifying-data-validation-and-standardization-21a3d94c2fdc",
+      "platform": "Medium",
+      "title": "Mastering Data Transfer Objects (DTOs) in PHP: Simplifying Data Validation and Standardization",
+      "href": "https://saniyathossain.medium.com/mastering-data-transfer-objects-dtos-in-php-simplifying-data-validation-and-standardization-21a3d94c2fdc",
+      "date": "2023-08-04",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": true
+    },
+    {
+      "id": "medium:https://saniyathossain.medium.com/database-query-monitoring-in-laravel-and-lumen-fa2fc4ee43da",
+      "platform": "Medium",
+      "title": "Database Query Monitoring in Laravel and Lumen",
+      "href": "https://saniyathossain.medium.com/database-query-monitoring-in-laravel-and-lumen-fa2fc4ee43da",
+      "date": "2023-08-04",
+      "readMin": null,
+      "excerpt": "",
+      "tags": [],
+      "active": false
     }
   ],
   "services": [
