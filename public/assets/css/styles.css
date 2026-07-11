@@ -1968,6 +1968,16 @@ html.is-loading .site-header {
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
   color: var(--tint-ink, var(--accent-bright));
 }
+/* Soft ambient color bloom behind the icon — a real "spotlight," not just a drop-shadow — so the
+   icon reads as a featured, lit element rather than a flat glyph sitting on the photo. */
+.hero-card__badge::before {
+  content: ""; position: absolute; inset: -30%; z-index: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tint, var(--accent)) 38%, transparent) 0%, transparent 68%);
+  opacity: 0.85;
+  transition: opacity 0.5s var(--ease-glass);
+}
+.hero-card:hover .hero-card__badge::before,
+.hero-card:focus-within .hero-card__badge::before { opacity: 0.5; }
 /* Second-stage cascade: the badge pops in a beat after the card itself settles (the layered-stack
    read carries through into the card's own contents, not just its outer shell). --reveal-delay is
    set by reveal.js as an inline custom property on .hero-card and inherits down to this descendant.
@@ -1987,12 +1997,14 @@ html.is-loading .site-header {
 .hero-card__badge-icon {
   position: relative; z-index: 2; display: inline-flex;
   transform: scale(2.9);
-  transition: transform 0.5s var(--ease-smooth);
+  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent));
+  transition: transform 0.5s var(--ease-smooth), filter 0.5s var(--ease-glass);
 }
 .hero-card__badge-icon .ui-icon { stroke-width: 1.75; }
 .hero-card:hover .hero-card__badge-icon,
 .hero-card:focus-within .hero-card__badge-icon {
   transform: scale(1.7);
+  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent));
 }
 /* Higher specificity than the plain hover rule above so a card-advance click mid-hover still reads
    as a pulse (a small dip) instead of getting silently outranked and disappearing. */
