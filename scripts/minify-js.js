@@ -17,7 +17,7 @@ const { execFileSync } = require("child_process");
 const DIR = path.join(__dirname, "..", "public/assets/js");
 const FILES = [
   "data.js", "icons.js", "loader.js", "boot.js",
-  "app.js", "reveal.js", "blur-reveal.js", "motion.js", "liquid-hero.js", "aurora.js",
+  "app.js", "skills-flat.js", "editorial.js", "reveal.js", "blur-reveal.js", "skills-scroll.js", "motion.js", "liquid-hero.js", "aurora.js",
 ];
 
 let totalIn = 0;

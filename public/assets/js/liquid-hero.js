@@ -177,8 +177,6 @@
     container.addEventListener("pointermove", onPointerMove, { passive: true });
     container.addEventListener("pointerdown", onPointerDown, { passive: true });
     container.addEventListener("pointerleave", onPointerLeave);
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(tick);
   }
 
   window.addEventListener("portfolio-ready", init);

@@ -8,7 +8,6 @@
 (function () {
   const FILL_MS = 650;
   const REVEAL_AT = 0.12;
-  const BLUR_MAX = 10;
   const DIM_MAX = 0.48;
   const SCALE_MAX = 0.012;
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -31,10 +30,8 @@
   // fraction of the cost.
   function setLoadVisuals(p) {
     const root = rootEl();
-    const blur = (1 - p) * BLUR_MAX;
     const dim = (1 - p) * DIM_MAX;
     const scale = 1 + (1 - p) * SCALE_MAX;
-    root.style.setProperty("--load-blur", blur.toFixed(2) + "px");
     root.style.setProperty("--load-dim", dim.toFixed(3));
     root.style.setProperty("--load-scale", scale.toFixed(4));
   }

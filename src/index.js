@@ -52,21 +52,58 @@ const SECURITY_HEADERS = {
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=a244ebf3ccca>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=a244ebf3ccca>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=f37e8249e562>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=f37e8249e562>; rel=preload; as=image; type=image/svg+xml",
   "</assets/fonts/inter-latin.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
 ].join(", ");
 
 // Field limits — reject obviously abusive payloads before doing any work.
 const LIMITS = { name: 120, email: 200, project: 4000 };
 
-// ── Maintenance mode ─────────────────────────────────────────────────────────────────────────────
-// Site-wide hard gate, toggled by the MAINTENANCE_MODE var (set "1"/"true"/"on" in wrangler.toml or
-// the dashboard). When on, every request gets a self-contained 503 page — EXCEPT a request carrying
-// ?preview=<ADMIN_TOKEN>, which lets the owner check the live site while it's gated.
+// ── Feature flags ────────────────────────────────────────────────────────────────────────────────
+// Worker vars (wrangler.toml [vars] or Dashboard → Variables). MAINTENANCE_MODE is evaluated first
+// in fetch(); SKILLS_SCROLL_DESIGN optionally overrides portfolio.json → site.features.flags.
+
 function maintenanceOn(env) {
   const v = String(env.MAINTENANCE_MODE || "").toLowerCase();
   return v === "1" || v === "true" || v === "on";
+}
+
+function envFlagTriState(env, name) {
+  const v = String(env[name] ?? "").toLowerCase().trim();
+  if (!v) return null;
+  if (v === "1" || v === "true" || v === "on") return true;
+  if (v === "0" || v === "false" || v === "off") return false;
+  return null;
+}
+
+function flagEnabled(flags, key, env, envName) {
+  const fromJson = flags && flags[key];
+  let jsonVal = false;
+  if (typeof fromJson === "boolean") jsonVal = fromJson;
+  else if (fromJson && typeof fromJson === "object" && "enabled" in fromJson) jsonVal = !!fromJson.enabled;
+  const envVal = envFlagTriState(env, envName);
+  if (envVal !== null) return envVal;
+  return jsonVal;
+}
+
+async function mergePortfolioJson(response, env, headers) {
+  const raw = await response.json();
+  raw.site = raw.site || {};
+  raw.site.features = raw.site.features || {};
+  raw.site.features.flags = raw.site.features.flags || {};
+  raw.site.features.flags.skillsScrollDesign = flagEnabled(
+    raw.site.features.flags,
+    "skillsScrollDesign",
+    env,
+    "SKILLS_SCROLL_DESIGN"
+  );
+  headers.set("Cache-Control", "no-store");
+  return new Response(JSON.stringify(raw), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 function maintenanceResponse(env) {
@@ -351,6 +388,9 @@ export default {
       headers.set(key, value);
     }
     const path = url.pathname;
+    if (path === "/assets/data/portfolio.json" && response.ok) {
+      return mergePortfolioJson(response, env, headers);
+    }
     if (path.startsWith("/assets/data/") && path.endsWith(".json")) {
       headers.set("Cache-Control", "public, max-age=3600");
     } else if (path.startsWith("/assets/")) {

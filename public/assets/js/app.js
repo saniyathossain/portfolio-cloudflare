@@ -65,6 +65,7 @@ function portfolioApp() {
     profile: D.profile,
     site: D.site,
     sections,
+    articles: D.articles,
 
     init() {
       const live = window.PORTFOLIO_DATA;
@@ -77,10 +78,11 @@ function portfolioApp() {
         }));
       }
       if (live?.skills) this.skills = live.skills;
+      if (live?.site) this.site = live.site;
+      if (live?.articles) this.articles = live.articles;
       this.tickClock();
       this.initClockSweep();
       setInterval(() => this.tickClock(), T.CLOCK_TICK);
-      this.setupHeroGlow();
       this.setupHeroContrast();
       this.$nextTick(() => this.setupNavPill());
       // Guard against a second registration if init() ever runs twice — Alpine inits a component
@@ -96,6 +98,16 @@ function portfolioApp() {
       }
       this.setupBackToTop();
       this.setupIdlePause();
+      this.setupHashNav();
+    },
+
+    featFlag(key) {
+      const f = this.site?.features?.flags;
+      if (!f) return false;
+      const v = f[key];
+      if (typeof v === "boolean") return v;
+      if (v && typeof v === "object" && "enabled" in v) return !!v.enabled;
+      return !!v;
     },
 
     // Battery optimisation: pause every always-on decorative animation (the aurora drift, the .beam
@@ -110,7 +122,7 @@ function portfolioApp() {
         // `is-idle` only pauses @keyframes-driven decorations (browsers can't pause a CSS
         // transition). A transition mid-flight when the tab loses focus would otherwise freeze at
         // whatever value it happened to reach and resume from there on return — jarring for the
-        // #main liquid-warp blur/scale pulse specifically, since a very-mid-blur frozen frame reads
+        // #main liquid-warp scale/opacity pulse specifically, since a mid-transition frozen frame reads
         // as a rendering glitch, not a paused effect. Settle it to its resting state immediately
         // instead of waiting for its own scrollend/timeout cleanup to eventually fire.
         const main = document.getElementById("main");
@@ -136,22 +148,8 @@ function portfolioApp() {
         this.scrolled = window.scrollY > 12;
       };
       window.addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
+      window.addEventListener("resize", () => { if (!raf) raf = requestAnimationFrame(check); }, { passive: true });
       check();
-    },
-
-    setupHeroGlow() {
-      const hero = document.getElementById("home");
-      const glow = document.getElementById("heroGlow");
-      if (!hero || !glow) return;
-      hero.addEventListener("pointermove", (e) => {
-        const r = hero.getBoundingClientRect();
-        const x = ((e.clientX - r.left) / r.width) * 100;
-        const y = ((e.clientY - r.top) / r.height) * 100;
-        glow.style.left = x + "%";
-        glow.style.top = y + "%";
-        glow.style.opacity = "1";
-      });
-      hero.addEventListener("pointerleave", () => { glow.style.opacity = "0"; });
     },
 
     /** Sliding "liquid" nav pill: rests under the active section, glides to the hovered/focused item.
@@ -399,17 +397,47 @@ function portfolioApp() {
       }
     },
 
-    scrollTo(id) {
-      const el = document.getElementById(id);
+    setHash(id, { replace = false } = {}) {
+      const hash = id && id !== "home" ? "#" + id : "";
+      const url = location.pathname + location.search + hash;
+      if (replace) history.replaceState(null, "", url);
+      else history.pushState(null, "", url);
+    },
+
+    scrollToEl(el, { behavior = "smooth", updateHash = true, hashId } = {}) {
       if (!el) return;
       const y = el.getBoundingClientRect().top + window.scrollY - 12;
       this._liquidWarp();
-      window.scrollTo({ top: y, behavior: "smooth" });
+      window.scrollTo({ top: y, behavior });
+      if (updateHash) this.setHash(hashId || el.id);
+    },
+
+    scrollTo(id, opts) {
+      this.scrollToEl(document.getElementById(id), { ...opts, hashId: id });
+    },
+
+    restoreHashScroll() {
+      const id = (location.hash || "").replace(/^#/, "");
+      if (!id) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      this.scrollToEl(el, { behavior: "instant", updateHash: false });
+    },
+
+    setupHashNav() {
+      const onHash = () => {
+        if (this._scrollLocked || this.menuOpen || this.modalOpen) return;
+        this.restoreHashScroll();
+      };
+      window.addEventListener("hashchange", onHash);
+      const afterReady = () => requestAnimationFrame(() => requestAnimationFrame(onHash));
+      window.addEventListener("portfolio-ready", afterReady, { once: true });
+      if (!document.documentElement.classList.contains("is-loading")) afterReady();
     },
 
     scrollToTop() {
-      this._liquidWarp();
       window.scrollTo({ top: 0, behavior: "smooth" });
+      this.setHash("home", { replace: true });
     },
 
     // Brief "liquid glass" blur/refraction pulse across the scrolling content while a nav-triggered
@@ -668,7 +696,7 @@ function portfolioApp() {
     // complete naturally; without the fallback, a missed event would leave the panel's inline
     // height/overflow/transition styles stuck instead of cleared. Timer/listener are stashed
     // directly on the element so concurrent panels (different accordion rows) never share state.
-    _animateHeight(panel, toHeight, durationMs, onDone) {
+    _animateHeight(panel, toHeight, durationMs, onDone, easing) {
       clearTimeout(panel._heightTimer);
       panel.removeEventListener("transitionend", panel._heightOnEnd);
 
@@ -695,7 +723,7 @@ function portfolioApp() {
         // the cached layer, so the glossy content repaints every frame as the clip grows. An explicit
         // 3D transform forces a real compositor layer — content rasterized once, then only clipped.
         if (inner) { inner.style.willChange = "transform"; inner.style.transform = "translateZ(0)"; }
-        panel.style.transition = "height " + durationMs + "ms cubic-bezier(0.32, 0.72, 0, 1)";
+        panel.style.transition = "height " + durationMs + "ms " + (easing || "cubic-bezier(0.32, 0.72, 0, 1)");
         panel.style.height = toHeight;
       });
     },
@@ -735,7 +763,11 @@ function portfolioApp() {
           mountReady.then(() => {
             panel.style.overflow = "hidden";
             panel.style.height = "0px";
-            this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish);
+            // Overshoot on open only (skiper103 "bouncy accordion" read) — a back-out curve with
+            // y>1 makes `height` genuinely stretch a few % past scrollHeight then settle, a real
+            // spring bounce. Close stays on the flat decel curve (default) — bouncing right before
+            // fully collapsing would read as a glitch, not a spring.
+            this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish, "cubic-bezier(0.34, 1.56, 0.64, 1)");
           });
         });
         return;

@@ -13,9 +13,24 @@
   // they're created moments later once portfolioDataReady resolves and Alpine finishes its init walk.
   // A single querySelectorAll pass here would permanently miss them (still carrying the CSS
   // opacity:0 default, no observer ever attached) on any device slow enough that Alpine's walk
-  // outlasts the loader's fixed timer. reveal-io.js's MutationObserver (wired in boot()) re-runs
+  // outlasts the loader's fixed timer. boot()'s late-mount MutationObserver (below) re-runs
   // these same observe-functions for anything Alpine mounts after this first pass.
   let revealIO = null;
+
+  function revealIfAlreadyVisible(el) {
+    if (reduced || el.classList.contains("is-visible")) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const margin = Math.round(vh * 0.08);
+    if (rect.top < vh - margin && rect.bottom > margin) {
+      const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
+      el.style.setProperty("--reveal-delay", delay + "ms");
+      if (delay) el.style.transitionDelay = delay + "ms";
+      el.classList.add("is-visible");
+      revealIO?.unobserve(el);
+    }
+  }
+
   function observeReveal(el) {
     if (reduced) {
       el.classList.add("is-visible");
@@ -43,36 +58,13 @@
       );
     }
     revealIO.observe(el);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => revealIfAlreadyVisible(el));
+    });
   }
 
   function initReveals() {
     document.querySelectorAll("[data-reveal]").forEach(observeReveal);
-  }
-
-  function initWordReveal() {
-    document.querySelectorAll(".word-reveal").forEach((wrap) => {
-      const raw = wrap.getAttribute("data-text") || wrap.textContent;
-      wrap.textContent = "";
-      const words = raw.trim().split(/\s+/);
-      words.forEach((w, i) => {
-        const s = document.createElement("span");
-        s.className = "word";
-        s.textContent = w;
-        s.style.transitionDelay = i * 48 + "ms";
-        wrap.appendChild(s);
-        if (i < words.length - 1) wrap.appendChild(document.createTextNode(" "));
-      });
-      const io = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            wrap.classList.add("is-visible");
-            io.disconnect();
-          }
-        },
-        { threshold: 0.2 }
-      );
-      io.observe(wrap);
-    });
   }
 
   function revealStaggerRow(row) {
@@ -196,7 +188,6 @@
 
   function boot() {
     initReveals();
-    initWordReveal();
     initStagger();
     initCountUp();
     initScrollProgress();

@@ -26,7 +26,7 @@
     { h: "255,92,138",  k: 0.30, ax: 0.15, ay: 0.13, sx: 0.009, sy: 0.012, ph: 5.6, x: 0.42, y: 0.52, r: 0.34 },
     { h: "177,95,44",   k: 0.50, ax: 0.11, ay: 0.10, sx: 0.011, sy: 0.009, ph: 2.3, x: 0.70, y: 0.40, r: 0.36 },
   ];
-  const FRAME_MS = 42; // ~24fps — the drift is slow, so fewer frames are imperceptible but save GPU/battery
+  const FRAME_MS = 55; // ~18fps — drift is slow; fewer wakes = smoother main thread + better lab scores
 
   function init() {
     let canvas = document.getElementById("auroraCanvas");
@@ -102,8 +102,25 @@
     window.addEventListener("focus", start);
 
     draw(0);
-    requestAnimationFrame(() => canvas.classList.add("is-ready"));
-    start();
+    document.documentElement.classList.add("has-aurora");
+    requestAnimationFrame(() => {
+      canvas.classList.add("is-ready");
+      // Release promoted layer once the fade-in settles — persistent will-change costs compositor RAM.
+      setTimeout(() => { canvas.style.willChange = "auto"; }, 1600);
+    });
+    const startLoop = () => {
+      if (!running) start();
+    };
+    // Defer the paint loop until after load/LCP — static first frame + CSS fallback cover the gap.
+    if (document.readyState === "complete") {
+      if ("requestIdleCallback" in window) requestIdleCallback(startLoop, { timeout: 2500 });
+      else setTimeout(startLoop, 1200);
+    } else {
+      window.addEventListener("load", () => {
+        if ("requestIdleCallback" in window) requestIdleCallback(startLoop, { timeout: 2500 });
+        else setTimeout(startLoop, 1200);
+      }, { once: true });
+    }
   }
 
   window.addEventListener("portfolio-ready", init);
