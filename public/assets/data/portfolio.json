@@ -93,8 +93,26 @@
     "services": "Backend, architecture, APIs, and AI-assisted delivery.",
     "experience": "{years}+ years · {roles} roles across {companies} companies.",
     "skills": "Languages, frameworks, data, platform, dev tools, and AI in the flow.",
-    "editorial": "Notes on backend engineering, published on dev.to and Medium.",
+    "editorial": "Selected notes on backend engineering — full archive on dev.to and Medium.",
     "education": "Electronics & Telecommunication Engineering — Dhaka."
+  },
+  "editorialOutbound": {
+    "eyebrow": "More writing",
+    "hint": "Selected notes here — explore the full archive on",
+    "links": [
+      {
+        "label": "dev.to",
+        "href": "https://dev.to/saniyathossain",
+        "icon": "devto",
+        "ci": "teal"
+      },
+      {
+        "label": "Medium",
+        "href": "https://saniyathossain.medium.com",
+        "icon": "medium",
+        "ci": "purple"
+      }
+    ]
   },
   "profile": {
     "name": "Mohammad Saniyat Hossain",
@@ -133,7 +151,7 @@
     {
       "label": "Editorial",
       "id": "editorial",
-      "icon": "code"
+      "icon": "editorial"
     },
     {
       "label": "Education",
@@ -244,7 +262,7 @@
         "productivity",
         "automation"
       ],
-      "active": true
+      "active": false
     },
     {
       "id": "devto:2111808",
@@ -255,7 +273,7 @@
       "readMin": 4,
       "excerpt": "Comprehensive Git Diff Analysis: A Developer’s Guide   Analyzing changes between Git...",
       "tags": [],
-      "active": true
+      "active": false
     },
     {
       "id": "devto:1999795",
@@ -310,7 +328,7 @@
       "readMin": null,
       "excerpt": "",
       "tags": [],
-      "active": true
+      "active": false
     },
     {
       "id": "medium:https://saniyathossain.medium.com/unleashing-typescripts-pipeline-library-f3942594ff9d",
@@ -321,7 +339,7 @@
       "readMin": null,
       "excerpt": "",
       "tags": [],
-      "active": true
+      "active": false
     },
     {
       "id": "medium:https://saniyathossain.medium.com/enhancing-code-documentation-with-mermaid-js-a-guide-to-visualizing-code-in-markdown-1502d3406bc9",

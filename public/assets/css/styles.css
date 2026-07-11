@@ -583,11 +583,11 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
    label text without dominating it. */
 .meta-icon {
   display: inline-grid; place-items: center;
-  width: 0.75rem; height: 0.75rem; flex: none;
-  opacity: 0.62;
+  width: 0.88rem; height: 0.88rem; flex: none;
+  opacity: 0.82;
   transition: transform 0.4s var(--ease-liquid), opacity 0.3s var(--ease-glass);
 }
-.meta-icon .ui-icon { width: 0.62rem; height: 0.62rem; }
+.meta-icon .ui-icon { width: 0.72rem; height: 0.72rem; }
 /* Hover/focus on whichever parent already owns the interaction (card, link, or popover trigger)
    gives its meta-icon a small liquid pop — consistent with the site's other icon-on-hover tiles
    (.exp-row__icon, .edu-row__logo) instead of a static glyph. */
@@ -853,7 +853,19 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
   transform: translateY(-2px);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 10px 22px -6px rgba(17,17,17,.3);
 }
-.social-link .ui-icon { width: 1rem; height: 1rem; }
+.social-link .ui-icon {
+  position: relative;
+  z-index: 1;
+  width: 1rem;
+  height: 1rem;
+  color: #fff;
+  opacity: 1;
+}
+.social-link .ui-icon--social,
+.social-link .ui-icon--social path {
+  fill: currentColor;
+  stroke: none;
+}
 
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 ::selection { background: color-mix(in srgb, var(--accent) 20%, #fff); color: var(--ink); }
@@ -1726,7 +1738,11 @@ html.is-loading .site-header {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 1px 3px rgba(17,17,17,.12);
   transition: transform var(--dur-btn-hover) var(--ease-btn);
 }
-.pill-btn__icon .ui-icon { width: 1rem; height: 1rem; color: var(--ink); stroke-width: 2.25; }
+.pill-btn__icon .ui-icon {
+  width: 1rem; height: 1rem;
+  color: var(--ink);
+  stroke-width: 2.25;
+}
 /* Opposite-contrast pairing for a light-surface button: dark circle + white glyph, mirroring
    .pill-btn-dark's white circle + dark glyph so the two hero CTAs read as an inverted pair. */
 .pill-btn__icon--dark {
@@ -1961,36 +1977,22 @@ html.is-loading .site-header {
    :hover/:focus-within drawer-flip transform (below) after the one-shot entrance finishes. The
    animation's end state already matches the badge's natural rest style, so releasing is seamless. */
 .hero-card.is-visible .hero-card__badge {
-  animation: heroCardBadgePop 0.5s var(--ease-spring) calc(var(--reveal-delay, 0ms) + var(--dur-reveal) + 60ms) backwards;
+  animation: heroCardBadgePop 0.42s var(--ease-spring) calc(var(--reveal-delay, 0ms) + 140ms) backwards;
 }
 @keyframes heroCardBadgePop {
-  from { opacity: 0; transform: scale(0.7) translateY(6px); }
-  to   { opacity: 1; transform: none; }
+  from { transform: scale(0.82) translateY(4px); }
+  to   { transform: none; }
 }
-/* Soft ambient color bloom behind the icon — a real "spotlight," not just a drop-shadow — so the
-   icon reads as a featured, lit element rather than a flat glyph sitting on the photo. */
-.hero-card__badge::before {
-  content: ""; position: absolute; inset: -30%; z-index: 1; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, color-mix(in srgb, var(--tint, var(--accent)) 38%, transparent) 0%, transparent 68%);
-  opacity: 0.85;
-  transition: opacity 0.5s var(--ease-glass);
-}
-.hero-card:hover .hero-card__badge::before,
-.hero-card:focus-within .hero-card__badge::before { opacity: 0.5; }
-/* Icon wrapper — a stable element for the swap-synced pulse, since x-html replaces the SVG root
-   wholesale on each card change (a transform on the SVG itself would be discarded with it). Bolder
-   stroke at this scale — the default weight reads thin/flimsy blown up this large. */
+/* Icon wrapper — stable element for swap-synced pulse (x-html replaces the SVG each card change). */
 .hero-card__badge-icon {
   position: relative; z-index: 2; display: inline-flex;
   transform: scale(2.9);
-  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent));
-  transition: transform 0.5s var(--ease-smooth), filter 0.5s var(--ease-glass);
+  transition: transform 0.5s var(--ease-smooth);
 }
 .hero-card__badge-icon .ui-icon { stroke-width: 1.75; }
 .hero-card:hover .hero-card__badge-icon,
 .hero-card:focus-within .hero-card__badge-icon {
   transform: scale(1.7);
-  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent));
 }
 /* Higher specificity than the plain hover rule above so a card-advance click mid-hover still reads
    as a pulse (a small dip) instead of getting silently outranked and disappearing. */
@@ -2316,10 +2318,38 @@ html.is-loading .site-header {
 .ui-icon--md { width: 1rem; height: 1rem; }
 .ui-icon--lg { width: 1.2rem; height: 1.2rem; }
 .ui-icon--social { fill: currentColor; stroke: none; }
+.ui-icon--social path { fill: currentColor; stroke: none; }
 /* Chevrons render thin/washed-out at default stroke-width — bolder + very slightly bigger so they
    read with the same confidence as the rest of the icon set instead of looking like an afterthought. */
-.ui-icon--chevron { width: 0.95em; height: 0.95em; stroke-width: 2.75; }
+.ui-icon--chevron { width: 0.88em; height: 0.88em; stroke-width: 2; }
+.ui-icon--filled { fill: currentColor; stroke: none; }
+.ui-icon--filled path,
+.ui-icon--filled g { fill: currentColor; }
 
+/* Tahoe balance — nav, section chrome, chips (hero-card badge excluded below). */
+.nav-desktop button .ui-icon {
+  width: 1.05rem; height: 1.05rem; opacity: 0.72;
+}
+.nav-desktop button.is-active .ui-icon,
+.nav-desktop button:hover .ui-icon { opacity: 0.92; }
+.sec-sub__icon .ui-icon { width: 1rem; height: 1rem; opacity: 0.84; }
+.nav-desktop button .ui-icon:not(.ui-icon--filled):not(.ui-icon--social),
+.sec-sub__icon .ui-icon:not(.ui-icon--filled):not(.ui-icon--social),
+.meta-icon .ui-icon:not(.ui-icon--social),
+.service-row__icon .ui-icon:not(.ui-icon--social),
+.editorial-tabs__icon .ui-icon:not(.ui-icon--social),
+.editorial-search__field-icon .ui-icon:not(.ui-icon--social),
+.editorial-search__orb > .ui-icon:not(.ui-icon--social),
+.editorial-search__clear .ui-icon:not(.ui-icon--social),
+.modal-field label .ui-icon:not(.ui-icon--social),
+.modal-close .ui-icon:not(.ui-icon--social),
+.exp-row__chev { stroke-width: 1.75; }
+.editorial-search__field-icon .ui-icon,
+.editorial-search__orb > .ui-icon {
+  width: 0.95rem; height: 0.95rem;
+  opacity: 0.7;
+  color: rgba(17,17,17,.68);
+}
 .icon-chip {
   display: inline-grid; place-items: center; flex: none;
   width: 1.5rem; height: 1.5rem; border-radius: 0.5rem;
@@ -2378,9 +2408,14 @@ html.is-loading .site-header {
 }
 .icon-chip--sm { width: 1.28rem; height: 1.28rem; border-radius: 0.36rem; }
 .icon-chip--md { width: 2.35rem; height: 2.35rem; border-radius: 0.72rem; }
-.icon-chip .ui-icon { width: 0.78rem; height: 0.78rem; }
-.icon-chip--sm .ui-icon { width: 0.75rem; height: 0.75rem; }
-.icon-chip--md .ui-icon { width: 1.05rem; height: 1.05rem; opacity: .88; }
+.icon-chip .ui-icon {
+  position: relative;
+  z-index: 2;
+  width: 0.84rem;
+  height: 0.84rem;
+}
+.icon-chip--sm .ui-icon { width: 0.78rem; height: 0.78rem; }
+.icon-chip--md .ui-icon { width: 1.05rem; height: 1.05rem; opacity: 0.94; }
 
 .icon-chip--muted {
   color: rgba(17,17,17,.5);
@@ -2393,6 +2428,23 @@ html.is-loading .site-header {
   background: linear-gradient(165deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
   border-color: rgba(255,255,255,.14);
   box-shadow: 0 2px 8px rgba(0,0,0,.22), 0 1px 0 rgba(255,255,255,.12);
+}
+.icon-chip--on-dark::before {
+  opacity: 0.38;
+  background: linear-gradient(125deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 32%, transparent 56%);
+}
+.icon-chip--on-dark .ui-icon--social,
+.icon-chip--on-dark .ui-icon--social path,
+.icon-chip--on-dark .ui-icon--filled,
+.icon-chip--on-dark .ui-icon--filled path {
+  color: rgba(255,255,255,.92);
+  fill: currentColor;
+  stroke: none;
+  opacity: 1;
+}
+.icon-chip--on-dark .ui-icon:not(.ui-icon--social):not(.ui-icon--filled) {
+  color: rgba(255,255,255,.92);
+  opacity: 1;
 }
 /* Menu drawer nav icons — deliberately NOT the .icon-chip glossy-tile treatment used everywhere
    else: a small colorful badge next to text set at clamp(2.25rem, 6vw, 3.75rem) read as a
@@ -2407,7 +2459,7 @@ html.is-loading .site-header {
 }
 .nav-overlay__icon .ui-icon {
   width: clamp(1.5rem, 3.4vw, 2.35rem); height: clamp(1.5rem, 3.4vw, 2.35rem);
-  stroke-width: 1.5;
+  opacity: .85;
 }
 .nav-overlay__item:hover .nav-overlay__icon,
 .nav-overlay__item[aria-expanded="true"] .nav-overlay__icon {
@@ -2813,7 +2865,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   color: rgba(17,17,17,.72);
 }
 .editorial-search__clear:active { transform: scale(0.9); }
-.editorial-search__clear .ui-icon { width: 0.66rem; height: 0.66rem; stroke-width: 2.75; }
+.editorial-search__clear .ui-icon { width: 0.66rem; height: 0.66rem; }
 .editorial-search__orb {
   position: relative;
   overflow: hidden;
@@ -3281,8 +3333,162 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   border-top-right-radius: var(--radius-card-sm);
 }
 .editorial-row:last-child .editorial-row__link {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.editorial-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+  padding: 1rem 1.15rem 1.1rem;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 10%, var(--line));
+  background:
+    radial-gradient(ellipse 120% 80% at 12% 0%, rgba(255,255,255,.42), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
   border-bottom-left-radius: var(--radius-card-sm);
   border-bottom-right-radius: var(--radius-card-sm);
+}
+.editorial-more__copy {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.editorial-more__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(17,17,17,.42);
+}
+.editorial-more__hint {
+  margin: 0.28rem 0 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  color: rgba(17,17,17,.58);
+}
+.editorial-more__links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.42rem;
+}
+.editorial-more__link {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.38rem 0.62rem 0.38rem 0.48rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: rgba(17,17,17,.78);
+  background:
+    radial-gradient(120% 90% at 18% 10%, rgba(255,255,255,.52), transparent 56%),
+    linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.1));
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.04);
+  border: 1px solid rgba(255,255,255,.68);
+  box-shadow:
+    0 8px 22px -14px rgba(17,17,17,.2),
+    inset 0 1px 1px rgba(255,255,255,.92);
+  transition:
+    transform 0.32s var(--ease-liquid),
+    box-shadow 0.32s var(--ease-glass),
+    border-color 0.28s var(--ease-glass),
+    color 0.24s var(--ease-glass);
+}
+.editorial-more__link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.82) 0%, transparent 62%);
+  opacity: 0.85;
+}
+.editorial-more__link[data-ci="teal"] { --tint: var(--c-teal); --tint-deep: var(--teal-deep); }
+.editorial-more__link[data-ci="purple"] { --tint: var(--c-violet); --tint-deep: #4a48a8; }
+.editorial-more__link-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.42rem;
+  height: 1.42rem;
+  border-radius: 0.48rem;
+  color: var(--tint-deep);
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,.9), rgba(255,255,255,.3) 44%, transparent 68%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--tint) 20%, rgba(255,255,255,.74)),
+      color-mix(in srgb, var(--tint) 8%, rgba(255,255,255,.34)));
+  border: 1px solid rgba(255,255,255,.66);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.9);
+}
+.editorial-more__link-icon .ui-icon { width: 0.78rem; height: 0.78rem; }
+.editorial-more__link-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.editorial-more__link-arrow {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  color: rgba(17,17,17,.46);
+  background: rgba(255,255,255,.42);
+  transition: transform 0.3s var(--ease-liquid), color 0.24s var(--ease-glass);
+}
+.editorial-more__link-arrow .ui-icon {
+  width: 0.62rem;
+  height: 0.62rem;
+}
+@media (hover: hover) and (pointer: fine) {
+  .editorial-more__link:hover,
+  .editorial-more__link:focus-visible {
+    color: var(--tint-deep);
+    border-color: rgba(255,255,255,.82);
+    box-shadow:
+      0 10px 28px -12px color-mix(in srgb, var(--tint) 28%, transparent),
+      inset 0 1px 1px rgba(255,255,255,.96);
+    transform: translateY(-1px);
+  }
+  .editorial-more__link:hover .editorial-more__link-arrow,
+  .editorial-more__link:focus-visible .editorial-more__link-arrow {
+    color: var(--tint-deep);
+    transform: translateX(2px);
+  }
+}
+.editorial-more__link:active { transform: scale(0.97); }
+@media (max-width: 639px) {
+  .editorial-more {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 0.95rem 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+  .editorial-more__copy { flex-basis: auto; }
+  .editorial-more__links {
+    justify-content: center;
+    width: 100%;
+  }
+  .editorial-more__link {
+    flex: 1 1 calc(50% - 0.22rem);
+    justify-content: center;
+    min-width: 7.5rem;
+    max-width: 10.5rem;
+  }
 }
 .editorial-row { position: relative; }
 .editorial-row__link {
@@ -3338,6 +3544,9 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 }
 .editorial-row:hover .editorial-row__icon::before { opacity: 1; }
 .editorial-row__icon .ui-icon { position: relative; z-index: 2; width: 1.05rem; height: 1.05rem; }
+.editorial-row__icon .ui-icon--social,
+.editorial-tabs__icon .ui-icon--social,
+.editorial-more__link-icon .ui-icon--social { fill: currentColor; stroke: none; opacity: 1; }
 .editorial-row__body {
   min-width: 0;
   transition: transform 0.35s var(--ease-glass);
@@ -3418,6 +3627,10 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   .editorial-row:hover .editorial-row__body { transform: none; }
   .editorial-row:hover .editorial-row__icon { transform: none; }
   .editorial-row:hover .editorial-row__arrow { opacity: 1; transform: none; }
+  .editorial-more__link,
+  .editorial-more__link-arrow { transition: none; }
+  .editorial-more__link:hover,
+  .editorial-more__link:focus-visible { transform: none; }
 }
 
 .services-list { padding: 0.5rem; }
@@ -3652,9 +3865,8 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   transition: transform 0.34s var(--ease-liquid), color 0.24s var(--ease-glass);
 }
 .skills-flat__toggle-chevron .ui-icon {
-  width: 0.72rem;
-  height: 0.72rem;
-  stroke-width: 2.5;
+  width: 0.78rem;
+  height: 0.78rem;
 }
 .skills-flat__toggle-chevron.is-open { transform: rotate(180deg); }
 .skills-flat__toggle[aria-expanded="true"] .skills-flat__toggle-chevron {
@@ -3847,7 +4059,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   width: 0.95rem; height: 0.95rem; flex: none;
   transition: transform 0.4s var(--ease-liquid);
 }
-.exp-row__type-icon .ui-icon { width: 0.72rem; height: 0.72rem; }
+.exp-row__type-icon .ui-icon { width: 0.8rem; height: 0.8rem; }
 .exp-row__type--contract { --chip: #0a84ff; }
 .exp-row__type--permanent { --chip: #12a8c4; }
 .exp-row__type-icon { color: var(--chip); }
@@ -3878,12 +4090,30 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   letter-spacing: -0.006em;
 }
 .exp-row__arrow {
-  flex: none; opacity: 0.45; transform: translateX(-4px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex: none;
+  min-height: 2.35rem;
+  opacity: 0.65;
+  transform: translateX(-4px);
   transition: opacity 0.3s, transform 0.3s var(--ease-spring);
+}
+.exp-row__arrow .icon-chip--sm {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+.exp-row__arrow .ui-icon--chevron {
+  width: 0.82rem;
+  height: 0.82rem;
+  display: block;
+  margin: 0;
 }
 .exp-row:hover .exp-row__arrow,
 .exp-row[aria-expanded="true"] .exp-row__arrow { opacity: 1; transform: none; }
-.exp-row__chev { color: var(--accent); opacity: 0.75; transition: transform 0.2s var(--ease-spring), opacity 0.2s ease; }
+.exp-row__chev { color: var(--tint-deep, var(--accent)); opacity: 1; transition: transform 0.2s var(--ease-spring), opacity 0.2s ease; }
 /* Opening gets its own overshoot transition (a back-out curve with y>1 genuinely rotates past 180deg
    before settling back — a real bounce, not just an ease) matching the accordion panel's own
    overshoot-on-open language. Closing falls back to the base rule's flat curve above (CSS transitions
@@ -3943,14 +4173,22 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
     0 2px 8px -2px color-mix(in srgb, var(--tint) 44%, transparent);
 }
 .exp-item[data-ci] .point-chip { color: var(--tint-deep); }
-.point-chip .ui-icon,
-.point-chip svg {
+.point-chip .ui-icon {
+  position: relative;
+  z-index: 2;
   width: 0.72rem;
   height: 0.72rem;
   display: block;
   flex: none;
+}
+.point-chip .ui-icon--filled,
+.point-chip .ui-icon--filled path {
+  fill: currentColor;
+  stroke: none;
+}
+.point-chip .ui-icon:not(.ui-icon--filled):not(.ui-icon--social) {
+  fill: none;
   stroke: currentColor;
-  stroke-width: 2.75;
 }
 .exp-details .role-tags { margin-top: 0.85rem; }
 
@@ -4561,7 +4799,7 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 2px 8px -1px color-mix(in srgb, var(--accent) 48%, transparent);
   transition: transform 0.3s var(--ease-spring), box-shadow 0.25s var(--ease-glass), border-color 0.25s var(--ease-glass), color 0.25s var(--ease-glass);
 }
-.modal-titlebar > .modal-close .ui-icon { width: 0.85rem; height: 0.85rem; stroke-width: 2.4; }
+.modal-titlebar > .modal-close .ui-icon { width: 0.85rem; height: 0.85rem; }
 .modal-titlebar > .modal-close:hover,
 .modal-titlebar > .modal-close:focus-visible {
   transform: scale(1.12) rotate(90deg);
@@ -4583,7 +4821,7 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   color: rgba(17,17,17,.5); margin-bottom: 0.35rem;
   transition: color 0.22s var(--ease-hover);
 }
-.modal-field label .ui-icon { width: 0.8rem; height: 0.8rem; opacity: 0.75; }
+.modal-field label .ui-icon { width: 0.85rem; height: 0.85rem; opacity: 0.9; }
 .modal-field input, .modal-field textarea {
   width: 100%; border: 1px solid var(--line); background: rgba(241,240,238,.5);
   border-radius: var(--radius-control); padding: 0.75rem 1rem; font-size: 0.875rem;
@@ -4668,7 +4906,7 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
    Toggled via Alpine (.is-visible) past a scroll threshold; also hidden whenever scroll-lock is
    active so it never fights the menu/modal overlays for attention while they're open. */
 .back-to-top {
-  position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 90;
+  position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 105;
   display: inline-flex; align-items: center; justify-content: center;
   width: 2.75rem; height: 2.75rem; border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
@@ -4718,13 +4956,14 @@ body.scroll-lock .back-to-top { opacity: 0; pointer-events: none; }
    (setupBackToTop) as raw DOM writes, not Alpine reactivity — same "cheap direct style write on a
    cached node ref" pattern already used for hero parallax, so a fast scroll never floods Alpine. */
 .scroll-ring {
-  position: fixed; right: 4.5rem; bottom: 1.25rem; z-index: 90;
+  position: fixed; right: 4.75rem; bottom: 1.25rem; z-index: 105;
   display: inline-flex; align-items: center; justify-content: center;
   width: 2.75rem; height: 2.75rem; border-radius: 50%;
   border: 1px solid rgba(24,30,56,.08);
   background: var(--frost-bg);
   box-shadow: var(--glass-highlight), 0 6px 18px -6px rgba(17,17,17,.18);
   cursor: pointer; padding: 0;
+  color: var(--ink);
   opacity: 0; transform: translateY(0.6rem) scale(0.92); pointer-events: none;
   transition: opacity 0.3s var(--ease-glass), transform 0.3s var(--ease-glass), box-shadow 0.3s var(--ease-glass);
 }
@@ -4744,10 +4983,14 @@ body.scroll-lock .back-to-top { opacity: 0; pointer-events: none; }
 }
 .scroll-ring__pct {
   position: relative; z-index: 2;
-  font-size: 0.62rem; font-weight: 700; letter-spacing: -0.01em;
-  color: var(--tint-deep); font-variant-numeric: tabular-nums;
+  display: inline-block;
+  min-width: 1.35rem;
+  font-size: 0.68rem; font-weight: 750; line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+  text-align: center;
 }
-.scroll-ring__pct::after { content: "%"; font-size: 0.5rem; margin-left: 0.03rem; opacity: 0.7; }
+.scroll-ring__pct::after { content: "%"; font-size: 0.54rem; margin-left: 0.03rem; opacity: 0.82; }
 body.scroll-lock .scroll-ring { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .scroll-ring { transition: opacity 0.2s linear; }
@@ -4756,7 +4999,7 @@ body.scroll-lock .scroll-ring { opacity: 0; pointer-events: none; }
   .scroll-ring__bar { transition: none; }
 }
 @media (max-width: 767px) {
-  .scroll-ring { right: 3.75rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
+  .scroll-ring { right: 4rem; bottom: 1rem; width: 2.5rem; height: 2.5rem; }
 }
 
 /* Utilities */

@@ -87,6 +87,20 @@ function editorialHelpers() {
       return "No articles in this filter yet.";
     },
 
+    editorialMore() {
+      const outbound = window.PORTFOLIO_DATA?.editorialOutbound
+        || this.$root?.editorialOutbound;
+      if (outbound?.links?.length) return outbound;
+      return {
+        eyebrow: "More writing",
+        hint: "Selected notes here — explore the full archive on",
+        links: [
+          { label: "dev.to", href: "https://dev.to/saniyathossain", icon: "devto", ci: "teal" },
+          { label: "Medium", href: "https://saniyathossain.medium.com", icon: "medium", ci: "purple" },
+        ],
+      };
+    },
+
     reflowEditorialPanel(onSettled) {
       const panel = document.getElementById("editorial-panel");
       if (!panel) {
