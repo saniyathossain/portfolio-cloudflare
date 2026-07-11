@@ -38,6 +38,11 @@
       }
     },
     "features": {
+      "flags": {
+        "skillsScrollDesign": {
+          "enabled": true
+        }
+      },
       "underConstruction": {
         "contactForm": {
           "enabled": true,
@@ -55,7 +60,7 @@
   "sections": {
     "services": "Backend, architecture, APIs, and AI-assisted delivery.",
     "experience": "{years}+ years · {roles} roles across {companies} companies.",
-    "skills": "Languages, frameworks, data, platform, and AI in the flow.",
+    "skills": "Languages, frameworks, data, platform, dev tools, and AI in the flow.",
     "education": "Electronics & Telecommunication Engineering — Dhaka."
   },
   "profile": {
@@ -253,7 +258,20 @@
         "Nginx",
         "Docker",
         "Git",
+        "Jira",
         "Microservices"
+      ]
+    },
+    {
+      "title": "Tools",
+      "icon": "chip",
+      "items": [
+        "Mockoon",
+        "VS Code",
+        "PhpStorm",
+        "WebStorm",
+        "Sublime Text",
+        "Sublime Merge"
       ]
     },
     {
@@ -380,7 +398,8 @@
         "Nginx",
         "Node.js",
         "Docker",
-        "Git"
+        "Git",
+        "Jira"
       ],
       "aiTools": [
         "Claude",
@@ -422,7 +441,8 @@
         "Mockoon",
         "JMeter",
         "Git",
-        "Docker"
+        "Docker",
+        "Jira"
       ],
       "aiTools": [
         "ChatGPT",
@@ -450,7 +470,8 @@
         "Redis",
         "RabbitMQ",
         "Docker",
-        "Git"
+        "Git",
+        "Jira"
       ],
       "aiTools": []
     },
@@ -469,7 +490,8 @@
         "Laravel",
         "MySQL",
         "Docker",
-        "Git"
+        "Git",
+        "Jira"
       ],
       "aiTools": []
     },

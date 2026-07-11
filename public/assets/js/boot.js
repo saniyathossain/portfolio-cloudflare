@@ -69,6 +69,7 @@
     // network request stacked serially after the json fetch. Fire-and-forget: any failure here just
     // means the later loadScript() falls back to a normal (uncached) fetch.
     fetch("/assets/js/app.min.js?v=" + ASSET_V).catch(() => {});
+    fetch("/assets/js/skills-flat.min.js?v=" + ASSET_V).catch(() => {});
     fetch("/assets/js/vendor/alpine.min.js?v=" + ASSET_V).catch(() => {});
 
     // portfolio.json is same-origin but still a real network request — a transient failure here
@@ -78,6 +79,7 @@
     // the page degrades to empty data-driven sections instead of a totally dead interactive layer.
     await window.portfolioDataReady.catch((err) => console.error("portfolio.json failed to load:", err));
     await loadScript("/assets/js/app.min.js");
+    await loadScript("/assets/js/skills-flat.min.js");
     await loadScript("/assets/js/vendor/alpine.min.js");
     await loadDeferredScripts();
     scheduleIdle();

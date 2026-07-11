@@ -32,10 +32,22 @@ const BRANDS = {
   rabbitmq: { icon: "rabbitmq", color: "#FF6600" },
   minio: { icon: "minio", color: "#C72E49" },
   mockoon: { icon: "mockoon", color: "#242830" },
+  "vs code": { icon: "visualstudiocode", color: "#007ACC" },
+  vscode: { icon: "visualstudiocode", color: "#007ACC" },
+  "visual studio code": { icon: "visualstudiocode", color: "#007ACC" },
+  phpstorm: { icon: "phpstorm", color: "#765AF8" },
+  "php storm": { icon: "phpstorm", color: "#765AF8" },
+  webstorm: { icon: "webstorm", color: "#00CDD7" },
+  "web storm": { icon: "webstorm", color: "#00CDD7" },
+  "sublime text": { icon: "sublimetext", color: "#FF9800" },
+  sublimetext: { icon: "sublimetext", color: "#FF9800" },
+  "sublime merge": { icon: "sublimemerge", color: "#00E6E7" },
+  sublimemerge: { icon: "sublimemerge", color: "#00E6E7" },
   jmeter: { icon: "apachejmeter", color: "#D22128" },
   nginx: { icon: "nginx", color: "#009639" },
   docker: { icon: "docker", color: "#2496ED" },
   git: { icon: "git", color: "#F05032" },
+  jira: { icon: "jira", color: "#0052CC" },
   svn: { icon: "subversion", color: "#809CC9" },
   firebase: { icon: "firebase", color: "#DD2C00" },
   wordpress: { icon: "wordpress", color: "#21759B" },
@@ -67,6 +79,172 @@ const BRANDS = {
   cursor: { icon: "cursor", color: "#0A0A0A" },
   antigravity: { icon: "antigravity", color: "#3186ff" },
 };
+
+// Curated pill-shell hues — macOS Tahoe system palette + site copper/teal/beige, softened for
+// glass tiles on --surface. Logo hex stays in `color` (icons); `tint` drives --brand on pills.
+const _TAHOE_PILL_TINTS = {
+  php: "#7F88DC",
+  javascript: "#DDB85A",
+  typescript: "#5A96D4",
+  go: "#48B8CC",
+  golang: "#48B8CC",
+  laravel: "#DE6E62",
+  lumen: "#D87868",
+  nestjs: "#D86A82",
+  nest: "#D86A82",
+  node: "#52C08A",
+  "node.js": "#52C08A",
+  nodejs: "#52C08A",
+  express: "#5E8A98",
+  vue: "#4EB894",
+  "vue.js": "#4EB894",
+  vuejs: "#4EB894",
+  mysql: "#4A9BB0",
+  mssql: "#C8706A",
+  redis: "#DE7268",
+  redisearch: "#DE7268",
+  elasticsearch: "#2E8498",
+  kibana: "#3A9AAA",
+  rabbitmq: "#E0A05C",
+  minio: "#CC7480",
+  nginx: "#48B878",
+  docker: "#52A8E0",
+  git: "#D48258",
+  jira: "#5288D8",
+  microservices: "#C08858",
+  mockoon: "#6E929E",
+  jmeter: "#CA7070",
+  "vs code": "#4A9AD8",
+  vscode: "#4A9AD8",
+  "visual studio code": "#4A9AD8",
+  phpstorm: "#8A7AE8",
+  "php storm": "#8A7AE8",
+  webstorm: "#4CC0D0",
+  "web storm": "#4CC0D0",
+  "sublime text": "#E0A858",
+  sublimetext: "#E0A858",
+  "sublime merge": "#48D0D8",
+  sublimemerge: "#48D0D8",
+  svn: "#8A9EC0",
+  firebase: "#DE8458",
+  wordpress: "#4A96B8",
+  codeigniter: "#DE7A62",
+  joomla: "#5AA0D8",
+  jquery: "#4A90C4",
+  bootstrap: "#8E7CC8",
+  webpack: "#4A92C0",
+  parcel: "#D8A868",
+  "parcel builder": "#D8A868",
+  openstreetmap: "#5AAA78",
+  dotenv: "#BE9A62",
+  cakephp: "#D87278",
+  "kendo ui": "#DE8278",
+  kendo: "#DE8278",
+  handsontable: "#4A9E72",
+  datatables: "#4A84A8",
+  highcharts: "#7A82D0",
+  uikit: "#5AA8E8",
+  elgg: "#7A8E9A",
+  "wysiwyg editor": "#8A7AB0",
+  "form wizard": "#4A9888",
+  claude: "#DE9878",
+  chatgpt: "#52B898",
+  openai: "#52B898",
+  gemini: "#A088D8",
+  copilot: "#6078A0",
+  cursor: "#5A88D8",
+  antigravity: "#5AA0E8",
+};
+
+const _SITE_TAUPE = { r: 154 / 255, g: 127 / 255, b: 114 / 255 };
+const _SITE_TEAL = { r: 43 / 255, g: 140 / 255, b: 154 / 255 };
+const _SITE_VIOLET = { r: 110 / 255, g: 108 / 255, b: 240 / 255 };
+
+function _hexToRgb(hex) {
+  const h = String(hex || "").replace("#", "");
+  if (h.length !== 6) return { r: 0.42, g: 0.42, b: 0.42 };
+  return {
+    r: parseInt(h.slice(0, 2), 16) / 255,
+    g: parseInt(h.slice(2, 4), 16) / 255,
+    b: parseInt(h.slice(4, 6), 16) / 255,
+  };
+}
+
+function _rgbToHex(rgb) {
+  const to = (c) => Math.round(Math.max(0, Math.min(255, c * 255))).toString(16).padStart(2, "0");
+  return "#" + to(rgb.r) + to(rgb.g) + to(rgb.b);
+}
+
+function _mixRgb(a, b, t) {
+  return {
+    r: a.r + (b.r - a.r) * t,
+    g: a.g + (b.g - a.g) * t,
+    b: a.b + (b.b - a.b) * t,
+  };
+}
+
+function _rgbToHsl(rgb) {
+  const max = Math.max(rgb.r, rgb.g, rgb.b);
+  const min = Math.min(rgb.r, rgb.g, rgb.b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === rgb.r) h = ((rgb.g - rgb.b) / d + (rgb.g < rgb.b ? 6 : 0)) / 6;
+    else if (max === rgb.g) h = ((rgb.b - rgb.r) / d + 2) / 6;
+    else h = ((rgb.r - rgb.g) / d + 4) / 6;
+  }
+  return { h: h * 360, s, l };
+}
+
+function _hslToRgb(hsl) {
+  const hue = (((hsl.h % 360) + 360) % 360) / 360;
+  if (hsl.s === 0) return { r: hsl.l, g: hsl.l, b: hsl.l };
+  const q = hsl.l < 0.5 ? hsl.l * (1 + hsl.s) : hsl.l + hsl.s - hsl.l * hsl.s;
+  const p = 2 * hsl.l - q;
+  const hue2rgb = (t) => {
+    let x = t;
+    if (x < 0) x += 1;
+    if (x > 1) x -= 1;
+    if (x < 1 / 6) return p + (q - p) * 6 * x;
+    if (x < 1 / 2) return q;
+    if (x < 2 / 3) return p + (q - p) * (2 / 3 - x) * 6;
+    return p;
+  };
+  return { r: hue2rgb(hue + 1 / 3), g: hue2rgb(hue), b: hue2rgb(hue - 1 / 3) };
+}
+
+// Pill tints need more mid-light chroma than raw logo hexes (many marks are near-black or neon-yellow).
+// Lift/dampen in HSL, then nudge toward the site's warm beige + sea-teal + Tahoe violet so stack
+// rows feel cohesive on the Lumora glass surface.
+function _brandUiTint(hex) {
+  const hsl = _rgbToHsl(_hexToRgb(hex));
+  let { h, s, l } = hsl;
+
+  if (s < 0.1 || l < 0.12) {
+    return _rgbToHex(_mixRgb(_hexToRgb(hex), _SITE_TEAL, 0.32));
+  }
+  if (l < 0.32) {
+    l = 0.5;
+    s = Math.max(s, 0.42);
+  } else if (l > 0.68) {
+    l = 0.58;
+    s = Math.min(Math.max(s, 0.48), 0.82);
+  } else {
+    s = Math.min(s * 1.04 + 0.03, 0.86);
+    l = Math.min(Math.max(l, 0.44), 0.58);
+  }
+
+  return _rgbToHex(_mixRgb(_mixRgb(_hslToRgb({ h, s, l }), _SITE_TAUPE, 0.1), _SITE_VIOLET, 0.04));
+}
+
+function _pillTintOf(key, brand, raw) {
+  if (brand && brand.tint) return brand.tint;
+  if (_TAHOE_PILL_TINTS[key]) return _TAHOE_PILL_TINTS[key];
+  return _brandUiTint(raw);
+}
 
 // WCAG relative luminance → pick a readable foreground for a brand color chip. app.js's
 // setupHeroContrast samples a hero photo pixel with the same 0.2126/0.7152/0.0722 weights, minus
@@ -358,10 +536,12 @@ function _hydrate(raw) {
   data.brandOf = (name) => {
     const key = String(name || "").toLowerCase().trim();
     const b = data.brands[key] || null;
-    const color = b ? b.color : "#6b6b6b";
+    const raw = b ? b.color : "#6b6b6b";
+    const color = _pillTintOf(key, b, raw);
     return {
       label: name,
       color,
+      raw,
       src: b && b.icon ? "/assets/img/brands/" + b.icon + ".svg" : null,
       mono: String(name || "?").trim().charAt(0).toUpperCase(),
       fg: _readableFg(color),
@@ -408,6 +588,15 @@ function _hydrate(raw) {
   data.partners = _partnersFromExperience(data);
   const expTerms = (data.site && data.site.experienceHighlights) || [];
   data.highlightExp = (text) => _highlightTerms(text, expTerms);
+  if (data.site && data.site.features) {
+    data.site.features.flags = data.site.features.flags || {};
+    const v = data.site.features.flags.skillsScrollDesign;
+    if (v != null && typeof v === "object") {
+      data.site.features.flags.skillsScrollDesign = !!v.enabled;
+    } else {
+      data.site.features.flags.skillsScrollDesign = !!v;
+    }
+  }
   return data;
 }
 

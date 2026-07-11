@@ -26,14 +26,13 @@ run_worker_first = true
 CONTACT_FROM = "contact@saniyat.com"
 CONTACT_TO = "saniyat1000@gmail.com"
 
-# Maintenance mode — site-wide hard gate (503). Set to "1"/"true"/"on" to enable (flip here + redeploy,
-# or override live in Dashboard → the Worker → Settings → Variables). Owner bypass while gated:
-# https://saniyat.com/?preview=<ADMIN_TOKEN>. Optional copy overrides: MAINTENANCE_TITLE / MAINTENANCE_MESSAGE.
+# ── Feature flags (Worker vars) ────────────────────────────────────────────────────────────────────
+# Truthy: "1" / "true" / "on".  Falsy: "off" / "false" / "0".  Omit SKILLS_SCROLL_DESIGN → JSON default.
 MAINTENANCE_MODE = "off"
+# SKILLS_SCROLL_DESIGN = "off"   # Tools & craft scroll layout — optional; local default in portfolio.json → site.features.flags
 
 # ⚠️ The two bindings below are COMMENTED OUT so the first deploy succeeds with no setup.
 # They are OPTIONAL and guarded in src/index.js (the contact endpoint still validates + logs; it just
-# won't persist to KV or send email until you enable them). Uncomment each after its one-time setup:
 #
 # Email Routing send_email binding — lets the Worker send the notification email.
 #   1. Dashboard → your zone → Email → Email Routing → enable + verify the destination (CONTACT_TO).

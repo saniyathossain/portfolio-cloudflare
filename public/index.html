@@ -419,7 +419,9 @@ Staff Software Engineer · Dhaka, Bangladesh
                             <span class="role-tags__label role-tags__label--stack"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('chip', 'ui-icon')" aria-hidden="true"></span></span> Stack</span>
                             <div class="pill-row">
                               <template x-for="item in role.stacks" :key="role.id + '-s-' + item">
-                                <span class="brand-pill brand-pill--stack spec" :style="'--brand:' + brandOf(item).color">
+                                <span class="brand-pill brand-pill--stack spec" tabindex="0"
+                                  :style="'--brand:' + brandOf(item).color"
+                                  :aria-label="item">
                                   <span class="brand-pill__badge">
                                     <template x-if="brandOf(item).src">
                                       <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
@@ -437,7 +439,9 @@ Staff Software Engineer · Dhaka, Bangladesh
                             <span class="role-tags__label role-tags__label--ai"><span class="icon-chip icon-chip--sm" aria-hidden="true"><span x-html="iconSvg('sparkles', 'ui-icon')" aria-hidden="true"></span></span> AI tools</span>
                             <div class="pill-row">
                               <template x-for="item in role.aiTools" :key="role.id + '-ai-' + item">
-                                <span class="brand-pill brand-pill--ai spec" :style="'--brand:' + brandOf(item).color">
+                                <span class="brand-pill brand-pill--ai spec" tabindex="0"
+                                  :style="'--brand:' + brandOf(item).color"
+                                  :aria-label="item">
                                   <span class="brand-pill__badge">
                                     <template x-if="brandOf(item).src">
                                       <img :src="brandOf(item).src" :alt="item" width="12" height="12" loading="lazy">
@@ -470,31 +474,74 @@ Staff Software Engineer · Dhaka, Bangladesh
       <div class="shell">
         <h2 class="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl" data-blur-reveal data-delay="120">Tools &amp; craft</h2>
         <p class="sec-sub"><span class="sec-sub__icon" aria-hidden="true" x-html="iconSvg('code', 'ui-icon')"></span><span data-sec-sub="skills"></span></p>
-        <div class="grid gap-6 md:grid-cols-2">
-          <template x-for="(g,gi) in skills" :key="g.title">
-            <div class="glass-panel spec spec--panel" data-reveal :data-delay="gi*80" :data-ci="['blue','teal','purple','orange','cyan'][gi]">
-              <div class="skills-panel__head">
-                <span class="icon-chip" aria-hidden="true"><span x-html="iconSvg(g.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span></span>
-                <h3 x-text="g.title"></h3>
-              </div>
-              <div class="pill-row" data-stagger data-stagger-step="62">
-                <template x-for="item in g.items" :key="item">
-                  <span class="brand-pill spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
-                    <span class="brand-pill__badge">
-                      <template x-if="brandOf(item).src">
-                        <img :src="brandOf(item).src" :alt="item" width="14" height="14" loading="lazy">
-                      </template>
-                      <template x-if="!brandOf(item).src">
-                        <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
-                      </template>
+
+        <!-- Default: glass-panel cards with full brand pills -->
+        <template x-if="!featFlag('skillsScrollDesign')">
+          <div class="grid gap-6 md:grid-cols-2">
+            <template x-for="(g,gi) in skills" :key="g.title">
+              <div class="glass-panel spec spec--panel" data-reveal :data-delay="gi*80" :data-ci="['blue','teal','purple','orange','green','cyan'][gi]">
+                <div class="skills-panel__head">
+                  <span class="icon-chip" aria-hidden="true"><span x-html="iconSvg(g.icon, 'ui-icon ui-icon--md')" aria-hidden="true"></span></span>
+                  <h3 x-text="g.title"></h3>
+                </div>
+                <div class="pill-row" data-stagger data-stagger-step="62">
+                  <template x-for="item in g.items" :key="item">
+                    <span class="brand-pill spec" tabindex="0" :style="'--brand:' + brandOf(item).color">
+                      <span class="brand-pill__badge">
+                        <template x-if="brandOf(item).src">
+                          <img :src="brandOf(item).src" :alt="item" width="14" height="14" loading="lazy">
+                        </template>
+                        <template x-if="!brandOf(item).src">
+                          <span class="brand-pill__mono" x-text="brandOf(item).mono"></span>
+                        </template>
+                      </span>
+                      <span class="brand-pill__label"><span class="brand-pill__label-tx"><span class="brand-pill__label-in" x-text="item"></span></span></span>
                     </span>
-                    <span class="brand-pill__label"><span class="brand-pill__label-tx"><span class="brand-pill__label-in" x-text="item"></span></span></span>
-                  </span>
-                </template>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <!-- Alt: flat icon strip — no cards, 1–2 wrapped lines -->
+        <template x-if="featFlag('skillsScrollDesign')">
+          <div class="skills-flat" x-data="skillsFlatPanel()" role="list" aria-label="Tools and technologies">
+            <div class="skills-flat__panel" id="skills-flat-panel" :class="skillsFlatOpen && 'is-open'">
+              <div class="skills-flat__inner">
+                <div class="skills-flat__row pill-row">
+                  <template x-for="(entry, idx) in flatSkillItems()" :key="entry.group + '-' + entry.item">
+                    <span class="brand-pill skills-flat__pill spec" role="listitem" tabindex="0"
+                      x-show="showFlatSkill(idx)"
+                      :style="'--brand:' + brandOf(entry.item).color"
+                      :aria-label="entry.item">
+                      <span class="brand-pill__badge">
+                        <template x-if="brandOf(entry.item).src">
+                          <img :src="brandOf(entry.item).src" :alt="entry.item" width="46" height="46" loading="lazy">
+                        </template>
+                        <template x-if="!brandOf(entry.item).src">
+                          <span class="brand-pill__mono" x-text="brandOf(entry.item).mono"></span>
+                        </template>
+                      </span>
+                      <span class="brand-pill__label"><span class="brand-pill__label-tx"><span class="brand-pill__label-in" x-text="entry.item"></span></span></span>
+                    </span>
+                  </template>
+                </div>
               </div>
             </div>
-          </template>
-        </div>
+            <button type="button" class="skills-flat__toggle"
+              x-show="skillsFlatMobile && (skillsFlatMoreCount() > 0 || skillsFlatOpen)"
+              @click="toggleSkillsFlat()"
+              :aria-expanded="skillsFlatOpen">
+              <span class="skills-flat__toggle-label" x-text="skillsFlatToggleLabel()"></span>
+              <span class="skills-flat__toggle-arrow" aria-hidden="true">
+                <span class="icon-chip icon-chip--sm">
+                  <span x-html="iconSvg('chevronDown', skillsFlatOpen ? 'ui-icon ui-icon--chevron exp-row__chev is-open' : 'ui-icon ui-icon--chevron exp-row__chev')" aria-hidden="true"></span>
+                </span>
+              </span>
+            </button>
+          </div>
+        </template>
       </div>
     </section>
 

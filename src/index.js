@@ -60,13 +60,50 @@ const EARLY_HINTS = [
 // Field limits — reject obviously abusive payloads before doing any work.
 const LIMITS = { name: 120, email: 200, project: 4000 };
 
-// ── Maintenance mode ─────────────────────────────────────────────────────────────────────────────
-// Site-wide hard gate, toggled by the MAINTENANCE_MODE var (set "1"/"true"/"on" in wrangler.toml or
-// the dashboard). When on, every request gets a self-contained 503 page — EXCEPT a request carrying
-// ?preview=<ADMIN_TOKEN>, which lets the owner check the live site while it's gated.
+// ── Feature flags ────────────────────────────────────────────────────────────────────────────────
+// Worker vars (wrangler.toml [vars] or Dashboard → Variables). MAINTENANCE_MODE is evaluated first
+// in fetch(); SKILLS_SCROLL_DESIGN optionally overrides portfolio.json → site.features.flags.
+
 function maintenanceOn(env) {
   const v = String(env.MAINTENANCE_MODE || "").toLowerCase();
   return v === "1" || v === "true" || v === "on";
+}
+
+function envFlagTriState(env, name) {
+  const v = String(env[name] ?? "").toLowerCase().trim();
+  if (!v) return null;
+  if (v === "1" || v === "true" || v === "on") return true;
+  if (v === "0" || v === "false" || v === "off") return false;
+  return null;
+}
+
+function flagEnabled(flags, key, env, envName) {
+  const fromJson = flags && flags[key];
+  let jsonVal = false;
+  if (typeof fromJson === "boolean") jsonVal = fromJson;
+  else if (fromJson && typeof fromJson === "object" && "enabled" in fromJson) jsonVal = !!fromJson.enabled;
+  const envVal = envFlagTriState(env, envName);
+  if (envVal !== null) return envVal;
+  return jsonVal;
+}
+
+async function mergePortfolioJson(response, env, headers) {
+  const raw = await response.json();
+  raw.site = raw.site || {};
+  raw.site.features = raw.site.features || {};
+  raw.site.features.flags = raw.site.features.flags || {};
+  raw.site.features.flags.skillsScrollDesign = flagEnabled(
+    raw.site.features.flags,
+    "skillsScrollDesign",
+    env,
+    "SKILLS_SCROLL_DESIGN"
+  );
+  headers.set("Cache-Control", "no-store");
+  return new Response(JSON.stringify(raw), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 function maintenanceResponse(env) {
@@ -351,6 +388,9 @@ export default {
       headers.set(key, value);
     }
     const path = url.pathname;
+    if (path === "/assets/data/portfolio.json" && response.ok) {
+      return mergePortfolioJson(response, env, headers);
+    }
     if (path.startsWith("/assets/data/") && path.endsWith(".json")) {
       headers.set("Cache-Control", "public, max-age=3600");
     } else if (path.startsWith("/assets/")) {

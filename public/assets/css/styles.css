@@ -124,10 +124,16 @@ html:not(.is-loading) #main.is-liquid-warp {
   --dur-swap: 0.18s;
   --dur-slow: 1.05s;
   --dur-reveal: 0.88s;
-  --dur-pill-reveal: 0.82s;
-  --ease-pill-reveal: cubic-bezier(0.33, 1, 0.68, 1); /* easeOutCubic — gentle onset, no snap (smoother stack/skill stagger) */
-  --dur-pill-expand: 0.4s;
-  --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
+  --dur-pill-reveal: 0.88s;
+  --ease-pill-reveal: cubic-bezier(0.28, 0.92, 0.38, 1);
+  --dur-pill-expand: 0.48s;
+  --ease-pill-expand: cubic-bezier(0.16, 0.84, 0.32, 1);
+  /* FLIP glide (motion.js reads these — keep CSS + JS in sync) */
+  --dur-pill-flip-open: 0.52s;
+  --dur-pill-flip-close: 0.38s;
+  --dur-pill-panel-reflow: 0.44s;
+  --ease-pill-flip: cubic-bezier(0.23, 0.84, 0.35, 1);
+  --dur-pill-sheen: 1.05s;
   /* Shared button/control sizing + motion tokens — nothing owned this before this rule, so every
      pill hard-coded its own padding/height/font and hover took an un-snappy 0.45s. */
   --control-pad-x: 1.5rem;
@@ -2772,7 +2778,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
     0 2px 12px color-mix(in srgb, var(--tint) 38%, transparent);
 }
 .skills-panel__head {
-  display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1rem;
 }
 .skills-panel__head .icon-chip { width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; }
 .skills-panel__head .icon-chip .ui-icon { width: 0.85rem; height: 0.85rem; }
@@ -2780,6 +2786,117 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em;
   text-transform: uppercase; color: rgba(17,17,17,.48);
 }
+
+/* Shiny pill shell — skills-flat + experience stack/AI (sec-sub / icon-chip recipe) */
+.skills-flat .brand-pill,
+.role-tags__group .brand-pill {
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--brand) 26%, #fff),
+    color-mix(in srgb, var(--brand) 9%, #fff));
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    inset 0 0 0 1px color-mix(in srgb, var(--brand) 18%, transparent),
+    0 3px 8px -3px color-mix(in srgb, var(--brand) 45%, transparent),
+    0 1px 2px rgba(17,17,17,.05);
+}
+@media (hover: hover) and (pointer: fine) {
+  .skills-flat .brand-pill:hover,
+  .skills-flat .brand-pill:focus-visible,
+  .skills-flat .brand-pill.is-open,
+  .role-tags__group .brand-pill:hover,
+  .role-tags__group .brand-pill:focus-visible,
+  .role-tags__group .brand-pill.is-open {
+    border-color: color-mix(in srgb, var(--brand) 34%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.95),
+      inset 0 0 0 1px color-mix(in srgb, var(--brand) 28%, transparent),
+      0 5px 14px -3px color-mix(in srgb, var(--brand) 55%, transparent),
+      0 2px 5px rgba(17,17,17,.06);
+  }
+}
+
+/* Skills flat mode (SKILLS_SCROLL_DESIGN) — rounded brand pills, label reveal + FLIP */
+.skills-flat { margin-top: 0.65rem; }
+.skills-flat__panel { overflow: hidden; }
+.skills-flat__panel[style*="height"],
+.skills-flat[style*="height"],
+#skills .glass-panel[style*="height"] {
+  overflow: hidden;
+}
+.skills-flat__toggle {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-control);
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.42)),
+    linear-gradient(160deg, color-mix(in srgb, var(--primary) 8%, var(--surface)), var(--surface));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    0 2px 8px -4px rgba(17,17,17,.12);
+  cursor: pointer;
+  outline: none;
+  color: rgba(17,17,17,.72);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: box-shadow 0.24s var(--ease-glass), border-color 0.24s var(--ease-glass);
+}
+.skills-flat__toggle:hover,
+.skills-flat__toggle:focus-visible {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--line));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    0 4px 14px -4px rgba(17,17,17,.16);
+}
+.skills-flat__toggle-label { flex: 1; text-align: left; }
+.skills-flat__toggle-arrow {
+  flex: none;
+  opacity: 0.55;
+  transition: opacity 0.24s ease;
+}
+.skills-flat__toggle:hover .skills-flat__toggle-arrow,
+.skills-flat__toggle:focus-visible .skills-flat__toggle-arrow,
+.skills-flat__toggle[aria-expanded="true"] .skills-flat__toggle-arrow { opacity: 1; }
+@media (max-width: 639px) {
+  .skills-flat__toggle { display: flex; }
+}
+@media (min-width: 640px) {
+  .skills-flat__panel { height: auto !important; overflow: visible; }
+}
+.skills-flat__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-block: 0.25rem 0.5rem;
+}
+.skills-flat .brand-pill { padding: 0.32rem; }
+.skills-flat .brand-pill__badge {
+  width: 3rem;
+  height: 3rem;
+}
+.skills-flat .brand-pill__badge img {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+.skills-flat .brand-pill__mono {
+  font-size: 0.82rem;
+}
+@media (max-width: 640px) {
+  .skills-flat__row { justify-content: flex-start; padding-block: 0.2rem 0.35rem; }
+  .skills-flat .brand-pill__badge { width: 2.8rem; height: 2.8rem; }
+  .skills-flat .brand-pill__badge img { width: 2.1rem; height: 2.1rem; }
+}
+
 .role-tags__label .icon-chip--sm { margin-right: 0.15rem; }
 .stats-panel li > p {
   color: rgba(255,255,255,.58);
@@ -2987,6 +3104,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   contain: layout style;
 }
 .exp-details.is-open:not([style*="height"]) { height: auto; overflow: visible; }
+.exp-details.is-open[style*="height"] { overflow: hidden; }
 .exp-details__inner {
   min-height: 0;
   padding: 0 1rem 1.4rem 4.75rem;
@@ -3135,6 +3253,33 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 /* Brand pills — single clipped outset surface (icon + label share one pill) */
 .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; }
 
+/* Tools & craft flat row also has .pill-row — restore row/column gaps over generic gap. */
+.skills-flat__row.pill-row {
+  column-gap: clamp(0.55rem, 1.5vw, 1.35rem);
+  row-gap: clamp(1.25rem, 3.2vw, 2.25rem);
+}
+@media (max-width: 640px) {
+  .skills-flat__row.pill-row { column-gap: 0.55rem; row-gap: 1.25rem; }
+}
+
+/* Experience stack / AI pill rows — looser icon spacing on desktop */
+.role-tags__group .pill-row {
+  column-gap: 0.65rem;
+  row-gap: 0.55rem;
+}
+@media (max-width: 640px) {
+  .role-tags__group .pill-row {
+    column-gap: 0.55rem;
+    row-gap: 1.25rem;
+  }
+}
+@media (min-width: 768px) {
+  .role-tags__group .pill-row {
+    column-gap: 0.85rem;
+    row-gap: 0.65rem;
+  }
+}
+
 .brand-pill {
   --brand: #6b6b6b;
   --pill-top: #fff;
@@ -3167,11 +3312,10 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
     0 1px 2px rgba(17,17,17,.05);
   cursor: default; outline: none;
   top: 0;
-  /* Same Tahoe deceleration + duration as the .icon-chip tiles, so the pills settle identically. */
   transition:
-    top 0.32s var(--ease-glass),
-    box-shadow 0.32s var(--ease-glass),
-    border-color 0.32s var(--ease-glass);
+    top var(--dur-pill-flip-close) var(--ease-pill-flip),
+    box-shadow var(--dur-pill-flip-close) var(--ease-pill-flip),
+    border-color var(--dur-pill-flip-close) var(--ease-pill-flip);
 }
 .brand-pill--sm { padding: 0.26rem; }
 .brand-pill--stack { --pill-top: #f8fafc; --pill-bot: #eef2f6; }
@@ -3189,7 +3333,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   border-radius: inherit;
   background: linear-gradient(115deg, transparent 14%, rgba(255,255,255,.55) 48%, transparent 84%);
   transform: translateX(-135%);
-  transition: transform 0.8s var(--ease-glass);
+  transition: transform var(--dur-pill-sheen) var(--ease-pill-flip);
 }
 .brand-pill:hover::before,
 .brand-pill:focus-visible::before,
@@ -3212,6 +3356,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
      the FLIP so the pill can glide if it wraps. z-index keeps the active pill above sliding neighbours. */
   z-index: 2;
   top: -2px;
+  transition-duration: var(--dur-pill-flip-open);
   /* Exactly the .icon-chip hover feel: the brand rim brightens and the shadow deepens into a soft
      brand glow (a lift, no crisp edge — NOT --shadow-outset-hover, whose zero-blur white layer drew
      the old "bottom border"). Combined with the sheen sweep (::before) this reads as the tile
@@ -3244,7 +3389,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 }
 .brand-pill__badge img {
   width: 1.34rem; height: 1.34rem; object-fit: contain;
-  transition: transform 0.3s var(--ease-glass), filter 0.3s ease;
+  transition: transform var(--dur-pill-expand) var(--ease-pill-expand);
 }
 .brand-pill--sm .brand-pill__badge img { width: 1.12rem; height: 1.12rem; }
 
@@ -3256,15 +3401,17 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 }
 .brand-pill--sm .brand-pill__mono { font-size: 0.56rem; }
 
-.brand-pill:hover .brand-pill__badge img,
-.brand-pill:focus-visible .brand-pill__badge img,
-.brand-pill.is-open .brand-pill__badge img {
-  transform: scale(1.05);
-  filter: brightness(1.05) saturate(1.1);
+@media (hover: hover) and (pointer: fine) {
+  .brand-pill:hover .brand-pill__badge img,
+  .brand-pill:focus-visible .brand-pill__badge img,
+  .brand-pill.is-open .brand-pill__badge img {
+    transform: scale(1.05);
+    filter: brightness(1.04) saturate(1.08);
+    transition:
+      transform var(--dur-pill-expand) var(--ease-pill-expand),
+      filter var(--dur-pill-expand) var(--ease-pill-expand);
+  }
 }
-.brand-pill:hover .brand-pill__label-in,
-.brand-pill:focus-visible .brand-pill__label-in,
-.brand-pill.is-open .brand-pill__label-in { color: #0a0a0a; text-shadow: none; }
 
 /* Icon→label reveal, done IN FLOW so the pill genuinely takes the space its label needs — no absolute
    overlay painting over the neighbour (which left an overlap + a lingering box-shadow). The label is a
@@ -3286,20 +3433,43 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 }
 .brand-pill__label-in {
   display: block; white-space: nowrap;
-  padding: 0 0.62rem 0 0.4rem;
-  font-size: 0.8125rem; font-weight: 600; color: #14161c;
-  letter-spacing: -0.015em; line-height: 1.2;
-  opacity: 0; transform: translateX(-5px);
+  padding: 0 0.58rem 0 0.38rem;
+  font-size: 0.78rem; font-weight: 600; color: rgba(17, 17, 17, 0.62);
+  letter-spacing: 0.02em; line-height: 1.3;
+  text-shadow: var(--text-sh-sm);
+  opacity: 0; transform: translate3d(-3px, 0, 0);
   transition:
-    opacity 0.34s ease,
-    transform 0.42s var(--ease-glass),
-    color 0.24s ease;
+    opacity var(--dur-pill-expand) var(--ease-pill-expand),
+    transform var(--dur-pill-expand) var(--ease-pill-expand),
+    color calc(var(--dur-pill-expand) * 0.65) var(--ease-pill-flip),
+    text-shadow calc(var(--dur-pill-expand) * 0.75) var(--ease-pill-flip);
+}
+.brand-pill:not(.is-open) .brand-pill__label-in {
+  transition-duration:
+    calc(var(--dur-pill-expand) * 0.5),
+    calc(var(--dur-pill-expand) * 0.5),
+    0.2s;
+  transition-delay: 0s, 0s, 0s;
 }
 .brand-pill--sm .brand-pill__label-in {
-  font-size: 0.76rem; padding: 0 0.55rem 0 0.34rem;
+  font-size: 0.74rem; padding: 0 0.52rem 0 0.34rem;
+}
+.brand-pill--stack .brand-pill__label-in,
+.brand-pill--ai .brand-pill__label-in {
+  font-size: 0.74rem;
+  padding: 0 0.52rem 0 0.34rem;
+  letter-spacing: 0.018em;
 }
 .brand-pill.is-open .brand-pill__label-in {
-  opacity: 1; transform: none;
+  opacity: 1; transform: translate3d(0, 0, 0);
+  color: color-mix(in srgb, var(--brand) 50%, #12141c);
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.94),
+    0 1px 2px color-mix(in srgb, var(--brand) 26%, transparent),
+    0 3px 10px color-mix(in srgb, var(--brand) 16%, transparent),
+    0 6px 18px color-mix(in srgb, var(--brand) 8%, transparent);
+  transition-duration: var(--dur-pill-expand), var(--dur-pill-expand), 0.28s, 0.32s;
+  transition-delay: 0.1s, 0.1s, 0.04s, 0.06s;
 }
 .pill-expand:not(:hover):not(:focus-visible):not([aria-expanded="true"]) .pill-expand__label {
   transition-delay: 0s, 0.18s, 0s;
@@ -3311,7 +3481,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   background: radial-gradient(2.6rem 2.6rem at 0.9rem 50%,
               color-mix(in srgb, var(--brand) 34%, transparent), transparent 62%);
   opacity: 0;
-  transition: opacity 0.32s var(--ease-glass);
+  transition: opacity var(--dur-pill-flip-open) var(--ease-pill-flip);
 }
 .brand-pill.spec:hover::after,
 .brand-pill.spec:focus-visible::after,
@@ -3330,6 +3500,11 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
     transform var(--dur-pill-reveal) var(--ease-pill-reveal);
   transition-delay: var(--reveal-delay, 0ms);
 }
+/* FLIP in flight — compositor hint for transform-only glide (all platforms). */
+.pill-row.is-pill-moving .brand-pill {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
 
 /* Touch / no-hover, no touch-pills class (reduced-motion or no-JS): force labels OPEN statically.
    With html.touch-pills (boot.js), labels stay closed until .is-open via pillTap — grid transition
@@ -3339,6 +3514,12 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   html:not(.touch-pills) .brand-pill__label-in {
     opacity: 1; transform: none; transition: none;
     padding: 0 0.55rem 0 0.44rem;
+    color: color-mix(in srgb, var(--brand) 50%, #12141c);
+    text-shadow:
+      0 1px 0 rgba(255,255,255,.94),
+      0 1px 2px color-mix(in srgb, var(--brand) 26%, transparent),
+      0 3px 10px color-mix(in srgb, var(--brand) 16%, transparent),
+      0 6px 18px color-mix(in srgb, var(--brand) 8%, transparent);
   }
   html:not(.touch-pills) .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
   /* Kill sticky-hover polish unless the pill is deliberately open (pillTap). */
@@ -3348,7 +3529,13 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   .brand-pill:hover:not(.is-open) .brand-pill__badge img { transform: none; filter: none; }
 }
 html.touch-pills .brand-pill__label {
-  transition: grid-template-columns 0.42s var(--ease-glass);
+  transition: grid-template-columns var(--dur-pill-expand) var(--ease-pill-expand);
+}
+html.touch-pills .brand-pill {
+  transition:
+    top var(--dur-pill-expand) var(--ease-pill-expand),
+    box-shadow var(--dur-pill-expand) var(--ease-pill-expand),
+    border-color var(--dur-pill-expand) var(--ease-pill-expand);
 }
 html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns: 1fr; }
 
@@ -3370,6 +3557,16 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   .exp-details { transition: none; }
   .exp-row__chev,
   .pill-expand__label { transition: none; }
+  .brand-pill,
+  .brand-pill::before,
+  .brand-pill__badge img,
+  .brand-pill__label-in,
+  html.touch-pills .brand-pill,
+  html.touch-pills .brand-pill__label {
+    transition: none !important;
+  }
+  .brand-pill:hover,
+  .brand-pill.is-open { top: 0; }
   /* Force-open in-flow labels (same as the touch fallback) so reduced-motion users get the readable
      stack with no animation instead of an icon-only row they can't reveal without motion (pillFlip is
      gated out by the module-level reduced-motion early return). */
@@ -3377,6 +3574,12 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   .brand-pill__label-in {
     opacity: 1; transform: none; transition: none;
     padding: 0 0.55rem 0 0.44rem;
+    color: color-mix(in srgb, var(--brand) 50%, #12141c);
+    text-shadow:
+      0 1px 0 rgba(255,255,255,.94),
+      0 1px 2px color-mix(in srgb, var(--brand) 26%, transparent),
+      0 3px 10px color-mix(in srgb, var(--brand) 16%, transparent),
+      0 6px 18px color-mix(in srgb, var(--brand) 8%, transparent);
   }
   .brand-pill--sm .brand-pill__label-in { padding: 0 0.5rem 0 0.38rem; }
   .create-band[data-stagger] .create-band__tile { opacity: 1; transform: none; }

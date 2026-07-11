@@ -77,6 +77,7 @@ function portfolioApp() {
         }));
       }
       if (live?.skills) this.skills = live.skills;
+      if (live?.site) this.site = live.site;
       this.tickClock();
       this.initClockSweep();
       setInterval(() => this.tickClock(), T.CLOCK_TICK);
@@ -96,6 +97,16 @@ function portfolioApp() {
       }
       this.setupBackToTop();
       this.setupIdlePause();
+      this.setupHashNav();
+    },
+
+    featFlag(key) {
+      const f = this.site?.features?.flags;
+      if (!f) return false;
+      const v = f[key];
+      if (typeof v === "boolean") return v;
+      if (v && typeof v === "object" && "enabled" in v) return !!v.enabled;
+      return !!v;
     },
 
     // Battery optimisation: pause every always-on decorative animation (the aurora drift, the .beam
@@ -399,17 +410,48 @@ function portfolioApp() {
       }
     },
 
-    scrollTo(id) {
-      const el = document.getElementById(id);
+    setHash(id, { replace = false } = {}) {
+      const hash = id && id !== "home" ? "#" + id : "";
+      const url = location.pathname + location.search + hash;
+      if (replace) history.replaceState(null, "", url);
+      else history.pushState(null, "", url);
+    },
+
+    scrollToEl(el, { behavior = "smooth", updateHash = true, hashId } = {}) {
       if (!el) return;
       const y = el.getBoundingClientRect().top + window.scrollY - 12;
       this._liquidWarp();
-      window.scrollTo({ top: y, behavior: "smooth" });
+      window.scrollTo({ top: y, behavior });
+      if (updateHash) this.setHash(hashId || el.id);
+    },
+
+    scrollTo(id, opts) {
+      this.scrollToEl(document.getElementById(id), { ...opts, hashId: id });
+    },
+
+    restoreHashScroll() {
+      const id = (location.hash || "").replace(/^#/, "");
+      if (!id) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      this.scrollToEl(el, { behavior: "instant", updateHash: false });
+    },
+
+    setupHashNav() {
+      const onHash = () => {
+        if (this._scrollLocked || this.menuOpen || this.modalOpen) return;
+        this.restoreHashScroll();
+      };
+      window.addEventListener("hashchange", onHash);
+      const afterReady = () => requestAnimationFrame(() => requestAnimationFrame(onHash));
+      window.addEventListener("portfolio-ready", afterReady, { once: true });
+      if (!document.documentElement.classList.contains("is-loading")) afterReady();
     },
 
     scrollToTop() {
       this._liquidWarp();
       window.scrollTo({ top: 0, behavior: "smooth" });
+      this.setHash("home", { replace: true });
     },
 
     // Brief "liquid glass" blur/refraction pulse across the scrolling content while a nav-triggered

@@ -1,5 +1,5 @@
 /** Portfolio service worker — cache-first assets, network-first shell */
-const CACHE_VERSION = "ae1c659fc19a";
+const CACHE_VERSION = "3c71f6378e8e";
 const SHELL_URLS = ["/", "/index.html"];
 
 self.addEventListener("install", (event) => {
@@ -66,15 +66,16 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(networkFirst(event.request));
     return;
   }
+  // portfolio.json must stay fresh for local feature-flag toggles — never cache-first under /assets/.
+  if (url.pathname.endsWith("/portfolio.json")) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
   if (url.pathname.startsWith("/assets/")) {
     event.respondWith(cacheFirst(event.request));
     return;
   }
-  if (
-    url.pathname === "/" ||
-    url.pathname === "/index.html" ||
-    url.pathname.endsWith("/portfolio.json")
-  ) {
+  if (url.pathname === "/" || url.pathname === "/index.html") {
     event.respondWith(networkFirst(event.request));
   }
 });

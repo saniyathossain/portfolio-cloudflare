@@ -209,6 +209,248 @@
     applyElementParallax(window.scrollY);
   }
 
+  // When pill rows wrap (label reveal), glide their container height so everything below — the next
+  // Experience role, Skills section, or the Stats ("Proof in the work") panel — slides instead of
+  // jumping. Experience: .exp-details; Skills flat: .skills-flat; Skills cards: .glass-panel.
+  function setupPillRowReflow() {
+    const panelState = new WeakMap();
+    const rootStyle = () => getComputedStyle(document.documentElement);
+
+    function readReflowMs(fallback) {
+      const n = parseFloat(rootStyle().getPropertyValue("--dur-pill-panel-reflow"));
+      return Number.isFinite(n) ? Math.round(n * 1000) : fallback;
+    }
+
+    function readEase() {
+      return rootStyle().getPropertyValue("--ease-pill-flip").trim()
+        || "cubic-bezier(0.23, 0.84, 0.35, 1)";
+    }
+
+    function resolveReflowTarget(row) {
+      if (!row) return null;
+
+      const expPanel = row.closest(".exp-details");
+      if (expPanel) {
+        if (!expPanel.classList.contains("is-open")) return null;
+        const inner = expPanel.querySelector(".exp-details__inner");
+        if (!inner) return null;
+        return { panel: expPanel, inner, kind: "exp" };
+      }
+
+      const skillsPanel = row.closest(".skills-flat__panel");
+      if (skillsPanel) {
+        const inner = skillsPanel.querySelector(".skills-flat__inner") || skillsPanel;
+        return { panel: skillsPanel, inner, kind: "skills-flat" };
+      }
+
+      const skillsFlat = row.closest(".skills-flat");
+      if (skillsFlat) {
+        const inner = skillsFlat.querySelector(".skills-flat__inner") || skillsFlat;
+        const panel = skillsFlat.querySelector(".skills-flat__panel") || skillsFlat;
+        return { panel, inner, kind: "skills-flat" };
+      }
+
+      const skillCard = row.closest("#skills .glass-panel");
+      if (skillCard) {
+        return { panel: skillCard, inner: skillCard, kind: "skills-card" };
+      }
+
+      return null;
+    }
+
+    function compositorLayer(target) {
+      if (!target) return null;
+      const el = target.firstElementChild || target;
+      el.style.willChange = "transform";
+      el.style.transform = "translateZ(0)";
+      return el;
+    }
+
+    function releaseCompositorLayer(el) {
+      if (!el) return;
+      el.style.willChange = "";
+      el.style.transform = "";
+    }
+
+    function pinPanelHeight(panel) {
+      if (!panel || panel._heightTimer) return;
+      let inner = null;
+      if (panel.classList.contains("exp-details")) {
+        if (!panel.classList.contains("is-open")) return;
+        inner = panel.querySelector(".exp-details__inner");
+      } else if (panel.classList.contains("skills-flat__panel")) {
+        inner = panel.querySelector(".skills-flat__inner");
+      }
+      if (!inner) return;
+      const h = inner.scrollHeight;
+      if (h < 2) return;
+      panel.style.overflow = "hidden";
+      panel.style.height = h + "px";
+    }
+
+    function readTargetHeight(panel, inner) {
+      const prevH = panel.style.height;
+      const prevO = panel.style.overflow;
+      const prevT = panel.style.transition;
+      panel.style.transition = "none";
+      panel.style.height = "auto";
+      panel.style.overflow = "visible";
+      const h = inner.scrollHeight;
+      panel.style.height = prevH;
+      panel.style.overflow = prevO || "hidden";
+      void panel.offsetHeight;
+      panel.style.transition = prevT;
+      return h;
+    }
+
+    function settlePanelHeight(panel, to) {
+      panel.style.height = to + "px";
+      panel.style.overflow = "hidden";
+      requestAnimationFrame(() => { panel.style.transition = ""; });
+    }
+
+    function lockPanel(row) {
+      const t = resolveReflowTarget(row);
+      if (!t || t.panel._heightTimer) return null;
+      t.panel.style.overflow = "hidden";
+      t.panel.style.height = t.panel.offsetHeight + "px";
+      return t;
+    }
+
+    function animate(target, ms, precomputedTo) {
+      const panel = target.panel;
+      const inner = target.inner;
+      if (!panel || !inner) return;
+      if (target.kind === "exp") {
+        if (!panel.classList.contains("is-open") || panel._heightTimer) return;
+      }
+
+      let st = panelState.get(panel);
+      if (!st) {
+        st = { raf: 0, timer: 0, onEnd: null, layer: null };
+        panelState.set(panel, st);
+      }
+      if (st.raf) cancelAnimationFrame(st.raf);
+
+      const duration = ms || readReflowMs(440);
+      panel._reflowLockUntil = performance.now() + duration + 140;
+
+      st.raf = requestAnimationFrame(() => {
+        st.raf = 0;
+        if (!panel.style.height || panel.style.height === "auto") {
+          panel.style.overflow = "hidden";
+          panel.style.height = panel.offsetHeight + "px";
+        }
+        const from = panel.offsetHeight;
+        const to = precomputedTo != null ? precomputedTo : readTargetHeight(panel, inner);
+
+        if (Math.abs(from - to) < 2) {
+          settlePanelHeight(panel, to);
+          return;
+        }
+
+        clearTimeout(st.timer);
+        if (st.onEnd) panel.removeEventListener("transitionend", st.onEnd);
+        releaseCompositorLayer(st.layer);
+
+        void panel.offsetHeight;
+
+        st.layer = compositorLayer(inner);
+
+        const finish = () => {
+          clearTimeout(st.timer);
+          if (st.onEnd) panel.removeEventListener("transitionend", st.onEnd);
+          st.onEnd = null;
+          releaseCompositorLayer(st.layer);
+          st.layer = null;
+          settlePanelHeight(panel, to);
+        };
+
+        st.onEnd = (e) => { if (e.propertyName === "height") finish(); };
+        panel.addEventListener("transitionend", st.onEnd);
+        st.timer = setTimeout(finish, duration + 80);
+
+        panel.style.transition = "height " + duration + "ms " + readEase();
+        panel.style.height = to + "px";
+      });
+    }
+
+    function measureTarget(row) {
+      const target = resolveReflowTarget(row);
+      if (!target) return null;
+      return readTargetHeight(target.panel, target.inner);
+    }
+
+    function reflowFromRow(row, ms, precomputedTo) {
+      if (!row) return;
+      const driven = precomputedTo != null;
+      if (!driven) {
+        if (row._reflowLockUntil > performance.now()) return;
+        const peek = resolveReflowTarget(row);
+        if (peek && peek.panel._reflowLockUntil > performance.now()) return;
+      }
+      const target = resolveReflowTarget(row);
+      if (!target) return;
+      animate(target, ms, precomputedTo);
+      if (driven && ms) row._reflowLockUntil = performance.now() + ms + 150;
+    }
+
+    // Touch-only fallback — desktop uses flipRow reflow (avoid double height animations).
+    if ("ResizeObserver" in window && document.documentElement.classList.contains("touch-pills")) {
+      const ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          reflowFromRow(entry.target);
+        }
+      });
+      const bindRows = () => {
+        document.querySelectorAll(".pill-row").forEach((row) => {
+          if (row._pillReflowObs) return;
+          row._pillReflowObs = true;
+          ro.observe(row);
+        });
+      };
+      const main = document.getElementById("main") || document.body;
+      new MutationObserver(bindRows).observe(main, { childList: true, subtree: true });
+      bindRows();
+    }
+
+    document.addEventListener("transitionend", (e) => {
+      if (e.propertyName !== "height") return;
+      const panel = e.target;
+      if (!panel.classList) return;
+      if (panel.classList.contains("exp-details")) {
+        if (panel.classList.contains("is-open")) {
+          // Bubble phase (not capture): runs after toggleRole()'s finish() clears inline height,
+          // so pill-row reflow always has a pinned px baseline inside open accordions.
+          requestAnimationFrame(() => pinPanelHeight(panel));
+        } else {
+          panel.style.height = "";
+          panel.style.overflow = "";
+        }
+        return;
+      }
+      if (panel.classList.contains("skills-flat__panel")) {
+        requestAnimationFrame(() => pinPanelHeight(panel));
+      }
+    }, false);
+
+    document.querySelectorAll(".exp-details").forEach((panel) => {
+      new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.attributeName !== "class") continue;
+          if (panel.classList.contains("is-open")) {
+            requestAnimationFrame(() => pinPanelHeight(panel));
+          } else {
+            panel.style.height = "";
+            panel.style.overflow = "";
+          }
+        }
+      }).observe(panel, { attributes: true, attributeFilter: ["class"] });
+    });
+
+    return { lock: lockPanel, reflow: reflowFromRow, pin: pinPanelHeight, measureTarget };
+  }
+
   // Icon→label hover reveal, smoothed with FLIP (First, Last, Invert, Play). The label is an IN-FLOW
   // grid column that flips 0fr→1fr the instant a pill gets .is-open, so the flex row reflows to its
   // final layout in a single frame (no per-frame line-break juggle); flipRow() then animates that
@@ -221,15 +463,30 @@
   // relocate out from under a STATIONARY cursor; Chromium then fires pointerout on that layout-induced
   // hit-target change, and a pointerout-driven close would collapse→return→reopen→wrap forever (the
   // Chrome "juggle"). A relocating pill under a still cursor fires NO pointermove, so it can never open
-  // or close anything — the loop is impossible by construction, in every browser. We close only when the
-  // pointer genuinely leaves the .pill-row. Desktop-pointer-only via canEnhance; touch / reduced-motion
-  // show the static in-flow labels from CSS.
-  function pillFlip() {
+  // or close anything — the loop is impossible by construction, in every browser.
+  //
+  // Close policy (hybrid, tuned for 3-row skills-flat wrap):
+  //  • elementFromPoint(clientX, clientY) — not e.target — so FLIP transforms don't mis-hit.
+  //  • Stay open while the pointer is inside the open pill's bounds (expanded label included).
+  //  • Leave the .pill-row entirely → close immediately.
+  //  • Row gap / trailing whitespace → debounced close, deferred while a FLIP is still running.
+  // Desktop-pointer-only via canEnhance; touch / reduced-motion show the static in-flow labels from CSS.
+  function pillFlip(reflowPanel) {
     if (!canEnhance) return;
-    const OPEN_MS = 440, CLOSE_MS = 300;
-    const EASE = "cubic-bezier(0.2, 0.68, 0.32, 1)"; // soft ease-out, no overshoot
+    const rootStyle = getComputedStyle(document.documentElement);
+    const readSec = (name, fallback) => {
+      const n = parseFloat(rootStyle.getPropertyValue(name));
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const OPEN_MS = Math.round(readSec("--dur-pill-flip-open", 0.52) * 1000);
+    const CLOSE_MS = Math.round(readSec("--dur-pill-flip-close", 0.38) * 1000);
+    const GAP_CLOSE_MS = 180;
+    const EASE = rootStyle.getPropertyValue("--ease-pill-flip").trim()
+      || "cubic-bezier(0.23, 0.84, 0.35, 1)";
     const rowTimers = new WeakMap(); // row -> cleanup timeout id
     let openPill = null;
+    let gapCloseTimer = 0;
+    let flipBusyUntil = 0;
 
     function pillsIn(row) {
       const out = [];
@@ -239,15 +496,53 @@
       return out;
     }
 
+    function cancelGapClose() {
+      if (gapCloseTimer) { clearTimeout(gapCloseTimer); gapCloseTimer = 0; }
+    }
+
+    function scheduleGapClose() {
+      cancelGapClose();
+      gapCloseTimer = setTimeout(() => {
+        gapCloseTimer = 0;
+        clearOpen();
+      }, GAP_CLOSE_MS);
+    }
+
+    function pillAt(x, y) {
+      const el = document.elementFromPoint(x, y);
+      return el && el.closest ? el.closest(".brand-pill") : null;
+    }
+
+    function rowAt(x, y) {
+      const el = document.elementFromPoint(x, y);
+      return el && el.closest ? el.closest(".pill-row") : null;
+    }
+
+    function pointInRect(x, y, rect, pad) {
+      return (
+        x >= rect.left - pad &&
+        x <= rect.right + pad &&
+        y >= rect.top - pad &&
+        y <= rect.bottom + pad
+      );
+    }
+
     // FLIP every pill in `row` across the layout change `mutate()` makes.
     function flipRow(row, mutate, ms) {
       const pills = pillsIn(row);
+      flipBusyUntil = performance.now() + ms + 80;
+      row.classList.add("is-pill-moving");
       // FIRST — current visual positions (include any in-flight transforms from a prior interrupt).
       const first = pills.map((p) => p.getBoundingClientRect());
       // Clear in-flight transforms so LAST is measured against the clean final layout. No paint happens
       // between here and the Invert below (all synchronous), so this never flashes.
       pills.forEach((p) => { p.style.transition = "none"; p.style.transform = "none"; });
+      if (reflowPanel) reflowPanel.lock(row);
       mutate();
+      if (reflowPanel) {
+        const to = reflowPanel.measureTarget(row);
+        reflowPanel.reflow(row, ms, to);
+      }
       // LAST — reading a rect forces the synchronous layout we need.
       const last = pills.map((p) => p.getBoundingClientRect());
       // INVERT — send each moved pill back to its old spot (transform only; layout stays final).
@@ -257,7 +552,7 @@
         const dy = first[i].top - last[i].top;
         if (dx || dy) {
           p.style.willChange = "transform";
-          p.style.transform = "translate(" + dx + "px," + dy + "px)";
+          p.style.transform = "translate3d(" + dx + "px," + dy + "px,0)";
           movers.push(p);
         } else {
           p.style.transition = "";
@@ -269,14 +564,22 @@
         requestAnimationFrame(() => {
           movers.forEach((p) => {
             p.style.transition = "transform " + ms + "ms " + EASE;
-            p.style.transform = "";
+            p.style.transform = "translate3d(0,0,0)";
           });
         });
       });
       // Strip inline transition/will-change once the glide settles so nothing lingers.
       clearTimeout(rowTimers.get(row));
       rowTimers.set(row, setTimeout(() => {
-        pillsIn(row).forEach((p) => { p.style.transition = ""; p.style.willChange = ""; });
+        row.classList.remove("is-pill-moving");
+        pillsIn(row).forEach((p) => {
+          p.style.transition = "none";
+          p.style.willChange = "";
+          p.style.transform = "";
+        });
+        requestAnimationFrame(() => {
+          pillsIn(row).forEach((p) => { p.style.transition = ""; });
+        });
       }, ms + 100));
     }
 
@@ -292,6 +595,7 @@
 
     function setOpen(pill) {
       if (pill === openPill) return;
+      cancelGapClose();
       const prev = openPill;
       const prevRow = prev && prev.parentElement;
       const row = pill.parentElement;
@@ -309,6 +613,7 @@
 
     function clearOpen() {
       if (!openPill) return;
+      cancelGapClose();
       const pill = openPill, row = pill.parentElement;
       openPill = null;
       if (row) flipRow(row, () => pill.classList.remove("is-open"), CLOSE_MS);
@@ -319,19 +624,49 @@
       return el && el.parentElement && el.parentElement.classList.contains("pill-row");
     }
 
-    // Real-movement-only open/switch; close on leaving the row. rAF-coalesced so a burst of
+    // Real-movement-only open/switch; hybrid close (see header). rAF-coalesced so a burst of
     // pointermoves does at most one layout pass per frame.
-    let moveRaf = 0, lastTarget = null;
+    let moveRaf = 0;
+    let lastX = 0;
+    let lastY = 0;
     function onMove(e) {
-      lastTarget = e.target;
+      lastX = e.clientX;
+      lastY = e.clientY;
       if (moveRaf) return;
       moveRaf = requestAnimationFrame(() => {
         moveRaf = 0;
-        const t = lastTarget;
-        const pill = t && t.closest && t.closest(".brand-pill");
-        if (pill && inPillRow(pill)) setOpen(pill);
-        else if (openPill && !(t && t.closest && t.closest(".pill-row"))) clearOpen();
-        // else: within a row but over a gap → keep the current pill open.
+        const x = lastX;
+        const y = lastY;
+        const pill = pillAt(x, y);
+        if (pill && inPillRow(pill)) {
+          setOpen(pill);
+          return;
+        }
+        if (!openPill) return;
+
+        // Label expansion can outpace hit-target during FLIP — keep open while inside pill bounds.
+        if (pointInRect(x, y, openPill.getBoundingClientRect(), 10)) {
+          cancelGapClose();
+          return;
+        }
+
+        const row = openPill.parentElement;
+        const rowEl = rowAt(x, y);
+        const inOpenRow = row && (rowEl === row || pointInRect(x, y, row.getBoundingClientRect(), 0));
+
+        if (!inOpenRow) {
+          clearOpen();
+          return;
+        }
+
+        // Never arm a gap-close while FLIP is running — avoids cutting the glide short.
+        if (performance.now() < flipBusyUntil) {
+          cancelGapClose();
+          return;
+        }
+
+        // Row gap / trailing whitespace — debounced close.
+        scheduleGapClose();
       });
     }
     document.addEventListener("pointermove", onMove, { passive: true });
@@ -351,9 +686,16 @@
 
   // Touch brand-pill reveal — gated on html.touch-pills (boot.js). Mutually exclusive with pillFlip
   // (fine-pointer). Opens one pill; auto-closes on other-pill / outside tap / scroll / timer.
-  function pillTap() {
+  function pillTap(reflowPanel) {
     if (!document.documentElement.classList.contains("touch-pills")) return;
-    const CLOSE_MS = 2500;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const readMs = (name, fb) => {
+      const n = parseFloat(rootStyle.getPropertyValue(name));
+      return Number.isFinite(n) ? Math.round(n * 1000) : fb;
+    };
+    const OPEN_MS = readMs("--dur-pill-expand", 480);
+    const CLOSE_MS_FLIP = readMs("--dur-pill-flip-close", 380);
+    const CLOSE_MS = 2800;
     let openPill = null;
     let timer = 0;
 
@@ -363,13 +705,35 @@
     function close() {
       clearTimer();
       if (!openPill) return;
-      openPill.classList.remove("is-open");
+      const pill = openPill;
+      const row = pill.parentElement;
       openPill = null;
+      if (reflowPanel && row) reflowPanel.lock(row);
+      pill.classList.remove("is-open");
+      if (reflowPanel && row) {
+        const to = reflowPanel.measureTarget(row);
+        reflowPanel.reflow(row, CLOSE_MS_FLIP, to);
+      }
     }
     function open(pill) {
-      if (openPill && openPill !== pill) openPill.classList.remove("is-open");
+      if (openPill && openPill !== pill) {
+        const prev = openPill;
+        const prevRow = prev.parentElement;
+        if (reflowPanel && prevRow) reflowPanel.lock(prevRow);
+        prev.classList.remove("is-open");
+        if (reflowPanel && prevRow) {
+          const prevTo = reflowPanel.measureTarget(prevRow);
+          reflowPanel.reflow(prevRow, CLOSE_MS_FLIP, prevTo);
+        }
+      }
       openPill = pill;
+      const row = pill.parentElement;
+      if (reflowPanel && row) reflowPanel.lock(row);
       pill.classList.add("is-open");
+      if (reflowPanel && row) {
+        const to = reflowPanel.measureTarget(row);
+        reflowPanel.reflow(row, OPEN_MS, to);
+      }
       clearTimer();
       timer = setTimeout(close, CLOSE_MS);
     }
@@ -465,8 +829,9 @@
     specular();
     scrollParallax();
     heroSpatial();
-    pillFlip();
-    pillTap();
+    const reflowPanel = setupPillRowReflow();
+    pillFlip(reflowPanel);
+    pillTap(reflowPanel);
     pauseOffscreenDecor();
     liquidTouch();
     clockTapZoom();

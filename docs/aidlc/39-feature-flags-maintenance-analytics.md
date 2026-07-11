@@ -1,74 +1,86 @@
 # 39 — Feature flags, maintenance mode & opt-in analytics
 
 ## Context
-Three related capabilities, added so the site can be gated and measured without code changes each time:
-1. A **named, reusable "under construction" flag** (the first one was hard-coded to the contact form and
-   un-scoped — impossible to reuse for another section tomorrow).
-2. A **site-wide maintenance mode** (a hard gate, not a soft overlay).
-3. **Opt-in analytics** (Google Analytics 4 + Cloudflare Web Analytics) that stays request-free until configured,
-   so the default build keeps the "no new network requests" guarantee.
+Capabilities to gate sections, flip layouts, and measure traffic without code changes each time:
+1. **JSON feature flags** — local defaults (`site.features.flags`, `site.features.underConstruction`).
+2. **Worker feature flags** — edge toggles in `wrangler.toml [vars]` or Dashboard → Variables (same block as `MAINTENANCE_MODE`).
+3. **Opt-in analytics** — zero requests until configured.
 
-## 1. Named "under construction" flags (soft, per-section — client-side)
+## Worker feature flags (`wrangler.toml` → `[vars]`)
 
-Config lives in `portfolio.json → site.features.underConstruction.<sectionKey>`:
+Grouped in `wrangler.toml` under `# ── Feature flags (Worker vars) ──`, next to `MAINTENANCE_MODE`.
+
+| Var | Default | Effect |
+|-----|---------|--------|
+| `MAINTENANCE_MODE` | `"off"` | Site-wide **503** hard gate. Truthy → everyone sees maintenance page; `?preview=<ADMIN_TOKEN>` bypasses. |
+| `SKILLS_SCROLL_DESIGN` | *(omit)* | **Optional** override for Tools & craft scroll layout. Truthy → on; `"off"` → off; **omit** → `portfolio.json` `site.features.flags.skillsScrollDesign.enabled`. |
+
+Truthy: `"1"` / `"true"` / `"on"`. Falsy: `"off"` / `"false"` / `"0"`.
+
+### Maintenance mode (hard gate)
+
+Implemented in `src/index.js` (`maintenanceOn` / `maintenanceResponse`), evaluated **first** in `fetch`:
+- Template: `src/maintenance.html` → self-contained **503** (`Retry-After: 3600`, `noindex`).
+- Copy: `MAINTENANCE_TITLE`, `MAINTENANCE_MESSAGE` (optional Worker vars).
+- Bypass: `?preview=<ADMIN_TOKEN>`.
+
+Why Worker-level: must gate before assets/JS load and return a real 503 — a client overlay cannot.
+
+### Skills scroll layout (soft layout swap)
+
+When enabled, Tools & craft uses the Skiper31-style scroll pill cloud ([reference](https://skiper-ui.com/v1/skiper31)) — same `.brand-pill`, no category boxes. `skills-scroll.js` drives scroll transforms.
+
+**Resolution order:** `SKILLS_SCROLL_DESIGN` Worker var (if set) → else JSON `enabled`. Worker + `data.js` normalize to a boolean on `site.features.flags.skillsScrollDesign` for Alpine.
+
+## JSON feature flags (`portfolio.json` → `site.features`)
+
+Sorted keys: **`flags`** (layout / experiment toggles) then **`underConstruction`** (soft section overlays).
+
+### `flags` — local defaults (+ optional Worker override)
+
 ```json
 "features": {
-  "underConstruction": {
-    "contactForm": {
-      "enabled": true,
-      "title": "This page is under construction",
-      "message": "…",
-      "mailLabel": "Email us"
+  "flags": {
+    "skillsScrollDesign": {
+      "enabled": false
     }
+  },
+  "underConstruction": { … }
+}
+```
+
+Set `"enabled": true` for local preview (`npx wrangler dev`, static server). Production: leave `false` in repo; flip via Dashboard `SKILLS_SCROLL_DESIGN=on` if needed.
+
+### `underConstruction` — soft per-section (client-only)
+
+```json
+"underConstruction": {
+  "contactForm": {
+    "enabled": true,
+    "title": "This page is under construction",
+    "message": "…",
+    "mailLabel": "Email us"
   }
 }
 ```
-- Each instance is **named by section** (`contactForm`, and any future key), so it can gate any part of the site.
-- `app.js` exposes a helper: **`uc(key)`** → returns the config object or `{ enabled:false }` if absent.
-- The contact modal ([index.html](../../public/index.html)) binds to `uc('contactForm')`: when enabled it frosts the
-  form (`.modal-form-wrap.is-uc .modal-form { filter: blur(5px) }`), makes it `inert`, and floats a glass
-  `.uc-panel` (wrench icon-chip + title + message + **Email us** CTA — label first, trailing circular
-  `.pill-btn__icon` badge so the `.pill-btn-dark` asymmetric padding lands correctly). Off → panel not rendered,
-  form works normally.
 
-**Add a new one:** add a key under `underConstruction`, then in the target section bind to `uc('<key>')`.
+- `app.js` → **`uc(key)`** returns config or `{ enabled: false }`.
+- Contact modal binds `uc('contactForm')`: frosts form, shows `.uc-panel` when on.
 
-## 2. Maintenance mode (hard, site-wide — Worker-level)
+**Add a new UC flag:** key under `underConstruction`, bind `uc('<key>')` in markup.
 
-Toggled by the **`MAINTENANCE_MODE`** var (`"1"/"true"/"on"`), in `wrangler.toml` or Dashboard → Worker → Settings
-→ Variables. Implemented in `src/index.js` (`maintenanceOn` / `maintenanceResponse`), evaluated first in `fetch`:
-- The page is a **real template file, `src/maintenance.html`** (not an inline string), bundled into the Worker as a
-  **text module** (`[[rules]] type="Text"` in `wrangler.toml`) and rendered by substituting `{{TITLE}}` /
-  `{{MESSAGE}}` / `{{EMAIL}}` (all escaped). Returns a **self-contained 503** (no asset deps, `Retry-After: 3600`,
-  `noindex`), on-brand Tahoe glass + copper, with a `mailto:CONTACT_TO` CTA. Edit the `.html` to restyle it.
-- Copy overridable via `MAINTENANCE_TITLE` / `MAINTENANCE_MESSAGE`.
-- **Owner bypass:** `?preview=<ADMIN_TOKEN>` serves the real site while everyone else sees the 503.
-
-Why Worker-level (not a portfolio.json flag like #1): maintenance must gate **before** any content/JS loads, return a
-real 503, and work even if assets fail — a client-side overlay can't. #1 is a soft per-section notice; #2 is a hard
-whole-site gate.
-
-## 3. Opt-in analytics
+## Opt-in analytics
 
 Config in `portfolio.json → site.analytics`:
 ```json
 "analytics": { "googleId": "", "cloudflareToken": "" }
 ```
-- `sync-head.js → buildAnalytics()` injects the **GA4 gtag** snippet and/or the **Cloudflare Web Analytics beacon**
-  into `<head>` **only when the id/token is non-empty** (ids sanitised to `[\w-]`). Empty → nothing injected → zero
-  external requests, so the default build is unchanged.
-- `src/index.js` CSP allow-lists the analytics hosts (`googletagmanager.com`, `static.cloudflareinsights.com` in
-  `script-src`; `google-analytics.com`, `region1.google-analytics.com`, `cloudflareinsights.com` in `connect-src`).
-  These are **allowed-but-unused** until an id is set.
-- **Zero-config alternative:** Cloudflare **Web Analytics** (Dashboard → zone → Analytics → Web Analytics → automatic)
-  and **Workers** request analytics need no code at all — recommended as the always-on baseline.
-
-### Constraint note
-The "no new network requests" non-negotiable holds **for the default build** (all analytics fields empty). Filling an
-analytics id is a deliberate, documented opt-in that trades one third-party request for measurement; PageSpeed impact
-is minimal (GA4 `async`, CF beacon `defer`).
+- `sync-head.js` injects GA4 / CF beacon **only when non-empty**.
+- CSP hosts allow-listed in `src/index.js` (allowed-but-unused by default).
 
 ## Verify
-- `./build.sh` → head contains **no** analytics tags while ids are empty; set `googleId` → GA4 tags appear.
-- Toggle `uc('contactForm').enabled` → modal blurs + panel; off → normal form.
-- `wrangler dev` with `MAINTENANCE_MODE=1` → every path returns the 503 page; `?preview=<ADMIN_TOKEN>` shows the site.
+- `./build.sh` → no analytics tags while ids empty; set `googleId` → GA4 appears.
+- `uc('contactForm').enabled` → modal blurs + panel; off → normal form.
+- `MAINTENANCE_MODE=1` → 503 everywhere; `?preview=<ADMIN_TOKEN>` → live site.
+- `site.features.flags.skillsScrollDesign.enabled: true` (no Worker var) → scroll layout locally.
+- Dashboard `SKILLS_SCROLL_DESIGN=on` → scroll layout in production; `off` → default grid.
