@@ -26,7 +26,7 @@ function skillsFlatAnimateHeight(panel, toHeight, durationMs, onDone, easing) {
 
   requestAnimationFrame(() => {
     if (inner) { inner.style.willChange = "transform"; inner.style.transform = "translateZ(0)"; }
-    panel.style.transition = "height " + durationMs + "ms " + (easing || SKILLS_FLAT_EASE);
+    panel.style.transition = `height ${durationMs}ms ${easing || SKILLS_FLAT_EASE}`;
     panel.style.height = toHeight;
   });
 }
@@ -57,7 +57,7 @@ function skillsFlatPanel() {
         return;
       }
       panel.style.overflow = "hidden";
-      panel.style.height = inner.scrollHeight + "px";
+      panel.style.height = `${inner.scrollHeight}px`;
       panel.style.transition = "";
     },
 
@@ -113,7 +113,7 @@ function skillsFlatPanel() {
       }
 
       const finish = () => {
-        panel.style.height = inner.scrollHeight + "px";
+        panel.style.height = `${inner.scrollHeight}px`;
         panel.style.overflow = "hidden";
         panel.style.transition = "";
       };
@@ -122,17 +122,17 @@ function skillsFlatPanel() {
         this.skillsFlatOpen = true;
         this.$nextTick(() => {
           panel.style.overflow = "hidden";
-          panel.style.height = panel.offsetHeight + "px";
-          skillsFlatAnimateHeight(panel, inner.scrollHeight + "px", SKILLS_FLAT_T.OPEN, finish);
+          panel.style.height = `${panel.offsetHeight}px`;
+          skillsFlatAnimateHeight(panel, `${inner.scrollHeight}px`, SKILLS_FLAT_T.OPEN, finish);
         });
         return;
       }
 
       panel.style.overflow = "hidden";
-      panel.style.height = panel.scrollHeight + "px";
+      panel.style.height = `${panel.scrollHeight}px`;
       this.skillsFlatOpen = false;
       this.$nextTick(() => {
-        skillsFlatAnimateHeight(panel, inner.scrollHeight + "px", SKILLS_FLAT_T.CLOSE, finish);
+        skillsFlatAnimateHeight(panel, `${inner.scrollHeight}px`, SKILLS_FLAT_T.CLOSE, finish);
       });
     },
   };

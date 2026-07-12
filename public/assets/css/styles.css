@@ -659,7 +659,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
    once a section scrolls near the viewport it renders normally regardless of this placeholder,
    including any user-expanded accordion rows in #experience. Hero (#home) is intentionally excluded
    — it holds the LCP element and must never be skip-rendered. */
-#about        { content-visibility: auto; contain-intrinsic-size: auto 820px; }
+#about        { content-visibility: auto; contain-intrinsic-size: auto 860px; }
 #services     { content-visibility: auto; contain-intrinsic-size: auto 775px; }
 #experience   { content-visibility: auto; contain-intrinsic-size: auto 1803px; }
 /* #skills excluded — height changes from pill FLIP reflow + mobile "View more"; placeholder
@@ -668,7 +668,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 #education    { content-visibility: auto; contain-intrinsic-size: auto 542px; }
 #stats        { content-visibility: auto; contain-intrinsic-size: auto 420px; }
 @media (max-width: 640px) {
-  #about      { contain-intrinsic-size: auto 860px; }
+  #about      { contain-intrinsic-size: auto 920px; }
   #services   { contain-intrinsic-size: auto 933px; }
   #experience { contain-intrinsic-size: auto 3435px; }
   #education  { contain-intrinsic-size: auto 713px; }
@@ -3534,6 +3534,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 }
 .editorial-row { position: relative; }
 .editorial-row__link {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -3542,7 +3543,16 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   padding: 1.35rem 1.25rem;
   color: inherit;
   text-decoration: none;
-  transition: background 0.35s var(--ease-glass);
+  transition: background 0.35s var(--ease-glass), transform 0.5s var(--ease-glass);
+}
+/* Subtle "glass catching light" tilt — driven by --tilt-x/--tilt-y custom properties written from
+   editorial.js's delegated pointermove handler (never el.style.transform directly), so it can never
+   clobber this same element's own CSS-transitioned transform. Row hover lift/shift already lives on
+   the __body/__icon/__arrow children (see below), never on __link itself — no conflict. */
+@media (hover: hover) and (pointer: fine) {
+  .editorial-row__link {
+    transform: perspective(900px) rotateX(var(--tilt-y, 0deg)) rotateY(var(--tilt-x, 0deg));
+  }
 }
 .editorial-row + .editorial-row::before {
   content: "";

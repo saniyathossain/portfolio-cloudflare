@@ -6,7 +6,76 @@
  * @license Proprietary — all rights reserved.
  */
 
-const EDITORIAL_T = { SWITCH: 440, LENS_TRAVEL: 440, EXIT: 200, ENTER: 520 };
+const EDITORIAL_T = { SWITCH: 440, LENS_TRAVEL: 440, EXIT: 170, ENTER: 480 };
+const EDITORIAL_REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const EDITORIAL_TILT_ENABLED =
+  window.matchMedia("(hover: hover) and (pointer: fine)").matches && !EDITORIAL_REDUCED;
+const EDITORIAL_TILT_MAX = 1.2; // deg — subtle "glass catching light" tilt, not a card flip
+
+// Same easeOutCubic count-up curve as reveal.js's stat counters — kept consistent so every rolling
+// number on the page reads as the same motion language, not a bespoke one-off here.
+function editorialAnimateCount(el, to, durationMs) {
+  if (EDITORIAL_REDUCED || !el || el._editorialCounted) return;
+  el._editorialCounted = true;
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  const start = performance.now();
+  const run = (now) => {
+    const t = Math.min((now - start) / durationMs, 1);
+    el.textContent = `${Math.round(ease(t) * to)}`;
+    if (t < 1) requestAnimationFrame(run);
+  };
+  requestAnimationFrame(run);
+}
+
+// Per-row title cascade — reuses blur-reveal.js's exact split/crossfade technique (opacity+transform
+// only, compositor-safe in every browser — see that file) rather than a second text-reveal engine.
+// blur-reveal.js's own IntersectionObserver only scans the DOM once at portfolio-ready, so article
+// rows (rendered later by Alpine, and re-rendered on every filter swap) need a direct call instead.
+function editorialCascadeTitle(el) {
+  if (!window.blurReveal || !el || el.classList.contains("blur-reveal")) return;
+  window.blurReveal.split(el);
+  if (window.blurReveal.reduced) { el.classList.add("is-visible"); return; }
+  requestAnimationFrame(() => requestAnimationFrame(() => window.blurReveal.reveal(el)));
+}
+
+function editorialCascadeTitles(root) {
+  if (!root) return;
+  root.querySelectorAll(".editorial-row__title").forEach(editorialCascadeTitle);
+}
+
+// Cursor tilt on article rows — delegated single pointermove listener (same idiom as motion.js's
+// specular()), writes CSS custom properties only (never el.style.transform directly), so it can
+// never clobber a CSS-transitioned transform on the same element. Row background/lift hovers already
+// live on child elements (__body/__icon/__arrow), not on __link itself, so this is conflict-free.
+function editorialBindRowTilt() {
+  if (!EDITORIAL_TILT_ENABLED || document._editorialTiltBound) return;
+  document._editorialTiltBound = true;
+  let raf = 0;
+  let pending = null;
+  let current = null;
+  const apply = () => {
+    raf = 0;
+    if (!pending || !current) return;
+    const r = current.getBoundingClientRect();
+    const px = (pending.clientX - r.left) / r.width - 0.5;
+    const py = (pending.clientY - r.top) / r.height - 0.5;
+    current.style.setProperty("--tilt-x", `${(px * EDITORIAL_TILT_MAX).toFixed(2)}deg`);
+    current.style.setProperty("--tilt-y", `${(-py * EDITORIAL_TILT_MAX).toFixed(2)}deg`);
+  };
+  document.addEventListener("pointermove", (e) => {
+    const el = e.target.closest && e.target.closest(".editorial-row__link");
+    if (!el) return;
+    current = el;
+    pending = e;
+    if (!raf) raf = requestAnimationFrame(apply);
+  }, { passive: true });
+  document.addEventListener("pointerout", (e) => {
+    const el = e.target.closest && e.target.closest(".editorial-row__link");
+    if (!el || el.contains(e.relatedTarget)) return;
+    el.style.setProperty("--tilt-x", "0deg");
+    el.style.setProperty("--tilt-y", "0deg");
+  }, { passive: true });
+}
 
 function editorialReadEase() {
   return getComputedStyle(document.documentElement).getPropertyValue("--ease-pill-flip").trim()
@@ -35,7 +104,7 @@ function editorialAnimateHeight(panel, toHeight, durationMs, onDone) {
 
   requestAnimationFrame(() => {
     if (inner) { inner.style.willChange = "transform"; inner.style.transform = "translateZ(0)"; }
-    panel.style.transition = "height " + durationMs + "ms " + editorialReadEase();
+    panel.style.transition = `height ${durationMs}ms ${editorialReadEase()}`;
     panel.style.height = toHeight;
   });
 }
@@ -53,7 +122,32 @@ function editorialHelpers() {
       this.$nextTick(() => {
         this.syncTabLens();
         this.bindTabLens();
+        editorialBindRowTilt();
+        editorialCascadeTitles(document.getElementById("editorial-panel"));
+        this.bindTabCountReveal();
       });
+    },
+
+    // Tab counts are static per session (computed once from the article list), so they roll up from
+    // zero the first time the dock actually scrolls into view — not on every render — via a one-shot
+    // IntersectionObserver, same pattern as reveal.js's stat count-up.
+    bindTabCountReveal() {
+      const dock = this.$refs.dock;
+      if (!dock || EDITORIAL_REDUCED || !("IntersectionObserver" in window)) return;
+      const targets = this.platformTabs();
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const btns = Array.from(dock.querySelectorAll(".editorial-tabs__btn"));
+          btns.forEach((btn, i) => {
+            const countEl = btn.querySelector(".editorial-tabs__count");
+            const target = targets[i]?.count;
+            if (countEl && typeof target === "number") editorialAnimateCount(countEl, target, 620);
+          });
+          io.disconnect();
+        }
+      }, { threshold: 0.4 });
+      io.observe(dock);
     },
 
     matchesSearch(article) {
@@ -83,7 +177,7 @@ function editorialHelpers() {
 
     emptySearchHint() {
       const q = String(this.articleQuery || "").trim();
-      if (q) return "Nothing for \"" + q + "\" in this filter. Try another term or platform.";
+      if (q) return `Nothing for "${q}" in this filter. Try another term or platform.`;
       return "No articles in this filter yet.";
     },
 
@@ -121,7 +215,7 @@ function editorialHelpers() {
 
       const from = panel.offsetHeight;
       panel.style.overflow = "hidden";
-      panel.style.height = from + "px";
+      panel.style.height = `${from}px`;
 
       requestAnimationFrame(() => {
         const target = panel.scrollHeight;
@@ -136,14 +230,14 @@ function editorialHelpers() {
           settle();
           return;
         }
-        editorialAnimateHeight(panel, target + "px", editorialReadReflowMs(), settle);
+        editorialAnimateHeight(panel, `${target}px`, editorialReadReflowMs(), settle);
       });
     },
 
     lockDockHeight() {
       const dock = this.$refs.dock;
       if (!dock) return;
-      dock.style.minHeight = dock.offsetHeight + "px";
+      dock.style.minHeight = `${dock.offsetHeight}px`;
     },
 
     releaseDockHeight() {
@@ -157,7 +251,10 @@ function editorialHelpers() {
 
     onSearchInput() {
       cancelAnimationFrame(this._searchRaf);
-      this._searchRaf = requestAnimationFrame(() => this.reflowEditorialPanel());
+      this._searchRaf = requestAnimationFrame(() => {
+        this.reflowEditorialPanel();
+        editorialCascadeTitles(document.getElementById("editorial-panel"));
+      });
     },
 
     openSearch() {
@@ -226,10 +323,10 @@ function editorialHelpers() {
       tabs._lastTabX = x;
       tabs._lastTabY = y;
 
-      tabs.style.setProperty("--tab-x", x + "px");
-      tabs.style.setProperty("--tab-y", y + "px");
-      tabs.style.setProperty("--tab-w", w + "px");
-      tabs.style.setProperty("--tab-h", h + "px");
+      tabs.style.setProperty("--tab-x", `${x}px`);
+      tabs.style.setProperty("--tab-y", `${y}px`);
+      tabs.style.setProperty("--tab-w", `${w}px`);
+      tabs.style.setProperty("--tab-h", `${h}px`);
       tabs.style.setProperty("--tab-o", "1");
     },
 
@@ -252,8 +349,8 @@ function editorialHelpers() {
         const r = btn.getBoundingClientRect();
         const x = ((e.clientX - r.left) / r.width) * 100;
         const y = ((e.clientY - r.top) / r.height) * 100;
-        btn.style.setProperty("--tx", x.toFixed(1) + "%");
-        btn.style.setProperty("--ty", y.toFixed(1) + "%");
+        btn.style.setProperty("--tx", `${x.toFixed(1)}%`);
+        btn.style.setProperty("--ty", `${y.toFixed(1)}%`);
         btn.classList.add("is-pressed");
       }, { passive: true });
       const releaseBtn = (e) => {
@@ -325,6 +422,7 @@ function editorialHelpers() {
         this.$nextTick(() => {
           this.syncTabLens();
           this.filterAnim = "enter";
+          editorialCascadeTitles(panel);
 
           if (!panel || !inner || reduced) {
             clearTimeout(this._enterTimer);
@@ -356,7 +454,7 @@ function editorialHelpers() {
 
     articleDateLabel(date) {
       if (!date) return "";
-      const d = new Date(String(date) + "T12:00:00");
+      const d = new Date(`${String(date)}T12:00:00`);
       if (Number.isNaN(d.getTime())) return date;
       return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
     },

@@ -54,7 +54,7 @@ function yearsSince(dateStr, offset) {
 }
 
 function fillTemplate(str, vars) {
-  return String(str || "").replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : "{" + key + "}"));
+  return String(str || "").replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : `{${key}}`));
 }
 
 // Opt-in analytics — emitted only when an id/token is set in portfolio.json (site.analytics).
@@ -103,11 +103,11 @@ function buildHead(data) {
     "@context": "https://schema.org",
     "@type": "Person",
     name: profile.name,
-    alternateName: profile.shortName + " Hossain",
+    alternateName: `${profile.shortName} Hossain`,
     jobTitle: profile.title,
     url: site.url,
     image: absUrl(site.url, profile.avatar),
-    email: "mailto:" + profile.email,
+    email: `mailto:${profile.email}`,
     sameAs: (socials || []).map((s) => s.href),
   };
 
@@ -144,14 +144,14 @@ ${stylesheetLinks()}${buildAnalytics(site)}`;
 
 
 function buildHeroEyebrow(profile) {
-  return esc(profile.title + " · " + profile.location);
+  return esc(`${profile.title} · ${profile.location}`);
 }
 
 function buildHeroRating(profile) {
   const years = yearsSince(profile.experienceStartDate, profile.experienceYearsOffset);
   const tail = profile.heroRatingTail || "";
   // Matches data.js: profile.years = years+"+" ; heroRating = years+" years · "+tail
-  return esc(years + "+ years · " + tail);
+  return esc(`${years}+ years · ${tail}`);
 }
 
 function buildHeroWm(profile) {
@@ -175,8 +175,8 @@ function buildH1(profile) {
 function replaceBlock(html, start, end, content) {
   const a = html.indexOf(start);
   const b = html.indexOf(end);
-  if (a === -1 || b === -1) throw new Error("Missing markers: " + start);
-  return html.slice(0, a + start.length) + "\n" + content + "\n  " + html.slice(b);
+  if (a === -1 || b === -1) throw new Error(`Missing markers: ${start}`);
+  return `${html.slice(0, a + start.length)}\n${content}\n  ${html.slice(b)}`;
 }
 
 const data = JSON.parse(fs.readFileSync(JSON_PATH, "utf8"));

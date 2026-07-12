@@ -182,9 +182,9 @@ function portfolioApp() {
           travelTimer = setTimeout(() => nav.classList.remove("is-traveling"), 440);
         }
         lastX = x;
-        nav.style.setProperty("--pill-x", x + "px");
-        nav.style.setProperty("--pill-w", btn.offsetWidth + "px");
-        nav.style.setProperty("--pill-h", btn.offsetHeight + "px");
+        nav.style.setProperty("--pill-x", `${x}px`);
+        nav.style.setProperty("--pill-w", `${btn.offsetWidth}px`);
+        nav.style.setProperty("--pill-h", `${btn.offsetHeight}px`);
         nav.style.setProperty("--pill-o", "1");
       };
       // Music-app press: holding a tab inflates the lens under the finger/cursor; release springs
@@ -326,9 +326,9 @@ function portfolioApp() {
       const m = String(now.getMinutes()).padStart(2, "0");
       const mer = h < 12 ? "am" : "pm";
       h = h % 12 || 12;
-      this.clockTime = h + ":" + m + mer;
+      this.clockTime = `${h}:${m}${mer}`;
       const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-      this.clockDate = now.getDate() + " " + months[now.getMonth()] + ", " + now.getFullYear();
+      this.clockDate = `${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
 
       // Analog hour/minute hands: set directly each tick (they barely move between ticks, and ease
       // via CSS transition). clockAngleS only matters as the reduced-motion static fallback below —
@@ -347,7 +347,7 @@ function portfolioApp() {
     initClockSweep() {
       const now = new Date();
       const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
-      this.clockSecondDelay = "-" + seconds.toFixed(3) + "s";
+      this.clockSecondDelay = `-${seconds.toFixed(3)}s`;
     },
 
     // Locking via plain `overflow: hidden` on <html>/<body> silently resets scrollTop to 0 in
@@ -376,7 +376,7 @@ function portfolioApp() {
       document.body.classList[fn]("scroll-lock");
       if (on) {
         this._lockedScrollY = y;
-        document.body.style.top = -y + "px";
+        document.body.style.top = `${-y}px`;
       } else {
         document.body.style.top = "";
         // Reading a layout property forces a synchronous reflow, so the browser recomputes the
@@ -398,7 +398,7 @@ function portfolioApp() {
     },
 
     setHash(id, { replace = false } = {}) {
-      const hash = id && id !== "home" ? "#" + id : "";
+      const hash = id && id !== "home" ? `#${id}` : "";
       const url = location.pathname + location.search + hash;
       if (replace) history.replaceState(null, "", url);
       else history.pushState(null, "", url);
@@ -508,10 +508,10 @@ function portfolioApp() {
       if (!r.width) return;
       Object.assign(close.style, {
         position: "fixed",
-        top: r.top + "px",
-        left: r.left + "px",
-        width: r.width + "px",
-        height: r.height + "px",
+        top: `${r.top}px`,
+        left: `${r.left}px`,
+        width: `${r.width}px`,
+        height: `${r.height}px`,
         margin: "0",
       });
     },
@@ -567,7 +567,7 @@ function portfolioApp() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error("HTTP " + res.status);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         this.success = true;
         form.reset();
         if (window.turnstile) { try { window.turnstile.reset(); } catch (_) { /* widget not rendered */ } }
@@ -600,7 +600,7 @@ function portfolioApp() {
         blue: { tint: "var(--c-blue)", ink: "var(--c-blue)" },
       };
       const v = map[tint] || map.accent;
-      return "--tint:" + v.tint + ";--tint-ink:" + v.ink;
+      return `--tint:${v.tint};--tint-ink:${v.ink}`;
     },
 
     // Direction-aware content swap: slide+fade the OLD caption/title out, swap the underlying data
@@ -632,7 +632,7 @@ function portfolioApp() {
       // the very transition this call is about to trigger.
       wrap.classList.remove("is-swapping-next", "is-swapping-prev", "is-swap-instant", "is-entering-next", "is-entering-prev");
       void wrap.offsetWidth;
-      wrap.classList.add("is-swapping-" + dir_);
+      wrap.classList.add(`is-swapping-${dir_}`);
       const badgeIcon = this._badgeIconEl || (this._badgeIconEl = document.querySelector(".hero-card__badge-icon"));
       if (badgeIcon) badgeIcon.classList.remove("is-pulsing"); // same defensive clear as above, cheap insurance
 
@@ -651,11 +651,11 @@ function portfolioApp() {
       const badgeIcon = this._badgeIconEl || (this._badgeIconEl = document.querySelector(".hero-card__badge-icon"));
       wrap.classList.add("is-swap-instant"); // transitions off for one frame — reposition is a silent jump
       wrap.classList.remove("is-swapping-next", "is-swapping-prev");
-      wrap.classList.add("is-entering-" + dir_);
+      wrap.classList.add(`is-entering-${dir_}`);
       if (badgeIcon) badgeIcon.classList.add("is-pulsing"); // brief Dynamic-Island-style content-ack pulse
       requestAnimationFrame(() => {
         requestAnimationFrame(() => { // double-rAF: same idiom as reveal.js's is-visible add
-          wrap.classList.remove("is-swap-instant", "is-entering-" + dir_); // now animates back to rest
+          wrap.classList.remove("is-swap-instant", `is-entering-${dir_}`); // now animates back to rest
           if (badgeIcon) badgeIcon.classList.remove("is-pulsing");
         });
       });
@@ -723,7 +723,7 @@ function portfolioApp() {
         // the cached layer, so the glossy content repaints every frame as the clip grows. An explicit
         // 3D transform forces a real compositor layer — content rasterized once, then only clipped.
         if (inner) { inner.style.willChange = "transform"; inner.style.transform = "translateZ(0)"; }
-        panel.style.transition = "height " + durationMs + "ms " + (easing || "cubic-bezier(0.32, 0.72, 0, 1)");
+        panel.style.transition = `height ${durationMs}ms ${easing || "cubic-bezier(0.32, 0.72, 0, 1)"}`;
         panel.style.height = toHeight;
       });
     },
@@ -735,7 +735,7 @@ function portfolioApp() {
         return;
       }
 
-      const panel = document.getElementById("exp-panel-" + id);
+      const panel = document.getElementById(`exp-panel-${id}`);
       const inner = panel?.querySelector(".exp-details__inner");
       if (!panel || !inner) {
         this.openRoles[id] = opening;
@@ -767,14 +767,14 @@ function portfolioApp() {
             // y>1 makes `height` genuinely stretch a few % past scrollHeight then settle, a real
             // spring bounce. Close stays on the flat decel curve (default) — bouncing right before
             // fully collapsing would read as a glitch, not a spring.
-            this._animateHeight(panel, inner.scrollHeight + "px", T.ROLE_OPEN, finish, "cubic-bezier(0.34, 1.56, 0.64, 1)");
+            this._animateHeight(panel, `${inner.scrollHeight}px`, T.ROLE_OPEN, finish, "cubic-bezier(0.34, 1.56, 0.64, 1)");
           });
         });
         return;
       }
 
       panel.style.overflow = "hidden";
-      panel.style.height = panel.scrollHeight + "px";
+      panel.style.height = `${panel.scrollHeight}px`;
       this._animateHeight(panel, "0px", T.ROLE_CLOSE, () => {
         this.openRoles[id] = false;
         finish();

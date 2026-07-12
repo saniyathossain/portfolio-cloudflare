@@ -49,8 +49,8 @@
       const r = container.getBoundingClientRect();
       canvas.width = Math.max(1, Math.floor(r.width * dpr));
       canvas.height = Math.max(1, Math.floor(r.height * dpr));
-      canvas.style.width = r.width + "px";
-      canvas.style.height = r.height + "px";
+      canvas.style.width = `${r.width}px`;
+      canvas.style.height = `${r.height}px`;
       radius = Math.min(r.width, r.height) * BRUSH_FRACTION * dpr;
       cover = document.createElement("canvas");
       cover.width = canvas.width;
@@ -114,7 +114,7 @@
       }
       const fade = drawing ? DECAY : Math.min(DECAY + idle * 0.004, 0.5);
       ctx.globalCompositeOperation = "destination-out";
-      ctx.fillStyle = "rgba(0,0,0," + fade + ")";
+      ctx.fillStyle = `rgba(0,0,0,${fade})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.globalCompositeOperation = "source-over";
       if (points.length) {
