@@ -61,7 +61,7 @@ function editorialMakeSpring(apply, stiffness) {
     cx += (tx - cx) * stiffness;
     cy += (ty - cy) * stiffness;
     apply(cx, cy);
-    raf = (Math.abs(tx - cx) > 0.01 || Math.abs(ty - cy) > 0.01) ? requestAnimationFrame(tick) : 0;
+    raf = (Math.abs(tx - cx) > 0.005 || Math.abs(ty - cy) > 0.005) ? requestAnimationFrame(tick) : 0;
   }
   return {
     set(x, y) { tx = x; ty = y; if (!raf) raf = requestAnimationFrame(tick); },
