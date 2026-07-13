@@ -24,8 +24,8 @@
     const margin = Math.round(vh * 0.08);
     if (rect.top < vh - margin && rect.bottom > margin) {
       const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
-      el.style.setProperty("--reveal-delay", delay + "ms");
-      if (delay) el.style.transitionDelay = delay + "ms";
+      el.style.setProperty("--reveal-delay", `${delay}ms`);
+      if (delay) el.style.transitionDelay = `${delay}ms`;
       el.classList.add("is-visible");
       revealIO?.unobserve(el);
     }
@@ -43,8 +43,8 @@
             if (e.isIntersecting) {
               const el2 = e.target;
               const delay = parseInt(el2.getAttribute("data-delay") || "0", 10);
-              el2.style.setProperty("--reveal-delay", delay + "ms");
-              if (delay) el2.style.transitionDelay = delay + "ms";
+              el2.style.setProperty("--reveal-delay", `${delay}ms`);
+              if (delay) el2.style.transitionDelay = `${delay}ms`;
               requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                   el2.classList.add("is-visible");
@@ -72,7 +72,7 @@
     const step = parseInt(row.getAttribute("data-stagger-step") || "85", 10);
     const base = parseInt(row.getAttribute("data-stagger-base") || "50", 10);
     for (let i = 0; i < kids.length; i++) {
-      kids[i].style.setProperty("--reveal-delay", base + i * step + "ms");
+      kids[i].style.setProperty("--reveal-delay", `${base + i * step}ms`);
     }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -110,7 +110,7 @@
     const els = document.querySelectorAll("[data-count]");
     if (reduced) {
       els.forEach((el) => {
-        el.textContent = (el.getAttribute("data-value") || "0") + (el.getAttribute("data-suffix") || "");
+        el.textContent = `${el.getAttribute("data-value") || "0"}${el.getAttribute("data-suffix") || ""}`;
       });
       return;
     }
@@ -126,7 +126,7 @@
           const ease = (t) => 1 - Math.pow(1 - t, 3);
           const run = (now) => {
             const t = Math.min((now - st) / dur, 1);
-            el.textContent = Math.round(ease(t) * val) + suf;
+            el.textContent = `${Math.round(ease(t) * val)}${suf}`;
             if (t < 1) requestAnimationFrame(run);
           };
           requestAnimationFrame(run);
@@ -145,7 +145,7 @@
     const w = window.innerWidth;
     const widthReduction = ((baseWidth - w) / baseWidth) * 100;
     const size = FONT_BASE - (FONT_BASE * (widthReduction * coef)) / 100;
-    if (size > FONT_BASE) document.documentElement.style.fontSize = size + "px";
+    if (size > FONT_BASE) document.documentElement.style.fontSize = `${size}px`;
     else document.documentElement.style.removeProperty("font-size");
   }
 

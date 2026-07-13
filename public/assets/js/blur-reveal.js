@@ -80,13 +80,13 @@
       cur.words.push(words[i]);
     }
 
-    const dur = (seg * 6 * speed).toFixed(3) + "s"; // smooth per-segment fade (~0.36s headings)
+    const dur = `${(seg * 6 * speed).toFixed(3)}s`; // smooth per-segment fade (~0.36s headings)
     segments.forEach((sgm, idx) => {
       const text = sgm.words.join(" ");
-      const delay = Math.min(idx * seg * speed, 0.5).toFixed(3) + "s"; // cap stagger so long copy isn't sluggish
+      const delay = `${Math.min(idx * seg * speed, 0.5).toFixed(3)}s`; // cap stagger so long copy isn't sluggish
       const s = document.createElement("span");
-      const hlClass = sgm.key === null ? "" : " blur-reveal__word--hl" + (sgm.key ? "-" + sgm.key : "");
-      s.className = "blur-reveal__word" + hlClass;
+      const hlClass = sgm.key === null ? "" : ` blur-reveal__word--hl${sgm.key ? `-${sgm.key}` : ""}`;
+      s.className = `blur-reveal__word${hlClass}`;
       s.textContent = text; // sharp copy, stays in flow and sizes the box
       s.style.transitionDuration = dur;
       s.style.transitionDelay = delay;
@@ -109,7 +109,7 @@
   // forever. Only compositor-only properties animate here, so this is smooth in every browser.
   function reveal(el) {
     const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
-    if (delay) el.style.setProperty("--blur-delay", delay + "ms");
+    if (delay) el.style.setProperty("--blur-delay", `${delay}ms`);
 
     const spans = el.querySelectorAll(".blur-reveal__word");
     spans.forEach((s) => {
@@ -160,4 +160,9 @@
 
   window.addEventListener("portfolio-ready", init);
   if (window.__portfolioReady) init();
+
+  // Exposed so other components (e.g. editorial.js's per-row title cascade) can reuse the exact same
+  // split/crossfade technique on elements rendered after portfolio-ready — the IntersectionObserver
+  // above only ever scans the DOM once, so late/dynamically-rendered elements need direct calls.
+  window.blurReveal = { split: splitWords, reveal, reduced };
 })();

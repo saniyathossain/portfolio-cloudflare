@@ -172,7 +172,7 @@ function _hexToRgb(hex) {
 
 function _rgbToHex(rgb) {
   const to = (c) => Math.round(Math.max(0, Math.min(255, c * 255))).toString(16).padStart(2, "0");
-  return "#" + to(rgb.r) + to(rgb.g) + to(rgb.b);
+  return `#${to(rgb.r)}${to(rgb.g)}${to(rgb.b)}`;
 }
 
 function _mixRgb(a, b, t) {
@@ -323,14 +323,14 @@ function _formatTenureMonths(total) {
   if (total < 1) total = 1;
   const years = Math.floor(total / 12);
   const months = total % 12;
-  const yearStr = years + (years === 1 ? " year" : " years");
-  const monthStr = months + (months === 1 ? " month" : " months");
+  const yearStr = `${years}${years === 1 ? " year" : " years"}`;
+  const monthStr = `${months}${months === 1 ? " month" : " months"}`;
   // Show the leftover months alongside the years when there is a remainder ("5 years 3 months") so
   // the duration is precise; an exact multiple of 12 stays years-only ("2 years"); a genuinely
   // sub-year tenure (some shorter contract stints) shows months only rather than a misleading
   // "1 year" or a meaningless "0 years".
   const label = years >= 1
-    ? (months > 0 ? yearStr + " " + monthStr : yearStr)
+    ? (months > 0 ? `${yearStr} ${monthStr}` : yearStr)
     : monthStr;
   return { years, months, totalMonths: total, label };
 }
@@ -351,7 +351,7 @@ function _tenureOf(period) {
 // omitting a months breakdown that the underlying data doesn't actually support to that precision.
 function _eduTenureOf(startYear, endYear) {
   const years = Math.max(1, (parseInt(endYear, 10) || 0) - (parseInt(startYear, 10) || 0));
-  return { years, label: years + (years === 1 ? " year" : " years") };
+  return { years, label: `${years}${years === 1 ? " year" : " years"}` };
 }
 
 function _companyTenureOf(roles) {
@@ -377,7 +377,7 @@ function _setMeta(attr, key, content) {
 function _absUrl(siteUrl, path) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
-  return String(siteUrl || "").replace(/\/$/, "") + path;
+  return `${String(siteUrl || "").replace(/\/$/, "")}${path}`;
 }
 
 function _applySiteMeta(data) {
@@ -404,11 +404,11 @@ function _applySiteMeta(data) {
     "@context": "https://schema.org",
     "@type": "Person",
     name: profile.name,
-    alternateName: profile.shortName + " Hossain",
+    alternateName: `${profile.shortName} Hossain`,
     jobTitle: profile.title,
     url: site.url,
     image: _absUrl(site.url, profile.avatar),
-    email: "mailto:" + profile.email,
+    email: `mailto:${profile.email}`,
     sameAs: (socials || []).map((s) => s.href),
   };
   let script = document.getElementById("ld-person");
@@ -482,7 +482,7 @@ function _yearsSince(dateStr, offset) {
 // sections.experience (live, per page load) and, separately, sync-head.js's build-time
 // ogDescription (same placeholder syntax, different runtime, no shared module between the two).
 function _fillTemplate(str, vars) {
-  return String(str || "").replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : "{" + key + "}"));
+  return String(str || "").replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : `{${key}}`));
 }
 
 function _applySectionSubs(data) {
@@ -516,7 +516,7 @@ function _highlightTerms(text, terms) {
   const escaped = _escapeHtml(text || "");
   if (!terms || !terms.length) return escaped;
   const sorted = terms.slice().sort((a, b) => b.length - a.length).map(_escapeRegex);
-  const re = new RegExp("(" + sorted.join("|") + ")", "gi");
+  const re = new RegExp(`(${sorted.join("|")})`, "gi");
   return escaped.replace(re, '<strong class="exp-highlight">$1</strong>');
 }
 
@@ -543,7 +543,7 @@ function _hydrate(raw) {
       label: name,
       color,
       raw,
-      src: b && b.icon ? "/assets/img/brands/" + b.icon + ".svg" : null,
+      src: b && b.icon ? `/assets/img/brands/${b.icon}.svg` : null,
       mono: String(name || "?").trim().charAt(0).toUpperCase(),
       fg: _readableFg(color),
     };
@@ -562,8 +562,8 @@ function _hydrate(raw) {
   const years = _yearsSince(data.profile.experienceStartDate, data.profile.experienceYearsOffset);
   const rolesCount = (data.experiences || []).length;
   const companiesCount = data.experienceGroups.length;
-  data.profile.years = years + "+";
-  data.profile.heroRating = data.profile.years + " years · " + (data.profile.heroRatingTail || "");
+  data.profile.years = `${years}+`;
+  data.profile.heroRating = `${data.profile.years} years · ${data.profile.heroRatingTail || ""}`;
   data.sections = Object.assign({}, DEFAULT_SECTIONS, raw.sections || {});
   const tplVars = { years, roles: rolesCount, companies: companiesCount };
   data.sections.experience = _fillTemplate(data.sections.experience, tplVars);
@@ -579,7 +579,7 @@ function _hydrate(raw) {
   const topEdu = (data.education || [])[0];
   if (topEdu) {
     const city = String(topEdu.place || "").split(",")[0].trim();
-    data.sections.education = topEdu.subject + (city ? " — " + city : "") + ".";
+    data.sections.education = `${topEdu.subject}${city ? ` — ${city}` : ""}.`;
   }
   // The "stacks" stat is a curated headline figure (the core backend/frontend/dev-ops stacks),
   // authored directly in portfolio.json — it is deliberately NOT a raw count of every skill/tool
@@ -610,7 +610,7 @@ window.PORTFOLIO_DATA = null;
 
 window.portfolioDataReady = fetch("/assets/data/portfolio.json")
   .then((r) => {
-    if (!r.ok) throw new Error("portfolio.json " + r.status);
+    if (!r.ok) throw new Error(`portfolio.json ${r.status}`);
     return r.json();
   })
   .then((raw) => {

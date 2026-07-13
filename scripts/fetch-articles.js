@@ -28,7 +28,7 @@ function get(url) {
           return;
         }
         if (res.statusCode !== 200) {
-          reject(new Error(url + " → " + res.statusCode));
+          reject(new Error(`${url} → ${res.statusCode}`));
           res.resume();
           return;
         }
@@ -38,16 +38,16 @@ function get(url) {
       })
       .on("error", reject)
       .setTimeout(10000, function () {
-        this.destroy(new Error("timeout: " + url));
+        this.destroy(new Error(`timeout: ${url}`));
       });
   });
 }
 
 async function fetchDevTo() {
-  const body = await get("https://dev.to/api/articles?username=" + DEVTO_USERNAME);
+  const body = await get(`https://dev.to/api/articles?username=${DEVTO_USERNAME}`);
   const list = JSON.parse(body);
   return list.map((a) => ({
-    id: "devto:" + a.id,
+    id: `devto:${a.id}`,
     platform: "dev.to",
     title: a.title,
     href: a.url,
@@ -67,7 +67,7 @@ function parseMediumRss(xml) {
   while ((m = itemRe.exec(xml))) {
     const block = m[1];
     const pick = (tag) => {
-      const re = new RegExp("<" + tag + ">(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/" + tag + ">");
+      const re = new RegExp(`<${tag}>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/${tag}>`);
       const mm = block.match(re);
       return mm ? mm[1].trim() : "";
     };
@@ -85,7 +85,7 @@ function parseMediumRss(xml) {
     if (!title || !link) continue;
     const date = pubDate ? new Date(pubDate).toISOString().slice(0, 10) : "";
     items.push({
-      id: "medium:" + link,
+      id: `medium:${link}`,
       platform: "Medium",
       title,
       href: link,
@@ -99,7 +99,7 @@ function parseMediumRss(xml) {
 }
 
 async function fetchMedium() {
-  const xml = await get("https://" + MEDIUM_USERNAME + ".medium.com/feed");
+  const xml = await get(`https://${MEDIUM_USERNAME}.medium.com/feed`);
   return parseMediumRss(xml);
 }
 
@@ -139,10 +139,10 @@ async function main() {
   }
 
   raw.articles = mergeArticles(existing, fetched);
-  fs.writeFileSync(JSON_PATH, JSON.stringify(raw, null, 2) + "\n");
+  fs.writeFileSync(JSON_PATH, `${JSON.stringify(raw, null, 2)}\n`);
   const newCount = raw.articles.filter((a) => !existing.some((e) => e.id === a.id)).length;
   console.log(
-    "fetch-articles: merged " + fetched.length + " posts (" + newCount + " new, added as inactive — curate via `active` in portfolio.json)."
+    `fetch-articles: merged ${fetched.length} posts (${newCount} new, added as inactive — curate via \`active\` in portfolio.json).`
   );
 }
 

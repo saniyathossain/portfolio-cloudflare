@@ -47,13 +47,13 @@ const SECURITY_HEADERS = {
   // Worker (and therefore this CSP) was being bypassed in production until run_worker_first was added
   // (see docs/aidlc/43-pagespeed-cloudflare-edge.md) — the CSP had never actually been enforced live.
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' " + TURNSTILE + " " + ANALYTICS_SCRIPT + "; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' " + TURNSTILE + " " + ANALYTICS_CONNECT + "; frame-src " + TURNSTILE + "; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' ${TURNSTILE} ${ANALYTICS_SCRIPT}; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' ${TURNSTILE} ${ANALYTICS_CONNECT}; frame-src ${TURNSTILE}; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
 };
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=f37e8249e562>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=f37e8249e562>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=ffbfd6852f0e>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=ffbfd6852f0e>; rel=preload; as=image; type=image/svg+xml",
   "</assets/fonts/inter-latin.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
 ].join(", ");
 
@@ -187,7 +187,7 @@ function timingSafeEqual(a, b) {
 // stop a naive hammer without needing a paid WAF rule.
 async function checkRateLimit(env, ip) {
   if (!env.CONTACT_KV || !ip) return true;
-  const key = "ratelimit:contact:" + ip;
+  const key = `ratelimit:contact:${ip}`;
   try {
     const hit = await env.CONTACT_KV.get(key);
     if (hit) return false;
@@ -215,7 +215,7 @@ async function verifyTurnstile(secret, token, ip) {
   form.append("response", token);
   if (ip) form.append("remoteip", ip);
   try {
-    const r = await fetch(TURNSTILE + "/turnstile/v0/siteverify", { method: "POST", body: form });
+    const r = await fetch(`${TURNSTILE}/turnstile/v0/siteverify`, { method: "POST", body: form });
     const data = await r.json();
     return !!(data && data.success);
   } catch (err) {
@@ -227,19 +227,16 @@ async function verifyTurnstile(secret, token, ip) {
 // Build a minimal, spec-valid RFC 5322 message. Subject + body are base64/encoded-word so any
 // unicode a visitor types survives. Reply-To is the visitor so a reply goes straight back to them.
 function buildMime({ from, to, name, email, project }) {
-  const subject = "New portfolio contact — " + name;
-  const body =
-    "Name: " + name + "\r\n" +
-    "Email: " + email + "\r\n\r\n" +
-    project + "\r\n";
+  const subject = `New portfolio contact — ${name}`;
+  const body = `Name: ${name}\r\nEmail: ${email}\r\n\r\n${project}\r\n`;
   const b64body = b64utf8(body).replace(/(.{76})/g, "$1\r\n"); // wrap at 76 cols per MIME
   return [
-    "From: Portfolio Contact <" + from + ">",
-    "To: <" + to + ">",
-    "Reply-To: " + name + " <" + email + ">",
-    "Message-ID: <" + crypto.randomUUID() + "@saniyat.com>",
-    "Date: " + new Date().toUTCString(),
-    "Subject: =?UTF-8?B?" + b64utf8(subject) + "?=",
+    `From: Portfolio Contact <${from}>`,
+    `To: <${to}>`,
+    `Reply-To: ${name} <${email}>`,
+    `Message-ID: <${crypto.randomUUID()}@saniyat.com>`,
+    `Date: ${new Date().toUTCString()}`,
+    `Subject: =?UTF-8?B?${b64utf8(subject)}?=`,
     "MIME-Version: 1.0",
     "Content-Type: text/plain; charset=utf-8",
     "Content-Transfer-Encoding: base64",
@@ -308,7 +305,7 @@ async function handleContact(request, env) {
   if (env.CONTACT_KV) {
     try {
       await env.CONTACT_KV.put(
-        "contact:" + record.ts + ":" + crypto.randomUUID(),
+        `contact:${record.ts}:${crypto.randomUUID()}`,
         JSON.stringify(record),
         { expirationTtl: 60 * 60 * 24 * 365 }
       );

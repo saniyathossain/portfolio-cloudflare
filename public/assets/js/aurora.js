@@ -61,9 +61,9 @@
         const rad = b.r * minDim * (0.9 + 0.1 * Math.sin(t * 0.006 + b.ph));
         const k = b.k == null ? 1 : b.k;
         const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
-        g.addColorStop(0, "rgba(" + b.h + "," + (0.34 * k).toFixed(3) + ")");
-        g.addColorStop(0.5, "rgba(" + b.h + "," + (0.14 * k).toFixed(3) + ")");
-        g.addColorStop(1, "rgba(" + b.h + ",0)");
+        g.addColorStop(0, `rgba(${b.h},${(0.34 * k).toFixed(3)})`);
+        g.addColorStop(0.5, `rgba(${b.h},${(0.14 * k).toFixed(3)})`);
+        g.addColorStop(1, `rgba(${b.h},0)`);
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H);
       }

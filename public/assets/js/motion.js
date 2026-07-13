@@ -37,7 +37,7 @@
   function magnetic(el, strength) {
     strength = strength || 0.14;
     const spring = makeSpring(el, (node, x, y) => {
-      node.style.transform = "translate(" + x.toFixed(2) + "px," + y.toFixed(2) + "px)";
+      node.style.transform = `translate(${x.toFixed(2)}px,${y.toFixed(2)}px)`;
     }, 0.22);
     el.addEventListener("pointermove", (e) => {
       const r = el.getBoundingClientRect();
@@ -51,7 +51,7 @@
   function tilt(el, max) {
     max = max || 5;
     const spring = makeSpring(el, (node, rx, ry) => {
-      node.style.transform = "rotateY(" + rx.toFixed(2) + "deg) rotateX(" + ry.toFixed(2) + "deg)";
+      node.style.transform = `rotateY(${rx.toFixed(2)}deg) rotateX(${ry.toFixed(2)}deg)`;
     }, 0.18);
     el.addEventListener("pointermove", (e) => {
       const r = el.getBoundingClientRect();
@@ -73,8 +73,8 @@
       const r = current.getBoundingClientRect();
       const px = ((pending.clientX - r.left) / r.width) * 100;
       const py = ((pending.clientY - r.top) / r.height) * 100;
-      current.style.setProperty("--px", px.toFixed(1) + "%");
-      current.style.setProperty("--py", py.toFixed(1) + "%");
+      current.style.setProperty("--px", `${px.toFixed(1)}%`);
+      current.style.setProperty("--py", `${py.toFixed(1)}%`);
     }
     document.addEventListener(
       "pointermove",
@@ -105,8 +105,8 @@
     function settle() {
       cx += (tx - cx) * 0.12;
       cy += (ty - cy) * 0.12;
-      layer.style.setProperty("--hero-spatial-x", cx.toFixed(2) + "px");
-      layer.style.setProperty("--hero-spatial-y", cy.toFixed(2) + "px");
+      layer.style.setProperty("--hero-spatial-x", `${cx.toFixed(2)}px`);
+      layer.style.setProperty("--hero-spatial-y", `${cy.toFixed(2)}px`);
       raf = (Math.abs(tx - cx) > 0.05 || Math.abs(ty - cy) > 0.05) ? requestAnimationFrame(settle) : 0;
     }
     function kick() {
@@ -133,11 +133,11 @@
     const y = Math.min(scrollY * 0.10 * s, 70 * s);
     const wm = Math.min(scrollY * 0.06 * s, 48 * s);
     const liquid = Math.min(scrollY * 0.08 * s, 56 * s);
-    document.documentElement.style.setProperty("--aurora-y", y.toFixed(1) + "px");
-    document.documentElement.style.setProperty("--wm-parallax-y", wm.toFixed(1) + "px");
-    document.documentElement.style.setProperty("--hero-liquid-y", liquid.toFixed(1) + "px");
+    document.documentElement.style.setProperty("--aurora-y", `${y.toFixed(1)}px`);
+    document.documentElement.style.setProperty("--wm-parallax-y", `${wm.toFixed(1)}px`);
+    document.documentElement.style.setProperty("--hero-liquid-y", `${liquid.toFixed(1)}px`);
     const glow = document.getElementById("heroGlow");
-    if (glow) glow.style.setProperty("--glow-parallax-y", (y * 1.4).toFixed(1) + "px");
+    if (glow) glow.style.setProperty("--glow-parallax-y", `${(y * 1.4).toFixed(1)}px`);
   }
 
   // Generic depth parallax for any [data-parallax] element — transform-only, in-view only, cheap.
@@ -167,7 +167,7 @@
       const top = d.docTop - scrollY;
       if (top + d.height < -240 || top > vh + 240) continue; // skip far off-screen
       const offset = ((top + d.height / 2) - vh / 2) * -d.speed;
-      d.el.style.setProperty("--parallax-y", offset.toFixed(1) + "px");
+      d.el.style.setProperty("--parallax-y", `${offset.toFixed(1)}px`);
     }
   }
 
@@ -285,7 +285,7 @@
       const h = inner.scrollHeight;
       if (h < 2) return;
       panel.style.overflow = "hidden";
-      panel.style.height = h + "px";
+      panel.style.height = `${h}px`;
     }
 
     function readTargetHeight(panel, inner) {
@@ -304,7 +304,7 @@
     }
 
     function settlePanelHeight(panel, to) {
-      panel.style.height = to + "px";
+      panel.style.height = `${to}px`;
       panel.style.overflow = "hidden";
       requestAnimationFrame(() => { panel.style.transition = ""; });
     }
@@ -313,7 +313,7 @@
       const t = resolveReflowTarget(row);
       if (!t || t.panel._heightTimer) return null;
       t.panel.style.overflow = "hidden";
-      t.panel.style.height = t.panel.offsetHeight + "px";
+      t.panel.style.height = `${t.panel.offsetHeight}px`;
       return t;
     }
 
@@ -339,7 +339,7 @@
         st.raf = 0;
         if (!panel.style.height || panel.style.height === "auto") {
           panel.style.overflow = "hidden";
-          panel.style.height = panel.offsetHeight + "px";
+          panel.style.height = `${panel.offsetHeight}px`;
         }
         const from = panel.offsetHeight;
         const to = precomputedTo != null ? precomputedTo : readTargetHeight(panel, inner);
@@ -370,8 +370,8 @@
         panel.addEventListener("transitionend", st.onEnd);
         st.timer = setTimeout(finish, duration + 80);
 
-        panel.style.transition = "height " + duration + "ms " + readEase();
-        panel.style.height = to + "px";
+        panel.style.transition = `height ${duration}ms ${readEase()}`;
+        panel.style.height = `${to}px`;
       });
     }
 
@@ -552,7 +552,7 @@
         const dy = first[i].top - last[i].top;
         if (dx || dy) {
           p.style.willChange = "transform";
-          p.style.transform = "translate3d(" + dx + "px," + dy + "px,0)";
+          p.style.transform = `translate3d(${dx}px,${dy}px,0)`;
           movers.push(p);
         } else {
           p.style.transition = "";
@@ -563,7 +563,7 @@
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           movers.forEach((p) => {
-            p.style.transition = "transform " + ms + "ms " + EASE;
+            p.style.transition = `transform ${ms}ms ${EASE}`;
             p.style.transform = "translate3d(0,0,0)";
           });
         });
@@ -791,8 +791,8 @@
       const r = el.getBoundingClientRect();
       const x = ((e.clientX - r.left) / r.width) * 100;
       const y = ((e.clientY - r.top) / r.height) * 100;
-      el.style.setProperty("--tx", x.toFixed(1) + "%");
-      el.style.setProperty("--ty", y.toFixed(1) + "%");
+      el.style.setProperty("--tx", `${x.toFixed(1)}%`);
+      el.style.setProperty("--ty", `${y.toFixed(1)}%`);
     };
     document.querySelectorAll(".menu-btn").forEach((el) => {
       if (!el.querySelector(".menu-btn__ripple")) return;
