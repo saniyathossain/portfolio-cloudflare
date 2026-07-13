@@ -288,6 +288,12 @@ body::before {
      always-on Safari cost). The 8deg hue shift over 52s was imperceptible; dropping it leaves the
      blur static (painted once, composited) while auroraDrift stays transform-only (compositor-safe). */
   animation: auroraDrift 34s ease-in-out infinite alternate;
+  /* Without this hint, every scroll-driven --aurora-y write (motion.js's settleHeroFloat()) forced a
+     full repaint of this huge blurred inset(-25vmax) layer instead of a cheap compositor-only move —
+     confirmed via a real Chromium performance trace as the single biggest contributor to scroll
+     jank (~40% of dropped frames). will-change guarantees the promoted layer the comment above
+     already assumed existed. */
+  will-change: transform;
 }
 body::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -1669,6 +1675,9 @@ html.is-loading .site-header {
     translate3d(0, var(--glow-parallax-y, 0px), 0);
   pointer-events: none;
   opacity: 0; transition: opacity 0.6s ease; filter: blur(10px);
+  /* Same fix as body::before/.hero__wm above — blurred + frequently transform-updated by the scroll
+     parallax settle loop, was missing the compositor-layer hint. */
+  will-change: transform;
 }
 /* watermark stays opacity:0 — decorative; fade-in was late LCP */
 .hero__wm {
@@ -1680,6 +1689,10 @@ html.is-loading .site-header {
   /* Paint immediately — delayed fade was re-recording LCP as SANIYAT and driving CLS */
   opacity: 0.55;
   transform: translate3d(0, var(--wm-parallax-y, 0px), 0);
+  /* Same fix as body::before above: this large watermark text was missing a compositor-layer hint,
+     so every scroll-driven --wm-parallax-y write forced glyph re-rasterization instead of a cheap
+     transform move — confirmed via performance trace as a top-3 scroll-jank contributor. */
+  will-change: transform;
 }
 [data-parallax] {
   transform: translate3d(0, var(--parallax-y, 0px), 0);

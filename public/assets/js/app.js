@@ -178,10 +178,24 @@ function portfolioApp() {
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       let lastX = null;
       let travelTimer = 0;
+      // Cache each button's box once (load + resize) instead of reading offsetLeft/Width/Height live
+      // in place() — same idiom as motion.js's collectParallax(). The nav lives in a fixed header, so
+      // these values never change from scrolling; only a resize (or content change) can move them.
+      // place() used to read them fresh every call, and since it's scroll-spy-triggered it could land
+      // on the same rAF frame as the scroll-parallax settle loop's CSS writes — a layout READ right
+      // after a different system's WRITE forces a synchronous layout recalc (confirmed via a real
+      // long-task trace as a scroll-jank contributor). Reading from a plain cached object removes
+      // that read from the hot path entirely.
+      let btnBoxes = [];
+      const collectBtnBoxes = () => {
+        btnBoxes = btns.map((btn) => ({ x: btn.offsetLeft, w: btn.offsetWidth, h: btn.offsetHeight }));
+      };
+      collectBtnBoxes();
+      window.addEventListener("resize", collectBtnBoxes, { passive: true });
       const place = (idx) => {
-        const btn = btns[idx];
-        if (!btn || !btn.offsetWidth) { nav.style.setProperty("--pill-o", "0"); return; }
-        const x = btn.offsetLeft;
+        const box = btnBoxes[idx];
+        if (!box || !box.w) { nav.style.setProperty("--pill-o", "0"); return; }
+        const x = box.x;
         if (!reduceMotion && lastX !== null && Math.abs(x - lastX) > 4) {
           nav.classList.add("is-traveling");
           clearTimeout(travelTimer);
@@ -189,8 +203,8 @@ function portfolioApp() {
         }
         lastX = x;
         nav.style.setProperty("--pill-x", `${x}px`);
-        nav.style.setProperty("--pill-w", `${btn.offsetWidth}px`);
-        nav.style.setProperty("--pill-h", `${btn.offsetHeight}px`);
+        nav.style.setProperty("--pill-w", `${box.w}px`);
+        nav.style.setProperty("--pill-h", `${box.h}px`);
         nav.style.setProperty("--pill-o", "1");
       };
       // Music-app press: holding a tab inflates the lens under the finger/cursor; release springs
@@ -735,15 +749,28 @@ function portfolioApp() {
       };
       panel._heightOnEnd = (e) => { if (e.propertyName === "height") finish(); };
       panel.addEventListener("transitionend", panel._heightOnEnd);
-      panel._heightTimer = setTimeout(finish, durationMs + 80);
+      // +150 (not +80): generous fallback margin for Safari's paint-starvation scenarios on a role's
+      // first open, where the x-if-gated content mounts + this layer promotion + the height
+      // transition all compete for the same paint cycle.
+      panel._heightTimer = setTimeout(finish, durationMs + 150);
 
+      // translateZ(0), not just will-change: Safari treats will-change as a hint and often skips the
+      // cached layer, so the glossy content repaints every frame as the clip grows. An explicit 3D
+      // transform forces a real compositor layer — content rasterized once, then only clipped.
+      //
+      // Double-rAF, not a single rAF: setting the layer-promotion AND starting the height transition
+      // in the SAME callback doesn't guarantee Safari has actually rasterized the promoted layer
+      // before the height transition begins — it can start animating on the non-promoted layer and
+      // only pick up the promotion mid-transition, reading as a stuck/heavy first few frames. This is
+      // the exact double-rAF idiom already used elsewhere in this file (navGo's close-button sync,
+      // the hero-card swap) and in reveal.js — one rAF to let the promotion actually paint, a second
+      // to start the transition on the now-cached layer.
       requestAnimationFrame(() => {
-        // translateZ(0), not just will-change: Safari treats will-change as a hint and often skips
-        // the cached layer, so the glossy content repaints every frame as the clip grows. An explicit
-        // 3D transform forces a real compositor layer — content rasterized once, then only clipped.
         if (inner) { inner.style.willChange = "transform"; inner.style.transform = "translateZ(0)"; }
-        panel.style.transition = `height ${durationMs}ms ${easing || "cubic-bezier(0.32, 0.72, 0, 1)"}`;
-        panel.style.height = toHeight;
+        requestAnimationFrame(() => {
+          panel.style.transition = `height ${durationMs}ms ${easing || "cubic-bezier(0.32, 0.72, 0, 1)"}`;
+          panel.style.height = toHeight;
+        });
       });
     },
 
