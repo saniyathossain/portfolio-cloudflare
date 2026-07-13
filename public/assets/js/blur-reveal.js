@@ -129,7 +129,18 @@
       s.addEventListener("transitionend", done);
     });
 
-    el.classList.add("is-visible");
+    // Double-rAF, not a synchronous class-add: setting will-change and starting the crossfade
+    // transition in the SAME tick doesn't guarantee the browser has actually established/painted
+    // the promoted compositor layer before the transition begins (Safari in particular can start
+    // animating on the non-promoted layer and only pick up the promotion mid-transition, reading as
+    // a stuck/heavy first frame — same root cause already found and fixed in the experience
+    // accordion's height transition). One rAF lets the will-change writes above actually paint;
+    // the second starts the crossfade on the now-promoted layer.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add("is-visible");
+      });
+    });
     window.setTimeout(() => {
       spans.forEach((s) => { s.style.willChange = ""; });
     }, PROMOTE_MAX_MS);
