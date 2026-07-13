@@ -127,17 +127,36 @@
   let heroInView = true;
   let parallaxRaf = 0;
 
+  // Desktop-only (canEnhance) spring float on the hero parallax layers — same lerp-toward-target
+  // shape as heroSpatial()'s settle() below, adapted for scroll instead of pointer. Deliberately NOT
+  // a second rAF loop: it only steps forward inside scrollParallax()'s existing coalesced scroll rAF,
+  // so it smooths out the per-tick jump between scroll frames but only progresses while scroll events
+  // keep arriving (exactly the coalesced-rAF constraint this file already uses everywhere else).
+  // Touch/coarse-pointer and reduced-motion skip the float entirely and write the raw target directly.
+  const heroFloat = { cy: 0, cwm: 0, cliquid: 0, inited: false };
+
   function applyParallax(scrollY) {
     if (reduce || !heroInView) return;
     const s = parallaxScale;
     const y = Math.min(scrollY * 0.10 * s, 70 * s);
     const wm = Math.min(scrollY * 0.06 * s, 48 * s);
     const liquid = Math.min(scrollY * 0.08 * s, 56 * s);
-    document.documentElement.style.setProperty("--aurora-y", `${y.toFixed(1)}px`);
-    document.documentElement.style.setProperty("--wm-parallax-y", `${wm.toFixed(1)}px`);
-    document.documentElement.style.setProperty("--hero-liquid-y", `${liquid.toFixed(1)}px`);
+    let oy = y, owm = wm, oliquid = liquid;
+    if (canEnhance) {
+      if (!heroFloat.inited) {
+        heroFloat.cy = y; heroFloat.cwm = wm; heroFloat.cliquid = liquid; heroFloat.inited = true;
+      } else {
+        heroFloat.cy += (y - heroFloat.cy) * 0.3;
+        heroFloat.cwm += (wm - heroFloat.cwm) * 0.3;
+        heroFloat.cliquid += (liquid - heroFloat.cliquid) * 0.3;
+      }
+      oy = heroFloat.cy; owm = heroFloat.cwm; oliquid = heroFloat.cliquid;
+    }
+    document.documentElement.style.setProperty("--aurora-y", `${oy.toFixed(1)}px`);
+    document.documentElement.style.setProperty("--wm-parallax-y", `${owm.toFixed(1)}px`);
+    document.documentElement.style.setProperty("--hero-liquid-y", `${oliquid.toFixed(1)}px`);
     const glow = document.getElementById("heroGlow");
-    if (glow) glow.style.setProperty("--glow-parallax-y", `${(y * 1.4).toFixed(1)}px`);
+    if (glow) glow.style.setProperty("--glow-parallax-y", `${(oy * 1.4).toFixed(1)}px`);
   }
 
   // Generic depth parallax for any [data-parallax] element — transform-only, in-view only, cheap.
@@ -167,7 +186,15 @@
       const top = d.docTop - scrollY;
       if (top + d.height < -240 || top > vh + 240) continue; // skip far off-screen
       const offset = ((top + d.height / 2) - vh / 2) * -d.speed;
-      d.el.style.setProperty("--parallax-y", `${offset.toFixed(1)}px`);
+      // Same desktop-only float as applyParallax() above — per-element lerp state cached on `d` so it
+      // survives across scroll-rAF ticks without a second rAF loop or extra per-frame allocation.
+      let out = offset;
+      if (canEnhance) {
+        if (d.cval == null) d.cval = offset;
+        else d.cval += (offset - d.cval) * 0.3;
+        out = d.cval;
+      }
+      d.el.style.setProperty("--parallax-y", `${out.toFixed(1)}px`);
     }
   }
 

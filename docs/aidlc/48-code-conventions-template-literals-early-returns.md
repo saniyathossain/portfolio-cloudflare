@@ -1,4 +1,4 @@
-# 48 — Code conventions: template literals, early returns, SOLID
+# 48 — Code conventions: template literals, early returns, SOLID, no nested loops
 
 ## Why
 
@@ -53,6 +53,46 @@ function apply(node, ok) {
   // do the thing
 }
 ```
+
+## Rule 3 — no nested loops over different collections
+
+Don't inline a second loop inside the first when the inner loop iterates a *different* collection
+than the outer one — extract the inner loop into a named helper function, or replace it with
+`Array.some()`/`.find()`/an early `continue`, so the cross-product logic has a name and reads as one
+level of nesting from the call site.
+
+```js
+// Avoid
+hlSpecs.forEach(({ phrase, key }) => {
+  for (let i = 0; i <= words.length - phrase.length; i++) {
+    let match = true;
+    for (let j = 0; j < phrase.length; j++) {
+      if (words[i + j] !== phrase[j]) { match = false; break; }
+    }
+    if (match) /* ... */;
+  }
+});
+
+// Prefer
+function matchesPhraseAt(words, start, phrase) {
+  for (let j = 0; j < phrase.length; j++) {
+    if (words[start + j] !== phrase[j]) return false;
+  }
+  return true;
+}
+hlSpecs.forEach(({ phrase, key }) => {
+  for (let i = 0; i <= words.length - phrase.length; i++) {
+    if (!matchesPhraseAt(words, i, phrase)) continue;
+    /* ... */
+  }
+});
+```
+
+**Exception — two independent sequential passes over the *same* array are fine, not a violation.**
+`motion.js`'s `pillFlip()` runs a `pills.forEach()` to clear transforms, then a separate `pills.map()`
+to read positions — that's two O(n) passes, not an O(n²) cross-product, and fusing them into one loop
+would make the FLIP-animation phases (clear → measure → invert → play) harder to follow, not easier.
+Only flatten a loop that's genuinely nested at *definition time* over two different collections.
 
 ## Scope
 

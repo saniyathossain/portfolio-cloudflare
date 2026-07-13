@@ -1,5 +1,5 @@
 /** Portfolio service worker — cache-first assets, network-first shell */
-const CACHE_VERSION = "155d2d12d727";
+const CACHE_VERSION = "55390d0f88cc";
 const SHELL_URLS = ["/", "/index.html"];
 
 self.addEventListener("install", (event) => {

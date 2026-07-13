@@ -52,6 +52,12 @@ function portfolioApp() {
     openRoles: {},
     // Sticky, never reverts on re-collapse — see hasOpenedOnce()/toggleRole() below.
     openedRoles: {},
+    // Same lazy-mount idiom as openedRoles above, applied to the nav overlay's item list and the
+    // contact modal's form body: both are unconditionally in the DOM otherwise (only hidden via the
+    // critical-CSS opacity/pointer-events rule), so Alpine's init walk pays to bind them upfront even
+    // though neither is visible until the user opens it. Sticky, never reverts on close.
+    openedMenuOnce: false,
+    openedModalOnce: false,
     currentYear: new Date().getFullYear(),
     heroCards: D.heroCards,
     nav: D.nav,
@@ -469,6 +475,7 @@ function portfolioApp() {
       // instead of trying to make it resolve fast enough.
       if (item.action === "modal") {
         this.menuOpen = false;
+        this.openedModalOnce = true;
         setTimeout(() => {
           this.modalOpen = true;
           this.success = false;
@@ -484,13 +491,19 @@ function portfolioApp() {
 
     openMenu() {
       this.menuOpen = true;
+      // Sticky, never reverts on close — see hasOpenedOnce()-style getters below. Lazy-mounts the
+      // nav-item <template x-for> in index.html (see openedMenuOnce there) on first open only; every
+      // subsequent open skips straight through since it's already mounted.
+      this.openedMenuOnce = true;
       this.scrollLock(true);
       // Lay the overlay's Close button exactly over the header's Menu button so the drawer reads as
       // the same control morphing in place. The Menu button's on-screen position isn't a fixed
       // constant (the glass-pill's height — and thus the vertically-centred button's top — shifts
       // between breakpoints), so mirror its live rect rather than hard-coding offsets. nextTick +
-      // rAF lets the overlay lay out first. A one-time resize hook keeps it aligned if the viewport
-      // changes while open.
+      // rAF lets the overlay lay out first. syncCloseBtn() only reads the header's Menu button and
+      // the overlay's own always-mounted Close button — neither lives inside the lazy-mounted nav-item
+      // list — so it's unaffected by whether that list has been mounted yet. A one-time resize hook
+      // keeps it aligned if the viewport changes while open.
       requestAnimationFrame(() => requestAnimationFrame(() => this.syncCloseBtn()));
       if (!this._closeSync) {
         this._closeSync = () => { if (this.menuOpen) this.syncCloseBtn(); };
@@ -518,6 +531,12 @@ function portfolioApp() {
 
     openModal() {
       this.modalOpen = true;
+      // Sticky, never reverts on close — lazy-mounts the modal's form/success body in index.html (see
+      // openedModalOnce there) on first open only. _loadTurnstile() below only appends a <script> tag
+      // and doesn't touch the form DOM directly, so it stays correctly sequenced regardless: the
+      // Turnstile widget script finds its .cf-turnstile mount point whenever it finishes loading,
+      // well after this synchronous assignment has made the form template eligible to mount.
+      this.openedModalOnce = true;
       this.success = false;
       this.submitting = false;
       this.formError = "";

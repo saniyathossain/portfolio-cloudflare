@@ -125,7 +125,7 @@ html:not(.is-loading) #main.is-liquid-warp {
      "dropdown/select" range a text-content swap calls for; --dur-fast (450ms) is 2-3x too slow. */
   --dur-swap: 0.18s;
   --dur-slow: 1.05s;
-  --dur-reveal: 0.62s;
+  --dur-reveal: 0.56s;
   --dur-pill-reveal: 0.88s;
   --ease-pill-reveal: cubic-bezier(0.28, 0.92, 0.38, 1);
   --dur-pill-expand: 0.48s;
@@ -449,8 +449,11 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
    transform/box-shadow/border-color (the hover-lift + top-border fade snapped instantly instead of
    easing) and leaving only the sheen sweep animated. */
 .edu-row.glass-card {
+  /* transform on a light spring so the lift settles with a touch of overshoot; shadow/border stay on
+     --ease-glass's no-overshoot decel — a full-card lift with raw --ease-spring's overshoot character
+     read too bouncy/cheap at this size, so this is a toned-down custom curve (y peaks ~1.06, not 1). */
   transition:
-    transform 0.65s var(--ease-glass),
+    transform 0.6s cubic-bezier(0.22, 1.06, 0.36, 1),
     box-shadow 0.65s var(--ease-glass),
     border-color 0.65s var(--ease-glass),
     background-position 0.65s var(--ease-glass);
@@ -756,7 +759,10 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   font-size: clamp(1.0625rem, 1.65vw, 1.25rem);
   font-weight: 500;
   letter-spacing: -0.012em;
-  color: color-mix(in srgb, var(--tint-deep) 26%, rgba(17,17,17,.64));
+  /* rgba alpha .64 -> .74: confirmed via live Lighthouse color-contrast audit that #services/#skills
+     rendered at 4.35:1 against their light backdrop, just under the 4.5:1 WCAG AA minimum for this
+     font size — a small darkening clears it without changing the tinted-muted read. */
+  color: color-mix(in srgb, var(--tint-deep) 26%, rgba(17,17,17,.74));
   max-width: 48ch;
   margin-top: 0.65rem;
   margin-bottom: clamp(3rem, 5vw, 4rem);
@@ -1699,8 +1705,11 @@ html.is-loading .site-header {
 /* Tablet: real 2-col hero (between phone stack and desktop proportions). */
 @media (min-width: 768px) and (max-width: 1023px) {
   .hero__grid {
-    grid-template-columns: 1.15fr .85fr;
-    gap: 2.25rem;
+    /* Ratio nudged 1.15/.85 -> 1.1/.9 and gap widened 2.25rem -> 2.75rem: at this exact band the copy
+       column and hero-card read visually tight (confirmed via live screenshot, though bounding-box
+       math showed no hard overlap) — a touch more room on both axes without changing the hero's look. */
+    grid-template-columns: 1.1fr .9fr;
+    gap: 2.75rem;
     align-items: end;
     padding-block: clamp(7.5rem, 10vw, 8.5rem) 5rem;
   }
@@ -2328,11 +2337,13 @@ html.is-loading .site-header {
 }
 
 
-/* Reveals — slower, softer */
+/* Reveals — slower, softer. Eased on --ease-spring (not the shared --ease-smooth token, which also
+   drives unrelated menu/badge transitions elsewhere) so the scroll-into-view entrance reads with a
+   touch more spring character than a plain decel, without rippling into anything else. */
 [data-reveal] { opacity: 0; transform: translateY(22px); transition: none; }
 [data-reveal].is-visible {
   opacity: 1; transform: none;
-  transition: opacity var(--dur-reveal) var(--ease-smooth), transform var(--dur-reveal) var(--ease-smooth);
+  transition: opacity var(--dur-reveal) var(--ease-spring), transform var(--dur-reveal) var(--ease-spring);
   transition-delay: var(--reveal-delay, 0ms);
 }
 [data-reveal="scale"] { transform: translateY(14px) scale(0.97); }
@@ -3704,9 +3715,11 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
     inset 0 1px 0 rgba(255,255,255,.7),
     0 3px 10px -3px color-mix(in srgb, var(--tint) 42%, transparent);
   /* Snappier than the old 0.5s ease-glass — that's well past the ~300ms ceiling a hover response
-     should live under before it starts reading as sluggish; --ease-tile is tuned for exactly this
-     (small tile/icon lift), same curve family as the icon-chip lift below. */
-  transition: transform 0.28s var(--ease-tile), box-shadow 0.28s var(--ease-tile);
+     should live under before it starts reading as sluggish. transform gets --ease-spring for a
+     dashier scale/slide-in on hover (small bounded tile — the raw spring curve reads fine at this
+     size, unlike the full-card edu-row lift above); box-shadow stays on --ease-tile so the glow
+     doesn't overshoot/flicker. */
+  transition: transform 0.28s var(--ease-spring), box-shadow 0.28s var(--ease-tile);
 }
 @media (hover: hover) and (pointer: fine) {
   .service-row:hover .service-row__icon { transform: scale(1.06) translateX(4px); }
@@ -4994,7 +5007,7 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
     0 6px 18px -3px rgba(17,17,17,.4),
     0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
   opacity: 0; transform: translateY(0.6rem) scale(0.92); pointer-events: none;
-  transition: opacity 0.3s var(--ease-glass), transform 0.3s var(--ease-glass),
+  transition: opacity 0.3s var(--ease-glass), transform 0.32s var(--ease-spring),
     box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass);
 }
 .back-to-top.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
