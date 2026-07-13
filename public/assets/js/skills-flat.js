@@ -95,7 +95,7 @@ function skillsFlatPanel() {
       if (this.$parent && typeof this.$parent.iconSvg === "function") {
         return this.$parent.iconSvg(name, cls);
       }
-      return "";
+      return window.iconSvg ? window.iconSvg(name, cls) : "";
     },
 
     toggleSkillsFlat() {

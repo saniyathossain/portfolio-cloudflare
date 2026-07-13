@@ -5,9 +5,9 @@
     "url": "https://saniyat.com",
     "themeColor": "#0a0a0a",
     "keywords": "Saniyat Hossain, Staff Software Engineer, Laravel, PHP, Node.js, microservices, Dhaka, Bangladesh",
-    "aboutHeading": "I started on a monolith carrying telco-scale traffic, and spent {years}+ years learning to take it apart without anyone noticing — into microservices, into AI-assisted delivery, always shipped with quiet precision.",
+    "aboutHeading": "{years}+ years turning ambitious platforms into backends that carry telco-scale traffic without blinking — monoliths, microservices, and AI-assisted delivery, all shipped with quiet precision.",
     "aboutKicker": "{years}+ years · Staff Software Engineer · Dhaka",
-    "aboutLead": "I still write the backend myself — architecture, APIs, and platform engineering, hands-on from design through production. The systems change (telco-scale platforms, SaaS, coaching products); the discipline of staying calm under load doesn't.",
+    "aboutLead": "Backend architecture, APIs, and platform engineering — hands-on from design through production, across telco-scale systems, SaaS, and coaching products.",
     "aboutHighlights": [
       "telco-scale",
       "quiet precision",
