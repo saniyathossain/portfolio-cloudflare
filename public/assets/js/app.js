@@ -190,7 +190,15 @@ function portfolioApp() {
       const collectBtnBoxes = () => {
         btnBoxes = btns.map((btn) => ({ x: btn.offsetLeft, w: btn.offsetWidth, h: btn.offsetHeight }));
       };
-      collectBtnBoxes();
+      // Deferred to a rAF, not called synchronously here — this runs from setupNavPill(), itself
+      // called from init()'s $nextTick(), so a synchronous read at this exact point is a NEW forced
+      // layout flush during the page's initial settle that didn't exist before (previously the only
+      // read was the one already-deferred inside place()/render()'s own rAF). A live Lighthouse CLS
+      // check caught this: it measurably increased CLS variance on the hero copy, most likely by
+      // forcing layout to finalize earlier/differently than the hero's own entrance-reveal transform
+      // expects. Deferring restores the original timing (first read happens on the next frame, same
+      // as before this session's nav-pill caching change).
+      requestAnimationFrame(collectBtnBoxes);
       window.addEventListener("resize", collectBtnBoxes, { passive: true });
       const place = (idx) => {
         const box = btnBoxes[idx];
