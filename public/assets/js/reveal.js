@@ -83,31 +83,54 @@
     revealIO.observe(el);
   }
 
-  // Late-mount path (initLateMountWatcher, below): elements trickle in one at a time as Alpine
-  // mounts them, so a single-element read+write immediately after is cheap — no batch to thrash.
-  function checkRevealVisibleNow(el) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (isAlreadyVisible(el)) applyRevealVisible(el);
-      });
-    });
+  // Late-mount path (initLateMountWatcher, below). A single MutationObserver callback frequently
+  // reports MANY newly-added [data-reveal] nodes at once — Alpine's x-for loops (services,
+  // experience, skills, stats, education) don't trickle in "one at a time" as the old comment here
+  // assumed, they land in the same batch when Alpine finishes its reactive walk. Each element used
+  // to schedule its own independent double-rAF read+write, which recreates exactly the same
+  // interleaved-read/write forced-reflow pattern initReveals() was already fixed for, just for this
+  // path instead — confirmed via a live Lighthouse forced-reflow-insight trace still attributing
+  // real time to reveal.js after the initReveals() fix. Queue late-mounted elements and flush them
+  // through the same shared batched read-phase-then-write-phase pass instead of one-off per-element
+  // checks.
+  let lateMountQueue = [];
+  let lateMountRaf = 0;
+  function flushLateMountQueue() {
+    const els = lateMountQueue;
+    lateMountQueue = [];
+    lateMountRaf = 0;
+    const toReveal = els.filter(isAlreadyVisible); // read phase — no writes yet
+    toReveal.forEach(applyRevealVisible); // write phase — all reads already done
+  }
+  function queueRevealCheck(el) {
+    lateMountQueue.push(el);
+    if (!lateMountRaf) {
+      lateMountRaf = requestAnimationFrame(() => requestAnimationFrame(flushLateMountQueue));
+    }
   }
 
   function observeAndCheckReveal(el) {
     observeReveal(el);
-    checkRevealVisibleNow(el);
+    queueRevealCheck(el);
   }
 
   function initReveals() {
     const els = Array.from(document.querySelectorAll("[data-reveal]"));
     els.forEach(observeReveal);
     if (reduced || !els.length) return;
-    // Bulk initial pass: batch the whole page's worth of [data-reveal] elements into one shared
-    // read-phase-then-write-phase double-rAF instead of each element scheduling its own interleaved
-    // check — see isAlreadyVisible()/applyRevealVisible() above for why the interleaving was costly.
+    // Eager visibility check only needs to run for elements that could plausibly sit inside the
+    // viewport at scroll position 0 — #home/#about are the only sections that ever render above the
+    // fold at initial load, no matter the viewport height. Elements below that (services/experience/
+    // skills/stats/education) are always off-screen at boot and are handled correctly — same "reveal
+    // immediately without a flash" outcome — by observeReveal()'s IntersectionObserver, whose initial
+    // callback (unlike a manual getBoundingClientRect() sweep) is computed as part of the browser's
+    // own rendering pipeline instead of forcing a synchronous layout. Narrowing this eager sweep cut
+    // its forced-reflow cost roughly in half (confirmed via live Lighthouse forced-reflow-insight)
+    // with no visible-timing change, since nothing outside #home/#about was ever eligible anyway.
+    const eager = els.filter((el) => el.closest("#home, #about"));
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const toReveal = els.filter(isAlreadyVisible); // read phase — no writes yet
+        const toReveal = eager.filter(isAlreadyVisible); // read phase — no writes yet
         toReveal.forEach(applyRevealVisible); // write phase — all reads already done
       });
     });
