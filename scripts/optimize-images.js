@@ -115,9 +115,12 @@ function record(src) {
 // download more than ~1.5-2x its rendered pixel count (was: always the full 3000x4000 master).
 // 760 added: a 2x-DPR mobile phone (~360-390px CSS width) needs ~720-780px and was jumping straight
 // from 480w past that need to 900w — confirmed via live Lighthouse image-delivery-insight as ~31KB
-// wasted on mobile, ~7KB on desktop. (760, not 720: Lighthouse's mobile emulation is 412x1.75dpr =
-// 721px, so a 720w candidate lost the srcset pick by 1px — 760w clears it with margin.)
-const HERO_WIDTHS = [480, 760, 900, 1300, 1800];
+// wasted on mobile. (760, not 720: Lighthouse's mobile emulation is 412x1.75dpr = 721px, so a 720w
+// candidate lost the srcset pick by 1px — 760w clears it with margin.)
+// 840 added: the 62vw desktop backdrop at Lighthouse's 1350px desktop preset (DPR 1) renders at
+// 828px — 760w falls short and 900w overshoots by ~30KB (confirmed via live uses-responsive-images).
+// 840w clears the 828px need with margin, same "don't lose the pick by a handful of px" lesson as 760.
+const HERO_WIDTHS = [480, 760, 840, 900, 1300, 1800];
 const heroSrcset = HERO_WIDTHS.map((w) => path.join(IMG, `saniyat-hossain-${w}.webp`));
 const heroWebp = path.join(IMG, "saniyat-hossain.webp"); // 900w alias — plain <img src> fallback
 const apple = path.join(IMG, "apple-touch-icon.png");
