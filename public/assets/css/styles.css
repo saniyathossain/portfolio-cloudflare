@@ -108,10 +108,13 @@ html:not(.is-loading) #main.is-liquid-warp {
   --watermark: 13rem;
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-reveal: cubic-bezier(0.22, 1, 0.28, 1);
-  /* Matches --ease-spring's shape (same deceleration character, no overshoot — a full spring
-     overshoot reads jittery on small per-word text) so the blur-reveal word crossfade reads as part
-     of the same "premium" motion language as the rest of the site's reveals, not a flatter one-off. */
-  --ease-word: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Matches --ease-smooth's shape — an even, gradual decel with no fast-snap onset (unlike
+     --ease-spring/--ease-reveal, whose y>1 early control point front-loads most of the visible
+     motion into the first ~20% of the transition, then coasts — fine for a single block-level
+     element, but read as an abrupt "snap then drift" wave across many small per-word spans in a
+     row). Kept as its own token (not literally var(--ease-smooth)) so the two can still be tuned
+     independently later. */
+  --ease-word: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-hover: cubic-bezier(0.25, 0.9, 0.35, 1);
   /* Small tile/logo hover lift — snappier settle than --ease-hover, used across the tenure badges,
      logo tiles, and role-tag chips (previously hand-repeated as a raw cubic-bezier in 6 places). */
@@ -2564,7 +2567,9 @@ html.is-loading .site-header {
 .blur-reveal__word {
   display: inline-block; position: relative;
   opacity: 0;
-  transform: translateY(10px);
+  /* 14px, not 10px: paired with blur-reveal.js's longer per-word duration, a touch more travel
+     distance reads as a graceful glide-and-settle rather than a near-instant snap into place. */
+  transform: translateY(14px);
   transition:
     opacity var(--blur-dur, 0.5s) var(--ease-word),
     transform var(--blur-dur, 0.5s) var(--ease-word);

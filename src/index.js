@@ -52,8 +52,8 @@ const SECURITY_HEADERS = {
 
 const EARLY_HINTS = [
   '</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="/assets/img/saniyat-hossain-480.webp 480w, /assets/img/saniyat-hossain-760.webp 760w, /assets/img/saniyat-hossain-840.webp 840w, /assets/img/saniyat-hossain-900.webp 900w, /assets/img/saniyat-hossain-1300.webp 1300w, /assets/img/saniyat-hossain-1800.webp 1800w"; imagesizes="(min-width: 1024px) 62vw, 100vw"',
-  "</assets/css/styles.min.css?v=2ef8a159ea0f>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=2ef8a159ea0f>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=9898cfda5008>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=9898cfda5008>; rel=preload; as=image; type=image/svg+xml",
   "</assets/fonts/inter-latin.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
 ].join(", ");
 

@@ -108,7 +108,13 @@ html:not(.is-loading) .load-scrim { display: none; }
   --watermark: 13rem;
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-reveal: cubic-bezier(0.22, 1, 0.28, 1);
-  --ease-word: cubic-bezier(0.2, 0.85, 0.32, 1);
+  /* Matches --ease-smooth's shape — an even, gradual decel with no fast-snap onset (unlike
+     --ease-spring/--ease-reveal, whose y>1 early control point front-loads most of the visible
+     motion into the first ~20% of the transition, then coasts — fine for a single block-level
+     element, but read as an abrupt "snap then drift" wave across many small per-word spans in a
+     row). Kept as its own token (not literally var(--ease-smooth)) so the two can still be tuned
+     independently later. */
+  --ease-word: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-hover: cubic-bezier(0.25, 0.9, 0.35, 1);
   /* Small tile/logo hover lift — snappier settle than --ease-hover, used across the tenure badges,
      logo tiles, and role-tag chips (previously hand-repeated as a raw cubic-bezier in 6 places). */
@@ -126,10 +132,26 @@ html:not(.is-loading) .load-scrim { display: none; }
   --dur-swap: 0.18s;
   --dur-slow: 1.05s;
   --dur-reveal: 0.56s;
-  --dur-pill-reveal: 0.82s;
-  --ease-pill-reveal: cubic-bezier(0.33, 1, 0.68, 1); /* easeOutCubic — gentle onset, no snap (smoother stack/skill stagger) */
-  --dur-pill-expand: 0.4s;
-  --ease-pill-expand: cubic-bezier(0.22, 0.9, 0.3, 1);
+  --dur-pill-reveal: 0.88s;
+  --ease-pill-reveal: cubic-bezier(0.28, 0.92, 0.38, 1);
+  --dur-pill-expand: 0.48s;
+  --ease-pill-expand: cubic-bezier(0.16, 0.84, 0.32, 1);
+  /* FLIP glide (motion.js reads these — keep CSS + JS in sync) */
+  --dur-pill-flip-open: 0.52s;
+  --dur-pill-flip-close: 0.38s;
+  --dur-pill-panel-reflow: 0.44s;
+  --ease-pill-flip: cubic-bezier(0.23, 0.84, 0.35, 1);
+  --dur-pill-sheen: 1.05s;
+  /* Shared button/control sizing + motion tokens — nothing owned this before this rule, so every
+     pill hard-coded its own padding/height/font and hover took an un-snappy 0.45s. */
+  --control-pad-x: 1.5rem;
+  --control-pad-y: 0.375rem;
+  --control-gap: 0.75rem;
+  --btn-icon-size: 2.25rem;
+  --btn-radius: var(--radius-pill);
+  --dur-btn-hover: 0.22s;
+  --dur-btn-press: 0.13s;
+  --ease-btn: var(--ease-hover);
   /* Inter-first on every platform → identical look on Mac/iOS/Windows/Android/Linux (see doc 19).
      "Inter Fallback" is metric-matched so there's no CLS before Inter loads. */
   --font-sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
