@@ -111,7 +111,7 @@ html:not(.is-loading) .load-scrim { display: none; }
      "dropdown/select" range a text-content swap calls for; --dur-fast (450ms) is 2-3x too slow. */
   --dur-swap: 0.18s;
   --dur-slow: 1.05s;
-  --dur-reveal: 0.62s;
+  --dur-reveal: 0.56s;
   --dur-pill-reveal: 0.82s;
   --ease-pill-reveal: cubic-bezier(0.33, 1, 0.68, 1); /* easeOutCubic — gentle onset, no snap (smoother stack/skill stagger) */
   --dur-pill-expand: 0.4s;

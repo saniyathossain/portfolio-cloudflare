@@ -26,6 +26,16 @@
   // worst case: max stagger (0.5s cap) + per-span duration (~0.43s) + buffer.
   const PROMOTE_MAX_MS = 1600;
 
+  // Does `phrase` (already bare-normalized) match the words array starting at index `start`? Pulled
+  // out of splitWords()'s highlight pass per docs/aidlc/48 Rule 3 (avoid nested loops over different
+  // collections) — a single loop over hlSpecs now calls this instead of inlining a second `for`.
+  function matchesPhraseAt(words, start, phrase, bare) {
+    for (let j = 0; j < phrase.length; j++) {
+      if (bare(words[start + j]).toLowerCase() !== phrase[j].toLowerCase()) return false;
+    }
+    return true;
+  }
+
   function splitWords(el) {
     const raw = el.getAttribute("data-blur-reveal") || el.getAttribute("data-text") || el.textContent;
     el.textContent = "";
@@ -51,11 +61,8 @@
     const hlFlags = new Array(words.length).fill(null);
     hlSpecs.forEach(({ phrase, key }) => {
       for (let i = 0; i <= words.length - phrase.length; i++) {
-        let match = true;
-        for (let j = 0; j < phrase.length; j++) {
-          if (bare(words[i + j]).toLowerCase() !== phrase[j].toLowerCase()) { match = false; break; }
-        }
-        if (match) for (let j = 0; j < phrase.length; j++) hlFlags[i + j] = key;
+        if (!matchesPhraseAt(words, i, phrase, bare)) continue;
+        for (let j = 0; j < phrase.length; j++) hlFlags[i + j] = key;
       }
     });
     // Group words into segment-spans. Headings stay one-word-per-segment (groupSize 1) so the
@@ -122,7 +129,18 @@
       s.addEventListener("transitionend", done);
     });
 
-    el.classList.add("is-visible");
+    // Double-rAF, not a synchronous class-add: setting will-change and starting the crossfade
+    // transition in the SAME tick doesn't guarantee the browser has actually established/painted
+    // the promoted compositor layer before the transition begins (Safari in particular can start
+    // animating on the non-promoted layer and only pick up the promotion mid-transition, reading as
+    // a stuck/heavy first frame — same root cause already found and fixed in the experience
+    // accordion's height transition). One rAF lets the will-change writes above actually paint;
+    // the second starts the crossfade on the now-promoted layer.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add("is-visible");
+      });
+    });
     window.setTimeout(() => {
       spans.forEach((s) => { s.style.willChange = ""; });
     }, PROMOTE_MAX_MS);

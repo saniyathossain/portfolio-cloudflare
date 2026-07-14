@@ -127,17 +127,62 @@
   let heroInView = true;
   let parallaxRaf = 0;
 
+  // Desktop-only (canEnhance) spring float on the hero parallax layers — same kick()/settle()
+  // persistent-rAF-loop shape as heroSpatial() above, NOT a step-once-per-scroll-event lerp. A
+  // previous version stepped the lerp only inside scrollParallax()'s scroll-triggered rAF, which
+  // meant the float PERMANENTLY stopped converging the instant the user stopped scrolling — e.g.
+  // scrolling 300px (target 30px) would freeze at 9px (one 0.3-stiffness step) forever, reading as
+  // a genuinely stuck/broken parallax layer. Fixed by giving the float its own self-continuing loop
+  // that keeps stepping every frame — independent of new scroll events — until it actually settles.
+  const heroFloat = {
+    ty: 0, twm: 0, tliquid: 0, cy: 0, cwm: 0, cliquid: 0, inited: false, raf: 0,
+  };
+
+  function writeHeroParallaxVars(oy, owm, oliquid) {
+    document.documentElement.style.setProperty("--aurora-y", `${oy.toFixed(1)}px`);
+    document.documentElement.style.setProperty("--wm-parallax-y", `${owm.toFixed(1)}px`);
+    document.documentElement.style.setProperty("--hero-liquid-y", `${oliquid.toFixed(1)}px`);
+    const glow = document.getElementById("heroGlow");
+    if (glow) glow.style.setProperty("--glow-parallax-y", `${(oy * 1.4).toFixed(1)}px`);
+  }
+
+  function settleHeroFloat() {
+    heroFloat.cy += (heroFloat.ty - heroFloat.cy) * 0.3;
+    heroFloat.cwm += (heroFloat.twm - heroFloat.cwm) * 0.3;
+    heroFloat.cliquid += (heroFloat.tliquid - heroFloat.cliquid) * 0.3;
+    writeHeroParallaxVars(heroFloat.cy, heroFloat.cwm, heroFloat.cliquid);
+    const settled =
+      Math.abs(heroFloat.ty - heroFloat.cy) < 0.05 &&
+      Math.abs(heroFloat.twm - heroFloat.cwm) < 0.05 &&
+      Math.abs(heroFloat.tliquid - heroFloat.cliquid) < 0.05;
+    heroFloat.raf = settled ? 0 : requestAnimationFrame(settleHeroFloat);
+  }
+
+  function resetHeroFloat() {
+    cancelAnimationFrame(heroFloat.raf);
+    heroFloat.raf = 0;
+    heroFloat.ty = heroFloat.twm = heroFloat.tliquid = 0;
+    heroFloat.cy = heroFloat.cwm = heroFloat.cliquid = 0;
+    heroFloat.inited = false;
+  }
+
   function applyParallax(scrollY) {
     if (reduce || !heroInView) return;
     const s = parallaxScale;
     const y = Math.min(scrollY * 0.10 * s, 70 * s);
     const wm = Math.min(scrollY * 0.06 * s, 48 * s);
     const liquid = Math.min(scrollY * 0.08 * s, 56 * s);
-    document.documentElement.style.setProperty("--aurora-y", `${y.toFixed(1)}px`);
-    document.documentElement.style.setProperty("--wm-parallax-y", `${wm.toFixed(1)}px`);
-    document.documentElement.style.setProperty("--hero-liquid-y", `${liquid.toFixed(1)}px`);
-    const glow = document.getElementById("heroGlow");
-    if (glow) glow.style.setProperty("--glow-parallax-y", `${(y * 1.4).toFixed(1)}px`);
+    if (!canEnhance) {
+      writeHeroParallaxVars(y, wm, liquid);
+      return;
+    }
+    heroFloat.ty = y; heroFloat.twm = wm; heroFloat.tliquid = liquid;
+    if (!heroFloat.inited) {
+      heroFloat.cy = y; heroFloat.cwm = wm; heroFloat.cliquid = liquid; heroFloat.inited = true;
+      writeHeroParallaxVars(y, wm, liquid);
+      return;
+    }
+    if (!heroFloat.raf) heroFloat.raf = requestAnimationFrame(settleHeroFloat);
   }
 
   // Generic depth parallax for any [data-parallax] element — transform-only, in-view only, cheap.
@@ -148,6 +193,7 @@
   // which stays valid as the page scrolls since document coordinates don't shift) and derive the
   // viewport-relative top per frame with plain arithmetic (docTop - scrollY).
   let parallaxData = [];
+  let elementFloatRaf = 0;
   function collectParallax() {
     const scrollY = window.scrollY;
     parallaxData = Array.prototype.map.call(document.querySelectorAll("[data-parallax]"), (el) => {
@@ -159,16 +205,50 @@
       return { el, docTop: r.top + scrollY, height: r.height, speed };
     });
   }
+
+  // Same persistent-loop fix as settleHeroFloat() above, shared across all [data-parallax] elements
+  // in one rAF chain (not one loop per element) — keeps stepping every frame until every element's
+  // lerp has converged to its current target, then stops; applyElementParallax() below only updates
+  // targets and (re)kicks this loop, it never advances the lerp itself.
+  function settleElementFloat() {
+    let anyActive = false;
+    for (let i = 0; i < parallaxData.length; i++) {
+      const d = parallaxData[i];
+      if (d.ctarget == null || d.cval == null) continue;
+      const delta = d.ctarget - d.cval;
+      if (Math.abs(delta) > 0.05) {
+        d.cval += delta * 0.3;
+        anyActive = true;
+      } else {
+        d.cval = d.ctarget;
+      }
+      d.el.style.setProperty("--parallax-y", `${d.cval.toFixed(1)}px`);
+    }
+    elementFloatRaf = anyActive ? requestAnimationFrame(settleElementFloat) : 0;
+  }
+
   function applyElementParallax(scrollY) {
     if (reduce || !parallaxData.length) return;
     const vh = window.innerHeight;
+    let needsKick = false;
     for (let i = 0; i < parallaxData.length; i++) {
       const d = parallaxData[i];
       const top = d.docTop - scrollY;
       if (top + d.height < -240 || top > vh + 240) continue; // skip far off-screen
       const offset = ((top + d.height / 2) - vh / 2) * -d.speed;
-      d.el.style.setProperty("--parallax-y", `${offset.toFixed(1)}px`);
+      if (!canEnhance) {
+        d.el.style.setProperty("--parallax-y", `${offset.toFixed(1)}px`);
+        continue;
+      }
+      d.ctarget = offset;
+      if (d.cval == null) {
+        d.cval = offset;
+        d.el.style.setProperty("--parallax-y", `${offset.toFixed(1)}px`);
+      } else {
+        needsKick = true;
+      }
     }
+    if (needsKick && !elementFloatRaf) elementFloatRaf = requestAnimationFrame(settleElementFloat);
   }
 
   function scrollParallax() {
@@ -181,9 +261,11 @@
         (entries) => {
           heroInView = entries.some((e) => e.isIntersecting);
           if (!heroInView) {
-            document.documentElement.style.setProperty("--aurora-y", "0px");
-            document.documentElement.style.setProperty("--wm-parallax-y", "0px");
-            document.documentElement.style.setProperty("--hero-liquid-y", "0px");
+            // Reset the float's internal target/current state too, not just the CSS vars — otherwise
+            // re-entering view resumes the lerp from a stale cy/cwm/cliquid value and the aurora/
+            // watermark visibly jumps from wherever it was left instead of starting fresh at 0.
+            resetHeroFloat();
+            writeHeroParallaxVars(0, 0, 0);
           }
         },
         { root: null, threshold: 0, rootMargin: "0px 0px -20% 0px" }

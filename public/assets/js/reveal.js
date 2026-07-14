@@ -8,6 +8,20 @@
 (function () {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // Count-up curve: standard easeOutCubic for the first 90% of progress, then a small overshoot in
+  // the last 10% — the number ticks slightly past its target and settles back, like a spring-driven
+  // counter, instead of stopping flat. Subtle by design (a small UI detail, not a hero animation):
+  // peaks ~2.5% past 1 before easing back to exactly 1 at t=1, so the final displayed value is always
+  // correct. Reduced-motion never calls this — initCountUp() writes the final value instantly instead.
+  function easeOutCubicOvershoot(t) {
+    const cubicOut = (x) => 1 - Math.pow(1 - x, 3);
+    if (t < 0.9) return cubicOut(t / 0.9);
+    const tail = (t - 0.9) / 0.1; // 0..1 across the last 10%
+    // sin(tail*PI) is 0 at both ends and peaks at tail=0.5, so this returns exactly 1 at t=0.9 and
+    // t=1 (final value always lands exact), bumping ~2.5% past 1 in between.
+    return 1 + 0.025 * Math.sin(tail * Math.PI);
+  }
+
   // Shared across initReveals/initStagger and the late-mount watcher below: Alpine's x-for sections
   // (services/experience/skills/stats/education) don't exist in the DOM yet when boot() first runs —
   // they're created moments later once portfolioDataReady resolves and Alpine finishes its init walk.
@@ -17,18 +31,27 @@
   // these same observe-functions for anything Alpine mounts after this first pass.
   let revealIO = null;
 
-  function revealIfAlreadyVisible(el) {
-    if (reduced || el.classList.contains("is-visible")) return;
+  // Read-only: is `el` already inside the viewport right now? No style writes here — kept separate
+  // from applyRevealVisible() below so a batch of elements can all be READ before any of them WRITE
+  // (see initReveals()). Interleaving read(el1)/write(el1)/read(el2)/write(el2)/... across many
+  // elements in the same frame forces a synchronous layout recalc on every read — confirmed as the
+  // top `forced-reflow-insight` contributor in a live Lighthouse trace before this fix.
+  function isAlreadyVisible(el) {
+    if (reduced || el.classList.contains("is-visible")) return false;
     const rect = el.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
     const margin = Math.round(vh * 0.08);
-    if (rect.top < vh - margin && rect.bottom > margin) {
-      const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
-      el.style.setProperty("--reveal-delay", `${delay}ms`);
-      if (delay) el.style.transitionDelay = `${delay}ms`;
-      el.classList.add("is-visible");
-      revealIO?.unobserve(el);
-    }
+    return rect.top < vh - margin && rect.bottom > margin;
+  }
+
+  // Write-only counterpart to isAlreadyVisible() — call only after every element in the batch has
+  // already been read, so no write in this pass can invalidate another element's pending read.
+  function applyRevealVisible(el) {
+    const delay = parseInt(el.getAttribute("data-delay") || "0", 10);
+    el.style.setProperty("--reveal-delay", `${delay}ms`);
+    if (delay) el.style.transitionDelay = `${delay}ms`;
+    el.classList.add("is-visible");
+    revealIO?.unobserve(el);
   }
 
   function observeReveal(el) {
@@ -58,13 +81,36 @@
       );
     }
     revealIO.observe(el);
+  }
+
+  // Late-mount path (initLateMountWatcher, below): elements trickle in one at a time as Alpine
+  // mounts them, so a single-element read+write immediately after is cheap — no batch to thrash.
+  function checkRevealVisibleNow(el) {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => revealIfAlreadyVisible(el));
+      requestAnimationFrame(() => {
+        if (isAlreadyVisible(el)) applyRevealVisible(el);
+      });
     });
   }
 
+  function observeAndCheckReveal(el) {
+    observeReveal(el);
+    checkRevealVisibleNow(el);
+  }
+
   function initReveals() {
-    document.querySelectorAll("[data-reveal]").forEach(observeReveal);
+    const els = Array.from(document.querySelectorAll("[data-reveal]"));
+    els.forEach(observeReveal);
+    if (reduced || !els.length) return;
+    // Bulk initial pass: batch the whole page's worth of [data-reveal] elements into one shared
+    // read-phase-then-write-phase double-rAF instead of each element scheduling its own interleaved
+    // check — see isAlreadyVisible()/applyRevealVisible() above for why the interleaving was costly.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const toReveal = els.filter(isAlreadyVisible); // read phase — no writes yet
+        toReveal.forEach(applyRevealVisible); // write phase — all reads already done
+      });
+    });
   }
 
   function revealStaggerRow(row) {
@@ -123,10 +169,9 @@
           const suf = el.getAttribute("data-suffix") || "";
           const dur = 2200;
           const st = performance.now();
-          const ease = (t) => 1 - Math.pow(1 - t, 3);
           const run = (now) => {
             const t = Math.min((now - st) / dur, 1);
-            el.textContent = `${Math.round(ease(t) * val)}${suf}`;
+            el.textContent = `${Math.round(easeOutCubicOvershoot(t) * val)}${suf}`;
             if (t < 1) requestAnimationFrame(run);
           };
           requestAnimationFrame(run);
@@ -176,9 +221,9 @@
       for (const m of mutations) {
         for (const node of m.addedNodes) {
           if (node.nodeType !== 1) continue;
-          if (node.matches("[data-reveal]")) observeReveal(node);
+          if (node.matches("[data-reveal]")) observeAndCheckReveal(node);
           if (node.matches("[data-stagger]")) observeStagger(node);
-          node.querySelectorAll?.("[data-reveal]").forEach(observeReveal);
+          node.querySelectorAll?.("[data-reveal]").forEach(observeAndCheckReveal);
           node.querySelectorAll?.("[data-stagger]").forEach(observeStagger);
         }
       }

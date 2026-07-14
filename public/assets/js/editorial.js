@@ -12,16 +12,24 @@ const EDITORIAL_TILT_ENABLED =
   window.matchMedia("(hover: hover) and (pointer: fine)").matches && !EDITORIAL_REDUCED;
 const EDITORIAL_TILT_MAX = 1.2; // deg — subtle "glass catching light" tilt, not a card flip
 
-// Same easeOutCubic count-up curve as reveal.js's stat counters — kept consistent so every rolling
-// number on the page reads as the same motion language, not a bespoke one-off here.
+// Same easeOutCubic-with-overshoot count-up curve as reveal.js's stat counters — kept consistent so
+// every rolling number on the page reads as the same motion language, not a bespoke one-off here.
+// Standard easeOutCubic for the first 90% of progress, then a small (~2.5%) overshoot-and-settle in
+// the last 10% so the number ticks slightly past its target and lands back exactly on it.
+function editorialEaseOutCubicOvershoot(t) {
+  const cubicOut = (x) => 1 - Math.pow(1 - x, 3);
+  if (t < 0.9) return cubicOut(t / 0.9);
+  const tail = (t - 0.9) / 0.1;
+  return 1 + 0.025 * Math.sin(tail * Math.PI);
+}
+
 function editorialAnimateCount(el, to, durationMs) {
   if (EDITORIAL_REDUCED || !el || el._editorialCounted) return;
   el._editorialCounted = true;
-  const ease = (t) => 1 - Math.pow(1 - t, 3);
   const start = performance.now();
   const run = (now) => {
     const t = Math.min((now - start) / durationMs, 1);
-    el.textContent = `${Math.round(ease(t) * to)}`;
+    el.textContent = `${Math.round(editorialEaseOutCubicOvershoot(t) * to)}`;
     if (t < 1) requestAnimationFrame(run);
   };
   requestAnimationFrame(run);
@@ -43,13 +51,45 @@ function editorialCascadeTitles(root) {
   root.querySelectorAll(".editorial-row__title").forEach(editorialCascadeTitle);
 }
 
+// Small rAF-lerp settle, same shape as motion.js's makeSpring() (that file is a self-contained IIFE
+// and exposes nothing on window, so this is a local equivalent rather than a cross-file import).
+// `stiffness` is the per-frame lerp fraction; the loop stops itself once both axes are within the
+// settle threshold of their target instead of running forever.
+function editorialMakeSpring(apply, stiffness) {
+  let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+  function tick() {
+    cx += (tx - cx) * stiffness;
+    cy += (ty - cy) * stiffness;
+    apply(cx, cy);
+    raf = (Math.abs(tx - cx) > 0.005 || Math.abs(ty - cy) > 0.005) ? requestAnimationFrame(tick) : 0;
+  }
+  return {
+    set(x, y) { tx = x; ty = y; if (!raf) raf = requestAnimationFrame(tick); },
+  };
+}
+
 // Cursor tilt on article rows — delegated single pointermove listener (same idiom as motion.js's
 // specular()), writes CSS custom properties only (never el.style.transform directly), so it can
 // never clobber a CSS-transitioned transform on the same element. Row background/lift hovers already
 // live on child elements (__body/__icon/__arrow), not on __link itself, so this is conflict-free.
+// The raw pointer position feeds a per-element spring (WeakMap-cached) that settles the WRITTEN
+// --tilt-x/--tilt-y toward that target each frame — previously written instantly on every
+// pointermove, which read twitchy; damping it is the same idiom as the hero's heroSpatial() spring.
 function editorialBindRowTilt() {
   if (!EDITORIAL_TILT_ENABLED || document._editorialTiltBound) return;
   document._editorialTiltBound = true;
+  const springs = new WeakMap();
+  const springFor = (el) => {
+    let s = springs.get(el);
+    if (!s) {
+      s = editorialMakeSpring((cx, cy) => {
+        el.style.setProperty("--tilt-x", `${cx.toFixed(2)}deg`);
+        el.style.setProperty("--tilt-y", `${cy.toFixed(2)}deg`);
+      }, 0.22);
+      springs.set(el, s);
+    }
+    return s;
+  };
   let raf = 0;
   let pending = null;
   let current = null;
@@ -59,8 +99,7 @@ function editorialBindRowTilt() {
     const r = current.getBoundingClientRect();
     const px = (pending.clientX - r.left) / r.width - 0.5;
     const py = (pending.clientY - r.top) / r.height - 0.5;
-    current.style.setProperty("--tilt-x", `${(px * EDITORIAL_TILT_MAX).toFixed(2)}deg`);
-    current.style.setProperty("--tilt-y", `${(-py * EDITORIAL_TILT_MAX).toFixed(2)}deg`);
+    springFor(current).set(px * EDITORIAL_TILT_MAX, -py * EDITORIAL_TILT_MAX);
   };
   document.addEventListener("pointermove", (e) => {
     const el = e.target.closest && e.target.closest(".editorial-row__link");
@@ -72,8 +111,7 @@ function editorialBindRowTilt() {
   document.addEventListener("pointerout", (e) => {
     const el = e.target.closest && e.target.closest(".editorial-row__link");
     if (!el || el.contains(e.relatedTarget)) return;
-    el.style.setProperty("--tilt-x", "0deg");
-    el.style.setProperty("--tilt-y", "0deg");
+    springFor(el).set(0, 0);
   }, { passive: true });
 }
 
