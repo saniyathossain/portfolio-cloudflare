@@ -33,10 +33,15 @@ if (!styleMatch) {
   }
 }
 
-// Strip <script>...</script> and <style>...</style> bodies before tag-balance scanning — their
-// JS/CSS content routinely contains bare `<`/`>` (comparisons, template-literal HTML strings) that
-// a tag-regex can't tell apart from real markup.
+// Strip HTML comments, then <script>...</script> and <style>...</style> bodies before tag-balance
+// scanning. Comments must go first — several doc comments in this file reference "<style>"/"<script>"
+// by name (explaining why an element is invisible via the critical inline style block), and without
+// stripping comments first, that literal text false-matches the style/script open-tag regex below,
+// throwing off the whole-document tag stack. Script/style bodies still need their own strip after
+// that: their JS/CSS content routinely contains bare `<`/`>` (comparisons, template-literal HTML
+// strings) that a tag-regex can't tell apart from real markup.
 const htmlForTags = html
+  .replace(/<!--[\s\S]*?-->/g, "<!---->")
   .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "<script></script>")
   .replace(/<style\b[^>]*>[\s\S]*?<\/style>/g, "<style></style>");
 
