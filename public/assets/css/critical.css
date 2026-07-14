@@ -1,6 +1,20 @@
 [x-cloak] { display: none !important; }
 .svg-sprite { display: none; }
 
+/* .shell is a Tailwind utility (tailwind.css, not styles.css — the containment check below only
+   verifies against styles.css, so this rule is a deliberate exception, same as it flags for
+   .nav-overlay/.hero h1 .line-inner). It's the width-constraining container class on .hero__grid
+   and most other sections. Without it inlined here, .hero__grid renders unconstrained at full
+   viewport width until the async styles.min.css loads, then snaps to its real ~88rem-capped width —
+   a real, reproducible layout shift (confirmed via a live Lighthouse CLS trace: .hero__grid measured
+   1350px wide pre-stylesheet vs its true ~1320px constrained width, exactly matching this rule).
+   Values copied verbatim from Tailwind's generated output — keep in sync if the Tailwind config
+   (max-width/padding) ever changes. */
+.shell { margin-left: auto; margin-right: auto; max-width: 88rem; padding-left: 1.25rem; padding-right: 1.25rem; width: 100%; }
+@media (min-width: 640px) {
+  .shell { padding-left: 2rem; padding-right: 2rem; }
+}
+
 /* Loader stage — site painted + progressively settled during splash. --load-dim/--load-scale are
    set only twice by loader.js (load start, load end) — not per rAF frame — and interpolated here by
    a CSS transition instead. GPU-safe channels only: `transform: scale` (compositor) carries the
@@ -10,7 +24,7 @@
    single largest one-shot paint cost on first load. Duration is set inline by loader.js to match
    FILL_MS so this stays in lockstep without a duplicated constant here. */
 html.is-loading .app-root {
-  transform: scale(var(--load-scale, 1.012));
+  transform: scale(var(--load-scale, 1.003));
   transform-origin: center top;
   will-change: transform;
   transition: transform var(--load-ms, 1300ms) linear;
@@ -632,3 +646,1057 @@ html.is-loading .site-header {
 @media (min-width: 1024px) {
   .hero-card { max-width: 20rem; }
 }
+
+/* hero-card + hero-partners sub-classes — same missing-from-critical-CSS bug as .shell above (all
+   Tailwind-independent this time; these ARE in styles.css, just never got pulled into critical.css).
+   Before the async styles.min.css loads, .hero-card's children (badge/body/swap/caption/title/
+   footer/dots/nav/arrows) and the whole .hero-partners subtree render with zero custom styling —
+   browser-default font metrics/spacing — which measures taller than the fully-styled version.
+   Confirmed via a live layout-shift trace: .hero__aside measured 412.7px pre-stylesheet vs 214px
+   settled. Extracted verbatim (not retyped) from styles.css via a small script matching every
+   top-level rule block whose selector references one of these classes, to guarantee no drift. */
+
+p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { text-wrap: pretty; }
+
+.eyebrow, .hero-rating__text, .hero-card__caption, .hero-partners__label,
+.exp-row__desc, .service-row__desc, .exp-group__loc, .edu-row__degree,
+.hero-card__title, .role-tags__label {
+  text-shadow: var(--text-sh-sm);
+}
+
+.hero-card__inner { position: relative; z-index: 1; display: flex; gap: 0.5rem; border-radius: 0.9rem; }
+
+/* Badge + body submerged into one surface — no separate tinted tile, no border/shadow of its own;
+   the icon itself is the only accent, shown large with its own drop-shadow for depth/prominence at
+   rest (standing out of the card like a tree out of its pot), contracting smoothly on hover/focus as
+   a tactile "settle" cue. Nothing is hidden behind hover anymore — the whole card is always fully
+   shown, so there's no separate collapsed/expanded state to keep in sync. Reads --tint/--tint-ink,
+   set per active heroCards item via tintVars() in app.js (:style binding, same technique
+   .partner-orb already uses for --brand) — pinned to one of the site's 3 existing brand hues
+   (accent/primary/teal), never a new color; falls back to the original copper if --tint is ever
+   unset (e.g. before Alpine hydrates). */
+.hero-card__badge {
+  position: relative;
+  aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
+  color: var(--tint-ink, var(--accent-bright));
+}
+
+/* Soft ambient color bloom behind the icon — a real "spotlight," not just a drop-shadow — so the
+   icon reads as a featured, lit element rather than a flat glyph sitting on the photo. */
+.hero-card__badge::before {
+  content: ""; position: absolute; inset: -30%; z-index: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tint, var(--accent)) 38%, transparent) 0%, transparent 68%);
+  opacity: 0.85;
+  transition: opacity 0.5s var(--ease-glass);
+}
+
+.hero-card:hover .hero-card__badge::before,
+.hero-card:focus-within .hero-card__badge::before { opacity: 0.5; }
+
+/* Second-stage cascade: the badge pops in a beat after the card itself settles (the layered-stack
+   read carries through into the card's own contents, not just its outer shell). --reveal-delay is
+   set by reveal.js as an inline custom property on .hero-card and inherits down to this descendant.
+   fill-mode: backwards (not both/forwards) — holds the pre-start state so there's no flash before
+   the delay elapses, but releases control once the animation completes instead of holding
+   `transform: none` forever, which would otherwise silently block the badge's own
+   :hover/:focus-within drawer-flip transform (below) after the one-shot entrance finishes. The
+   animation's end state already matches the badge's natural rest style, so releasing is seamless. */
+.hero-card.is-visible .hero-card__badge {
+  animation: heroCardBadgePop 0.42s var(--ease-spring) calc(var(--reveal-delay, 0ms) + 140ms) backwards;
+}
+
+/* Icon wrapper — stable element for swap-synced pulse (x-html replaces the SVG each card change). */
+.hero-card__badge-icon {
+  position: relative; z-index: 2; display: inline-flex;
+  transform: scale(2.9);
+  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent));
+  transition: transform 0.5s var(--ease-smooth), filter 0.5s var(--ease-glass);
+}
+
+.hero-card__badge-icon .ui-icon { stroke-width: 1.75; }
+
+.hero-card:hover .hero-card__badge-icon,
+.hero-card:focus-within .hero-card__badge-icon {
+  transform: scale(1.7);
+  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--tint, var(--accent)) 42%, transparent));
+}
+
+/* Higher specificity than the plain hover rule above so a card-advance click mid-hover still reads
+   as a pulse (a small dip) instead of getting silently outranked and disappearing. */
+.hero-card__badge-icon.is-pulsing { transform: scale(2.7); }
+
+.hero-card:hover .hero-card__badge-icon.is-pulsing,
+.hero-card:focus-within .hero-card__badge-icon.is-pulsing { transform: scale(1.55); }
+
+.hero-card__badge .ui-icon { opacity: 1; }
+
+.hero-card__body {
+  flex: 1; border-radius: 0.9rem;
+  padding: 0.75rem; display: flex; flex-direction: column; justify-content: space-between;
+}
+
+/* Content swap — direction-aware: "next" exits left/enters from the right (matching the arrow
+   icons' own left/right semantics), "prev" mirrors. Driven by cardStep()/_finishSwap() in app.js via
+   direct classList toggles (not Alpine :class, so the double-rAF timing is exact). Transitions only,
+   never @keyframes, so rapid re-clicking retargets smoothly instead of restarting from zero. */
+.hero-card__swap {
+  transition: opacity var(--dur-swap) var(--ease-glass), transform var(--dur-swap) var(--ease-glass);
+}
+
+.hero-card__swap.is-swapping-next { opacity: 0; transform: translateX(-10px); }
+
+.hero-card__swap.is-swapping-prev { opacity: 0; transform: translateX(10px); }
+
+.hero-card__swap.is-entering-next { transform: translateX(10px); }
+
+.hero-card__swap.is-entering-prev { transform: translateX(-10px); }
+
+.hero-card__swap.is-swap-instant { transition: none; }
+
+.hero-card__caption {
+  font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 0.05em; color: rgba(17, 17, 17, 0.45);
+}
+
+.hero-card__title {
+  max-width: 11rem; font-size: 0.875rem; font-weight: 500; line-height: 1.35; margin-top: 0.25rem;
+  color: rgba(17, 17, 17, 0.88);
+}
+
+.hero-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem; }
+
+.hero-card__dots { display: flex; align-items: center; gap: 0.3rem; }
+
+.hero-card__dot {
+  height: 0.25rem; width: 0.375rem; border-radius: var(--radius-pill);
+  background: rgba(17,17,17,.2);
+  transition: width 0.3s var(--ease-glass), background-color 0.3s var(--ease-glass);
+}
+
+.hero-card__dot.is-active { width: 1rem; background: rgba(17,17,17,.7); }
+
+.hero-card__nav { display: flex; gap: 0.35rem; }
+
+/* Prev/next controls — the exact icon-chip shine recipe (was a flat white circle with a plain
+   text "←"/"→" glyph; now a real SVG arrow on the same tinted-glass tile as the badge/services
+   icons), pinned to --accent so it stays on-brand with the rest of the card. */
+.hero-card__arrow {
+  width: 1.75rem; height: 1.75rem; display: grid; place-items: center;
+  border-radius: var(--radius-pill); color: var(--accent-dark);
+  background: linear-gradient(145deg, #e8d5c8, #f4ebe4);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 32%, #fff),
+    color-mix(in srgb, var(--accent) 12%, #fff));
+  border: 1px solid rgba(177, 95, 44, 0.24);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px rgba(177, 95, 44, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.65),
+    0 2px 8px -3px color-mix(in srgb, var(--accent) 45%, transparent);
+  line-height: 0;
+  transition: box-shadow 0.35s var(--ease-glass), transform 0.16s var(--ease-glass);
+}
+
+.hero-card__arrow .ui-icon { width: 0.7rem; height: 0.7rem; }
+
+.hero-card__arrow:active { transform: scale(0.97); }
+
+.hero-card__arrow:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.82),
+    0 3px 12px -2px color-mix(in srgb, var(--accent) 52%, transparent);
+}
+
+/* Collapsed-badge → hover-expand drawer, "genie"-style: the card is clipped down to just the badge's
+   own footprint at rest (right-anchored, flush with the "Worked with" row below), and the body text
+   slides/fades out from behind it on hover — same mechanism as before, but the badge itself stays
+   submerged (no separate tinted tile, matching .hero-card__badge above) both collapsed and open, and
+   the icon's size now runs the OPPOSITE direction from the drawer: big + shadowed while collapsed
+   (it's the only thing visible, so it should read as prominent on its own, "tree out of its pot"),
+   contracting to its normal contained size once the drawer opens and the text takes over as the
+   focus. One shared, slow, unhurried transition drives clip-path/translateX/icon-scale together so
+   open and close feel identical. Desktop/fine-pointer only — touch devices have no hover, so the card
+   stays fully expanded there (unchanged), the safe fallback under reduced-motion and print. Motion is
+   done entirely with `clip-path` (compositor-only, no width/height reflow). Also requires
+   min-width:1024px, not just hover/pointer capability alone — (hover:hover) and (pointer:fine) are
+   about INPUT capability, not viewport width, so a narrow browser window on a real desktop (a mouse,
+   no touch) still matches them. Without this, resizing a desktop browser down to a phone-width
+   viewport left the card permanently in its collapsed rest state (just the badge, on a plain white
+   background — the tint only ever applied on the hover-open state), since nothing there could ever
+   receive a real hover. */
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  /* .hero-card carries data-reveal="scale" for its page-load entrance animation, and
+     `[data-reveal].is-visible` (specificity 0,2,0) sets its own `transition` — beating a plain
+     `.hero-card` rule (0,1,0) outright, which would silently discard the clip-path transition.
+     `.hero__aside .hero-card[data-reveal]` (0,3,0) decisively outranks it. */
+  .hero__aside .hero-card[data-reveal] {
+    height: 8rem;
+    padding: 0.5rem 0 0.5rem 0.5rem;
+    clip-path: inset(1rem 0 1rem calc(100% - 6rem) round 0.9rem);
+    /* Near-opaque frosted tile for ALL drawer states (rest/open/mid-transition). Without a live
+       backdrop blur the card is see-through, and while it's wide mid-close the grayscale hero photo
+       bled through and the icon's copper glow + drop-shadow ghosted against it — reading as a second
+       icon layer during fallback. Keeping the surface opaque means the icon always sits on a clean
+       frosted tile (like a macOS app icon), never on the photo, so nothing ghosts as it collapses. */
+    background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.88) 100%);
+    box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--accent) 42%, transparent);
+    transition:
+      clip-path 0.52s var(--ease-smooth),
+      padding-right 0.52s var(--ease-smooth),
+      background 0.52s var(--ease-smooth),
+      box-shadow 0.4s var(--ease-glass),
+      opacity var(--dur-reveal) var(--ease-reveal),
+      transform var(--dur-reveal) var(--ease-reveal);
+  }
+  .hero-card__inner { height: 100%; align-items: center; }
+  .hero__aside .hero-card[data-reveal]::after { opacity: 0; transition: opacity 0.5s var(--ease-glass); }
+  .hero-card__badge {
+    /* Shifted to sit flush at the card's true right edge at rest; returns to its natural
+       left-of-body flex position on hover/focus. Value accounts for the card's max-width, which
+       differs by breakpoint (see the 1024px override below). */
+    transform: translateX(15.5rem);
+    transition: transform 0.52s var(--ease-smooth);
+  }
+  @media (min-width: 1024px) {
+    .hero-card__badge { transform: translateX(13.5rem); }
+  }
+  .hero-card__body {
+    opacity: 0; transform: translateX(-8px);
+    /* CLOSE direction only (the :hover/:focus-within rule below owns the open fade). The badge
+       slides right, in sync with the clip, back across this body's whole area as the card collapses.
+       A *fade* here can't win that race — measured, the body is still painting while the icon is
+       already mid-slide over it, so with faux-frost (no blur to smear it) you see the icon ghosted on
+       top of the still-readable text: two overlapping UIs. So don't fade on close at all — drop the
+       body instantly (opacity 0s). The collapsing pill has no room for the text anyway, and the icon
+       then glides over an empty frosted surface with nothing behind it to overlap. */
+    transition: opacity 0s, transform 0.4s var(--ease-smooth);
+  }
+  /* Open state — its own (slower, deliberate) transition, since plain CSS has no separate
+     enter/exit duration otherwise. Faux-frost (opaque tinted gradient), not a live backdrop-filter:
+     see the note on the background below — a hover-time blur layer was hitching the first frame of
+     the reveal. */
+  .hero__aside .hero-card[data-reveal]:hover,
+  .hero__aside .hero-card[data-reveal]:focus-within {
+    padding-right: 0.5rem;
+    clip-path: inset(0 0 0 0 round 1.35rem);
+    /* Faux-frost on open too — a live backdrop-filter: blur(32px) here was promoted to a new
+       compositor layer only at hover-start, so the very first frame of the reveal hitched ("stuck")
+       while that blur layer rasterized, then ran smooth once cached. A more-opaque tinted gradient
+       gives the same frosted read over the hero photo with zero layer setup, so the clip-path reveal
+       is smooth from frame one — and it matches the faux-frost the rest of this card already uses by
+       design (see the .hero-card base rule). */
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--tint, var(--accent)) 10%, rgba(255,255,255,.96)) 0%,
+      color-mix(in srgb, var(--tint, var(--accent)) 6%, rgba(255,255,255,.86)) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 0 0 1px rgba(230,229,226,.35),
+      0 18px 46px -10px rgba(17, 17, 17, 0.14);
+    transition:
+      clip-path 0.6s var(--ease-smooth),
+      padding-right 0.6s var(--ease-smooth),
+      background 0.6s var(--ease-smooth),
+      box-shadow 0.45s var(--ease-glass);
+  }
+  .hero__aside .hero-card[data-reveal]:hover::after,
+  .hero__aside .hero-card[data-reveal]:focus-within::after { opacity: 0.5; }
+  .hero-card:hover .hero-card__badge,
+  .hero-card:focus-within .hero-card__badge {
+    transform: translateX(0);
+    transition: transform 0.6s var(--ease-smooth);
+  }
+  .hero-card:hover .hero-card__body,
+  .hero-card:focus-within .hero-card__body {
+    opacity: 1; transform: none;
+    transition: opacity 0.45s var(--ease-glass), transform 0.6s var(--ease-smooth);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-card, .hero-card__body, .hero-card__badge { transition: none; }
+  }
+}
+
+.hero-partners { width: 100%; max-width: 24rem; }
+
+.hero-partners__label {
+  margin-bottom: 0.75rem; font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(17,17,17,.72);
+  text-shadow: 0 1px 2px rgba(255,255,255,.9), 0 1px 10px rgba(255,255,255,.6);
+  text-align: left;
+}
+
+/* min-height reserves the row's footprint before Alpine populates it from the async-loaded JSON
+   (an empty flex container has zero height otherwise) — avoids a layout shift once the 5 partner
+   icons render in. */
+.hero-partners__list { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: flex-start; min-height: 2.35rem; }
+
+/* Partner "dock" icons — a fixed-size, never-shifting row (each icon's own box never changes
+   dimensions, so hovering one can NEVER push its neighbors: that reflow was the source of the
+   jiggle in the old inline-expand version). The company name floats up in a small tooltip bubble
+   above the icon instead, macOS-Dock style — reveals via opacity + a short rise, no layout impact
+   on anything else in the row. */
+.partner-orb {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.35rem; height: 2.35rem; border-radius: 50%;
+  overflow: visible;
+  cursor: pointer; outline: none;
+  background: linear-gradient(145deg, #d9e4f0, #eef3f8);
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--brand) 34%, #fff),
+    color-mix(in srgb, var(--brand) 12%, #fff));
+  border: 1px solid rgba(80, 120, 180, 0.26);
+  border: 1px solid color-mix(in srgb, var(--brand) 26%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 2px 8px -3px rgba(80, 120, 180, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.7),
+    0 2px 8px -3px color-mix(in srgb, var(--brand) 45%, transparent);
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-glass), z-index 0s;
+}
+
+.partner-orb::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, rgba(255,255,255,.68) 0%, rgba(255,255,255,.18) 30%, transparent 54%);
+  opacity: 0.75; transition: opacity 0.3s var(--ease-glass);
+}
+
+.partner-orb:hover,
+.partner-orb:focus-visible {
+  transform: translateY(-3px) scale(1.1);
+  z-index: 2;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 10px 22px -8px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+
+.partner-orb:hover::before,
+.partner-orb:focus-visible::before { opacity: 1; }
+
+.partner-orb__badge { position: relative; z-index: 2; width: 1rem; height: 1rem; display: grid; place-items: center; }
+
+.partner-orb__badge img { width: 100%; height: 100%; object-fit: contain; }
+
+.partner-orb:hover .partner-orb__tip,
+.partner-orb:focus-visible .partner-orb__tip,
+.partner-orb.is-open .partner-orb__tip {
+  opacity: 1; transform: translate(-50%, 0) scale(1);
+}
+
+.partner-orb.is-open {
+  transform: translateY(-3px) scale(1.1);
+  z-index: 2;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    0 10px 22px -8px color-mix(in srgb, var(--brand) 55%, transparent);
+}
+
+.partner-orb.is-open::before { opacity: 1; }
+
+/* Shiny tile gloss — shared diagonal specular across icon-chip + service/exp row icons */
+.icon-chip,
+.service-row__icon,
+.exp-row__icon,
+.point-chip,
+.hero-card__arrow {
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-chip::before,
+.service-row__icon::before,
+.exp-row__icon::before,
+.point-chip::before,
+.hero-card__arrow::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.72;
+  transition: opacity 0.35s var(--ease-glass);
+}
+
+.service-row:hover .service-row__icon::before,
+.exp-row:hover .exp-row__icon::before,
+.exp-row[aria-expanded="true"] .exp-row__icon::before,
+.point-chip:hover::before,
+.icon-chip:hover::before,
+.icon-chip:focus-within::before,
+.hero-card__arrow:hover::before {
+  opacity: 1;
+}
+
+.hero__grid:has(.partner-orb:hover),
+.hero__grid:has(.partner-orb:focus-within),
+.hero__grid:has(.partner-orb.is-open) { z-index: 200; }
+
+/* Per-item stagger entrance, delay driven by --stagger-i (set inline via Alpine :style in the
+   x-for loop — same custom-property idiom .partner-orb already uses for --brand). Rest state above
+   keeps opacity/transform transition at 0s so closing snaps the item back instantly with no visible
+   reverse-stagger — only the overlay's own opacity fade is visible on close. */
+.nav-overlay.is-open .nav-overlay__item {
+  opacity: 1; transform: none;
+  transition: color 0.3s, text-shadow 0.35s var(--ease-glass),
+              opacity 0.5s var(--ease-smooth), transform 0.5s var(--ease-smooth);
+  transition-delay: calc(var(--stagger-i, 0) * 45ms);
+}
+
+/* ——— Plan 41 Phases 7–8: tap targets, popover width, mobile justify ——— */
+
+/* 44px tap targets — invisible hit-area extension. Parent needs a positioning context
+   (relative, or absolute like .modal-close — do NOT force relative on absolute controls). */
+.menu-btn,
+.hero-card__arrow,
+.social-link,
+.popover__trigger,
+.site-footer li a,
+.site-footer li button,
+.partner-orb,
+.editorial-tabs__btn,
+.editorial-search__orb,
+.editorial-search__clear,
+.brand-btn,
+.nav-desktop button {
+  position: relative;
+}
+
+.menu-btn::after,
+.hero-card__arrow::after,
+.social-link::after,
+.modal-titlebar > .modal-close::after,
+.popover__trigger::after,
+.site-footer li a::after,
+.site-footer li button::after,
+.partner-orb::after,
+.editorial-tabs__btn::after,
+.editorial-search__orb::after,
+.editorial-search__clear::after,
+.brand-btn::after,
+.nav-desktop button::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+
+/* Gloss uses ::before + border-radius; allow ::after hit-area to extend past the tile edge. */
+.menu-btn,
+.hero-card__arrow {
+  overflow: visible;
+}
+
+/* Round 2: pill-btn (hero CTAs)/sheen/ui-icon--lg/partner-orb__mono/tooltip-shine — same missing-
+   from-critical-CSS gap, found via a systematic sweep of every class actually used inside #home
+   against critical.css (not hand-traced one at a time, since the pattern was already established
+   as systemic by the .shell and .hero-card fixes above). */
+
+/* Unified 0.65s glass choreography (card/logo/school/spec) + trailing sheen — real hover only.
+   Coarse gets an :active press instead of the old always-on lift (which fought press physics).
+   All four properties live on ONE rule deliberately: .edu-row.glass-card and .edu-row.sheen are
+   equal specificity (0,2,0) and match the same element, so two separate `transition` shorthands
+   don't merge — the later one (source order) replaced the whole list, silently dropping
+   transform/box-shadow/border-color (the hover-lift + top-border fade snapped instantly instead of
+   easing) and leaving only the sheen sweep animated. */
+.edu-row.glass-card {
+  transition:
+    transform 0.65s var(--ease-glass),
+    box-shadow 0.65s var(--ease-glass),
+    border-color 0.65s var(--ease-glass),
+    background-position 0.65s var(--ease-glass);
+}
+
+/* Shared tooltip text shine — one metallic sweep when the tooltip opens (not a loop). `color` is the
+   fallback for browsers without background-clip:text support. */
+.tooltip-shine {
+  display: inline-block;
+  background-repeat: no-repeat; background-size: 240% 100%; background-position: 0% 0;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Dark-bg variant (brand-tooltip: white text on near-black) — warm gold highlight sweeping through,
+   engraved-metal read matching the header calligraphy's own sheen treatment. */
+.brand-tooltip .tooltip-shine {
+  color: #fff;
+  background-image: linear-gradient(100deg, #fff 28%, #ffe9c8 50%, #fff 72%);
+}
+
+/* Light-bg variant (popover labels + partner-orb tips: dark ink on white) — copper accent highlight,
+   ties the shine into the site's one locked accent color instead of a generic white glint. */
+.popover__label.tooltip-shine,
+.partner-orb__tip .tooltip-shine {
+  color: var(--ink);
+  background-image: linear-gradient(100deg, var(--ink) 28%, var(--accent-bright) 50%, var(--ink) 72%);
+}
+
+.pill-btn__icon {
+  width: var(--btn-icon-size); height: var(--btn-icon-size); display: grid; place-items: center;
+  border-radius: var(--btn-radius); background: #fff; color: var(--ink); font-size: 1rem; line-height: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 1px 3px rgba(17,17,17,.12);
+  transition: transform var(--dur-btn-hover) var(--ease-btn);
+}
+
+.pill-btn__icon .ui-icon {
+  width: 1rem; height: 1rem;
+  color: var(--ink);
+  stroke-width: 2.25;
+}
+
+/* Opposite-contrast pairing for a light-surface button: dark circle + white glyph, mirroring
+   .pill-btn-dark's white circle + dark glyph so the two hero CTAs read as an inverted pair. */
+.pill-btn__icon--dark {
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 1px 3px rgba(17,17,17,.3);
+}
+
+.pill-btn__icon--dark .ui-icon { color: #fff; }
+
+/* Kinetic coin — nudges toward the direction of travel on hover ("internal kinetic tension"),
+   reset on press so the whole button reads as one solid unit while held down. */
+.pill-btn-dark:hover .pill-btn__icon,
+.pill-btn-glass:hover .pill-btn__icon,
+.pill-btn-outline:hover .pill-btn__icon {
+  transform: translateX(3px) scale(1.06);
+}
+
+.pill-btn-dark:active .pill-btn__icon,
+.pill-btn-glass:active .pill-btn__icon,
+.pill-btn-outline:active .pill-btn__icon {
+  transform: translateX(1px) scale(0.96);
+}
+
+/* Both CTAs below add the icon-chip "shiny tile" gloss via ::after (not ::before — .beam already
+   claims that pseudo-element for its rotating conic border on these same buttons). */
+.pill-btn-dark {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: var(--control-gap);
+  border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  color: #fff; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
+  /* Shinier rim: brighter top highlight + a thin bright inset ring wrapping the whole edge. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), inset 0 0 0 1px rgba(255,255,255,.1), 0 10px 24px rgba(17,17,17,.18);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn);
+}
+
+.pill-btn-dark::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.1) 30%, transparent 58%);
+  opacity: 0.92;
+  transition: opacity var(--dur-btn-hover) var(--ease-btn);
+}
+
+.pill-btn-dark > * { position: relative; z-index: 2; }
+
+.pill-btn-dark:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.18), 0 16px 34px rgba(17,17,17,.24);
+}
+
+.pill-btn-dark:hover::after { opacity: 1; }
+
+.pill-btn-dark:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
+
+.pill-btn-glass {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: var(--control-gap);
+  border-radius: var(--btn-radius); font-size: 0.875rem; font-weight: 500;
+  background: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
+  color: #111; padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x);
+  /* Shinier rim: crisp bright inset ring around the whole edge. */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 0 0 1px rgba(255,255,255,.7), 0 4px 14px -7px rgba(17,17,17,.14);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
+}
+
+.pill-btn-glass::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.32) 30%, transparent 58%);
+  opacity: 0.88;
+  transition: opacity var(--dur-btn-hover) var(--ease-btn);
+}
+
+.pill-btn-glass > * { position: relative; z-index: 2; }
+
+.pill-btn-glass:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1px rgba(255,255,255,.85), 0 12px 28px -8px rgba(17,17,17,.14);
+}
+
+.pill-btn-glass:hover::after { opacity: 1; }
+
+.pill-btn-glass:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
+
+.pill-btn-dark, .pill-btn-glass, .pill-btn-outline { touch-action: manipulation; }
+
+.pill-btn-dark:focus-visible, .pill-btn-glass:focus-visible, .pill-btn-outline:focus-visible {
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* Outline pill brought into the shiny-glass family — it shipped as flat Tailwind (no states) while
+   every other control on the site is tinted glass; this closes that gap without a new material. */
+.pill-btn-outline {
+  /* Distinct, aesthetic teal→cyan "aurora glass" — the other CTAs are copper / black / frosted, so
+     this one gets its own hue. --tint pinned to teal so the arrow coin, .beam rim and .sheen sweep
+     all recolour to match instead of the section's copper. Bright rim = the shiny border. */
+  --tint: var(--teal);
+  position: relative; overflow: hidden;
+  border-color: transparent !important;
+  /* Sized to match .pill-btn-dark/.pill-btn-glass exactly (same control-pad-* tokens, same icon
+     coin) instead of the taller symmetric Tailwind default padding it shipped with. */
+  padding: var(--control-pad-y) var(--control-pad-y) var(--control-pad-y) var(--control-pad-x) !important;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--teal) 24%, #fff) 0%,
+    color-mix(in srgb, var(--c-cyan) 20%, #fff) 52%,
+    color-mix(in srgb, var(--c-teal) 22%, #fff) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 0 0 1px color-mix(in srgb, var(--teal) 46%, rgba(255,255,255,.55)),
+    0 5px 18px -8px color-mix(in srgb, var(--teal) 42%, transparent);
+  transition: transform var(--dur-btn-hover) var(--ease-btn), box-shadow var(--dur-btn-hover) var(--ease-btn), background var(--dur-btn-hover) var(--ease-btn);
+}
+
+.pill-btn-outline:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--teal) 32%, #fff) 0%,
+    color-mix(in srgb, var(--c-cyan) 26%, #fff) 52%,
+    color-mix(in srgb, var(--c-teal) 28%, #fff) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 0 0 1px color-mix(in srgb, var(--teal) 62%, rgba(255,255,255,.6)),
+    0 12px 26px -8px color-mix(in srgb, var(--teal) 50%, transparent);
+}
+
+.pill-btn-outline:active { transform: translateY(0) scale(0.97); transition-duration: var(--dur-btn-press); }
+
+/* The outline pill's fill is near-white, so its coin needs its own contrast — tint-tinted ring
+   instead of the flat white .pill-btn__icon (which would nearly disappear on this background). */
+.pill-btn-outline .pill-btn__icon {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tint, var(--accent)) 30%, #fff), color-mix(in srgb, var(--tint, var(--accent)) 12%, #fff));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 1px 3px color-mix(in srgb, var(--tint, var(--accent)) 25%, transparent);
+}
+
+.partner-orb__mono { font-size: 0.6rem; font-weight: 800; color: #fff; }
+
+.ui-icon--lg { width: 1.2rem; height: 1.2rem; }
+
+.pill-btn__icon { color: #fff; }
+
+.site-footer__cta .pill-btn__icon { flex: none; }
+
+.modal-footer-row .pill-btn { white-space: nowrap; align-self: stretch; justify-content: center; }
+
+/* 4) Sheen sweep — a diagonal light glides across on hover/focus. Implemented as an extra
+   background-image layer (not a pseudo-element) so it never collides with a component's
+   own ::before/::after film; background-color/box-shadow from the base rule stay intact. */
+.sheen {
+  background-image: linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 50%, transparent 58%);
+  background-repeat: no-repeat;
+  background-size: 260% 260%;
+  background-position: -40% -40%;
+  transition: background-position 0.85s var(--ease-glass);
+}
+
+.sheen:focus-visible { background-position: 140% 140%; }
+
+/* .hero-card already layers --grad-soft as a background-image (ambient wash) — combine both
+   layers here instead of letting .sheen's single-layer image replace it. */
+.hero-card.sheen {
+  background-color: rgba(255, 255, 255, 0.82);
+  background-image: linear-gradient(115deg, transparent 42%, rgba(255,255,255,.5) 50%, transparent 58%);
+  background-size: 260% 260%;
+  background-position: -40% -40%;
+}
+
+.hero-card.sheen:focus-visible { background-position: 140% 140%; }
+
+/* .pill-btn-dark/.pill-btn-glass paint their own color via the `background` shorthand, which sets
+   background-image too — .sheen's bare `background-image` (equal specificity, later in source)
+   was fully replacing that gradient instead of layering over it, leaving the button looking blank/
+   white. Same collision already solved above for .hero-card.sheen; two-class selectors here also
+   outrank both single-class rules on specificity, not just source order, so this holds regardless
+   of where .sheen is declared. */
+.pill-btn-dark.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+    linear-gradient(145deg, #2b2b2b, #060606);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+
+.pill-btn-dark.sheen:focus-visible { background-position: 140% 140%, 0 0; }
+
+.pill-btn-glass.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.68) 100%);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+
+.pill-btn-glass.sheen:focus-visible {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.85) 50%, transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.8) 100%);
+  background-position: 140% 140%, 0 0;
+}
+
+.pill-btn-outline.sheen {
+  background-image:
+    linear-gradient(115deg, transparent 38%, rgba(255,255,255,.92) 50%, transparent 62%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--teal) 24%, #fff) 0%,
+      color-mix(in srgb, var(--c-cyan) 20%, #fff) 52%,
+      color-mix(in srgb, var(--c-teal) 22%, #fff) 100%);
+  background-size: 260% 260%, 100% 100%;
+  background-position: -40% -40%, 0 0;
+}
+
+.pill-btn-outline.sheen:focus-visible {
+  background-position: 140% 140%, 0 0;
+}
+
+/* Round 3: header widgets (analog clock, nav-desktop pill, brand/bismillah logo, menu button) +
+   loader shimmer/grain/scroll-progress — found via the same systematic above-fold sweep, extended
+   from #home only to the whole <body>-through-#about region (everything realistically visible
+   before first scroll). */
+
+/* Battery: freeze every always-on decorative animation while the page is hidden or the window is
+   blurred (app.js toggles html.is-idle). They resume seamlessly on return, so nothing visible
+   changes — it just stops burning GPU/battery compositing them in the background. The clock is
+   intentionally excluded (pausing a phase-locked sweep would desync it; its cost is negligible). */
+html.is-idle body::before,
+html.is-idle .brand-bismillah,
+html.is-idle .brand-bismillah-wrap::after,
+html.is-idle .beam::before {
+  animation-play-state: paused;
+}
+
+/* Film-grain overlay — fixed, pointer-events-none; sits above content, below the fixed chrome/overlays */
+.grain {
+  position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  opacity: 0.038; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Scroll-progress hairline — reflects page scroll; hidden under reduced motion */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 130;
+  transform: scaleX(var(--sp, 0)); transform-origin: left center;
+  background: linear-gradient(90deg, var(--accent), var(--primary) 55%, var(--c-cyan));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent);
+  pointer-events: none; will-change: transform;
+}
+
+.loader__track-shimmer {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,.08) 42%,
+    rgba(255,255,255,.18) 50%,
+    rgba(255,255,255,.08) 58%,
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: loaderTrackShimmer 1.8s ease-in-out infinite;
+}
+
+.loader__fill-shimmer {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg,
+    transparent 0%,
+    rgba(255,255,255,.12) 38%,
+    rgba(255,255,255,.72) 50%,
+    rgba(255,255,255,.12) 62%,
+    transparent 100%);
+  transform: translateX(-120%);
+  animation: loaderFillShimmer 1.1s ease-in-out infinite;
+}
+
+.brand-bismillah-wrap {
+  position: relative; display: block;
+  height: clamp(1.7rem, 6.5vw, 1.95rem);
+  width: auto;
+  max-width: min(9.7rem, 43vw);   /* never crowds the clock chip + Menu at 360px */
+}
+
+.brand-btn .brand-bismillah {
+  display: block; height: 100%; width: auto; max-width: 100%;
+  /* No shadow on the image itself — the shine is the SVG metallic gradient; the sheen (below)
+     animates the light, and the ambient/hover glow lives on the wrapper so it isn't clipped by
+     the image's own tight bounding box. */
+}
+
+/* Hover: a brighter, more saturated glow layered on top of the ambient sheen — the calligraphy's
+   metallic gradient catches more "light" the way real engraved copper would under a lamp. */
+.brand-btn:hover .brand-bismillah,
+.brand-btn:focus-visible .brand-bismillah {
+  filter: brightness(1.34) saturate(1.4) drop-shadow(0 2px 12px color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+/* Specular sweep — a bright highlight glides across, masked to the calligraphy's own silhouette
+   (not a rectangle) so it reads as light glinting off engraved metal rather than a generic shine
+   bar. mask-image on the same SVG source clips the sweep to exactly the drawn strokes. */
+.brand-bismillah-wrap::after {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.95) 50%, transparent 65%);
+  background-size: 300% 100%;
+  background-position: -100% 0;
+  -webkit-mask: url(/assets/img/bismillah.svg) center / contain no-repeat;
+  mask: url(/assets/img/bismillah.svg) center / contain no-repeat;
+  mix-blend-mode: overlay;
+}
+
+.brand-btn:hover .brand-bismillah-wrap::after,
+.brand-btn:focus-visible .brand-bismillah-wrap::after { animation-duration: 1.8s; }
+
+/* iOS 26 Music-app tab lens: a CLEAR glass capsule (not an opaque tinted chip) — bright specular
+   rim, light glassy fill with a whisper of copper so it stays on-brand, riding on the frosted dock.
+   Faux-glass fill (no nested backdrop-filter: it would rasterize a second live blur inside the
+   already-blurred header for near-zero visual gain on a flat frosted background). */
+.nav-desktop__pill {
+  position: absolute; top: 50%; left: 0; z-index: 0; overflow: hidden;
+  height: var(--pill-h, 2rem); width: var(--pill-w, 0);
+  transform: translate(var(--pill-x, 0), -50%);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--accent) 7%, rgba(255,255,255,.8)),
+    color-mix(in srgb, var(--accent) 5%, rgba(255,255,255,.42)));
+  border: 0;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.95),
+    inset 0 -6px 12px -8px color-mix(in srgb, var(--accent) 28%, transparent),
+    0 3px 10px -2px rgba(17,17,17,.14),
+    0 1px 3px rgba(17,17,17,.07);
+  opacity: var(--pill-o, 0);
+  pointer-events: none;
+  /* Liquid morph: position and width overshoot on a "back-out" curve (slightly staggered
+     durations) before settling, so the lens reads as a fluid glass droplet stretching toward the
+     destination rather than a rigid slide — same idea as iOS's tab-bar indicator. */
+  transition: transform 0.5s var(--ease-liquid), width 0.66s var(--ease-liquid),
+    opacity 0.3s ease, box-shadow 0.35s var(--ease-glass);
+}
+
+.nav-desktop:hover .nav-desktop__pill,
+.nav-desktop:focus-within .nav-desktop__pill {
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.98),
+    inset 0 -6px 12px -8px color-mix(in srgb, var(--accent) 36%, transparent),
+    0 5px 16px -2px rgba(17,17,17,.18),
+    0 1px 3px rgba(17,17,17,.08);
+}
+
+.nav-desktop__pill::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.16) 30%, transparent 54%);
+  opacity: 0.72;
+}
+
+.nav-desktop:hover .nav-desktop__pill::before { opacity: 1; }
+
+.header-right { display: flex; align-items: center; gap: 0.65rem; flex-shrink: 0; }
+
+.clock-chip { display: flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; color: rgba(17,17,17,.6); white-space: nowrap; }
+
+.clock-time { font-variant-numeric: tabular-nums; font-weight: 500; color: #111; }
+
+.clock-sep { color: rgba(17,17,17,.3); }
+
+/* Live analog clock — an extremely frosted "liquid glass" disc (heavy backdrop-blur; allowed here
+   because the navbar is fixed chrome) with understated graphite hands + a slate second hand. Hover
+   grows from the RIGHT edge (transform-origin) so the enlarged face expands left/up/down and never
+   covers the digital time text sitting to its right. Cardinal tick marks fade in on hover only, to
+   help read the hour/minute at the bigger size without cluttering the resting state. The second
+   hand's animation-delay is set once on load (never re-touched), so its 60s linear sweep runs on its
+   own compositor timeline with zero JS-driven correction jumps — a genuinely seamless glide. */
+.clock-face {
+  --hand: #2a2f38;          /* charcoal hour/minute hands */
+  --hand-second: #5b6472;   /* slate second hand — understated, no bright color */
+  position: relative; flex: none; overflow: hidden;
+  width: 3rem; height: 3rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255,255,255,.6), rgba(255,255,255,.1) 72%),
+    rgba(255,255,255,.16);
+  backdrop-filter: blur(18px) saturate(220%);
+  -webkit-backdrop-filter: blur(18px) saturate(220%);
+  border: 1px solid rgba(255,255,255,.8);
+  box-shadow:
+    inset 0 1px 1.5px rgba(255,255,255,.95),
+    inset 0 0 0 0.5px rgba(17,17,17,.04),
+    0 3px 10px -2px rgba(17,17,17,.16);
+  transform-origin: 50% 50%;
+  transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass);
+}
+
+/* Radial "glass orb" highlight, not the shared diagonal icon-chip gloss — a directional linear band
+   reads as a lopsided/non-circular cue on a disc (the eye interprets the asymmetric light/shadow as
+   an uneven edge even though the geometry underneath is a mathematically perfect circle, confirmed
+   via computed width===height at every breakpoint). A radial highlight positioned like a light
+   source hitting a sphere reinforces roundness instead of fighting it. */
+.clock-face::before {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.9) 0%, rgba(255,255,255,.3) 38%, transparent 68%);
+  opacity: 0.85;
+  transition: opacity 0.35s var(--ease-glass);
+}
+
+/* Enlarged state — desktop reveals it on :hover; touch devices toggle it by tapping the face
+   (.is-zoomed, set in motion.js) so the "hover" grow works on mobile too. Grows from the right edge
+   so the bigger face expands left/up/down and never covers the time text to its right. */
+.clock-face.is-zoomed {
+  transform-origin: 100% 50%;
+  transform: scale(2.1);
+  box-shadow:
+    inset 0 1px 1.5px rgba(255,255,255,.98),
+    0 9px 26px rgba(17,17,17,.22);
+}
+
+.clock-face.is-zoomed::before { opacity: 1; }
+
+.clock-face.is-zoomed .clock-tick { opacity: 1; }
+
+.clock-tick {
+  position: absolute; left: 50%; bottom: 50%;
+  transform-origin: 50% 100%;
+  width: 1.4px; height: 42%; margin-left: -0.7px;
+  /* spans center→edge like a hand, but only the outer segment is painted, so it reads as a short
+     rim mark rather than a spoke through the pivot */
+  background: linear-gradient(to top, transparent 0%, transparent 76%, rgba(42,47,56,.55) 80%, rgba(42,47,56,.55) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.clock-tick--12 { transform: rotate(0deg); }
+
+.clock-tick--3  { transform: rotate(90deg); }
+
+.clock-tick--6  { transform: rotate(180deg); }
+
+.clock-tick--9  { transform: rotate(270deg); }
+
+.clock-hand {
+  position: absolute; left: 50%; bottom: 50%;
+  transform-origin: 50% 100%;
+  border-radius: 999px;
+  background: var(--hand);
+}
+
+.clock-hand--h {
+  width: 2px; height: 25%; margin-left: -1px;
+  transform: rotate(var(--clock-h, 0deg));
+  transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
+}
+
+.clock-hand--m {
+  width: 1.7px; height: 35%; margin-left: -0.85px;
+  transform: rotate(var(--clock-m, 0deg));
+  transition: transform 0.6s cubic-bezier(.36,.66,.28,1);
+}
+
+.clock-hand--s {
+  width: 1.3px; height: 39%; margin-left: -0.65px;
+  background: var(--hand-second);
+  transform: rotate(var(--clock-s, 0deg));
+  animation: clock-sweep 60s linear infinite;
+  animation-delay: var(--clock-s-delay, 0s);
+}
+
+.clock-hand--s::after {         /* counterbalance tail behind the pivot */
+  content: ""; position: absolute; left: 50%; bottom: -22%;
+  width: 1.3px; height: 22%; margin-left: -0.65px;
+  border-radius: 999px; background: var(--hand-second);
+}
+
+.clock-pin {
+  position: absolute; left: 50%; top: 50%;
+  width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%; background: var(--hand);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.9);
+}
+
+/* Same shiny-tile recipe as .icon-chip/.nav-desktop__pill (gradient + border + layered shadow +
+   diagonal gloss), black base with a copper edge/glow and copper bars on interaction — "copper,
+   black, and other theme colors" combined in one control rather than flat single-tone black. */
+.menu-btn {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  /* FIXED (not min-) width + flex:none so the header "Menu" button and the overlay "Close" button —
+     which have different label + icon widths — render as the exact same box. Equal box + matched
+     right edge (see .nav-overlay__close) means Close lands perfectly over Menu when the drawer opens.
+     Sized to fit "Close" snugly; content is centered, so left/right space stays symmetric. */
+  width: 5.75rem; flex: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.15));
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  border-radius: var(--radius-pill);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 6px 18px -3px rgba(17,17,17,.4),
+    0 3px 12px -5px color-mix(in srgb, var(--accent) 55%, transparent);
+  /* transform included so the whole control squishes on press with the same liquid overshoot as the
+     iOS 26 music-app dock buttons (see .menu-btn.is-pressed). */
+  transition: box-shadow 0.35s var(--ease-glass), border-color 0.35s var(--ease-glass), transform 0.42s var(--ease-liquid);
+}
+
+.menu-btn:hover .menu-btn__bar,
+.menu-btn:focus-visible .menu-btn__bar,
+.menu-btn[aria-expanded="true"] .menu-btn__bar { background: var(--accent-bright); }
+
+/* iOS 26 "Liquid Glass" touch feedback — a soft light blob blooms from the exact touch/press point
+   (--tx/--ty, set by motion.js on pointerdown) and springs back out on release. Transform+opacity
+   only, positioned via a real element (both ::before and ::after on .menu-btn are already spoken
+   for — gloss sheen and the 44px invisible tap-target hit-area, respectively). */
+.menu-btn__ripple {
+  position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(circle at var(--tx, 50%) var(--ty, 50%),
+    rgba(255,255,255,.85) 0%, color-mix(in srgb, var(--accent-bright) 55%, rgba(255,255,255,.4)) 26%, transparent 62%);
+  opacity: 0; transform: scale(0.5);
+  transition: opacity 0.5s var(--ease-glass), transform 0.55s var(--ease-liquid);
+}
+
+/* No hover glow — the cursor-following copper highlight was removed by request; the ripple now only
+   blooms on an actual press (touch/click) below. */
+.menu-btn.is-pressed .menu-btn__ripple {
+  opacity: 1; transform: scale(1.35);
+  transition-duration: 0.12s;
+}
+
+/* Direct-child combinator, not a bare descendant selector: this must only style the one wrapper
+   span, not the .menu-btn__icon/.menu-btn__bar spans nested inside it below (a bare `.menu-btn
+   span` matched those too, inflating each 1.5px bar into a full padded flex box). */
+/* :not(.menu-btn__ripple) is load-bearing: a bare `.menu-btn > span` (0,1,1) also matched the ripple
+   span and — outranking `.menu-btn__ripple` (0,1,0) — forced it position:relative, so the ripple
+   became an in-flow flex item eating half the width and shoving the label off-centre. Excluding it
+   leaves the ripple absolutely-positioned and the label wrapper as the only flex item, so flex:1 +
+   the button's justify-content:center land the icon+label dead-centre for both "Menu" and "Close". */
+.menu-btn > span:not(.menu-btn__ripple) {
+  position: relative; z-index: 2;
+  flex: 1 1 auto; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 0.36rem;
+  padding: 0.48rem 0.72rem; font-size: 0.6875rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
+}
+
+/* Hamburger-to-X morph — 3 plain bars instead of a single SVG (CSS can't interpolate between two
+   path shapes), keyed off :aria-expanded the same way the experience accordion already keys its
+   own open state off an ARIA attribute rather than an ad-hoc class. */
+.menu-btn__icon {
+  display: inline-flex; flex-direction: column; justify-content: center; gap: 0.2rem;
+  width: 0.85rem; height: 0.7rem;
+}
+
+.menu-btn__bar {
+  display: block; height: 1.5px; width: 100%; border-radius: 1px;
+  background: currentColor;
+  /* --ease-liquid (the same overshoot the nav's sliding pill indicator uses) so the hamburger-to-X
+     morph reads as a springy liquid shift rather than a flat mechanical rotate. */
+  transition: transform 0.4s var(--ease-liquid), opacity 0.25s var(--ease-glass);
+}
+
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(1) { transform: translateY(4.3px) rotate(45deg); }
+
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(2) { opacity: 0; }
+
+.menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(3) { transform: translateY(-4.3px) rotate(-45deg); }
