@@ -158,7 +158,13 @@ function editorialHelpers() {
 
     init() {
       this.$nextTick(() => {
-        this.syncTabLens();
+        // syncTabLens() reads layout (offsetLeft/Width/Height) before it writes the lens position —
+        // deferred to its own rAF so that read can't land in the same synchronous tick as
+        // editorialCascadeTitles()'s DOM-restructuring writes below (a live Lighthouse
+        // forced-reflow-insight trace attributed real time to this file; the reveal.js late-mount
+        // path had the identical read-after-a-different-writer's-write class of bug, already fixed
+        // there the same way).
+        requestAnimationFrame(() => this.syncTabLens());
         this.bindTabLens();
         editorialBindRowTilt();
         editorialCascadeTitles(document.getElementById("editorial-panel"));
@@ -343,14 +349,19 @@ function editorialHelpers() {
         return;
       }
 
+      // Read phase — getComputedStyle + the offset* geometry reads below must all land before any
+      // style write, else the write forces a synchronous layout flush to serve the next read
+      // (confirmed as a live Lighthouse forced-reflow-insight contributor: a --tab-tint write used to
+      // sit between the tint read and these offset* reads). Layout-box coords (not
+      // getBoundingClientRect) so active scale() does not skew the lens.
       const tint = getComputedStyle(btn).getPropertyValue("--tint").trim();
-      if (tint) tabs.style.setProperty("--tab-tint", tint);
-
-      // Layout-box coords (not getBoundingClientRect) so active scale() does not skew the lens.
       const x = btn.offsetLeft;
       const y = btn.offsetTop;
       const w = btn.offsetWidth;
       const h = btn.offsetHeight;
+
+      // Write phase — no more reads below this point.
+      if (tint) tabs.style.setProperty("--tab-tint", tint);
 
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && tabs._lastTabX != null
         && (Math.abs(x - tabs._lastTabX) > 4 || Math.abs(y - (tabs._lastTabY || 0)) > 4)) {

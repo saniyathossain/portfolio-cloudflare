@@ -113,7 +113,11 @@ function record(src) {
 // ── Hero: responsive WebP srcset + PWA icons, all derived from the immutable master JPEG ───────
 // Widths cover mobile 1x/2x and the desktop 62vw-wide backdrop at 2x, so the browser never has to
 // download more than ~1.5-2x its rendered pixel count (was: always the full 3000x4000 master).
-const HERO_WIDTHS = [480, 900, 1300, 1800];
+// 760 added: a 2x-DPR mobile phone (~360-390px CSS width) needs ~720-780px and was jumping straight
+// from 480w past that need to 900w — confirmed via live Lighthouse image-delivery-insight as ~31KB
+// wasted on mobile, ~7KB on desktop. (760, not 720: Lighthouse's mobile emulation is 412x1.75dpr =
+// 721px, so a 720w candidate lost the srcset pick by 1px — 760w clears it with margin.)
+const HERO_WIDTHS = [480, 760, 900, 1300, 1800];
 const heroSrcset = HERO_WIDTHS.map((w) => path.join(IMG, `saniyat-hossain-${w}.webp`));
 const heroWebp = path.join(IMG, "saniyat-hossain.webp"); // 900w alias — plain <img src> fallback
 const apple = path.join(IMG, "apple-touch-icon.png");
@@ -148,13 +152,18 @@ if (needsGen(HERO, [...heroSrcset, heroWebp, apple, i192, i512, fav32, favSvg]))
 
 // ── Company/school logos → resized WebP ───────────────────────────────────────
 // Several master PNGs (exported at arbitrary source resolution) were shipped as-is and rendered at
-// 28-48px — e.g. a 512x512 st-joseph.png for a 48px <img>, and a 211x211 motijheel-school.png that
-// happened to be a very poorly-compressed PNG (100KB for 211px). Resize to the largest actual
-// on-page size (48px @ education rows) at 2x retina (96px), with margin, then re-encode as WebP.
-// SVG logos (brainstation-23, grameenphone, runnercyberlink) are already vector — left alone.
-// portfolio.json references the .webp output directly; the PNG masters stay as the source of truth.
+// 16-28px — e.g. a 512x512 st-joseph.png for a `width="28"` <img>, and a 211x211 motijheel-school.png
+// that happened to be a very poorly-compressed PNG (100KB for 211px). Resize to the largest actual
+// on-page size (28px — index.html's exp-group__logo/edu-row__logo `width` attribute) at ~3.4x retina
+// headroom (96px), then re-encode as WebP. SVG logos (brainstation-23, grameenphone, runnercyberlink)
+// are already vector — left alone. portfolio.json references the .webp output directly; the PNG
+// masters stay as the source of truth — DO NOT delete them as "unused" (a prior cleanup pass did
+// exactly that, since nothing in HTML/CSS/JS references the .png filenames directly — they're only
+// referenced here, as build-time sources; always grep this script too before deleting an asset).
 const LOGOS_DIR = path.join(IMG, "logos");
-const LOGO_MAX_WIDTH = 192; // covers 48px @2x with headroom; oss/east-west sources are already ≤ this
+// 96 (not the old 192): confirmed via live Lighthouse image-delivery-insight that 192px wasted ~18KB
+// on a 96%-oversized icddrb-official.webp — the real max on-page display is 28px, not 48px.
+const LOGO_MAX_WIDTH = 96;
 const LOGO_PNGS = [
   "icddrb-official.png",
   "oss-official-transparent.png",
