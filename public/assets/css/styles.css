@@ -10,7 +10,7 @@
    single largest one-shot paint cost on first load. Duration is set inline by loader.js to match
    FILL_MS so this stays in lockstep without a duplicated constant here. */
 html.is-loading .app-root {
-  transform: scale(var(--load-scale, 1.012));
+  transform: scale(var(--load-scale, 1.003));
   transform-origin: center top;
   will-change: transform;
   transition: transform var(--load-ms, 1300ms) linear;
@@ -108,10 +108,13 @@ html:not(.is-loading) #main.is-liquid-warp {
   --watermark: 13rem;
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-reveal: cubic-bezier(0.22, 1, 0.28, 1);
-  /* Matches --ease-spring's shape (same deceleration character, no overshoot — a full spring
-     overshoot reads jittery on small per-word text) so the blur-reveal word crossfade reads as part
-     of the same "premium" motion language as the rest of the site's reveals, not a flatter one-off. */
-  --ease-word: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Matches --ease-smooth's shape — an even, gradual decel with no fast-snap onset (unlike
+     --ease-spring/--ease-reveal, whose y>1 early control point front-loads most of the visible
+     motion into the first ~20% of the transition, then coasts — fine for a single block-level
+     element, but read as an abrupt "snap then drift" wave across many small per-word spans in a
+     row). Kept as its own token (not literally var(--ease-smooth)) so the two can still be tuned
+     independently later. */
+  --ease-word: cubic-bezier(0.22, 0.61, 0.36, 1);
   --ease-hover: cubic-bezier(0.25, 0.9, 0.35, 1);
   /* Small tile/logo hover lift — snappier settle than --ease-hover, used across the tenure badges,
      logo tiles, and role-tag chips (previously hand-repeated as a raw cubic-bezier in 6 places). */
@@ -1917,6 +1920,17 @@ html.is-loading .site-header {
   line-height: 1.02;
   letter-spacing: -0.03em;
   margin: 0;
+  /* Fixed, not auto: the outer .hero's own fixed-height/overflow:hidden fix (above) only absorbs
+     font-swap growth for its position:absolute children — .hero__grid is in normal flow, so when
+     this h1 (3 name lines) renders a few px taller on "Inter Fallback" -> real "Inter" swap, the
+     grid's align-items:end row recomputes and visibly shifts .hero__aside/.hero-card. Measured via
+     Playwright across 320-1920px: both fonts settle at height ~3.36em per line-set, but real Inter
+     occasionally renders ~3.40em (metric-override isn't pixel-perfect) — reproduced as a live
+     Lighthouse CLS spike (0.17 vs a steady ~0.01) tied to this exact element. 3.42em reserves for
+     the taller case; overflow:hidden absorbs the sub-pixel difference on the shorter case instead
+     of letting either state change the box height.  */
+  height: 3.42em;
+  overflow: hidden;
 }
 .hero h1 .line-wrap {
   display: block;
@@ -2553,7 +2567,9 @@ html.is-loading .site-header {
 .blur-reveal__word {
   display: inline-block; position: relative;
   opacity: 0;
-  transform: translateY(10px);
+  /* 14px, not 10px: paired with blur-reveal.js's longer per-word duration, a touch more travel
+     distance reads as a graceful glide-and-settle rather than a near-instant snap into place. */
+  transform: translateY(14px);
   transition:
     opacity var(--blur-dur, 0.5s) var(--ease-word),
     transform var(--blur-dur, 0.5s) var(--ease-word);

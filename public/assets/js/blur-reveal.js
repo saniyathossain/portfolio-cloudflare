@@ -41,7 +41,11 @@
     el.textContent = "";
     el.classList.add("blur-reveal");
     const speed = parseFloat(el.getAttribute("data-blur-speed") || "1");
-    const seg = parseFloat(el.getAttribute("data-blur-segment") || "0.06");
+    // 0.075, not the original 0.06: both the per-word duration and the inter-word stagger below
+    // scale off this one constant, so bumping it softens the whole cascade at once (~0.36s -> 0.45s
+    // per word, 60ms -> 75ms stagger) — reads as a graceful wave instead of a rapid-fire typewriter,
+    // without decoupling duration and stagger into two constants that could drift out of sync.
+    const seg = parseFloat(el.getAttribute("data-blur-segment") || "0.075");
     const words = raw.trim().split(/\s+/);
     // Optional keyword emphasis: `|`-delimited literal phrases (plain text only — matched against
     // the words above, never parsed as HTML, so this can't introduce markup injection). Each phrase

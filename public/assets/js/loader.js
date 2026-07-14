@@ -9,7 +9,13 @@
   const FILL_MS = 650;
   const REVEAL_AT = 0.12;
   const DIM_MAX = 0.48;
-  const SCALE_MAX = 0.012;
+  // 0.003, not 0.012: Chrome's CLS metric measures the .app-root's rendered rect on every frame,
+  // including this intentional transform:scale() reveal — it can't tell "designed transition" from
+  // "unexpected shift". Confirmed via a live Lighthouse CLS spike (~0.15) traced to exactly this
+  // transform via a throttled-CPU repro (matched .hero__grid's measured width, e.g. 1335.84px at
+  // 1.012 scale vs the true 1320px layout width, to 4 decimal places). Cutting the scale delta ~4x
+  // cuts the CLS contribution proportionally while keeping the reveal effect intact, just subtler.
+  const SCALE_MAX = 0.003;
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let ready = false;
   let running = false;
