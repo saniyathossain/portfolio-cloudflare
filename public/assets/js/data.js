@@ -78,6 +78,8 @@ const BRANDS = {
   copilot: { icon: "githubcopilot", color: "#24292E" },
   cursor: { icon: "cursor", color: "#0A0A0A" },
   antigravity: { icon: "antigravity", color: "#3186ff" },
+  "github copilot": { icon: "githubcopilot", color: "#24292E" },
+  "laravel horizon": { icon: "laravel", color: "#FF2D20" },
 };
 
 // Curated pill-shell hues — macOS Tahoe system palette + site copper/teal/beige, softened for
@@ -154,6 +156,8 @@ const _TAHOE_PILL_TINTS = {
   copilot: "#6078A0",
   cursor: "#5A88D8",
   antigravity: "#5AA0E8",
+  "github copilot": "#6078A0",
+  "laravel horizon": "#E87870",
 };
 
 const _SITE_TAUPE = { r: 154 / 255, g: 127 / 255, b: 114 / 255 };
@@ -563,7 +567,7 @@ function _hydrate(raw) {
   const rolesCount = (data.experiences || []).length;
   const companiesCount = data.experienceGroups.length;
   data.profile.years = `${years}+`;
-  data.profile.heroRating = `${data.profile.years} years · ${data.profile.heroRatingTail || ""}`;
+  data.profile.heroRating = data.profile.heroRatingTail || "";
   data.sections = Object.assign({}, DEFAULT_SECTIONS, raw.sections || {});
   const tplVars = { years, roles: rolesCount, companies: companiesCount };
   data.sections.experience = _fillTemplate(data.sections.experience, tplVars);

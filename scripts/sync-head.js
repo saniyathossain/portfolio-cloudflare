@@ -148,10 +148,8 @@ function buildHeroEyebrow(profile) {
 }
 
 function buildHeroRating(profile) {
-  const years = yearsSince(profile.experienceStartDate, profile.experienceYearsOffset);
-  const tail = profile.heroRatingTail || "";
-  // Matches data.js: profile.years = years+"+" ; heroRating = years+" years · "+tail
-  return esc(`${years}+ years · ${tail}`);
+  // Matches data.js: heroRating = heroRatingTail (no years-of-experience prefix).
+  return esc(profile.heroRatingTail || "");
 }
 
 function buildHeroWm(profile) {
