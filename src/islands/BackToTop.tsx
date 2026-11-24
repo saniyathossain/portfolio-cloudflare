@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "preact/hooks";
 import { scrollToTop } from "../lib/browser/scroll";
 
 interface BackToTopProps {

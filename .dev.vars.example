@@ -1,0 +1,6 @@
+# Copy to .dev.vars (gitignored) for `wrangler dev`. Production secrets are set with `wrangler secret put`, never committed.
+ADMIN_TOKEN=change-me-to-a-long-random-string
+# Cloudflare's published always-pass Turnstile test secret — safe for local development only.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+# LOG_CHANNEL=stderr
+# LOG_LEVEL=debug

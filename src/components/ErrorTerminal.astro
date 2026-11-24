@@ -13,17 +13,11 @@ if (!page) throw new Error(`errors.json has no page "${pageKey}"`);
 
 const { terminal } = errorCatalog;
 const statusLabel = page.status === null ? page.statusText : `${page.status} ${page.statusText}`;
-const levelClass = page.level === "ERROR" ? "badge--error" : "badge--warn";
-const hostLabel = `${terminal.userName}@${terminal.hostName}`;
+const tone = page.level === "ERROR" ? "is-error" : "is-warn";
 const resolveHref = (href: string) => fillTemplate(href, { email: portfolio.profile.email });
-const labelRows = [
-  { label: terminal.labels.when, value: undefined, field: "when" },
-  { label: terminal.labels.who, value: page.actor },
-  { label: terminal.labels.what, value: page.event },
-  { label: terminal.labels.where, value: undefined, field: "where" },
-  { label: terminal.labels.why, value: page.reason },
-  { label: terminal.labels.ref, value: undefined, field: "ref" },
-];
+// Same arrow glyph the site's pill buttons use (Lucide-style stroke), inlined so the page needs no other file.
+const arrowIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 const { retryDefaults } = errorCatalog;
 const retryConfig = {
   baseDelayMs: page.retry.baseDelayMs ?? retryDefaults.baseDelayMs,
@@ -31,7 +25,6 @@ const retryConfig = {
   maxDelayMs: page.retry.maxDelayMs ?? retryDefaults.maxDelayMs,
   maxAttempts: page.retry.maxAttempts ?? retryDefaults.maxAttempts,
   jitterRatio: retryDefaults.jitterRatio,
-  progressWidth: retryDefaults.progressWidth,
   tickMs: retryDefaults.tickMs,
 };
 const retryCopyForClient = {
@@ -39,6 +32,8 @@ const retryCopyForClient = {
   reloadWhenOnline: page.retry.reloadWhenOnline === true,
 };
 const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
+const idleGlyph = page.status === null ? terminal.orb.idleGlyph : String(page.status);
+const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
 ---
 
 <!doctype html>
@@ -52,20 +47,39 @@ const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
     <title>{page.title} — {portfolio.profile.name}</title>
     <!-- Self-contained on purpose: an outage page must not depend on any other file being reachable. -->
     <style is:inline>
+      /* One liquid-glass dialog on the site's own page colour. Same recipe as the site: Inter 800 headings at -0.042em,
+         translucent fill + backdrop blur + hue-tinted rim + soft-light top film, dark and glass pill buttons with the
+         arrow chip. Real backdrop-filter is fine here: one fixed, non-scrolling surface (docs/DESIGN.md §4 rule).
+         Self-contained on purpose: an outage page must not depend on any other file being reachable. */
+      @font-face {
+        font-family: "Inter";
+        font-style: normal;
+        font-weight: 400 800;
+        font-display: swap;
+        src: url("/assets/fonts/inter-latin.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Inter Fallback";
+        src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
+        ascent-override: 90.44%;
+        descent-override: 22.52%;
+        line-gap-override: 0%;
+        size-adjust: 107.4%;
+      }
       :root {
         color-scheme: light;
-        --ink: #1d1d1f;
-        --muted: #6e6e73;
-        --faint: #a1a1a6;
-        --paper: #fbfbfc;
-        --bar: #e9e9ec;
-        --line: #d8d8dc;
-        --error: #d62f45;
-        --warn: #b8741a;
-        --ok: #1f8f4e;
-        --link: #0a68d6;
+        --fg: #111111;
+        --ink: #0a0a0a;
+        --faint: #8d8d8d;
         --accent: #b15f2c;
-        --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+        --accent-dark: #97501f;
+        --error: #d62f45;
+        --tint: var(--accent);
+        --tint-deep: var(--accent-dark);
+        --sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
+        --ease-out: cubic-bezier(0.22, 1, 0.28, 1);
       }
       * {
         box-sizing: border-box;
@@ -73,195 +87,339 @@ const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
       html {
         -webkit-text-size-adjust: 100%;
       }
+      ::selection {
+        background: color-mix(in srgb, var(--tint) 24%, transparent);
+      }
       body {
         margin: 0;
         min-height: 100dvh;
         display: grid;
         place-items: center;
         padding: 1.25rem;
-        font-family: var(--mono);
-        color: var(--ink);
+        font-family: var(--sans);
+        letter-spacing: -0.011em;
+        line-height: 1.5;
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        /* The site's own page colour: the hero's sun-glare ray over the --hero-from → --hero-to gradient. */
         background:
-          radial-gradient(60rem 40rem at 85% -10%, rgba(255, 214, 164, 0.22), transparent 60%),
-          linear-gradient(160deg, #f6f4f1, #eceae7);
+          radial-gradient(38rem 30rem at 88% -8%, rgba(255, 214, 164, 0.3), transparent 62%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 38%),
+          linear-gradient(160deg, #f1f0ee 0%, #e3e2df 100%);
+        background-attachment: fixed;
+      }
+
+      /* Aurora whisper — the exact layer the site paints behind its glass (styles.css body::before), without the drift. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -25vmax;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          radial-gradient(52vmax 42vmax at 76% 1%, rgba(255, 216, 168, 0.1), transparent 60%),
+          radial-gradient(40vmax 40vmax at 12% 4%, rgba(110, 108, 240, 0.14), transparent 58%),
+          radial-gradient(36vmax 36vmax at 88% 0%, rgba(10, 132, 255, 0.11), transparent 58%),
+          radial-gradient(46vmax 46vmax at 84% 82%, rgba(63, 208, 224, 0.12), transparent 60%),
+          radial-gradient(42vmax 42vmax at 4% 90%, rgba(255, 159, 10, 0.07), transparent 58%),
+          radial-gradient(32vmax 32vmax at 48% 48%, rgba(255, 92, 138, 0.035), transparent 62%);
+        filter: blur(14px) saturate(118%);
       }
       .window {
-        width: min(46rem, 100%);
-        border-radius: 0.9rem;
-        overflow: hidden;
-        background: var(--paper);
-        border: 1px solid var(--line);
-        box-shadow:
-          0 24px 60px -20px rgba(17, 17, 17, 0.28),
-          0 2px 6px rgba(17, 17, 17, 0.08);
-      }
-      .titlebar {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.6rem 0.85rem;
-        background: linear-gradient(180deg, #f3f3f5, var(--bar));
-        border-bottom: 1px solid var(--line);
-      }
-      .lights {
-        display: flex;
-        gap: 0.4rem;
-      }
-      .lights i {
-        width: 0.75rem;
-        height: 0.75rem;
-        border-radius: 50%;
-        display: block;
-      }
-      .lights i:nth-child(1) {
-        background: #ff5f57;
-      }
-      .lights i:nth-child(2) {
-        background: #febc2e;
-      }
-      .lights i:nth-child(3) {
-        background: #28c840;
-      }
-      .window-title {
-        flex: 1;
-        margin-right: 3.1rem;
+        position: relative;
+        width: min(28.5rem, 100%);
+        display: grid;
+        justify-items: center;
+        gap: 1.5rem;
+        padding: 2.5rem 2rem 1.6rem;
         text-align: center;
-        font-size: 0.72rem;
-        color: var(--muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        border-radius: 2rem;
+        border: 1px solid transparent;
+        /* padding-box = the glass; border-box = a specular rim that is bright at the lit corners and fades between. */
+        background:
+          linear-gradient(155deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.2)) padding-box,
+          linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.12) 38%, rgba(255, 255, 255, 0.12) 62%, rgba(255, 255, 255, 0.85)) border-box;
+        -webkit-backdrop-filter: blur(26px) saturate(215%);
+        backdrop-filter: blur(26px) saturate(215%);
+        box-shadow:
+          inset 0 0 26px rgba(255, 255, 255, 0.38),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.45),
+          0 30px 70px -20px rgba(24, 30, 56, 0.28),
+          0 6px 18px rgba(24, 30, 56, 0.1),
+          0 26px 60px -32px color-mix(in srgb, var(--tint) 45%, transparent),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        isolation: isolate;
       }
-      .screen {
-        padding: 1.1rem 1.25rem 1.3rem;
-        font-size: 0.86rem;
-        line-height: 1.65;
+      .window.is-error {
+        --tint: var(--error);
+        --tint-deep: #8f1d2e;
       }
-      .line {
-        margin: 0;
-        overflow-wrap: anywhere;
-      }
-      .prompt {
-        color: var(--ok);
-      }
-      .host {
-        color: var(--accent);
-      }
-      .cmd {
-        color: var(--ink);
-      }
-      .badge {
-        display: inline-block;
-        padding: 0 0.55rem;
-        margin-right: 0.5rem;
-        border-radius: 0.3rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        color: #fff;
-      }
-      .badge--error {
-        background: var(--error);
-      }
-      .badge--warn {
-        background: var(--warn);
-      }
-      h1 {
-        margin: 0.9rem 0 0;
-        font-size: 1.05rem;
-        font-weight: 700;
-      }
-      .message {
-        margin: 0.35rem 0 0;
-        color: var(--muted);
-      }
-      dl {
-        display: grid;
-        grid-template-columns: max-content 1fr;
-        gap: 0 1rem;
-        margin: 1rem 0 0;
-        padding: 0.7rem 0.9rem;
-        border: 1px solid var(--line);
-        background: rgba(0, 0, 0, 0.025);
-        border-radius: 0.4rem;
-      }
-      dt {
-        color: var(--faint);
-      }
-      dd {
-        margin: 0;
-        overflow-wrap: anywhere;
-      }
-      .hint {
-        margin: 0.9rem 0 0;
-        color: var(--muted);
-      }
-      .hint b {
-        color: var(--ok);
-        font-weight: 700;
-      }
-      .actions {
-        margin: 1rem 0 0;
-        padding: 0;
-        list-style: none;
-        display: grid;
-        gap: 0.3rem;
-      }
-      .actions a,
-      .actions button {
-        font: inherit;
-        padding: 0;
-        border: 0;
-        background: none;
-        color: var(--link);
-        cursor: pointer;
-        text-align: left;
-        text-decoration: none;
-      }
-      .actions a:hover,
-      .actions button:hover {
-        text-decoration: underline;
-      }
-      .actions a:focus-visible,
-      .actions button:focus-visible {
-        outline: 2px solid var(--link);
-        outline-offset: 2px;
-        border-radius: 0.2rem;
-      }
-      .actions .desc {
-        color: var(--faint);
-      }
-      .cursor {
-        display: inline-block;
-        width: 0.55em;
-        height: 1.05em;
-        margin-left: 0.15rem;
-        vertical-align: text-bottom;
-        background: var(--ink);
+      /* Soft-light top film, as on .glass-panel. */
+      .window::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        pointer-events: none;
+        background:
+          radial-gradient(110% 70% at 12% -10%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 62%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, transparent 26%);
+        mix-blend-mode: soft-light;
+        opacity: 0.55;
       }
       @media (prefers-reduced-motion: no-preference) {
-        .cursor {
-          animation: blink 1.1s steps(1) infinite;
+        .window {
+          animation: arrive 0.8s var(--ease-out) both;
         }
       }
-      @keyframes blink {
-        50% {
+      @keyframes arrive {
+        from {
           opacity: 0;
+          transform: translateY(0.75rem) scale(0.985);
         }
+      }
+
+      /* Orb: a glass lens (same recipe as the site's clock face) whose own edge is the countdown — one ring, no track. */
+      .orb {
+        --orb: var(--accent);
+        --orb-deep: var(--accent-dark);
+        position: relative;
+        width: 9.5rem;
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        user-select: none;
+      }
+      .window.is-error .orb {
+        --orb: var(--error);
+        --orb-deep: #8f1d2e;
+      }
+      .orb.is-online {
+        --orb: #28c840;
+        --orb-deep: #1f8f4e;
+      }
+      .orb__glass {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.3) 34%, transparent 64%),
+          radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--orb) 34%, transparent) 0%, transparent 62%),
+          linear-gradient(160deg, rgba(255, 255, 255, 0.85), color-mix(in srgb, var(--orb) 12%, rgba(255, 255, 255, 0.6)));
+        box-shadow:
+          inset 0 1px 2px rgba(255, 255, 255, 0.95),
+          inset 0 -8px 18px color-mix(in srgb, var(--orb) 20%, transparent),
+          0 14px 28px -10px color-mix(in srgb, var(--orb-deep) 50%, transparent);
+      }
+      .orb__ring {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+        overflow: visible;
+        pointer-events: none;
+      }
+      .orb__progress {
+        fill: none;
+        stroke: var(--orb);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-dasharray: 100;
+        stroke-dashoffset: 0;
+      }
+      .orb__value {
+        position: relative;
+        font-size: 3.5rem;
+        font-weight: 300;
+        line-height: 1;
+        letter-spacing: -0.05em;
+        font-variant-numeric: tabular-nums;
+        color: var(--orb-deep);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+      }
+      .orb__value small {
+        display: block;
+        margin-top: 0.3rem;
+        font-size: 0.6rem;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--orb-deep) 55%, rgba(17, 17, 17, 0.5));
+        text-align: center;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .orb__glass {
+          animation: float 5.2s ease-in-out infinite alternate;
+        }
+        .orb__progress {
+          animation: drain var(--orb-drain-ms, 0ms) linear forwards;
+        }
+        .orb:not(.is-counting) .orb__progress {
+          animation: none;
+        }
+      }
+      @keyframes float {
+        from {
+          transform: translateY(0.14rem);
+        }
+        to {
+          transform: translateY(-0.14rem);
+        }
+      }
+      @keyframes drain {
+        to {
+          stroke-dashoffset: 100;
+        }
+      }
+
+      .copy {
+        display: grid;
+        gap: 0.7rem;
+        justify-items: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2.3rem, 2.6vw + 1.3rem, 3rem);
+        font-weight: 600;
+        line-height: 1.05;
+        letter-spacing: -0.034em;
+        text-wrap: balance;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 12px rgba(17, 17, 17, 0.06);
+      }
+      .message {
+        margin: 0;
+        max-width: 31ch;
+        font-size: 1.0625rem;
+        font-weight: 400;
+        letter-spacing: -0.006em;
+        line-height: 1.65;
+        text-wrap: pretty;
+        color: color-mix(in srgb, var(--tint-deep) 22%, rgba(17, 17, 17, 0.78));
       }
       .retry {
-        margin: 1rem 0 0;
-        color: var(--warn);
+        margin: 0.2rem 0 0;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: color-mix(in srgb, var(--tint-deep) 70%, rgba(17, 17, 17, 0.4));
       }
       .retry-text {
         display: block;
       }
-      .retry-bar {
-        display: block;
-        color: var(--ok);
-        letter-spacing: 0.02em;
+
+      /* Buttons: the site's pill buttons — dark primary + glass secondary, each with its white arrow chip. */
+      .actions {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.7rem;
       }
-      .retry-bar .empty {
+      .actions a,
+      .actions button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.4rem 0.4rem 0.4rem 1.2rem;
+        border: 0;
+        border-radius: 9999px;
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        letter-spacing: -0.005em;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
+      }
+      .actions li:first-child a,
+      .actions li:first-child button {
+        color: #fff;
+        background: linear-gradient(145deg, #2b2b2b, #060606);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+          0 10px 24px rgba(17, 17, 17, 0.18);
+      }
+      .actions li:not(:first-child) a,
+      .actions li:not(:first-child) button {
+        color: #111;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.68));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.95),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+          0 4px 14px -7px rgba(17, 17, 17, 0.14);
+      }
+      .actions .chip {
+        display: grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 9999px;
+        background: #fff;
+        color: var(--ink);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 3px rgba(17, 17, 17, 0.12);
+        transition: transform 0.45s var(--ease-glass);
+      }
+      .actions li:not(:first-child) .chip {
+        background: #111;
+        color: #fff;
+      }
+      .actions .chip svg {
+        width: 0.95rem;
+        height: 0.95rem;
+      }
+      .actions a:hover,
+      .actions button:hover {
+        transform: translateY(-1px);
+      }
+      .actions a:hover .chip,
+      .actions button:hover .chip {
+        transform: translateX(2px);
+      }
+      .actions a:active,
+      .actions button:active {
+        transform: scale(0.98);
+      }
+      .actions a:focus-visible,
+      .actions button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .actions .desc {
+        display: none;
+      }
+
+      .footer {
+        margin: 0;
+        padding-top: 1rem;
+        width: 100%;
+        border-top: 1px solid rgba(17, 17, 17, 0.08);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.2rem 0.9rem;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
         color: var(--faint);
+      }
+      .ref {
+        font-variant-numeric: tabular-nums;
+      }
+      .ref::before {
+        content: attr(data-label) " ";
+        opacity: 0.7;
+      }
+      .ref:empty {
+        display: none;
       }
       .sr-only {
         position: absolute;
@@ -274,65 +432,46 @@ const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
         white-space: nowrap;
         border: 0;
       }
-      .footer {
-        margin: 1rem 0 0;
-        padding-top: 0.7rem;
-        border-top: 1px dashed var(--line);
-        color: var(--faint);
-        font-size: 0.72rem;
-      }
       @media (max-width: 30rem) {
-        .screen {
-          font-size: 0.8rem;
-          padding: 0.9rem 0.9rem 1.1rem;
+        .window {
+          padding: 2rem 1.25rem 1.4rem;
+          border-radius: 1.75rem;
         }
-        dl {
-          grid-template-columns: 1fr;
+        .orb {
+          width: 8.5rem;
         }
-        dt {
-          margin-top: 0.35rem;
+        .orb__value {
+          font-size: 3rem;
+        }
+      }
+      /* No backdrop-filter support: a slightly more opaque fill keeps the text legible. */
+      @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .window {
+          background:
+            linear-gradient(155deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.74)) padding-box,
+            linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.3)) border-box;
         }
       }
     </style>
   </head>
   <body>
-    <main class="window" aria-labelledby="error-title">
-      <div class="titlebar">
-        <span class="lights" aria-hidden="true">
-          <i></i>
-          <i></i>
-          <i></i>
+    <main class:list={["window", tone]} aria-labelledby="error-title">
+      <div class:list={["orb", { "is-counting": page.retry.isEnabled }]} data-orb aria-hidden="true">
+        <span class="orb__glass"></span>
+        <svg class="orb__ring" viewBox="0 0 100 100" focusable="false">
+          <circle class="orb__progress" cx="50" cy="50" r="48.5" pathLength="100" data-orb-progress></circle>
+        </svg>
+        <span class="orb__value" data-orb-value data-orb-idle={idleGlyph}>
+          {orbGlyph}
+          {page.retry.isEnabled && <small>{terminal.orb.secondsLabel}</small>}
         </span>
-        <span class="window-title">{terminal.windowTitle}</span>
       </div>
-      <div class="screen" role="status">
-        <p class="line">
-          <span class="prompt">{terminal.promptSymbol}</span>
-          <span class="host">{hostLabel}</span>
-          <span class="cmd" data-command-template={page.command}>
-            {page.command.replace("{url}", terminal.hostName)}
-          </span>
-        </p>
-        <p class="line">
-          <span class={`badge ${levelClass}`}>{page.level}</span>
-          <span>{statusLabel}</span>
-        </p>
+      <div class="copy" role="status">
         <h1 id="error-title" data-error-title>
           {page.title}
         </h1>
         <p class="message" data-error-message>
           {page.message}
-        </p>
-        <dl>
-          {labelRows.map((row) => (
-            <>
-              <dt>{row.label}</dt>
-              <dd data-field={row.field}>{row.value ?? terminal.unknownValue}</dd>
-            </>
-          ))}
-        </dl>
-        <p class="hint">
-          <b>{terminal.labels.hint}:</b> {page.hint}
         </p>
         {page.retry.isEnabled && (
           <>
@@ -343,34 +482,34 @@ const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
               data-retry-copy={JSON.stringify(retryCopyForClient)}
             >
               <span class="retry-text" data-retry-text />
-              <span class="retry-bar" data-retry-bar aria-hidden="true" />
             </p>
             <p class="sr-only" role="status" data-retry-sr data-retry-sr-template={terminal.retry.srAnnouncement}>
               {terminal.retry.srAnnouncement.replace("{seconds}", String(firstDelaySeconds))}
             </p>
           </>
         )}
-        <ul class="actions">
-          {page.actions.map((action) => (
-            <li>
-              <span class="prompt">{terminal.promptSymbol}</span>
-              {action.isReload ? (
-                <button type="button" data-reload>
-                  {action.label}
-                </button>
-              ) : (
-                <a href={resolveHref(action.href ?? "/")}>{action.label}</a>
-              )}
-              <span class="desc"> # {action.description}</span>
-            </li>
-          ))}
-        </ul>
-        <p class="footer">
-          <span class="prompt">{terminal.promptSymbol}</span> <span class="cursor" aria-hidden="true"></span>
-          <br />
-          {terminal.footer}
-        </p>
       </div>
+      <ul class="actions">
+        {page.actions.map((action) => (
+          <li>
+            {action.isReload ? (
+              <button type="button" data-reload>
+                {action.label}
+                <span class="chip" aria-hidden="true" set:html={arrowIcon} />
+              </button>
+            ) : (
+              <a href={resolveHref(action.href ?? "/")}>
+                {action.label}
+                <span class="chip" aria-hidden="true" set:html={arrowIcon} />
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p class="footer">
+        <span>{statusLabel}</span>
+        <span class="ref" data-field="ref" data-label={terminal.labels.ref}></span>
+      </p>
     </main>
     <!-- Optional enhancement: request time/path and the self-healing retry countdown (exponential backoff,
          configured in errors.json). Never throws; the static page is already complete without it. -->
@@ -416,28 +555,40 @@ const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
               location.reload();
             });
 
+          var orb = document.querySelector("[data-orb]");
+          var orbValue = document.querySelector("[data-orb-value]");
+          var orbProgress = document.querySelector("[data-orb-progress]");
+          var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+          // The orb shows a bare glyph (status code / seconds); the unit label under the seconds is static markup.
+          var setOrbValue = function (value) {
+            if (orbValue && orbValue.firstChild) orbValue.firstChild.nodeValue = value;
+          };
+
           var box = document.querySelector("[data-retry]");
           if (!box) return;
           var config = JSON.parse(box.getAttribute("data-retry"));
           var copy = JSON.parse(box.getAttribute("data-retry-copy"));
           var textEl = box.querySelector("[data-retry-text]");
-          var barEl = box.querySelector("[data-retry-bar]");
           var srEl = document.querySelector("[data-retry-sr]");
-          var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-          var tickMs = reduceMotion ? 1000 : config.tickMs;
           var attempt = store.read();
 
           if (copy.reloadWhenOnline)
             window.addEventListener("online", function () {
               box.hidden = false;
-              textEl.textContent = copy.prefix + " " + copy.reconnected;
-              barEl.textContent = "";
+              textEl.textContent = copy.reconnected;
+              if (orb) orb.classList.add("is-online");
               location.reload();
             });
 
           if (attempt >= config.maxAttempts) {
             box.hidden = false;
             textEl.textContent = copy.exhausted.replace("{attempts}", String(attempt));
+            if (orb) orb.classList.remove("is-counting");
+            if (orbValue) {
+              setOrbValue(orbValue.getAttribute("data-orb-idle") || "!");
+              var unit = orbValue.querySelector("small");
+              if (unit) unit.remove();
+            }
             return;
           }
 
@@ -447,40 +598,38 @@ const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
           var totalMs = Math.max(250, Math.round(exponential * spread));
           var remainingMs = totalMs;
           var lastTick = Date.now();
+          var shownSeconds = -1;
           if (srEl)
             srEl.textContent = srEl
               .getAttribute("data-retry-sr-template")
               .replace("{seconds}", String(Math.round(totalMs / 1000)));
 
+          // The ring drains through one CSS animation (no per-frame JS); reduced motion gets a stepped update instead.
+          if (orb && orbProgress && !reduceMotion) orb.style.setProperty("--orb-drain-ms", totalMs + "ms");
+
           var draw = function () {
-            var done = Math.round((1 - remainingMs / totalMs) * config.progressWidth);
-            textEl.textContent =
-              copy.prefix +
-              " " +
-              copy.attemptLabel +
-              " #" +
-              (attempt + 1) +
-              "/" +
-              config.maxAttempts +
-              " " +
-              copy.waitingLabel +
-              " " +
-              (Math.max(0, remainingMs) / 1000).toFixed(1) +
-              copy.secondsSuffix +
-              "\n";
-            barEl.innerHTML =
-              "[" +
-              new Array(done + 1).join(copy.progressFilled) +
-              '<span class="empty">' +
-              new Array(config.progressWidth - done + 1).join(copy.progressEmpty) +
-              "</span>]";
+            var seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+            if (reduceMotion && orbProgress) orbProgress.style.strokeDashoffset = String((1 - remainingMs / totalMs) * 100);
+            if (seconds === shownSeconds) return; // the DOM only changes once per displayed second
+            shownSeconds = seconds;
+            textEl.textContent = copy.attemptLabel + " " + (attempt + 1) + "/" + config.maxAttempts;
+            setOrbValue(String(seconds));
+            if (orbValue && !reduceMotion && orbValue.animate)
+              orbValue.animate(
+                [{ opacity: 0.55 }, { opacity: 1 }],
+                { duration: 320, easing: "ease-out" },
+              );
           };
 
           box.hidden = false;
           draw();
+          // The countdown (and the ring animation) pauses while the tab is hidden, so both stay in sync.
+          document.addEventListener("visibilitychange", function () {
+            if (orbProgress) orbProgress.style.animationPlayState = document.hidden ? "paused" : "running";
+          });
           var timer = setInterval(function () {
             var now = Date.now();
-            if (!document.hidden) remainingMs -= now - lastTick; // the countdown pauses while the tab is hidden
+            if (!document.hidden) remainingMs -= now - lastTick;
             lastTick = now;
             if (remainingMs <= 0) {
               clearInterval(timer);
@@ -489,7 +638,7 @@ const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
               return;
             }
             draw();
-          }, tickMs);
+          }, config.tickMs);
         } catch (ignored) {
           /* the static page is already complete */
         }

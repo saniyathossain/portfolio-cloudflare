@@ -1,0 +1,36 @@
+{
+  "$comment": "Edge security policy for the Worker (docs/aidlc/57). Thresholds, blocked probe paths and field limits live here, never as literals in src/worker. Validated by src/schemas/securitySchema.ts. blockedPathPatterns are matched against the lower-cased path.",
+  "allowedMethods": [
+    "GET",
+    "HEAD",
+    "OPTIONS"
+  ],
+  "limits": {
+    "maxUrlLength": 2048,
+    "maxContactBodyBytes": 16384,
+    "maxCspReportBytes": 8192,
+    "maxNameLength": 120,
+    "maxEmailLength": 200,
+    "maxProjectLength": 4000
+  },
+  "honeypotField": "company",
+  "blockedPathPatterns": [
+    "^/\\.(?!well-known/)",
+    "^/(wp-admin|wp-login|wp-content|wp-includes|wordpress|xmlrpc\\.php|phpmyadmin|pma|myadmin|phpinfo|cgi-bin|server-status|actuator|jenkins|solr|vendor/phpunit|boaform|owa|ecp)(/|\\.|$)",
+    "\\.(php[0-9]?|asp|aspx|jsp|cgi|env|bak|sql|swp|ini|log|git|svn|ds_store)$"
+  ],
+  "rateLimits": {
+    "contact": {
+      "limit": 3,
+      "windowSeconds": 600
+    },
+    "adminAuthFailure": {
+      "limit": 5,
+      "windowSeconds": 900
+    },
+    "cspReport": {
+      "limit": 20,
+      "windowSeconds": 60
+    }
+  }
+}

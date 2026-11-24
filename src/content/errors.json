@@ -17,15 +17,16 @@
     "unknownValue": "—",
     "footer": "Mohammad Saniyat Hossain · Staff Software Engineer",
     "retry": {
-      "prefix": "⟳",
       "attemptLabel": "retry",
       "waitingLabel": "in",
       "secondsSuffix": "s",
       "exhausted": "gave up after {attempts} attempts — run retry to try again",
       "reconnected": "back online — reloading",
-      "progressFilled": "█",
-      "progressEmpty": "░",
       "srAnnouncement": "Retrying automatically in {seconds} seconds."
+    },
+    "orb": {
+      "idleGlyph": "!",
+      "secondsLabel": "sec"
     }
   },
   "pages": {
@@ -170,7 +171,6 @@
     "maxDelayMs": 60000,
     "maxAttempts": 5,
     "jitterRatio": 0.2,
-    "progressWidth": 20,
-    "tickMs": 100
+    "tickMs": 250
   }
 }

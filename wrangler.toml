@@ -1,12 +1,12 @@
 name = "portfolio-cloudflare"
-main = "src/index.js"
+main = "src/index.ts"
 compatibility_date = "2024-12-01"
 # Custom domain: saniyat.com (configure in Cloudflare dashboard → Workers → Domains & Routes)
 
 [assets]
 directory = "./dist"
 binding = "ASSETS"
-# Without this the Static-Assets router serves public/ directly and src/index.js never runs for
+# Without this the Static-Assets router serves public/ directly and src/index.ts never runs for
 # HTML/asset requests — silently dropping the CSP/COOP/CORP headers, the Early-Hints Link header,
 # and normalized Cache-Control (see docs/aidlc/43-pagespeed-cloudflare-edge.md). Forces the Worker
 # to run for every request so those always apply.
@@ -18,7 +18,7 @@ not_found_handling = "404-page"
 # src/content/errors.json and served from /errors/<slug>/ — the Worker fetches them via the ASSETS binding.
 
 # --- Contact form (POST /api/contact) --------------------------------------------------------------
-# All three backing services below are OPTIONAL and guarded in src/index.js: the endpoint validates
+# All three backing services below are OPTIONAL and guarded in src/index.ts: the endpoint validates
 # and returns success even before they're configured, so deploying in stages is safe.
 
 # Public, non-secret vars. CONTACT_FROM must be an address on a domain with Email Routing enabled;
@@ -39,7 +39,7 @@ MAINTENANCE_MODE = "off"
 # SKILLS_SCROLL_DESIGN = "off"   # Tools & craft scroll layout — optional; local default in portfolio.json → site.features.flags
 
 # ⚠️ The two bindings below are COMMENTED OUT so the first deploy succeeds with no setup.
-# They are OPTIONAL and guarded in src/index.js (the contact endpoint still validates + logs; it just
+# They are OPTIONAL and guarded in src/index.ts (the contact endpoint still validates + logs; it just
 #
 # Email Routing send_email binding — lets the Worker send the notification email.
 #   1. Dashboard → your zone → Email → Email Routing → enable + verify the destination (CONTACT_TO).
@@ -73,3 +73,13 @@ MAINTENANCE_MODE = "off"
 # Admin token for the read endpoint (GET /api/contact?token=... → recent submissions). Set via:
 #   npx wrangler secret put ADMIN_TOKEN
 # The GET endpoint returns 401 until this is set. Not linked from the UI.
+
+# ── Security (docs/aidlc/57) ──────────────────────────────────────────────────────────────────────
+# Optional atomic rate limiter. The Worker uses it automatically when bound as RATE_LIMITER and otherwise falls
+# back to KV counters, then to per-isolate memory. Thresholds for the fallbacks: src/content/security.json.
+# [[ratelimits]]
+# name = "RATE_LIMITER"
+# namespace_id = "1001"
+#   [ratelimits.simple]
+#   limit = 10
+#   period = 60

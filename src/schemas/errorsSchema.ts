@@ -17,8 +17,6 @@ const retryTuningSchema = z.strictObject({
   maxAttempts: z.number().int().min(1).max(50),
   /** 0.2 = each delay varies by ±20 % so many visitors do not retry in lock-step. */
   jitterRatio: z.number().min(0).max(1),
-  /** Characters in the ASCII progress bar. */
-  progressWidth: z.number().int().min(5).max(60),
   /** How often the countdown redraws (ms). */
   tickMs: z.number().int().min(50),
 });
@@ -67,17 +65,20 @@ export const errorsSchema = z.strictObject({
       ref: nonEmptyString,
     }),
     unknownValue: nonEmptyString,
+    orb: z.strictObject({
+      /** Shown inside the orb on pages without a status code or a countdown. */
+      idleGlyph: nonEmptyString,
+      /** Unit label under the countdown number. */
+      secondsLabel: nonEmptyString,
+    }),
     footer: nonEmptyString,
     retry: z.strictObject({
-      prefix: nonEmptyString,
       attemptLabel: nonEmptyString,
       waitingLabel: nonEmptyString,
       secondsSuffix: nonEmptyString,
       /** `{attempts}` is replaced with the number of tries made. */
       exhausted: nonEmptyString,
       reconnected: nonEmptyString,
-      progressFilled: nonEmptyString,
-      progressEmpty: nonEmptyString,
       /** `{seconds}` is replaced with the first delay, for screen readers. */
       srAnnouncement: nonEmptyString,
     }),

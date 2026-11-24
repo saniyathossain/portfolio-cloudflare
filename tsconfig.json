@@ -7,8 +7,8 @@
     "noFallthroughCasesInSwitch": true,
     "verbatimModuleSyntax": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    "jsxImportSource": "preact"
   },
   "include": [".astro/types.d.ts", "src/**/*", "tests/**/*", "vitest.config.mjs"],
-  "exclude": ["dist", "node_modules", "src/index.js", "src/legacy"]
+  "exclude": ["dist", "node_modules", "src/legacy"]
 }

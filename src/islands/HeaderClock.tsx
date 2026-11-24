@@ -1,4 +1,5 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import type { CSSProperties } from "preact";
+import { useEffect, useState } from "preact/hooks";
 import { readClock, type ClockLabels, type ClockReading } from "../lib/clock";
 
 interface HeaderClockProps {
