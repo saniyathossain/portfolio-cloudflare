@@ -70,6 +70,8 @@ const sectionHeadingSchema = z.strictObject({ heading: nonEmptyString, icon: non
 const copySchema = z.strictObject({
   about: z.strictObject({ onlineLabel: nonEmptyString, workButton: nonEmptyString }),
   createBand: z.strictObject({ ariaLabel: nonEmptyString }),
+  backToTop: z.strictObject({ ariaLabel: nonEmptyString }),
+  clock: z.strictObject({ ariaLabel: nonEmptyString }),
   partners: z.strictObject({ label: nonEmptyString }),
   experience: z.strictObject({
     stackLabel: nonEmptyString,

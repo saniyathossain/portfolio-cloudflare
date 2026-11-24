@@ -5,7 +5,7 @@ import Icon from "../ui/Icon.astro";
 const { createBand, copy } = portfolio;
 ---
 
-<section class="sec pb-10" aria-label={copy.createBand.ariaLabel}>
+<section class="sec" aria-label={copy.createBand.ariaLabel}>
   <ul class="shell create-band create-band--flow" data-stagger data-stagger-step="120" data-stagger-base="0">
     {createBand.map((tile) =>
       tile.isDecorative ? (

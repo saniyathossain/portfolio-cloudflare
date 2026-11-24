@@ -1,5 +1,5 @@
 /** Portfolio service worker — cache-first assets, network-first shell */
-const CACHE_VERSION = "265c3c8150bd";
+const CACHE_VERSION = "ccf90e9c980e";
 const OFFLINE_PAGE_URL = "/errors/offline/";
 const SHELL_URLS = ["/", "/index.html", OFFLINE_PAGE_URL];
 

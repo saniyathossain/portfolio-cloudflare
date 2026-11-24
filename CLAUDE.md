@@ -12,7 +12,7 @@ system **SF Pro** fonts. No runtime build step.
 - `src/index.js` — Cloudflare Worker: serves `public/`, sets security headers + **CSP**, early-hint preloads.
 - `scripts/` — `sync-head.js` (generates `<head>` + h1 from data), `optimize-images.js`, `hash-sw.js`.
 - `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
-  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **55**).
+  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **57**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it

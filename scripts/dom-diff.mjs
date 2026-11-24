@@ -24,6 +24,10 @@ async function normalized(url) {
     if (!root) return `MISSING ${selector}`;
     const clone = root.cloneNode(true);
     clone.querySelectorAll('template, script[type="text/html"]').forEach((node) => node.remove());
+    // React islands are wrapped in <astro-island> (display: contents) — transparent to layout, so unwrap it.
+    for (const island of [...clone.querySelectorAll('astro-island')]) island.replaceWith(...island.childNodes);
+    // The first island injects Astro's hydration runtime (<style>/<script>) next to it — not page content.
+    clone.querySelectorAll('script, style').forEach((node) => node.remove());
     const volatileClass = /^(is-[a-z-]+|in-view|revealed)$/;
     for (const el of [clone, ...clone.querySelectorAll('*')]) {
       for (const attr of [...el.attributes]) {

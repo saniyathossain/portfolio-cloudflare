@@ -627,6 +627,20 @@
       }
       // LAST — reading a rect forces the synchronous layout we need.
       const last = pills.map((p) => p.getBoundingClientRect());
+      // GROW — the shell reflows to its final width in one frame (that is what makes the FLIP above cheap), so
+      // wipe it open from its old right edge instead of letting it snap: a compositor-friendly clip-path that
+      // starts `grewBy` px short on the right and ends unclipped (-24px keeps the soft shadow visible).
+      pills.forEach((p, i) => {
+        const grewBy = Math.round(last[i].width - first[i].width);
+        if (grewBy <= 2 || typeof p.animate !== "function") return;
+        p.animate(
+          [
+            { clipPath: `inset(-24px ${grewBy}px -24px -24px)` },
+            { clipPath: "inset(-24px -24px -24px -24px)" },
+          ],
+          { duration: ms, easing: EASE }
+        );
+      });
       // INVERT — send each moved pill back to its old spot (transform only; layout stays final).
       const movers = [];
       pills.forEach((p, i) => {

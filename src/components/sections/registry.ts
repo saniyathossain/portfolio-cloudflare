@@ -1,9 +1,11 @@
 import AboutSection from "./AboutSection.astro";
+import BackToTopIsland from "./BackToTopIsland.astro";
 import CreateBandSection from "./CreateBandSection.astro";
 import EducationSection from "./EducationSection.astro";
 import ExperienceSection from "./ExperienceSection.astro";
 import FooterSection from "./FooterSection.astro";
 import LiveDatesScript from "./LiveDatesScript.astro";
+import HeaderClockIsland from "./HeaderClockIsland.astro";
 import NavDesktopItems from "./NavDesktopItems.astro";
 import NavOverlayData from "./NavOverlayData.astro";
 import NavOverlayItems from "./NavOverlayItems.astro";
@@ -27,6 +29,8 @@ export const SECTION_COMPONENTS = {
   navOverlayData: NavOverlayData,
   navOverlayItems: NavOverlayItems,
   liveDatesScript: LiveDatesScript,
+  backToTop: BackToTopIsland,
+  headerClock: HeaderClockIsland,
 } as const;
 
 export type SectionComponentName = keyof typeof SECTION_COMPONENTS;

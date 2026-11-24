@@ -909,6 +909,12 @@
       "emailLabel": "Email",
       "callLabel": "Call",
       "ctaLabel": "Get in touch"
+    },
+    "backToTop": {
+      "ariaLabel": "Scroll to top"
+    },
+    "clock": {
+      "ariaLabel": "Local time"
     }
   }
 }

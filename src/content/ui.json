@@ -59,5 +59,31 @@
     "skillGroups": ["blue", "teal", "purple", "orange", "green", "cyan"],
     "statTiles": ["cyan", "teal", "green", "orange"],
     "educationRows": ["teal", "green", "indigo"]
+  },
+  "behavior": {
+    "backToTopRevealPx": 560,
+    "headerScrolledPx": 12
+  },
+  "clock": {
+    "tickMs": 1000,
+    "meridiem": {
+      "am": "am",
+      "pm": "pm"
+    },
+    "monthNames": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "dateSeparator": ", "
   }
 }

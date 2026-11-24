@@ -178,8 +178,9 @@ html:not(.is-loading) .load-scrim { display: none; }
   --shadow-outset-sm: 0 1px 0 rgba(255,255,255,.95), 0 2px 5px rgba(17,17,17,.07), 0 6px 14px rgba(17,17,17,.06);
   --shadow-outset-md: 0 1px 0 rgba(255,255,255,.98), 0 4px 10px rgba(17,17,17,.08), 0 12px 28px rgba(17,17,17,.08);
   --shadow-outset-hover: 0 2px 0 rgba(255,255,255,.98), 0 8px 22px rgba(17,17,17,.1), 0 16px 36px rgba(17,17,17,.08);
-  /* Fluid section rhythm — tablet↔desktop interpolates; used by .sec-pad / .sec-pad-b (not blanket .sec). */
-  --sec-py: clamp(5rem, 3.4rem + 3.2vw, 7rem);
+  /* Fluid section rhythm — tablet↔desktop interpolates; used by .sec-pad / .sec-pad-b (not blanket .sec).
+     Doc 56: tightened from 5–7rem to 2–3rem per side (≈ 64–96 px between sections instead of 150–224 px). */
+  --sec-py: clamp(2rem, 1.4rem + 1.4vw, 3rem);
 }
 @font-face {
   font-family: "Inter";

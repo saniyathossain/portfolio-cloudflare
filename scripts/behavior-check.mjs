@@ -57,6 +57,34 @@ report.livedates = {
   companyTenure: await page.$$eval(".exp-group__tenure-badge span:last-child", (elements) => elements.map((element) => element.textContent?.trim())),
 };
 
+// header clock: format, live hand angles and the zoom-on-click effect from motion.js
+const clockFace = await page.$(".clock-face");
+report.clock = {
+  timePattern: /^\d{1,2}:\d{2}(am|pm)$/.test((await text(".clock-time")) ?? ""),
+  datePattern: /^\d{1,2} [A-Za-z]+, \d{4}$/.test((await text(".clock-date")) ?? ""),
+  hasAngles: await page.$eval(".clock-face", (element) => ["--clock-h", "--clock-m", "--clock-s", "--clock-s-delay"].every((name) => element.style.getPropertyValue(name) !== "")),
+};
+if (clockFace) {
+  await clockFace.click();
+  await sleep(500);
+  report.clock.zoomedAfterClick = await page.$eval(".site-header", (element) => element.classList.contains("clock-zoomed"));
+  await page.mouse.click(5, 400);
+  await sleep(500);
+  report.clock.zoomClearedAfterOutsideClick = await page.$eval(".site-header", (element) => !element.classList.contains("clock-zoomed"));
+}
+
+// back-to-top: hidden at the top, appears past the threshold, scrolls home on click
+await page.evaluate(() => window.scrollTo(0, 0));
+await sleep(600);
+report.backToTop = { hiddenAtTop: await page.$eval(".back-to-top", (element) => !element.classList.contains("is-visible") && element.tabIndex === -1) };
+await page.evaluate(() => window.scrollTo(0, 1500));
+await sleep(900);
+report.backToTop.visibleAfterScroll = await page.$eval(".back-to-top", (element) => element.classList.contains("is-visible") && element.tabIndex === 0);
+await page.click(".back-to-top");
+await sleep(1800);
+report.backToTop.scrolledHome = (await page.evaluate(() => window.scrollY)) < 30;
+report.backToTop.hashCleared = (await page.evaluate(() => location.hash)) === "";
+
 // menu → navigate → overlay closes
 await centerAndClick(".menu-btn");
 report.menu = { opened: await count(".nav-overlay.is-open"), items: await count(".nav-overlay__item") };

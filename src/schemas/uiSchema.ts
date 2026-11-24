@@ -44,6 +44,18 @@ export const uiSchema = z.strictObject({
     [EmploymentType.Contract]: employmentViewSchema,
   }),
   derivedStats: z.strictObject({ yearsOfExperienceIcon: nonEmptyString, companyCountIcon: nonEmptyString }),
+  behavior: z.strictObject({
+    /** scrollY (px) past which the back-to-top control appears. */
+    backToTopRevealPx: z.number().int().min(1),
+    /** scrollY (px) past which the header glass intensifies. */
+    headerScrolledPx: z.number().int().min(1),
+  }),
+  clock: z.strictObject({
+    tickMs: z.number().int().min(250),
+    meridiem: z.strictObject({ am: nonEmptyString, pm: nonEmptyString }),
+    monthNames: z.array(nonEmptyString).length(12),
+    dateSeparator: nonEmptyString,
+  }),
   fallbackIconName: nonEmptyString,
   accents: z.strictObject({
     serviceRows: z.array(nonEmptyString).min(1),

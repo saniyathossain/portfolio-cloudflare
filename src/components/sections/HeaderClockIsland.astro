@@ -1,0 +1,16 @@
+---
+import { portfolio, uiConfig } from "../../bootstrap/container";
+import HeaderClock from "../../islands/HeaderClock";
+import { readClock } from "../../lib/clock";
+
+const { clock } = uiConfig;
+const labels = { meridiem: clock.meridiem, monthNames: clock.monthNames, dateSeparator: clock.dateSeparator };
+---
+
+<HeaderClock
+  client:idle
+  ariaLabel={portfolio.copy.clock.ariaLabel}
+  labels={labels}
+  tickMs={clock.tickMs}
+  initialReading={readClock(new Date(), labels)}
+/>
