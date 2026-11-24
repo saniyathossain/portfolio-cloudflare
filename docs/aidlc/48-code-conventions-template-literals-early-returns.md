@@ -94,6 +94,16 @@ to read positions — that's two O(n) passes, not an O(n²) cross-product, and f
 would make the FLIP-animation phases (clear → measure → invert → play) harder to follow, not easier.
 Only flatten a loop that's genuinely nested at *definition time* over two different collections.
 
+## Rule 4 — HARD RULE: commits carry no AI co-author trailer (2026-11-24)
+
+Commit messages and PR descriptions in this repo **must not** include a `Co-Authored-By: Claude …` (or any other
+AI/agent) trailer, nor a "Generated with …" footer. Authorship is the owner's alone. This overrides any agent or
+tool default attribution. Agents also **never push** (and never merge/deploy) unless the owner explicitly says so
+in that turn — commit locally, report, stop.
+
+Message style: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …), subject ≤ 72 chars, body explains why.
+Stage files by name (no `git add -A`).
+
 ## Scope
 
 Applies to all hand-written files under `public/assets/js/` and `scripts/`. Existing hot loops that
