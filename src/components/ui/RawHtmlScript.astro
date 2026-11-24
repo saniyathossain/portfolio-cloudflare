@@ -1,0 +1,12 @@
+---
+interface Props {
+  /** Element id the lazy-mount expression reads (`document.getElementById(id).textContent`). */
+  id: string;
+}
+
+const { id } = Astro.props;
+// Rendered markup is stored as inert text: the browser never parses it into DOM nodes until it is mounted.
+const markup = await Astro.slots.render("default");
+---
+
+<script is:inline type="text/html" id={id} set:html={markup}></script>

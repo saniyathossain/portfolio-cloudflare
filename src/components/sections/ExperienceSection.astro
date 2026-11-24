@@ -1,13 +1,16 @@
 ---
 import { iconService, portfolio, portfolioService, uiConfig } from "../../bootstrap/container";
-import BrandPill from "../ui/BrandPill.astro";
 import Icon from "../ui/Icon.astro";
+import RawHtmlScript from "../ui/RawHtmlScript.astro";
 import SectionHeading from "../ui/SectionHeading.astro";
+import ExperienceRoleDetails from "./ExperienceRoleDetails.astro";
 
 const { experienceGroups, copy } = portfolio;
 const roleAccents = uiConfig.accents.experienceRoles;
 const closedChevronClass = "ui-icon ui-icon--chevron exp-row__chev";
 const openChevronClass = `${closedChevronClass} is-open`;
+
+const bodyId = (roleId: string): string => `exp-body-${roleId}`;
 
 function roleCountLabel(roleCount: number): string {
   return `${roleCount} ${roleCount === 1 ? copy.experience.roleCountSingular : copy.experience.roleCountPlural}`;
@@ -120,62 +123,11 @@ function roleCountLabel(roleCount: number): string {
                   <div class="exp-details__inner">
                     {/* Lazy-mounted on first expand (hasOpenedOnce) so Alpine does not bind every role's pills upfront. */}
                     <template x-if={`hasOpenedOnce('${role.id}')`}>
-                      <div>
-                        <ul class="exp-details__list">
-                          {role.details.map((detail) => (
-                            <li>
-                              <Icon name="check" svgClass="ui-icon ui-icon--sm" class="point-chip" />
-                              <span set:html={portfolioService.highlightExperience(detail)} />
-                            </li>
-                          ))}
-                        </ul>
-
-                        {(role.stacks.length > 0 || role.aiTools.length > 0) && (
-                          <div class="role-tags">
-                            {role.stacks.length > 0 && (
-                              <div class="role-tags__group">
-                                <span class="role-tags__label role-tags__label--stack">
-                                  <span class="icon-chip icon-chip--sm" aria-hidden="true">
-                                    <Icon name="chip" svgClass="ui-icon ui-icon--sm" />
-                                  </span>{" "}
-                                  {copy.experience.stackLabel}
-                                </span>
-                                <div class="pill-row">
-                                  {role.stacks.map((stackName) => (
-                                    <BrandPill
-                                      stackName={stackName}
-                                      iconSizePx={12}
-                                      modifierClass="brand-pill--stack"
-                                      hasAriaLabel
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            {role.aiTools.length > 0 && (
-                              <div class="role-tags__group">
-                                <span class="role-tags__label role-tags__label--ai">
-                                  <span class="icon-chip icon-chip--sm" aria-hidden="true">
-                                    <Icon name="sparkles" svgClass="ui-icon ui-icon--sm" />
-                                  </span>{" "}
-                                  {copy.experience.aiToolsLabel}
-                                </span>
-                                <div class="pill-row">
-                                  {role.aiTools.map((toolName) => (
-                                    <BrandPill
-                                      stackName={toolName}
-                                      iconSizePx={12}
-                                      modifierClass="brand-pill--ai"
-                                      hasAriaLabel
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <div x-html={`document.getElementById('${bodyId(role.id)}').textContent`} />
                     </template>
+                    <RawHtmlScript id={bodyId(role.id)}>
+                      <ExperienceRoleDetails role={role} />
+                    </RawHtmlScript>
                   </div>
                 </div>
               </li>

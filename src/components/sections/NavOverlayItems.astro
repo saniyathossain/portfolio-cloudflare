@@ -1,23 +1,5 @@
 ---
-import { portfolio } from "../../bootstrap/container";
-import Icon from "../ui/Icon.astro";
+// The visible shell only: the <li> items are inert text (NavOverlayData) mounted when the menu is first opened.
 ---
 
-<ul class="flex flex-col gap-1">
-  {portfolio.nav.map((item, itemIndex) => (
-    <li>
-      <button
-        type="button"
-        class="nav-overlay__item"
-        style={`--stagger-i:${itemIndex}`}
-        x-on:click={`navGo(nav[${itemIndex}])`}
-      >
-        <span class="nav-overlay__gutter" aria-hidden="true" />
-        <span class="nav-overlay__icon" aria-hidden="true">
-          <Icon name={item.icon} svgClass="ui-icon" />
-        </span>
-        <span>{item.label}</span>
-      </button>
-    </li>
-  ))}
-</ul>
+<ul class="flex flex-col gap-1" x-html="document.getElementById('nav-overlay-items').textContent"></ul>

@@ -23,7 +23,7 @@ async function normalized(url) {
     const root = document.querySelector(selector);
     if (!root) return `MISSING ${selector}`;
     const clone = root.cloneNode(true);
-    clone.querySelectorAll('template').forEach((node) => node.remove());
+    clone.querySelectorAll('template, script[type="text/html"]').forEach((node) => node.remove());
     const volatileClass = /^(is-[a-z-]+|in-view|revealed)$/;
     for (const el of [clone, ...clone.querySelectorAll('*')]) {
       for (const attr of [...el.attributes]) {

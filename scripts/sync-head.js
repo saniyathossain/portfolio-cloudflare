@@ -85,8 +85,13 @@ function stylesheetLinks() {
   }
   // Minified critical CSS only — source is our own build output (no </style> risk when clean).
   const criticalMinCss = fs.readFileSync(criticalPath, "utf8").trim();
-  return `  <style>${criticalMinCss}</style>
-  <link rel="preload" href="${stylesHref}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  // `css-pending` marks the window before styles.min.css is applied. Server-rendered sections are hidden by
+  // critical.css during it, so a first (uncached) visit never flashes unstyled markup — oversized SVG icons,
+  // default-blue links. It is cleared on load, on error, and after a 6 s failsafe so content can never stay hidden.
+  // Without JS the class is never added, so the markup shows (the <noscript> stylesheet is render-blocking).
+  return `  <script>(function(){var r=document.documentElement;r.classList.add("css-pending");setTimeout(function(){r.classList.remove("css-pending")},6000)})()</script>
+  <style>${criticalMinCss}</style>
+  <link rel="preload" href="${stylesHref}" as="style" onload="this.onload=null;this.rel='stylesheet';document.documentElement.classList.remove('css-pending')" onerror="document.documentElement.classList.remove('css-pending')">
   <noscript><link rel="stylesheet" href="${stylesHref}"></noscript>`;
 }
 

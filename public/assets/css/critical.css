@@ -1722,3 +1722,28 @@ html.is-idle .beam::before {
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(2) { opacity: 0; }
 
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(3) { transform: translateY(-4.3px) rotate(-45deg); }
+
+/* Doc 53 — first-visit flash guard. These blocks are server-rendered, so they exist before the full stylesheet
+   has arrived; until it is applied (html.css-pending, see scripts/sync-head.js) they stay invisible instead of
+   showing as unstyled, oversized icons and default-blue links. `visibility` (not display) keeps their layout
+   boxes, and elements that are not visible do not count toward layout shift. */
+html.css-pending .nav-desktop button,
+html.css-pending .hero-partners,
+html.css-pending main > section:not(#home),
+html.css-pending .site-footer {
+  visibility: hidden;
+}
+
+/* Doc 53 — icon base sizing for first paint. An inline <svg> has no intrinsic size, so without these (they
+   otherwise arrive with the full stylesheet) any icon in the initial HTML renders ~300 px wide and in the default
+   link/text colour. Same values as the "UI icons" block in styles.css. */
+.ui-icon { display: block; flex: none; width: 1em; height: 1em; }
+.ui-icon--sm { width: 0.8125rem; height: 0.8125rem; }
+.ui-icon--md { width: 1rem; height: 1rem; }
+.ui-icon--lg { width: 1.2rem; height: 1.2rem; }
+.ui-icon--chevron { width: 0.88em; height: 0.88em; stroke-width: 2; }
+.ui-icon--social,
+.ui-icon--social path { fill: currentColor; stroke: none; }
+.ui-icon--filled,
+.ui-icon--filled path,
+.ui-icon--filled g { fill: currentColor; stroke: none; }

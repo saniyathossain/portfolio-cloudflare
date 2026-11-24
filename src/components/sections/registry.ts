@@ -5,6 +5,7 @@ import ExperienceSection from "./ExperienceSection.astro";
 import FooterSection from "./FooterSection.astro";
 import LiveDatesScript from "./LiveDatesScript.astro";
 import NavDesktopItems from "./NavDesktopItems.astro";
+import NavOverlayData from "./NavOverlayData.astro";
 import NavOverlayItems from "./NavOverlayItems.astro";
 import PartnersBlock from "./PartnersBlock.astro";
 import ServicesSection from "./ServicesSection.astro";
@@ -23,6 +24,7 @@ export const SECTION_COMPONENTS = {
   stats: StatsSection,
   education: EducationSection,
   footer: FooterSection,
+  navOverlayData: NavOverlayData,
   navOverlayItems: NavOverlayItems,
   liveDatesScript: LiveDatesScript,
 } as const;
