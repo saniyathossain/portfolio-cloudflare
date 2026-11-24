@@ -18,6 +18,18 @@ new request is wrong and loses.
   `AnalyticsEvent`) in `src/enums/`; no magic strings in components or `data-track` attributes.
 - Prefer `readonly`, `as const`, discriminated unions and early returns (doc 48 rule 2) over flags and casts.
 
+## 1a. Data lives in JSON, code holds logic only (owner rule, 2026-11-24)
+Anything an editor might want to change is **content/config in JSON, validated by Zod, never a literal in code**:
+copy, labels, vocabularies (article platforms, hero-card tints, band variants), brand icon/colour/tint tables,
+palette anchors and tint-algorithm thresholds, fallback colours, icon paths, feature flags, analytics/log settings.
+- `public/assets/data/portfolio.json` — site content (moves to `src/content/` when the legacy runtime is gone).
+- `src/content/brands.json` — stack → icon/colour/tint catalogue. `src/content/ui.json` — vocabularies, labels,
+  fallback colours, brand-tint parameters. Future: `analytics.json`/`logging.json` (see doc 53 §4, doc 54 §6).
+- Code owns only structure and algorithms; values reach it by injection from `ContentRepository`. Enums are for
+  **code-logic** domains (e.g. `EmploymentType` keys a label map, `NavAction`, `LogLevel`), **not** data vocabularies —
+  those are JSON lists cross-checked by the schema (`createPortfolioSchema(ui)`), so adding a platform is a JSON edit.
+- Before adding a constant to `src/`, ask "would an editor change this?" — if yes it belongs in JSON.
+
 ## 2. Naming (no `a`, `b`, `c`)
 - Names state meaning: `experienceGroup`, not `g`; `scrollOffsetPx`, not `y`; `handleMenuToggle`, not `onClick2`.
   Functions are verbs (`groupExperiencesByCompany`), booleans read as questions (`isMenuOpen`, `hasUnderConstruction`),
@@ -145,5 +157,7 @@ tests/             # unit (services, schemas, lib) + e2e smoke (Playwright, late
 Lighthouse mobile/desktop ≥ baseline; console clean; CSP clean; zero new requests with default config.
 
 ## Open items
+- Tenure unit words ("year", "month", "—") and a few remaining UI strings still live in `src/lib/tenure.ts`; move to `ui.json` when the components that render them are ported.
 - Pick the test runner (Vitest for units, Playwright for e2e) when the first service lands (phase 3).
-- Flip `engine-strict=true` in `.npmrc` once all machines run the Node in `.nvmrc`.
+- `engine-strict=true` is on in `.npmrc` (Node 26.13.1 via FlyEnv on the owner's machine, 2026-11-24).
+- npm 12 skips dependency install scripts (esbuild, workerd, fsevents) until approved with `npm install-scripts approve`; builds and `wrangler` work without it today — approve only if a binary goes missing.

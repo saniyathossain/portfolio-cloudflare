@@ -7,6 +7,6 @@
     "noFallthroughCasesInSwitch": true,
     "verbatimModuleSyntax": true
   },
-  "include": [".astro/types.d.ts", "src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "include": [".astro/types.d.ts", "src/**/*", "tests/**/*", "vitest.config.mjs"],
+  "exclude": ["dist", "node_modules", "src/index.js", "src/legacy"]
 }

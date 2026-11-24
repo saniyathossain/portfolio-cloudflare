@@ -29,6 +29,8 @@ system **SF Pro** fonts. No runtime build step.
 - **Git (HARD RULE, `docs/aidlc/48` rule 4):** no `Co-Authored-By: Claude`/AI trailer or "Generated with" footer in
   commits or PRs; never commit without the owner's explicit go-ahead; never push, merge or deploy unless the owner
   says so in that turn; stage files by name.
+- **Data in JSON, logic in code (doc 54 §1a):** content, labels, vocabularies, brand/colour tables, thresholds, fallback
+  values live in `portfolio.json` / `src/content/*.json` (Zod-validated), never as literals in `src/`.
 - **Engineering standards (doc 54):** strict TS + DTOs/enums/Zod, Laravel-style `src/` layers, DRY/SOLID, meaningful
   names (no single-letter identifiers), 5W logging + Artisan-style script output, ESLint/Prettier, least-privilege
   security, PWA/browser compat — never at the cost of performance or UX. Node = `.nvmrc` (26.13.1 LTS).

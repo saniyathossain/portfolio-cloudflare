@@ -1,0 +1,8 @@
+dist
+.astro
+public
+src/legacy
+docs
+package-lock.json
+src/index.js
+src/maintenance.html

@@ -1,0 +1,55 @@
+{
+  "$comment": "Presentation rules kept out of code: vocabularies, labels, fallback colours and the brand-tint algorithm parameters. Validated by src/schemas/uiSchema.ts.",
+  "vocabulary": {
+    "articlePlatforms": ["dev.to", "Medium"],
+    "heroCardTints": ["accent", "primary", "blue"],
+    "createBandVariants": ["code", "accent", "dark", "scale"]
+  },
+  "employmentTypes": {
+    "permanent": {
+      "label": "Permanent",
+      "icon": "permanent"
+    },
+    "contract": {
+      "label": "Contract",
+      "icon": "contract"
+    }
+  },
+  "derivedStats": {
+    "yearsOfExperienceIcon": "years",
+    "companyCountIcon": "companies"
+  },
+  "partnerFallbackColor": "#8d8d8d",
+  "brandTint": {
+    "unknownBrandColor": "#6b6b6b",
+    "anchors": {
+      "taupe": "#9a7f72",
+      "teal": "#2b8c9a",
+      "violet": "#6e6cf0"
+    },
+    "mutedBelowSaturation": 0.1,
+    "darkBelowLightness": 0.12,
+    "darkTealMix": 0.32,
+    "darkLift": {
+      "belowLightness": 0.32,
+      "lightness": 0.5,
+      "minSaturation": 0.42
+    },
+    "lightDampen": {
+      "aboveLightness": 0.68,
+      "lightness": 0.58,
+      "minSaturation": 0.48,
+      "maxSaturation": 0.82
+    },
+    "midTone": {
+      "saturationGain": 1.04,
+      "saturationBoost": 0.03,
+      "maxSaturation": 0.86,
+      "minLightness": 0.44,
+      "maxLightness": 0.58
+    },
+    "taupeMix": 0.1,
+    "violetMix": 0.04
+  },
+  "brandIconBasePath": "/assets/img/brands"
+}

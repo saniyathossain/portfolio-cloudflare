@@ -183,3 +183,15 @@ Branch `feat/astro-port` from `develop`. Each phase = one commit, verified again
   empty id, network shows zero GA requests.
 - Lighthouse mobile/desktop ≥ baseline (target mobile 90+); request count; Worker invoked only for `/` + `/api/*`.
 - `/api/contact`, maintenance mode + preview bypass tested via wrangler dev.
+
+## Execution log
+- **Phase 1** (baseline) — `b82ad3f`. **Phase 2** (Astro wraps legacy page, Tailwind v4 with v3-parity rules) — `710b06e`.
+- **Phase 3a** (content layer, 2026-11-24): `src/{enums,schemas,types,config,lib,repositories,services}` + `tests/`.
+  Zod schema (strict objects, cross-checks `companySlug`) validates `portfolio.json` at build; `PortfolioService`
+  derives sections/stats/partners/groups; `tests/parity/legacyPortfolioParity.test.ts` runs the shipped `data.js` in a
+  sandbox and asserts the TS port matches it for every stack brand, experience group + tenure, section copy, stats,
+  partners and highlight output. Gates: `npm run lint`, `typecheck`, `test`, `format:check` all green.
+  - **TypeScript is pinned to 6.0.3, not 7.x:** `typescript-eslint` (peer `<6.1`) rejects TS 7, and type-aware lint is a
+    doc 54 requirement. Bump when typescript-eslint supports 7.
+  - Node 25.1.0 made npm resolve `eslint-plugin-astro` 1.7.0 and `vitest` 4.1.12 (their latest need Node ≥22.22/24.16/26.3); after moving to Node 26.13.1 both are on latest (3.2.1 / 5.1.1). `typescript` stays 6.0.3 (see above).
+  - The schema found one real data quirk: Medium articles carry `readMin: null` (now `.nullable()`).
