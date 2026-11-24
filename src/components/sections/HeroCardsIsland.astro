@@ -1,0 +1,23 @@
+---
+import { iconService, portfolio, uiConfig } from "../../bootstrap/container";
+import HeroCards from "../../islands/HeroCards";
+import { tintCustomProperties } from "../../lib/heroCard";
+
+const { heroCard } = uiConfig;
+const cards = portfolio.heroCards.map((card) => ({
+  caption: card.caption,
+  title: card.title,
+  iconHtml: iconService.render(card.icon, heroCard.badgeIconClasses),
+  tintStyle: tintCustomProperties(card.tint, heroCard.tints, heroCard.fallbackTint),
+}));
+---
+
+<HeroCards
+  client:idle
+  cards={cards}
+  swapMs={heroCard.swapMs}
+  previousLabel={heroCard.previousLabel}
+  nextLabel={heroCard.nextLabel}
+  previousIconHtml={iconService.render(heroCard.previousIcon.name, heroCard.previousIcon.classes)}
+  nextIconHtml={iconService.render(heroCard.nextIcon.name, heroCard.nextIcon.classes)}
+/>

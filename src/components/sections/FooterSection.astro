@@ -1,4 +1,5 @@
 ---
+import { navTriggerAttributes } from "../../lib/navigation";
 import { iconService, portfolio } from "../../bootstrap/container";
 import { fillTemplate } from "../../lib/text";
 import Icon from "../ui/Icon.astro";
@@ -16,7 +17,7 @@ const copyrightTemplate = fillTemplate(site.footerCopyright, { name: profile.nam
         data-blur-reveal
         set:html={sectionHeadings.contact.heading}
       />
-      <button type="button" class="pill-btn pill-btn-glass beam sheen site-footer__cta" x-on:click="openModal()">
+      <button type="button" class="pill-btn pill-btn-glass beam sheen site-footer__cta" data-action="open-modal">
         <span class="site-footer__cta-label">{copy.footer.ctaLabel}</span>
         <span class="pill-btn__icon pill-btn__icon--dark">
           <Icon name="arrow" svgClass="ui-icon ui-icon--sm" />
@@ -33,9 +34,9 @@ const copyrightTemplate = fillTemplate(site.footerCopyright, { name: profile.nam
       <div class="site-footer__col">
         <p class="site-footer__heading text-xs uppercase tracking-wide">{copy.footer.navigateHeading}</p>
         <ul class="site-footer__links text-sm">
-          {nav.map((item, itemIndex) => (
+          {nav.map((item) => (
             <li>
-              <button type="button" x-on:click={`navGo(nav[${itemIndex}])`}>
+              <button type="button" {...navTriggerAttributes(item)}>
                 <span
                   class="icon-chip icon-chip--sm icon-chip--on-dark"
                   aria-hidden="true"

@@ -24,4 +24,20 @@ export class BrandResolver {
       foreground: readableForeground(color),
     };
   }
+
+  /**
+   * Drops stack names whose icon already appears earlier in the same list, so two pills never show the same logo
+   * (e.g. "Laravel Horizon" after "Laravel", "RediSearch" after "Redis" — each is a part of the first and has no
+   * logo of its own). Names without an icon are always kept: their monogram is unique to them.
+   */
+  distinctByIcon(stackNames: readonly string[]): string[] {
+    const seenIcons = new Set<string>();
+    return stackNames.filter((stackName) => {
+      const { iconSrc } = this.resolve(stackName);
+      if (iconSrc === null) return true;
+      if (seenIcons.has(iconSrc)) return false;
+      seenIcons.add(iconSrc);
+      return true;
+    });
+  }
 }

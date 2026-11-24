@@ -1,0 +1,47 @@
+---
+import { iconService, portfolio, uiConfig } from "../../bootstrap/container";
+import Editorial from "../../islands/Editorial";
+import { editorialIconKey, type EditorialIconSize } from "../../lib/editorial";
+import SectionHeading from "../ui/SectionHeading.astro";
+
+const { articles, copy, editorialOutbound } = portfolio;
+const config = uiConfig.editorial;
+const hasActiveArticles = articles.some((article) => article.active);
+
+// Every icon the island can show, rendered once here (at both sizes) so the client never needs the icon catalog.
+const iconNames = new Set<string>([
+  ...config.tabs.flatMap((tab) => (tab.icon ? [tab.icon] : [])),
+  config.fallbackPlatformIcon,
+  ...editorialOutbound.links.map((link) => link.icon),
+  "search",
+  "close",
+  "arrow",
+]);
+const sizes: EditorialIconSize[] = ["sm", "md"];
+const iconMarkup = Object.fromEntries(
+  [...iconNames].flatMap((name) =>
+    sizes.map((size) => [editorialIconKey(name, size), iconService.render(name, config.iconClasses[size])]),
+  ),
+);
+---
+
+{hasActiveArticles && (
+  <section id="editorial" class="sec sec-pad" aria-label="Editorial">
+    <div class="shell">
+      <SectionHeading
+        sectionId="editorial"
+        headingClass="mb-2 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl"
+        isSubtitleNoWrap
+        hasLegacySubtitleHook={false}
+      />
+      <Editorial
+        client:visible
+        articles={articles}
+        config={config}
+        copy={copy.editorial}
+        outbound={editorialOutbound}
+        iconMarkup={iconMarkup}
+      />
+    </div>
+  </section>
+)}

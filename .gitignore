@@ -28,6 +28,8 @@ bin/
 # src/index.js (sources that build.sh stamps with the asset hash — retired in doc 53 phase 6), and the
 # hero/*.webp derivatives (optimize-images.js needs macOS sips/cwebp, so CI cannot regenerate them).
 public/assets/js/*.min.js
+# Service worker + client bundles are built from src/client/*.ts (docs/aidlc/60)
+public/sw.js
 public/assets/css/*.min.css
 public/assets/css/tailwind.css
 # Generated image build cache (idempotency guard)

@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { computeHash, PUBLIC } = require("./lib/build-hash");
 
-const SW = path.join(PUBLIC, "sw.js");
+const SW = path.join(__dirname, "..", "src/client/sw.ts"); // stamped in the TS source, then bundled to public/sw.js
 
 // Excludes only itself — the SW cache version must change whenever ANY other shipped asset
 // changes (that's its whole purpose), so nothing else is excluded here.

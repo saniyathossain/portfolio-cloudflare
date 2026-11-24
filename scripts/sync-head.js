@@ -6,7 +6,7 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const JSON_PATH = path.join(ROOT, "public/assets/data/portfolio.json");
 const HTML_PATH = path.join(ROOT, "src/legacy/index.html");
-const BOOT_PATH = path.join(ROOT, "public/assets/js/boot.js");
+const BOOT_PATH = path.join(ROOT, "src/client/boot.ts");
 // Read the version set-asset-version.js already stamped into boot.js (build.sh runs that script
 // first) rather than recomputing an independent hash here. Two independent computeHash() calls with
 // their own exclusion sets previously diverged the moment boot.min.js's content changed between the
@@ -16,7 +16,7 @@ const BOOT_PATH = path.join(ROOT, "public/assets/js/boot.js");
 // regenerated icon on refresh.
 const bootSrc = fs.readFileSync(BOOT_PATH, "utf8");
 const assetVMatch = bootSrc.match(/const ASSET_V = "([^"]+)";/);
-if (!assetVMatch) throw new Error("sync-head: could not read ASSET_V from boot.js — run set-asset-version.js first");
+if (!assetVMatch) throw new Error("sync-head: could not read ASSET_V from src/client/boot.ts — run set-asset-version.js first");
 const ASSET_V = assetVMatch[1];
 
 function absUrl(siteUrl, p) {
@@ -59,7 +59,7 @@ function fillTemplate(str, vars) {
 
 // Opt-in analytics — emitted only when an id/token is set in portfolio.json (site.analytics).
 // Empty by default → nothing injected → zero external requests. Ids are sanitised to [\w-] so the
-// value can't break out of the tag. CSP hosts for these are allow-listed in src/index.js.
+// value can't break out of the tag. CSP hosts for these are allow-listed in src/worker/security/headers.ts.
 function buildAnalytics(site) {
   const a = (site && site.analytics) || {};
   const gid = String(a.googleId || "").replace(/[^\w-]/g, "");

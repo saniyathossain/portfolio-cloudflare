@@ -3,12 +3,12 @@ import { iconService, portfolio, portfolioService, uiConfig } from "../../bootst
 import Icon from "../ui/Icon.astro";
 import RawHtmlScript from "../ui/RawHtmlScript.astro";
 import SectionHeading from "../ui/SectionHeading.astro";
+import ExperienceAccordionIsland from "./ExperienceAccordionIsland.astro";
 import ExperienceRoleDetails from "./ExperienceRoleDetails.astro";
 
 const { experienceGroups, copy } = portfolio;
 const roleAccents = uiConfig.accents.experienceRoles;
 const closedChevronClass = "ui-icon ui-icon--chevron exp-row__chev";
-const openChevronClass = `${closedChevronClass} is-open`;
 
 const bodyId = (roleId: string): string => `exp-body-${roleId}`;
 
@@ -66,8 +66,6 @@ function roleCountLabel(roleCount: number): string {
                   type="button"
                   class="exp-row"
                   aria-expanded="false"
-                  x-on:click={`toggleRole('${role.id}')`}
-                  x-bind:aria-expanded={`isRoleOpen('${role.id}')`}
                 >
                   <span class="exp-row__gutter" aria-hidden="true" />
                   <span class="exp-row__icon" aria-hidden="true">
@@ -88,7 +86,7 @@ function roleCountLabel(roleCount: number): string {
                           <span>{role.employment.label}</span>
                         </span>
                         <span class="popover">
-                          <time class="exp-row__period popover__trigger" tabindex="0" x-on:click.stop>
+                          <time class="exp-row__period popover__trigger" tabindex="0">
                             <Icon name="years" svgClass="ui-icon ui-icon--sm" class="meta-icon" />
                             <span>{role.period}</span>
                           </time>
@@ -104,11 +102,7 @@ function roleCountLabel(roleCount: number): string {
                   </div>
                   <span class="exp-row__arrow" aria-hidden="true">
                     <span class="icon-chip icon-chip--sm">
-                      <span
-                        aria-hidden="true"
-                        x-html={`iconSvg('chevronDown', isRoleOpen('${role.id}') ? '${openChevronClass}' : '${closedChevronClass}')`}
-                        set:html={iconService.render("chevronDown", closedChevronClass)}
-                      />
+                      <span aria-hidden="true" set:html={iconService.render("chevronDown", closedChevronClass)} />
                     </span>
                   </span>
                 </button>
@@ -117,14 +111,9 @@ function roleCountLabel(roleCount: number): string {
                   class="exp-details"
                   id={`exp-panel-${role.id}`}
                   inert
-                  x-bind:class={`isRoleOpen('${role.id}') && 'is-open'`}
-                  x-bind:inert={`!isRoleOpen('${role.id}') ? '' : null`}
                 >
                   <div class="exp-details__inner">
-                    {/* Lazy-mounted on first expand (hasOpenedOnce) so Alpine does not bind every role's pills upfront. */}
-                    <template x-if={`hasOpenedOnce('${role.id}')`}>
-                      <div x-html={`document.getElementById('${bodyId(role.id)}').textContent`} />
-                    </template>
+                    {/* Inert template: ExperienceAccordion mounts it into a <div> ahead of this script on first expand. */}
                     <RawHtmlScript id={bodyId(role.id)}>
                       <ExperienceRoleDetails role={role} />
                     </RawHtmlScript>
@@ -137,4 +126,5 @@ function roleCountLabel(roleCount: number): string {
       ))}
     </ul>
   </div>
+  <ExperienceAccordionIsland sectionId="experience" />
 </section>

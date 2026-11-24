@@ -1,5 +1,5 @@
 ---
-import { portfolio, portfolioService } from "../../bootstrap/container";
+import { brandResolver, portfolio, portfolioService } from "../../bootstrap/container";
 import type { RoleView } from "../../types/ExperienceGroup";
 import BrandPill from "../ui/BrandPill.astro";
 import Icon from "../ui/Icon.astro";
@@ -32,7 +32,7 @@ const { copy } = portfolio;
           {copy.experience.stackLabel}
         </span>
         <div class="pill-row">
-          {role.stacks.map((stackName) => (
+          {brandResolver.distinctByIcon(role.stacks).map((stackName) => (
             <BrandPill stackName={stackName} iconSizePx={12} modifierClass="brand-pill--stack" hasAriaLabel />
           ))}
         </div>

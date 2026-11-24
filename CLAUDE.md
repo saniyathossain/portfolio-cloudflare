@@ -2,24 +2,26 @@
 
 Personal portfolio for **Mohammad Saniyat Hossain** (Staff Software Engineer). Static site built on the
 **Lumora** template, styled as a **macOS Tahoe "Liquid Glass"** design, served by a **Cloudflare Worker**.
-Stack: plain HTML + **Alpine.js** + **Motion One**, **Tailwind (precompiled)** + a hand-written design system,
+Stack: **Astro** static HTML + **Preact islands** + strict-TypeScript browser effects (`src/client`), **Tailwind (precompiled)** + a hand-written design system,
 system **SF Pro** fonts. No runtime build step.
 
 ## Layout
-- `public/` — the deployed site. Entry `public/index.html`; JS in `public/assets/js/` (`data.js`, `app.js`,
-  `boot.js`, `icons.js`, `loader.js`, `motion.js`, `reveal.js`, `blur-reveal.js`, `liquid-hero.js`, `aurora.js`); CSS in
+- `public/` — the deployed site. Entry `public/index.html`; browser JS is **TypeScript in `src/client/*.ts`** (entries) + `src/client/lib/**`,
+  bundled by `scripts/build-client.mjs` into `public/assets/js/<name>.min.js` (generated, gitignored; `sw.ts` → `public/sw.js`, doc 60); CSS in
   `public/assets/css/` (`styles.css` = the design system, `tailwind.css` = precompiled utilities).
-- `src/index.js` — Cloudflare Worker: serves `public/`, sets security headers + **CSP**, early-hint preloads.
+- `src/index.ts` — Cloudflare Worker entry (TypeScript, thin adapter). Pipeline in `src/worker/WorkerApplication.ts`; controllers in
+  `src/worker/controllers/`, security modules in `src/worker/security/`, composition root `src/worker/bootstrap/`, policy values in
+  `src/content/security.json` (docs 57–58).
 - `scripts/` — `sync-head.js` (generates `<head>` + h1 from data), `optimize-images.js`, `hash-sw.js`.
 - `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
-  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **57**).
+  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **62**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it
   mirrors `docs/cv-modern-template.md`.
 - **`<head>` is generated:** run `node scripts/sync-head.js` after editing `site`/`profile` in the JSON. Do **not**
   hand-edit inside the `<!-- SYNC:HEAD -->` / `<!-- SYNC:H1 -->` markers in `index.html`.
-- **No inline `style=""`** in HTML — use Alpine `:style` / `x-bind` or JS `el.style` only.
+- **No inline `style=""`** in HTML — use JSX `style` objects or JS `el.style` only. **No Alpine** (removed, doc 61): interactivity is Preact islands (`src/islands`), delegated `data-action` / `data-nav-target` attributes (`src/client/actions.ts`) and plain modules.
 - **CSS:** prefer custom classes + design tokens in `styles.css`. Only run `./build-css.sh` if you add new
   **Tailwind utility** classes to the HTML (regenerates the gitignored `tailwind.css` with the pinned npm Tailwind v4 CLI;
   see `tailwind.input.css` for the v3-parity rules). Generated `*.min.js`/`*.min.css`/`tailwind.css` are gitignored.
@@ -31,8 +33,12 @@ system **SF Pro** fonts. No runtime build step.
   says so in that turn; stage files by name.
 - **Data in JSON, logic in code (doc 54 §1a):** content, labels, vocabularies, brand/colour tables, thresholds, fallback
   values live in `portfolio.json` / `src/content/*.json` (Zod-validated), never as literals in `src/`.
-- **Error / outage pages:** all failures (404, 500, 502, 503 maintenance, offline) render the shell-console page from
+- **Error / outage pages:** all failures (404, 500, 502, 503 maintenance, offline) render the site-themed outage page (glass panel, orb + circular retry timer, nested shell-console strip; doc 58) from
   `src/content/errors.json` via `src/components/ErrorTerminal.astro`; add a failure mode by adding a JSON entry.
+- **Security (doc 57):** every Worker rejection goes through `logSecurityEvent` (severity low→critical, forensic IP/ASN/UA/ray
+  context); admin read is `Authorization: Bearer` only; new endpoints must add origin check, body cap and a rate limit.
+  Client/device details come from `worker/services/ClientProfileService` (tables in `src/content/clientSignatures.json`, DTOs in
+  `types/ClientProfile.ts`, doc 58). Islands use **Preact** (`preact/hooks`), not React.
 - **Logging:** Worker logs go through `src/worker/logging` (channels in `src/content/logging.json`, `LOG_CHANNEL`
   override); never `console.*` directly, never expose exception details on a page.
 - **Engineering standards (doc 54):** strict TS + DTOs/enums/Zod, Laravel-style `src/` layers, DRY/SOLID, meaningful
@@ -42,10 +48,10 @@ system **SF Pro** fonts. No runtime build step.
   are local), light-only theme, every animation gated by `prefers-reduced-motion`, responsive rem/vw grid verified
   at 360 / 768 / 1024 / 1440. Deploy via `./deploy.sh` (Wrangler).
 - **Feature flags / maintenance / analytics** (see `docs/aidlc/39`): soft per-section "under construction" notices
-  live in `site.features.underConstruction.<key>` (read via Alpine `uc('<key>')`); site-wide **maintenance mode** is
+  live in `site.features.underConstruction.<key>` (read at build time by the Astro components / islands); site-wide **maintenance mode** is
   the Worker `MAINTENANCE_MODE` var (503, `?preview=<ADMIN_TOKEN>` bypass). **Analytics** is opt-in via
   `site.analytics` — empty = zero requests (the "no new network requests" rule holds for the default build); setting
-  a `googleId`/`cloudflareToken` is a deliberate exception (hosts already CSP-allow-listed in `src/index.js`).
+  a `googleId`/`cloudflareToken` is a deliberate exception (hosts already CSP-allow-listed in `src/worker/security/headers.ts`).
 
 ## Skills (design / frontend)
 

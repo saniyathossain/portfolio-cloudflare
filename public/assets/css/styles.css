@@ -5518,3 +5518,6 @@ main { padding-bottom: calc(var(--sec-gap) - var(--sec-bleed)); }        /* last
 /* The Create Band strip carried its own 2.25–3.25 rem vertical padding (room for tile lift/glow), which made the gaps
    around it larger than every other boundary. Tiles are overflow-visible, so the shadow room is not needed. */
 main > .sec > .create-band { padding-block: 0; }
+
+/* Spam honeypot (docs/aidlc/57): off-screen so humans never see or focus it; bots that fill every input trip it. */
+.hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }

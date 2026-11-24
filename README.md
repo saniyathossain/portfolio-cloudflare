@@ -2,170 +2,166 @@
 
 **Live site:** [https://saniyat.com](https://saniyat.com)
 
-Static portfolio for Mohammad Saniyat Hossain — Staff Software Engineer. Built on the Lumora design system, filled with content from the portfolio-v2 seed data, and deployed on Cloudflare Workers with Static Assets.
+Portfolio of Mohammad Saniyat Hossain — Staff Software Engineer. A static **Astro 7 + TypeScript** site in a macOS Tahoe
+"Liquid Glass" design, with a few **Preact islands**, served by a **Cloudflare Worker** that adds security headers, rate
+limits, the contact API and structured security logging. Content comes from one JSON file.
 
 ## Features
 
-- Lumora-inspired layout: intro loader, glass header, liquid hero, scroll reveals, dark stats panel, footer watermark
-- Real CV content: experience (including four Brain Station 23 roles with individual expand), skills, education, projects
-- No runtime npm dependencies — Alpine.js and Motion are vendored locally
-- Precompiled Tailwind CSS via standalone CLI (no `node_modules`)
-- SEO: static meta prebuild, Open Graph, Twitter cards, JSON-LD `Person`, sitemap, PWA manifest + service worker
-- Typography: self-hosted Inter woff2 (identical on all platforms)
-- Security: CSP, HSTS, and related headers applied by the Worker
+- Liquid-glass UI: intro loader, glass header with live clock, liquid hero, scroll reveals, press-swell controls, pill
+  label reveal, editorial tabs, experience accordion, contact modal
+- Real CV content (never invented): experience, skills, education, projects, stats — all from `portfolio.json`
+- Static, server-rendered sections (Astro), JSON-validated at build time (Zod); islands hydrate on idle (Preact, ≈ 10 KB brotli)
+- Lighthouse 97–100 mobile / 99–100 desktop, accessibility / best-practices / SEO 100 (see `docs/aidlc/57`)
+- SEO: generated `<head>`, Open Graph, Twitter cards, JSON-LD `Person`, sitemap, robots, PWA manifest + service worker
+- Self-hosted fonts and icons — no third-party requests by default; analytics is opt-in via JSON
+- **Security:** request guard, rate limits, honeypot, same-origin check, CSP with violation reporting, hardened headers,
+  header-injection-safe mail, forensic security log (details below and in `docs/aidlc/57`)
+- Shell-console error / maintenance / offline pages with a retry countdown (`src/content/errors.json`)
 
 ## Tech stack
 
 | Layer | Technology |
 |-------|------------|
-| Markup | Semantic HTML (`public/index.html`) |
-| Styles | `styles.css` (design tokens) + `tailwind.css` (utilities) |
-| Interactivity | Alpine.js 3, vanilla JS modules |
-| Hosting | Cloudflare Workers + Static Assets |
-| Build | `./build.sh` (Tailwind + fonts + images + SEO sync + SW hash) |
+| Framework | Astro 7 (static output), TypeScript 6 (strict), Zod 4 schemas |
+| Islands | Preact 11 + `@astrojs/preact`, nanostores (BackToTop, HeaderClock, HeroCards, NavOverlay, ContactModal, SkillsFlat, ExperienceAccordion, Editorial) |
+| Browser runtime | strict TypeScript in `src/client` bundled by esbuild + Preact islands in `src/islands`; no framework runtime, no `unsafe-eval` (`docs/aidlc/55`, `60`, `61`) |
+| Styles | hand-written design system `styles.css` + Tailwind v4 utilities (precompiled) |
+| Hosting | Cloudflare Workers + Static Assets (`run_worker_first`) |
+| Quality | ESLint 10 + Prettier, Vitest, puppeteer-core behaviour/parity scripts, Lighthouse 13 |
+| Runtime | Node **26.13.1** (`.nvmrc`) |
 
 ## Project structure
 
 ```
 portfolio-cloudflare/
-├── public/                    # Deploy root (served as static assets)
-│   ├── index.html             # Main page
-│   ├── _headers               # Cache rules for /assets/*
-│   ├── robots.txt
-│   ├── sitemap.xml
-│   ├── sw.js                    # Service worker (PWA)
-│   └── assets/
-│       ├── css/               # styles.css + tailwind.css
-│       ├── fonts/             # inter-latin.woff2 (self-hosted)
-│       ├── data/              # portfolio.json + manifest.webmanifest
-│       ├── js/               # data.js, boot.js, aurora.js, … + vendor/ (alpine, motion)
-│       └── img/               # profile, logos, favicon, og-image
-├── src/index.js               # Worker — security headers on every response
-├── wrangler.toml              # Cloudflare Workers config
-├── build-css.sh               # Compile Tailwind only
-├── build.sh                   # Full pre-deploy build
-├── deploy.sh                  # build + wrangler deploy
-├── tailwind.input.css         # Tailwind source
-├── tailwind.config.js
-├── scripts/                   # sync-head.js, optimize-images.js, hash-sw.js
-├── skills-lock.json           # locked design-taste skills
-├── .agents/ .codex/ .cursor/  # agent skills, impeccable hook, Cursor rules
-└── docs/aidlc/                # Design system + content mapping notes
+├── public/                     # Static files copied into dist/
+│   ├── assets/{css,js,data,fonts,img}/   # styles.css, generated JS bundles, portfolio.json, Inter, images
+│   ├── .well-known/security.txt
+│   ├── sw.js · robots.txt · sitemap.xml
+├── src/
+│   ├── index.ts                # Worker entry (thin adapter) → worker/WorkerApplication.ts pipeline
+│   ├── worker/
+│   │   ├── controllers/        # ContactController, CspReportController
+│   │   ├── security/           # requestGuard, originGuard, rateLimiter, contactPayload, headers, securityEvents
+│   │   ├── services/           # UserAgentParser, ClientHintsReader, NetworkProfileReader, ClientProfileService
+│   │   ├── bootstrap/          # container.ts (service provider)
+│   │   ├── logging/            # Laravel-style channels (stderr, stdout, kv, d1), 5W records, redaction
+│   │   └── http/               # request id, error pages, static-site responder, early hints, JSON helpers
+│   ├── content/                # ui.json, brands.json, icons.json, errors.json, logging.json, security.json
+│   ├── schemas/ · types/ · enums/   # Zod schemas + inferred DTOs
+│   ├── repositories/ · services/ · bootstrap/   # ContentRepository, PortfolioService, composition root
+│   ├── components/ · pages/ · legacy/index.html # Astro sections, pages, marker-split legacy page
+│   ├── islands/                # Preact islands (BackToTop, HeaderClock)
+│   ├── client/                 # browser runtime in TypeScript (app, motion, data, editorial, icons, effects, boot, sw) → esbuild
+│   └── lib/                    # clock, tenure, colour, text, controlCharacters, browser helpers
+├── tests/{unit,worker,parity}/ # Vitest
+├── scripts/                    # build steps + measurement tools (lh-matrix, behavior-check, dom-diff, …)
+├── docs/aidlc/                 # design history and rationale (00–58) — start at 00-overview.md
+├── migrations/ · wrangler.toml · build.sh · build-css.sh · deploy.sh
+└── CLAUDE.md                   # conventions for AI agents working in this repo
 ```
 
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) (for `npx wrangler` only — not required at runtime)
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) — installed via `npx` or globally
-- Cloudflare account with Workers enabled (for deploy)
-- macOS build tools: `sips` (built in), `cwebp` (`brew install webp`), `ImageMagick`
-  (`brew install imagemagick`) — used by `scripts/optimize-images.js` for the responsive hero
-  srcset and the favicon/icon duotone pipeline. `magick` is required for the face-centered crop
-  (`sips` has no reliable arbitrary-offset crop); without it, `optimize-images.js` regenerates the
-  hero srcset but skips favicon/icon regeneration with a warning.
-
-## Local development
-
-### 1. Build
-
-Run before deploy (and after content/CSS changes):
+## Getting started
 
 ```bash
-./build.sh
+nvm use            # Node 26.13.1
+npm ci
+npm run build      # legacy asset pipeline (Tailwind, fonts, images, head sync, minify) + astro build → dist/
+npm run dev        # astro dev
+npx wrangler dev   # run the real Worker locally (headers, API, rate limits) on :8787
 ```
 
-This runs Tailwind, vendors Inter font, optimizes images, syncs SEO meta from `portfolio.json`, and stamps the service worker cache version.
+macOS image tooling used by `scripts/optimize-images.js`: `cwebp` (`brew install webp`) and ImageMagick
+(`brew install imagemagick`).
 
-CSS only (faster during style iteration):
+### Checks
 
 ```bash
-./build-css.sh
+npm run lint && npm run typecheck && npm test
 ```
 
-On first run `build-css.sh` downloads the Tailwind standalone binary into `bin/` (gitignored).
+Parity / performance tools (run against a built `dist/` served by `node scripts/serve-static.mjs dist 8803`):
+`scripts/behavior-check.mjs`, `scripts/dom-diff.mjs`, `scripts/fouc-check.mjs`, `scripts/measure-gaps.mjs`,
+`scripts/responsive-check.mjs`, `scripts/lh-matrix.sh 3 prod=https://saniyat.com/ new=http://127.0.0.1:8803/`.
 
-### 2. Preview locally
-
-**Option A — Cloudflare Workers (recommended, matches production):**
+## Deploy
 
 ```bash
-npx wrangler dev
+./deploy.sh        # npm run build → preflight-check → wrangler deploy
 ```
 
-**Option B — Simple static server:**
-
-```bash
-python3 -m http.server 8080 --directory public
-```
-
-Then open [http://localhost:8080](http://localhost:8080) (or the port Wrangler prints).
-
-## Deploy to Cloudflare
-
-```bash
-./deploy.sh
-```
-
-Or manually: `./build.sh && npx wrangler deploy`
-
-Full runbook: [docs/aidlc/08-cloudflare-deploy.md](docs/aidlc/08-cloudflare-deploy.md)
-
-After deploy, attach the custom domain **saniyat.com** in the Cloudflare dashboard:
-
-1. Workers & Pages → your worker (`saniyat-portfolio`)
-2. Settings → Domains & Routes → Add `saniyat.com` and `www.saniyat.com`
-
-Ensure DNS for `saniyat.com` points to Cloudflare.
+Attach `saniyat.com` and `www.saniyat.com` under Workers → Settings → Domains & Routes. Runbook:
+`docs/aidlc/08-cloudflare-deploy.md`. Never deploy, push or merge without the owner's say-so (`docs/aidlc/48`).
 
 ## Editing content
 
-All page content lives in one JSON file — the single source of truth, loaded at runtime by `data.js`:
-
-```
-public/assets/data/portfolio.json
-```
-
-CV truth for that JSON is `docs/cv-modern-template.md` (do not invent employers, dates, or titles). When syncing from the legacy seed data, the source is `portfolio-v2/codes/database/seeders/data/` in the sibling docker repo.
-
-Key sections in `portfolio.json`: `site`, `profile`, `nav`, `services`, `experiences`, `companies`, `skills`, `education`, `socials`, `stats`, `sections`.
-
-Site URL constant:
-
-```js
-site: { url: "https://saniyat.com", ... }
-```
+Single source of truth: `public/assets/data/portfolio.json` (validated by `src/schemas/portfolioSchema.ts`). CV truth is
+`docs/cv-modern-template.md` — do not invent employers, dates or titles. UI labels, brand/colour tables and error copy
+live in `src/content/*.json`. After editing `site`/`profile`, run `node scripts/sync-head.js` (it owns the content between
+the `SYNC:HEAD` / `SYNC:H1` markers in `index.html`).
 
 ## Editing styles
 
 | Task | File |
 |------|------|
-| Design tokens, components, animations | `public/assets/css/styles.css` |
-| Tailwind utilities / `@apply` components | `tailwind.input.css` → run `./build-css.sh` |
-| Lumora palette reference | `docs/aidlc/01-design-system.md` |
+| Design tokens, components, motion | `public/assets/css/styles.css` (+ `critical.css` for first-paint tokens — keep `--sec-*` in sync) |
+| Tailwind utilities | `tailwind.input.css` → `./build-css.sh` (generated `tailwind.css` is gitignored) |
+| Section spacing | one rule: `--sec-gap`, `--sec-title-gap`, `--sec-head-gap`, `--sec-bleed` (doc 56) |
 
-**Rule:** no inline `style=""` in HTML.
+Rules: no inline `style=""`, light-only theme, every animation gated by `prefers-reduced-motion`, verify at 360 / 768 /
+1024 / 1440.
 
 ## Architecture
 
 ```
-Browser → Cloudflare Worker (src/index.js)
-       → Static Assets (public/)
-       → HTML + CSS + JS + images
+Browser → Cloudflare edge (DDoS, WAF, rate-limit rules, Bot Fight)
+        → Worker src/index.ts → WorkerApplication
+            1 request guard      method allowlist, URL/path sanity, scanner-probe paths   (src/worker/security)
+            2 maintenance gate   MAINTENANCE_MODE → 503 shell-console page
+            3 API                /api/contact (POST form, GET admin read), /api/csp-report
+            4 static assets      dist/ via ASSETS binding + security headers + Cache-Control + Early Hints
+        → logger (stderr / stdout / KV / D1) with 5W records and a request id on every line
 ```
 
-The Worker adds security headers (CSP, HSTS, `X-Frame-Options`, etc.) on top of static file responses. Asset caching is configured in `public/_headers`.
+## Security
+
+Summary (full design, threat model and Cloudflare dashboard checklist: `docs/aidlc/57-security-hardening-and-preact-islands.md`).
+
+| Area | Control |
+|------|---------|
+| Bots / scanners | request guard (404 for `/.env`, `wp-*`, `*.php`…), method allowlist, Turnstile, honeypot field |
+| Rate limiting | contact 3 per 10 min per IP, admin-failure lockout 5 per 15 min, CSP-report cap; Workers rate-limit binding → KV → memory (thresholds in `src/content/security.json`) |
+| XSS / injection | no visitor content is ever rendered; CSP (`object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`, reporting); input stripped of control characters; mail headers built from sanitised values |
+| CSRF | `POST /api/contact` requires same `Origin` / `Sec-Fetch-Site` |
+| Transport | HSTS preload, `upgrade-insecure-requests` (HTTPS), COOP / CORP, nosniff, Permissions-Policy |
+| Admin | `ADMIN_TOKEN` secret, `Authorization: Bearer` only, constant-time compare, lockout |
+| DDoS | absorbed by Cloudflare; enable WAF rate-limit rule + Bot Fight Mode (checklist in doc 57) |
+| Logging | structured security events (low → critical) with a full client profile (IP, ASN, location, browser, OS, device/model, client hints, TLS/JA3/JA4, bot class, ray id); high/critical go to durable KV/D1; no MAC address exists on the wire (doc 58) |
+| Disclosure | `/.well-known/security.txt` (renew `Expires` yearly) |
+
+Operations:
+
+```bash
+npx wrangler secret put ADMIN_TOKEN        # required to read submissions
+npx wrangler secret put TURNSTILE_SECRET   # turns the CAPTCHA on
+curl -H "Authorization: Bearer $ADMIN_TOKEN" https://saniyat.com/api/contact
+npx wrangler tail --format json | grep '"channel":"security"'   # live security events
+```
+
+Production checklist (bindings, secrets, dashboard rules, what is still missing): `docs/aidlc/58`.
+
+CSP no longer allows `'unsafe-eval'` (Alpine is gone, doc 61). Remaining gap: `'unsafe-inline'` for the inline bootstrap scripts and critical `<style>` — next step is hashes/nonces.
 
 ## SEO checklist
 
-Canonical and OG URLs use `https://saniyat.com`. After deploy, verify:
-
-- [https://saniyat.com/robots.txt](https://saniyat.com/robots.txt)
-- [https://saniyat.com/sitemap.xml](https://saniyat.com/sitemap.xml)
-- [https://saniyat.com/assets/data/manifest.webmanifest](https://saniyat.com/assets/data/manifest.webmanifest)
+After deploy verify `robots.txt`, `sitemap.xml`, `/assets/data/manifest.webmanifest`, `/.well-known/security.txt` on
+`https://saniyat.com`.
 
 ## Legacy
 
-An earlier dc-runtime site (`support.js` + inline styles) predated this rebuild. It is **not** in this repo (gitignored) — there is nothing here to extend or deploy.
+The earlier dc-runtime site is not in this repo (gitignored); `src/legacy/index.html` is the marker-split page the Astro
+sections are carved from (doc 53).
 
 ## License
 

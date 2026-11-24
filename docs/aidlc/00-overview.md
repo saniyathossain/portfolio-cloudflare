@@ -4,10 +4,10 @@ This project rebuilds Saniyat Hossain's portfolio using the **Lumora** design te
 content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 
 ## Stack
-- Static HTML (`public/index.html`)
-- CSS: `styles.css` + precompiled `tailwind.css`
-- JS: Alpine.js, Motion (vendored), vanilla modules (`loader.js`, `boot.js`, `data.js`, …)
-- No npm/node_modules at runtime
+- Astro 7 static output + TypeScript (strict) + Zod-validated JSON content (`src/content/*`, `portfolio.json`)
+- Preact islands (`src/islands`) + strict-TS browser modules in `src/client` bundled by esbuild; Alpine.js removed (docs 55, 60, 61)
+- CSS: `styles.css` design system + precompiled Tailwind v4
+- Cloudflare Worker (`src/index.js`, `src/worker/*`): request guard, rate limits, contact API, headers/CSP, logging (docs 38, 54, 57)
 
 ## Key paths
 | Path | Role |
@@ -19,7 +19,7 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | `wrangler.toml` | Cloudflare config |
 | `.cursor/skills/portfolio/SKILL.md` | Agent project skill |
 | `.cursor/rules/` | Architecture, design-system, content-source rules |
-| `docs/aidlc/` | Design history & rationale (00–53) |
+| `docs/aidlc/` | Design history & rationale (00–61) |
 | `legacy/` | Old dc-runtime site (archived) |
 
 ## Doc index (recent)
@@ -42,9 +42,14 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | **54** | **Engineering standards: strict TS, DTOs/enums, Laravel-style structure, DRY/SOLID, security, 5W logging, lint, PWA/compat** |
 | **55** | **Phase 4: React islands replace Alpine — plan, slice order, progress** |
 | **56** | **Liquid layer v2 (press swell, modal backdrop), tighter section rhythm, onemorethink.dev review** |
+| **57** | **Security hardening (request guard, rate limits, honeypot, origin check, header-injection fix, CSP reports, forensic security log) and Preact islands** |
+| **58** | **Client profile forensics (browser/OS/device/hints/TLS in the security log), Laravel-style services + DTOs, Cloudflare production-readiness review** |
+| **59** | **Unused-files audit: tier-1 removals, tier-2/3 plan** |
+| **60** | **Browser runtime ported to TypeScript (`src/client`, esbuild bundles, sw.ts, boot.ts); build order and stamping changes** |
+| **61** | **Phase 4 complete: Alpine removed, 8 Preact islands + delegated actions, `unsafe-eval` dropped from the CSP** |
 
 ## Conventions for new docs
-- File name `NN-kebab-title.md`, H1 `# NN — Title`; next number = **57**. (20 and 21 are each used twice and 44 is
+- File name `NN-kebab-title.md`, H1 `# NN — Title`; next number = **62**. (20 and 21 are each used twice and 44 is
   unused — historical, leave as is; don't reuse numbers.)
 - Sections: **Context** (why, what was measured) → **Decisions/Changes** (tables welcome) → **Verification** →
   open questions. Plans say so in the title (`…-plan.md`) and record status.

@@ -1,0 +1,29 @@
+---
+import { iconService, portfolio, uiConfig } from "../../bootstrap/container";
+import NavOverlay from "../../islands/NavOverlay";
+import { readClock } from "../../lib/clock";
+import { resolveNavTarget } from "../../lib/navigation";
+
+const { clock, shell } = uiConfig;
+const clockLabels = { meridiem: clock.meridiem, monthNames: clock.monthNames, dateSeparator: clock.dateSeparator };
+const items = portfolio.nav.map((item) => ({
+  label: item.label,
+  iconHtml: iconService.render(item.icon, "ui-icon"),
+  sectionId: item.id,
+  opensModal: resolveNavTarget(item).kind === "modal",
+}));
+---
+
+<NavOverlay
+  client:idle
+  ariaLabel={shell.navOverlay.ariaLabel}
+  brandName={portfolio.profile.shortName}
+  closeLabel={shell.navOverlay.closeLabel}
+  closeIconHtml={iconService.render("close", "ui-icon ui-icon--sm")}
+  items={items}
+  localTimeLabel={shell.navOverlay.localTimeLabel}
+  contactLabel={shell.navOverlay.contactLabel}
+  clockLabels={clockLabels}
+  tickMs={clock.tickMs}
+  initialTimeText={readClock(new Date(), clockLabels).timeText}
+/>

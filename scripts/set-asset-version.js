@@ -17,8 +17,8 @@ const path = require("path");
 const { computeHash, PUBLIC } = require("./lib/build-hash");
 
 const ROOT = path.join(__dirname, "..");
-const BOOT = path.join(PUBLIC, "assets/js/boot.js");
-const WORKER = path.join(ROOT, "src/index.js");
+const BOOT = path.join(ROOT, "src/client/boot.ts");
+const WORKER = path.join(ROOT, "src/worker/http/earlyHints.ts");
 
 const hash = computeHash(["index.html", "assets/js/boot.js", "assets/js/boot.min.js", "sw.js"]);
 

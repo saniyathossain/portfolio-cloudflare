@@ -915,6 +915,19 @@
     },
     "clock": {
       "ariaLabel": "Local time"
+    },
+    "editorial": {
+      "tablistLabel": "Filter articles by platform",
+      "searchPlaceholder": "Search",
+      "searchLabel": "Search articles",
+      "clearSearchLabel": "Clear search",
+      "closeSearchLabel": "Close search",
+      "tabAriaTemplate": "{label} ({count})",
+      "readTimeTemplate": "{minutes} min read",
+      "emptyTitle": "No matches",
+      "emptyHintWithQueryTemplate": "Nothing for \"{query}\" in this filter. Try another term or platform.",
+      "emptyHint": "No articles in this filter yet.",
+      "moreAriaLabel": "More writing on dev.to and Medium"
     }
   }
 }

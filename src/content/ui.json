@@ -60,9 +60,94 @@
     "statTiles": ["cyan", "teal", "green", "orange"],
     "educationRows": ["teal", "green", "indigo"]
   },
+  "heroCard": {
+    "swapMs": 240,
+    "fallbackTint": "accent",
+    "tints": {
+      "accent": { "tint": "var(--accent)", "ink": "var(--accent-bright)" },
+      "primary": { "tint": "var(--c-violet)", "ink": "var(--c-violet)" },
+      "blue": { "tint": "var(--c-blue)", "ink": "var(--c-blue)" }
+    },
+    "previousLabel": "Previous",
+    "nextLabel": "Next",
+    "previousIcon": { "name": "arrowLeft", "classes": "ui-icon" },
+    "nextIcon": { "name": "arrow", "classes": "ui-icon ui-icon--sm" },
+    "badgeIconClasses": "ui-icon ui-icon--lg"
+  },
+  "skillsFlat": {
+    "collapsedLimit": 12,
+    "mobileMaxWidthPx": 639,
+    "openMs": 420,
+    "closeMs": 300,
+    "settleMarginMs": 80,
+    "easing": "cubic-bezier(0.32, 0.72, 0, 1)",
+    "reducedMotionQuery": "(prefers-reduced-motion: reduce)",
+    "chevronIcon": { "name": "chevronDown", "classes": "ui-icon ui-icon--chevron" }
+  },
+  "experienceAccordion": {
+    "openMs": 420,
+    "closeMs": 300,
+    "settleMarginMs": 150,
+    "openEasing": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+    "closeEasing": "cubic-bezier(0.32, 0.72, 0, 1)",
+    "reducedMotionQuery": "(prefers-reduced-motion: reduce)"
+  },
   "behavior": {
     "backToTopRevealPx": 560,
     "headerScrolledPx": 12
+  },
+  "shell": {
+    "menuHandoffMs": 60,
+    "navScrollMs": 80,
+    "modalResetMs": 300,
+    "liquidWarpMs": 700,
+    "scrollOffsetPx": 12,
+    "navOverlay": {
+      "ariaLabel": "Navigation menu",
+      "closeLabel": "Close",
+      "localTimeLabel": "Local time — ",
+      "contactLabel": "Get in touch →"
+    },
+    "honeypotLabel": "Company",
+    "errorEnterMs": 330,
+    "errorLeaveMs": 170,
+    "menuButton": {
+      "openLabel": "Menu",
+      "closeLabel": "Close",
+      "openAriaLabel": "Open menu",
+      "closeAriaLabel": "Close menu"
+    },
+    "contactEndpoint": "/api/contact",
+    "turnstileScriptUrl": "https://challenges.cloudflare.com/turnstile/v0/api.js"
+  },
+  "editorial": {
+    "motionMs": {
+      "lensTravel": 440,
+      "exit": 170,
+      "enter": 480,
+      "reducedEnter": 80,
+      "countUp": 620,
+      "dockUnlock": 460
+    },
+    "tilt": { "maxDeg": 1.2, "stiffness": 0.22, "settleThreshold": 0.005 },
+    "settleMarginMs": 80,
+    "reflowTolerancePx": 2,
+    "lensTravelThresholdPx": 4,
+    "countRevealThreshold": 0.4,
+    "fallbackEase": "cubic-bezier(0.23, 0.84, 0.35, 1)",
+    "reducedMotionQuery": "(prefers-reduced-motion: reduce)",
+    "finePointerQuery": "(hover: hover) and (pointer: fine)",
+    "dateLocale": "en-GB",
+    "dateTimeSuffix": "T12:00:00",
+    "rowTints": ["blue", "teal", "purple"],
+    "fallbackExcerpt": "Notes on backend craft, APIs, and shipping reliable systems.",
+    "fallbackPlatformIcon": "medium",
+    "iconClasses": { "sm": "ui-icon ui-icon--sm", "md": "ui-icon ui-icon--md" },
+    "tabs": [
+      { "key": "all", "label": "All", "icon": null, "ci": "blue", "match": { "mode": "all", "value": "" } },
+      { "key": "dev.to", "label": "dev.to", "icon": "devto", "ci": "teal", "match": { "mode": "includes", "value": "dev" } },
+      { "key": "Medium", "label": "Medium", "icon": "medium", "ci": "purple", "match": { "mode": "equals", "value": "medium" } }
+    ]
   },
   "clock": {
     "tickMs": 1000,

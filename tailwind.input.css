@@ -15,6 +15,7 @@
 
 @source "./src/legacy/index.html";
 @source "./src/components/**/*.astro";
+@source "./src/islands/**/*.tsx";
 @source "./public/assets/js/*.js";
 @source not "./public/assets/js/*.min.js";
 
