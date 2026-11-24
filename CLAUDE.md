@@ -11,8 +11,8 @@ system **SF Pro** fonts. No runtime build step.
   `public/assets/css/` (`styles.css` = the design system, `tailwind.css` = precompiled utilities).
 - `src/index.js` — Cloudflare Worker: serves `public/`, sets security headers + **CSP**, early-hint preloads.
 - `scripts/` — `sync-head.js` (generates `<head>` + h1 from data), `optimize-images.js`, `hash-sw.js`.
-- `docs/aidlc/` — **design history & rationale** (00–52; index in `00-overview.md`). Read these before large design changes; add
-  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **53**).
+- `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
+  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **54**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it
@@ -26,7 +26,8 @@ system **SF Pro** fonts. No runtime build step.
   `--ease-glass`, glass primitives (`.glass-panel`/`.glass-card`), shiny icon tiles (`.icon-chip`,
   `.service-row__icon`), `.brand-pill`, `.beam`/`.sheen`/`.spec` effects.
 - **Git (HARD RULE, `docs/aidlc/48` rule 4):** no `Co-Authored-By: Claude`/AI trailer or "Generated with" footer in
-  commits or PRs; never push, merge or deploy unless the owner says so in that turn; stage files by name.
+  commits or PRs; never commit without the owner's explicit go-ahead; never push, merge or deploy unless the owner
+  says so in that turn; stage files by name.
 - **Non-negotiables:** keep Google **PageSpeed**/**SEO**/**CSP** intact, **no new network requests** (fonts/icons
   are local), light-only theme, every animation gated by `prefers-reduced-motion`, responsive rem/vw grid verified
   at 360 / 768 / 1024 / 1440. Deploy via `./deploy.sh` (Wrangler).

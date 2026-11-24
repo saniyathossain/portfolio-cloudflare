@@ -19,7 +19,7 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | `wrangler.toml` | Cloudflare config |
 | `.cursor/skills/portfolio/SKILL.md` | Agent project skill |
 | `.cursor/rules/` | Architecture, design-system, content-source rules |
-| `docs/aidlc/` | Design history & rationale (00–52) |
+| `docs/aidlc/` | Design history & rationale (00–53) |
 | `legacy/` | Old dc-runtime site (archived) |
 
 ## Doc index (recent)
@@ -38,11 +38,13 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | 50 | PageSpeed both ends, responsive, motion polish (plan; Alpine-specific parts superseded by 52 if migration proceeds) |
 | **51** | **CV v9 sync, stack-focused copy (no years/figures), icon-only pills, local dev on :8787** |
 | **52** | **Stack direction: package.json + TS now → Astro + React islands + shadcn (plan, free-tier fit)** |
+| **53** | **Astro + TS + React islands port plan: exact parity, GA section tracking, sections registry, JSON vs SQLite verdict** |
 
 ## Conventions for new docs
-- File name `NN-kebab-title.md`, H1 `# NN — Title`; next number = **53**. (20 and 21 are each used twice and 44 is
+- File name `NN-kebab-title.md`, H1 `# NN — Title`; next number = **54**. (20 and 21 are each used twice and 44 is
   unused — historical, leave as is; don't reuse numbers.)
 - Sections: **Context** (why, what was measured) → **Decisions/Changes** (tables welcome) → **Verification** →
   open questions. Plans say so in the title (`…-plan.md`) and record status.
-- **Hard rule (doc 48 rule 4):** no AI co-author trailer in commits/PRs; agents never push/merge/deploy unasked.
+- **Hard rule (doc 48 rule 4):** no AI co-author trailer in commits/PRs; agents never commit without the owner's
+  go-ahead and never push/merge/deploy unasked.
 - Never fabricate CV content; cite file paths (`file:line`) for code claims.

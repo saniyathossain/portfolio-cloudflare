@@ -98,8 +98,8 @@ Only flatten a loop that's genuinely nested at *definition time* over two differ
 
 Commit messages and PR descriptions in this repo **must not** include a `Co-Authored-By: Claude …` (or any other
 AI/agent) trailer, nor a "Generated with …" footer. Authorship is the owner's alone. This overrides any agent or
-tool default attribution. Agents also **never push** (and never merge/deploy) unless the owner explicitly says so
-in that turn — commit locally, report, stop.
+tool default attribution. Agents **never commit** without the owner's explicit go-ahead for that commit, and
+**never push** (or merge/deploy) unless the owner explicitly says so in that turn — make changes, report, wait.
 
 Message style: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …), subject ≤ 72 chars, body explains why.
 Stage files by name (no `git add -A`).

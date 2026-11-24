@@ -26,7 +26,11 @@ bin/
 # Generated image build cache (idempotency guard)
 scripts/.img-cache.json
 
-# ── Cloudflare / secrets ───────────────────────────────────────────────────────────
+# Parity baselines (docs/aidlc/53): regenerable binaries/reports stay local; README + capture script are committed
+docs/aidlc/assets/*/shots/
+docs/aidlc/assets/*/lighthouse/
+
+# ── Cloudflare / secrets───────────────────────────────────────────────────────────
 .wrangler/
 .dev.vars
 .dev.vars.*
