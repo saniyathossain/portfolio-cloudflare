@@ -1,0 +1,42 @@
+/* Component classes + v3 preflight behaviours v4 dropped. Imported by tailwind.input.css (see parity rules there). */
+*,
+::after,
+::before,
+::backdrop,
+::file-selector-button {
+  border-color: #e5e7eb;
+}
+
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
+.shell {
+  @apply mx-auto w-full max-w-shell px-5 sm:px-8;
+}
+.pill-btn {
+  @apply inline-flex items-center gap-3 rounded-full text-sm font-medium transition-transform duration-300;
+}
+.pill-btn-dark {
+  @apply bg-ink text-white py-1.5 pl-6 pr-1.5;
+}
+/* Not `@apply border`: v4's `border` also sets border-style:solid, which beats styles.css's
+   `button { border: none }` and adds a 2px ring v3 never rendered (v3 left style to preflight's `*`). */
+.pill-btn-outline {
+  border-width: 1px;
+  border-color: var(--color-line);
+  @apply bg-transparent text-ink py-3.5 px-7;
+}
+.glass-header {
+  @apply rounded-full border border-white/60 bg-white/55 backdrop-blur-2xl shadow-lg;
+}
+.eyebrow {
+  @apply inline-flex items-center gap-2 text-sm font-medium text-ink/70;
+}
+.eyebrow-dot {
+  @apply h-1.5 w-1.5 rounded-full bg-ink/50;
+}
+.tag-chip {
+  @apply inline-flex rounded-full border border-white/25 px-4 py-2 text-sm text-white;
+}

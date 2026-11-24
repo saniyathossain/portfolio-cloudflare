@@ -117,6 +117,15 @@ Key facts from exploration:
 - Config stays opt-in: `site.analytics.googleId` empty ⇒ no tags, no requests (non-negotiable preserved).
 - `src/lib/analytics.ts`: loads gtag only when id set (after idle), `track(event, params)` no-op otherwise;
   respects reduced data/DNT optional.
+- **Non-blocking + fully configurable (owner requirement, 2026-11-24).** Any third-party dependency (GA,
+  Cloudflare Insights, Turnstile…) must:
+  - be configured entirely in JSON (`site.analytics`: `googleId`, `scriptUrl`, `loadTimeoutMs`, `loadOn`
+    (`idle`|`interaction`), `cloudflareToken`, `beaconUrl`, sample rate/flags) — no hard-coded URL or timeout in code;
+  - never block render: injected dynamically after `load`/idle, `async`, never in `<head>` blocking path, never
+    awaited by any UI code;
+  - fail silent: load timeout (`loadTimeoutMs`), `onerror`, adblock or CSP block → swallow, `track()` stays a no-op,
+    no console errors, no retry storm, nothing in the UI depends on it;
+  - when not configured (empty id): **no script, no request, no listeners** (not just a disabled call).
 - **Section views**: one IntersectionObserver over `[data-track-section]` (from registry `track: true`), fires
   `section_view {section_id, section_label, section_index}` once per page view when ≥50% visible ≥1s; plus
   `section_engaged_time` on leave (optional).

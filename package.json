@@ -1,0 +1,26 @@
+{
+  "name": "portfolio-cloudflare",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Portfolio of Mohammad Saniyat Hossain — Astro build served by a Cloudflare Worker",
+  "scripts": {
+    "dev": "astro dev",
+    "build:legacy": "bash build.sh",
+    "build": "npm run build:legacy && astro build",
+    "preview": "wrangler dev --port 8787 --ip 127.0.0.1",
+    "check": "astro check",
+    "deploy": "bash deploy.sh"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.5",
+    "astro": "7.4.13",
+    "esbuild": "0.28.2",
+    "tailwindcss": "4.3.5",
+    "typescript": "7.0.2",
+    "wrangler": "4.167.0"
+  },
+  "engines": {
+    "node": ">=26.13.1"
+  }
+}

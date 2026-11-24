@@ -12,7 +12,7 @@ system **SF Pro** fonts. No runtime build step.
 - `src/index.js` — Cloudflare Worker: serves `public/`, sets security headers + **CSP**, early-hint preloads.
 - `scripts/` — `sync-head.js` (generates `<head>` + h1 from data), `optimize-images.js`, `hash-sw.js`.
 - `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
-  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **54**).
+  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **55**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it
@@ -21,13 +21,17 @@ system **SF Pro** fonts. No runtime build step.
   hand-edit inside the `<!-- SYNC:HEAD -->` / `<!-- SYNC:H1 -->` markers in `index.html`.
 - **No inline `style=""`** in HTML — use Alpine `:style` / `x-bind` or JS `el.style` only.
 - **CSS:** prefer custom classes + design tokens in `styles.css`. Only run `./build-css.sh` if you add new
-  **Tailwind utility** classes to the HTML (regenerates `tailwind.css`; downloads the standalone CLI to `bin/`).
+  **Tailwind utility** classes to the HTML (regenerates the gitignored `tailwind.css` with the pinned npm Tailwind v4 CLI;
+  see `tailwind.input.css` for the v3-parity rules). Generated `*.min.js`/`*.min.css`/`tailwind.css` are gitignored.
 - **Design tokens:** `--tint`/`--tint-deep` (per-section + `[data-ci]` hue map), `--text-sh*` shadows,
   `--ease-glass`, glass primitives (`.glass-panel`/`.glass-card`), shiny icon tiles (`.icon-chip`,
   `.service-row__icon`), `.brand-pill`, `.beam`/`.sheen`/`.spec` effects.
 - **Git (HARD RULE, `docs/aidlc/48` rule 4):** no `Co-Authored-By: Claude`/AI trailer or "Generated with" footer in
   commits or PRs; never commit without the owner's explicit go-ahead; never push, merge or deploy unless the owner
   says so in that turn; stage files by name.
+- **Engineering standards (doc 54):** strict TS + DTOs/enums/Zod, Laravel-style `src/` layers, DRY/SOLID, meaningful
+  names (no single-letter identifiers), 5W logging + Artisan-style script output, ESLint/Prettier, least-privilege
+  security, PWA/browser compat — never at the cost of performance or UX. Node = `.nvmrc` (26.13.1 LTS).
 - **Non-negotiables:** keep Google **PageSpeed**/**SEO**/**CSP** intact, **no new network requests** (fonts/icons
   are local), light-only theme, every animation gated by `prefers-reduced-motion`, responsive rem/vw grid verified
   at 360 / 768 / 1024 / 1440. Deploy via `./deploy.sh` (Wrangler).

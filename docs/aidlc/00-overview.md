@@ -39,9 +39,10 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | **51** | **CV v9 sync, stack-focused copy (no years/figures), icon-only pills, local dev on :8787** |
 | **52** | **Stack direction: package.json + TS now → Astro + React islands + shadcn (plan, free-tier fit)** |
 | **53** | **Astro + TS + React islands port plan: exact parity, GA section tracking, sections registry, JSON vs SQLite verdict** |
+| **54** | **Engineering standards: strict TS, DTOs/enums, Laravel-style structure, DRY/SOLID, security, 5W logging, lint, PWA/compat** |
 
 ## Conventions for new docs
-- File name `NN-kebab-title.md`, H1 `# NN — Title`; next number = **54**. (20 and 21 are each used twice and 44 is
+- File name `NN-kebab-title.md`, H1 `# NN — Title`; next number = **55**. (20 and 21 are each used twice and 44 is
   unused — historical, leave as is; don't reuse numbers.)
 - Sections: **Context** (why, what was measured) → **Decisions/Changes** (tables welcome) → **Verification** →
   open questions. Plans say so in the title (`…-plan.md`) and record status.

@@ -1,30 +1,55 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4 build input (docs/aidlc/53 follow-up).
+ *
+ * Parity rules (the page must stay pixel-identical to the v3 build):
+ *  - NO cascade layers. v3 emitted plain rules that tied with styles.css by source order; v4's default
+ *    `@layer` output would make every unlayered styles.css rule beat every Tailwind rule regardless of
+ *    specificity. Plain imports keep the v3 cascade.
+ *  - Order is preflight → components → utilities, like v3's base → components → utilities.
+ *  - `source(none)` + explicit @source: detect classes only in the files that carry them (v3 scanned all
+ *    of public/, dragging vendor/min JS tokens in as junk utilities).
+ */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/preflight.css";
+@import "./tailwind.components.css";
+@import "tailwindcss/utilities.css" source(none);
 
-@layer components {
-  .shell {
-    @apply mx-auto w-full max-w-shell px-5 sm:px-8;
-  }
-  .pill-btn {
-    @apply inline-flex items-center gap-3 rounded-full text-sm font-medium transition-transform duration-300;
-  }
-  .pill-btn-dark {
-    @apply bg-ink text-white py-1.5 pl-6 pr-1.5;
-  }
-  .pill-btn-outline {
-    @apply border border-line bg-transparent text-ink py-3.5 px-7;
-  }
-  .glass-header {
-    @apply rounded-full border border-white/60 bg-white/55 backdrop-blur-2xl shadow-lg;
-  }
-  .eyebrow {
-    @apply inline-flex items-center gap-2 text-sm font-medium text-ink/70;
-  }
-  .eyebrow-dot {
-    @apply h-1.5 w-1.5 rounded-full bg-ink/50;
-  }
-  .tag-chip {
-    @apply inline-flex rounded-full border border-white/25 px-4 py-2 text-sm text-white;
-  }
+@source "./src/legacy/index.html";
+@source "./public/assets/js/*.js";
+@source not "./public/assets/js/*.min.js";
+
+/* Tokens mirror the old tailwind.config.js 1:1. */
+@theme {
+  --color-ink: #0a0a0a;
+  --color-muted: #8d8d8d;
+  --color-subtle: #b6b6b6;
+  --color-line: #e6e5e2;
+  --color-surface: #f1f0ee;
+  --color-surface2: #e3e2df;
+  --color-accent: #b15f2c;
+  --color-accent-bright: #cf8047;
+  --color-accent-dark: #97501f;
+  --color-hero-from: #ecebe9;
+  --color-hero-to: #c9c9c9;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  --container-shell: 88rem;
+
+  --radius-card: 2rem;
+  --radius-card-sm: 1.25rem;
+  --radius-control: 0.875rem;
+
+  /* v3 used fixed rem line-heights; v4's default is a unitless ratio that rescales with inherited font-size. */
+  --text-xs--line-height: 1rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl--line-height: 1;
+  --text-6xl--line-height: 1;
 }

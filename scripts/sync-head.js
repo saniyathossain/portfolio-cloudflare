@@ -5,7 +5,7 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const JSON_PATH = path.join(ROOT, "public/assets/data/portfolio.json");
-const HTML_PATH = path.join(ROOT, "public/index.html");
+const HTML_PATH = path.join(ROOT, "src/legacy/index.html");
 const BOOT_PATH = path.join(ROOT, "public/assets/js/boot.js");
 // Read the version set-asset-version.js already stamped into boot.js (build.sh runs that script
 // first) rather than recomputing an independent hash here. Two independent computeHash() calls with

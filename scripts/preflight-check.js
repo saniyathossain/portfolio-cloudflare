@@ -12,7 +12,7 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
-const html = fs.readFileSync(path.join(ROOT, "public/index.html"), "utf8");
+const html = fs.readFileSync(path.join(ROOT, "src/legacy/index.html"), "utf8");
 let failed = false;
 
 function fail(msg) {
