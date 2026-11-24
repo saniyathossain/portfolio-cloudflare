@@ -1,36 +1,58 @@
-# OS
+# ── OS ──────────────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
-# Editor / IDE (local only)
+# ── Editor / IDE (local only) ───────────────────────────────────────────────────────
 .vscode/
+.idea/
 *.swp
 *~
 
-# Cursor — commit .cursor/rules/ and .cursor/skills/portfolio/; ignore local/debug tooling
+# ── Node / package tooling (docs/aidlc/52 — package.json + Astro) ──────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+coverage/
+
+# ── Build output ───────────────────────────────────────────────────────────────────
+# Astro (planned): generated site + type cache. public/ stays committed (current deploy root).
+dist/
+.astro/
+# Tailwind standalone CLI (downloaded by build-css.sh)
+bin/
+# Generated image build cache (idempotency guard)
+scripts/.img-cache.json
+
+# ── Cloudflare / secrets ───────────────────────────────────────────────────────────
+.wrangler/
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+!.dev.vars.example
+
+# ── Agent tooling ──────────────────────────────────────────────────────────────────
+# Committed: skills-lock.json, .agents/skills/impeccable/ (vendored, unlocked — powers .codex hook),
+#            .claude/launch.json, .cursor/rules/, .cursor/skills/portfolio/, .codex/hooks.json,
+#            .impeccable/config.json
+# Ignored:   third-party skills (restore: `npx skills experimental_install` from skills-lock.json),
+#            their .claude/skills symlinks, per-machine state, logs and vendor duplicates.
+.agents/skills/*
+!.agents/skills/impeccable/
+.claude/skills/
+*.local.json
+.claude/settings.local.json
+.claude/worktrees/
 .cursor/debug-*.log
 .cursor/hooks.json
 .cursor/skills/impeccable/
 .cursor/work/
-
-# Local preview / tooling
-node_modules/
-.wrangler/
-.dev.vars
-.env
-.env.*
-
-# Tailwind standalone CLI (download via build-css.sh)
-bin/
-
-# Legacy dc-runtime site
-legacy/
-
-# Skills tooling — .agents/skills + skills-lock.json are committed; ignore per-machine state
-.impeccable/config.local.json
 .impeccable/hook.cache.json
 .impeccable/hook.pending.json
-*.local.json
 
-# generated image build cache (idempotency guard)
-scripts/.img-cache.json
+# ── Legacy dc-runtime site (archived, local only) ───────────────────────────────────
+legacy/
