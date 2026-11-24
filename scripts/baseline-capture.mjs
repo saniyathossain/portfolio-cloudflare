@@ -1,7 +1,4 @@
-import { createRequire } from 'node:module';
-import { execSync } from 'node:child_process';
-const require = createRequire(`${execSync('npm root -g').toString().trim()}/lighthouse/`);
-const puppeteer = require('puppeteer-core');
+import puppeteer from 'puppeteer-core';
 const BASE = process.env.BASE;
 const OUT = process.env.OUT;
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';

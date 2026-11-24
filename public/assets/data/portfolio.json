@@ -101,6 +101,34 @@
     "editorial": "Backend engineering notes — full archive on dev.to and Medium.",
     "education": "Electronics & Telecommunication Engineering — Dhaka."
   },
+  "sectionHeadings": {
+    "services": {
+      "heading": "What I build",
+      "icon": "layers"
+    },
+    "experience": {
+      "heading": "Where I've shipped",
+      "icon": "experience"
+    },
+    "skills": {
+      "heading": "Tools & craft",
+      "icon": "code"
+    },
+    "editorial": {
+      "heading": "Editorial",
+      "icon": "editorial"
+    },
+    "stats": {
+      "heading": "Proof in the work, not the words."
+    },
+    "education": {
+      "heading": "Foundations",
+      "icon": "education"
+    },
+    "contact": {
+      "heading": "Have a project in mind? Let's get to work."
+    }
+  },
   "editorialOutbound": {
     "eyebrow": "More writing",
     "hint": "Selected notes here — explore the full archive on",

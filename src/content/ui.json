@@ -51,5 +51,10 @@
     "taupeMix": 0.1,
     "violetMix": 0.04
   },
-  "brandIconBasePath": "/assets/img/brands"
+  "brandIconBasePath": "/assets/img/brands",
+  "fallbackIconName": "code",
+  "accents": {
+    "serviceRows": ["blue", "teal", "purple", "orange"],
+    "experienceRoles": ["blue", "purple", "teal", "orange", "cyan", "pink", "indigo", "green"]
+  }
 }

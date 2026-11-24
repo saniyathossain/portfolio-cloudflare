@@ -44,6 +44,11 @@ export const uiSchema = z.strictObject({
     [EmploymentType.Contract]: employmentViewSchema,
   }),
   derivedStats: z.strictObject({ yearsOfExperienceIcon: nonEmptyString, companyCountIcon: nonEmptyString }),
+  fallbackIconName: nonEmptyString,
+  accents: z.strictObject({
+    serviceRows: z.array(nonEmptyString).min(1),
+    experienceRoles: z.array(nonEmptyString).min(1),
+  }),
   brandIconBasePath: z.string().regex(/^\/assets\//),
   partnerFallbackColor: hexColor,
   brandTint: brandTintSchema,

@@ -64,6 +64,8 @@ const sectionCopySchema = z.strictObject({
   education: nonEmptyString,
 });
 
+const sectionHeadingSchema = z.strictObject({ heading: nonEmptyString, icon: nonEmptyString.optional() });
+
 const outboundLinkSchema = z.strictObject({
   label: nonEmptyString,
   href: urlString,
@@ -174,6 +176,15 @@ const manifestSchema = z.strictObject({
 export const portfolioShapeSchema = z.strictObject({
   site: siteSchema,
   sections: sectionCopySchema,
+  sectionHeadings: z.strictObject({
+    services: sectionHeadingSchema,
+    experience: sectionHeadingSchema,
+    skills: sectionHeadingSchema,
+    editorial: sectionHeadingSchema,
+    stats: sectionHeadingSchema,
+    education: sectionHeadingSchema,
+    contact: sectionHeadingSchema,
+  }),
   editorialOutbound: z.strictObject({
     eyebrow: nonEmptyString,
     hint: nonEmptyString,

@@ -1,0 +1,15 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { iconService } from "../../bootstrap/container";
+
+interface Props extends HTMLAttributes<"span"> {
+  /** Icon name from icons.json (an alias, a Lucide id or a social id). */
+  name: string;
+  /** Class list for the <svg> itself, e.g. "ui-icon ui-icon--md". */
+  svgClass?: string;
+}
+
+const { name, svgClass = "ui-icon", ...wrapperAttributes } = Astro.props;
+---
+
+<span aria-hidden="true" {...wrapperAttributes} set:html={iconService.render(name, svgClass)} />
