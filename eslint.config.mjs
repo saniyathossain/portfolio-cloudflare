@@ -37,6 +37,7 @@ export default tseslint.config(
         { selector: "typeProperty", format: null },
       ],
       "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
       "@typescript-eslint/no-explicit-any": "error",
       "no-nested-ternary": "error",
       "max-depth": ["error", 3],
@@ -46,12 +47,13 @@ export default tseslint.config(
       "prefer-template": "error",
       curly: ["error", "multi-line"],
       eqeqeq: "error",
+      "@typescript-eslint/dot-notation": ["error", { allowIndexSignaturePropertyAccess: true }],
     },
   },
   {
     // JSX returned from .map() in .astro frontmatter/templates is typed by `astro check`, not by ESLint's program.
     files: ["**/*.astro"],
-    rules: { "@typescript-eslint/no-unsafe-return": "off" },
+    rules: { "@typescript-eslint/no-unsafe-return": "off", "@typescript-eslint/no-unsafe-assignment": "off" },
   },
   { files: ["**/*.mjs", "**/*.config.*"], extends: [tseslint.configs.disableTypeChecked] },
 );

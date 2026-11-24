@@ -31,6 +31,10 @@ system **SF Pro** fonts. No runtime build step.
   says so in that turn; stage files by name.
 - **Data in JSON, logic in code (doc 54 §1a):** content, labels, vocabularies, brand/colour tables, thresholds, fallback
   values live in `portfolio.json` / `src/content/*.json` (Zod-validated), never as literals in `src/`.
+- **Error / outage pages:** all failures (404, 500, 502, 503 maintenance, offline) render the shell-console page from
+  `src/content/errors.json` via `src/components/ErrorTerminal.astro`; add a failure mode by adding a JSON entry.
+- **Logging:** Worker logs go through `src/worker/logging` (channels in `src/content/logging.json`, `LOG_CHANNEL`
+  override); never `console.*` directly, never expose exception details on a page.
 - **Engineering standards (doc 54):** strict TS + DTOs/enums/Zod, Laravel-style `src/` layers, DRY/SOLID, meaningful
   names (no single-letter identifiers), 5W logging + Artisan-style script output, ESLint/Prettier, least-privilege
   security, PWA/browser compat — never at the cost of performance or UX. Node = `.nvmrc` (26.13.1 LTS).

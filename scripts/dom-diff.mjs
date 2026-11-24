@@ -7,10 +7,18 @@ const browser = await puppeteer.launch({ executablePath: '/Applications/Google C
 async function normalized(url) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 900 });
-  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  if (!process.env.ALLOW_MOTION) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   await page.goto(url, { waitUntil: 'networkidle0' });
   await page.waitForSelector('html.is-ready', { timeout: 15000 }).catch(() => {});
   await sleep(4000);
+  for (const clickSelector of (process.env.CLICK || '').split('|').filter(Boolean)) {
+    const target = await page.$(clickSelector);
+    if (!target) throw new Error(`CLICK target not found: ${clickSelector}`);
+    await target.evaluate((element) => element.scrollIntoView({ block: 'center' }));
+    await sleep(500);
+    await target.click();
+    await sleep(1800);
+  }
   const html = await page.evaluate((selector) => {
     const root = document.querySelector(selector);
     if (!root) return `MISSING ${selector}`;
@@ -20,7 +28,7 @@ async function normalized(url) {
     for (const el of [clone, ...clone.querySelectorAll('*')]) {
       for (const attr of [...el.attributes]) {
         const name = attr.name;
-        if (name.startsWith('x-') || name.startsWith(':') || name.startsWith('@') || name === 'style') el.removeAttribute(name);
+        if (name.startsWith('x-') || name.startsWith(':') || name.startsWith('@') || name === 'style' || name.startsWith('data-tenure') || name === 'data-copyright-template') el.removeAttribute(name);
       }
       if (el.classList.length) {
         const kept = [...el.classList].filter((c) => !volatileClass.test(c));

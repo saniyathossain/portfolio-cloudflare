@@ -7,7 +7,9 @@ import { PortfolioService } from "../services/PortfolioService";
 const contentRepository = new JsonContentRepository();
 const ui = contentRepository.ui();
 
-export const portfolio = new PortfolioService(contentRepository).build();
+export const portfolioService = new PortfolioService(contentRepository);
+export const portfolio = portfolioService.build();
 export const iconService = new IconService(contentRepository.icons(), ui.fallbackIconName);
 export const brandResolver = new BrandResolver(contentRepository.brands(), ui);
 export const uiConfig = ui;
+export const errorCatalog = contentRepository.errors();

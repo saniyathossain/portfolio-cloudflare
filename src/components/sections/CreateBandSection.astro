@@ -1,0 +1,32 @@
+---
+import { portfolio } from "../../bootstrap/container";
+import Icon from "../ui/Icon.astro";
+
+const { createBand, copy } = portfolio;
+---
+
+<section class="sec pb-10" aria-label={copy.createBand.ariaLabel}>
+  <ul class="shell create-band create-band--flow" data-stagger data-stagger-step="120" data-stagger-base="0">
+    {createBand.map((tile) =>
+      tile.isDecorative ? (
+        <li
+          class={`create-band__tile create-band__tile--${tile.variant} beam spec`}
+          aria-hidden="true"
+          data-parallax={tile.parallax}
+        >
+          <Icon name={tile.icon} svgClass="ui-icon create-band__arrow-ico" />
+        </li>
+      ) : (
+        <li class={`create-band__tile create-band__tile--${tile.variant} beam spec`} data-parallax={tile.parallax}>
+          <span
+            class:list={["icon-chip icon-chip--md", { "icon-chip--on-dark": tile.isChipOnDark }, "create-band__icon"]}
+            aria-hidden="true"
+          >
+            <Icon name={tile.icon} svgClass="ui-icon" />
+          </span>
+          {tile.text}
+        </li>
+      ),
+    )}
+  </ul>
+</section>

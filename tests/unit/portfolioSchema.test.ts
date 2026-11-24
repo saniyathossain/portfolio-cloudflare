@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import rawPortfolio from "../../public/assets/data/portfolio.json";
 import rawBrands from "../../src/content/brands.json";
+import rawErrors from "../../src/content/errors.json";
 import rawIcons from "../../src/content/icons.json";
 import rawUi from "../../src/content/ui.json";
 import { JsonContentRepository } from "../../src/repositories/ContentRepository";
@@ -11,7 +12,7 @@ const uiConfig = uiSchema.parse(rawUi);
 const portfolioSchema = createPortfolioSchema(uiConfig);
 
 function repositoryWith(portfolio: unknown): JsonContentRepository {
-  return new JsonContentRepository({ portfolio, brands: rawBrands, icons: rawIcons, ui: rawUi });
+  return new JsonContentRepository({ portfolio, brands: rawBrands, icons: rawIcons, errors: rawErrors, ui: rawUi });
 }
 
 describe("portfolio content schema", () => {

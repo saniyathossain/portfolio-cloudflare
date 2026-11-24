@@ -105,8 +105,10 @@ tests/             # unit (services, schemas, lib) + e2e smoke (Playwright, late
 | Where | `location` (route / file / section id) | `POST /api/contact` |
 | Why | `reason` / `context` (cause, input summary, outcome) | `turnstile_ok, kv_stored` |
 
-- **Worker:** one JSON line per record via `console.log` (picked up by Workers Logs), same 5W keys; a `Logger`
-  interface with `ConsoleJsonLogger`; request id propagated. Never log secrets, tokens, emails or message bodies.
+- **Worker:** implemented in `src/worker/logging/` — a `Logger` writing 5W JSON records to Laravel-style channels
+  (`stdout`, `stderr`, `kv`, `database`/D1, `stack`, `silent`) configured in `src/content/logging.json`, overridable with
+  `LOG_CHANNEL`/`LOG_LEVEL`; the request id ties a log line to the reference id on the visitor's error page. Secrets are
+  redacted by key, strings truncated; exception details and stacks live only in the log, never on the page.
 - **Build scripts (`scripts/`)** print like an Artisan/console app, from one shared `scripts/lib/console.ts`:
   ```
    INFO  Building Astro site …                      [3/7]
@@ -118,6 +120,12 @@ tests/             # unit (services, schemas, lib) + e2e smoke (Playwright, late
   `ERROR`, a one-line summary at the end. `--json` flag emits the 5W JSON for CI.
 - **Browser:** logger is a no-op in production unless `site.logging.level` in JSON says otherwise; **never
   transmitted** (no new requests); errors in optional third parties are swallowed and counted, not thrown (doc 53 §4).
+
+### Outage / error pages
+Every failure path ends in a shell-console page (`ErrorTerminal.astro`, content in `src/content/errors.json`) that uses
+the same 5W fields as the logs — so what the visitor sees and what the log line says are the same record. The pages are
+self-contained (no external CSS/JS), never depend on the data layer being healthy, and the Worker falls back to a
+one-line plain-text body rather than throwing if even they cannot be fetched.
 
 ## 7. Lint, format, structure checks
 - **ESLint (flat config) + `typescript-eslint` strict-type-checked + `eslint-plugin-astro` + `eslint-plugin-react-hooks`**,

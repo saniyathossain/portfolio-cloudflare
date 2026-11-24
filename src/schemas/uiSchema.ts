@@ -48,6 +48,9 @@ export const uiSchema = z.strictObject({
   accents: z.strictObject({
     serviceRows: z.array(nonEmptyString).min(1),
     experienceRoles: z.array(nonEmptyString).min(1),
+    skillGroups: z.array(nonEmptyString).min(1),
+    statTiles: z.array(nonEmptyString).min(1),
+    educationRows: z.array(nonEmptyString).min(1),
   }),
   brandIconBasePath: z.string().regex(/^\/assets\//),
   partnerFallbackColor: hexColor,

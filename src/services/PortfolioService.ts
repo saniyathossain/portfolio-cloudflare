@@ -1,5 +1,5 @@
 import { fillTemplate, highlightTerms } from "../lib/text";
-import { wholeYearsSince } from "../lib/tenure";
+import { tenureOfPeriod, wholeYearsSince } from "../lib/tenure";
 import type { ContentRepository } from "../repositories/ContentRepository";
 import type { ExperienceGroup } from "../types/ExperienceGroup";
 import type { Portfolio, Stat } from "../types/Portfolio";
@@ -92,6 +92,11 @@ export class PortfolioService {
       phoneHref: portfolio.profile.phone.replace(/[^\d+]/g, ""),
       heroRating: portfolio.profile.heroRatingTail,
     };
+  }
+
+  /** Build-time tenure label for one period; a small client script refreshes "Present" ones (see liveDates). */
+  tenureLabelOf(period: string): string {
+    return tenureOfPeriod(period, this.clock()).label;
   }
 
   /** Wraps the configured stack terms of an experience detail line in highlight markup. */

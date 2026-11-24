@@ -1,0 +1,33 @@
+---
+import { portfolio } from "../../bootstrap/container";
+
+const { partners, copy } = portfolio;
+---
+
+<div class="hero-partners" data-reveal data-delay="550">
+  <p class="hero-partners__label">{copy.partners.label}</p>
+  <div class="hero-partners__list" data-stagger>
+    {partners.map((partner) => (
+      <a
+        class="partner-orb"
+        tabindex="0"
+        href={partner.website}
+        target={partner.website ? "_blank" : undefined}
+        rel={partner.website ? "noopener noreferrer" : undefined}
+        aria-label={partner.website ? `Visit ${partner.name} website` : partner.name}
+        style={`--brand:${partner.color}`}
+      >
+        <span class="partner-orb__badge">
+          {partner.logo ? (
+            <img src={partner.logo} alt="" width="16" height="16" loading="lazy" />
+          ) : (
+            <span class="partner-orb__mono">{partner.name.charAt(0)}</span>
+          )}
+        </span>
+        <span class="partner-orb__tip" role="tooltip">
+          <span class="tooltip-shine">{partner.name}</span>
+        </span>
+      </a>
+    ))}
+  </div>
+</div>

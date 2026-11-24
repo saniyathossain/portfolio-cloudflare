@@ -1,6 +1,7 @@
 /** Portfolio service worker — cache-first assets, network-first shell */
-const CACHE_VERSION = "a4b3fe6002db";
-const SHELL_URLS = ["/", "/index.html"];
+const CACHE_VERSION = "be7523eb56d5";
+const OFFLINE_PAGE_URL = "/errors/offline/";
+const SHELL_URLS = ["/", "/index.html", OFFLINE_PAGE_URL];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -44,8 +45,34 @@ async function networkFirst(request) {
     // Nothing cached yet (e.g. the very first load happens offline, or this fetch raced a SW
     // activate() that just wiped old caches on a fresh CACHE_VERSION) — a fetch handler must never
     // resolve to undefined; Chrome renders that as "This site can't be reached" with no page to
-    // even retry from. An explicit response at least renders as a real, reloadable page.
+    // even retry from. Serve the shell-console offline page (precached on install) so there is a
+    // real, reloadable page; plain text is the last resort if even that was never cached.
+    const offlinePage = await caches.match(OFFLINE_PAGE_URL);
+    if (offlinePage) return offlinePage;
     return new Response("Offline and nothing cached yet — reconnect and reload.", {
+      status: 503,
+      statusText: "Service Unavailable",
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+}
+
+// Any other page navigation (a deep link, a typo): network first, then a previously visited copy, then the
+// shell-console offline page — never the browser's generic "can't be reached" screen.
+async function navigationWithOfflinePage(request) {
+  try {
+    const res = await fetch(request);
+    if (res.ok) {
+      const cache = await caches.open(CACHE_VERSION);
+      cache.put(request, res.clone());
+    }
+    return res;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    const offlinePage = await caches.match(OFFLINE_PAGE_URL);
+    if (offlinePage) return offlinePage;
+    return new Response("Offline — reconnect and reload.", {
       status: 503,
       statusText: "Service Unavailable",
       headers: { "Content-Type": "text/plain" },
@@ -77,5 +104,9 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.pathname === "/" || url.pathname === "/index.html") {
     event.respondWith(networkFirst(event.request));
+    return;
+  }
+  if (event.request.mode === "navigate") {
+    event.respondWith(navigationWithOfflinePage(event.request));
   }
 });

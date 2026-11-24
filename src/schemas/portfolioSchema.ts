@@ -30,6 +30,7 @@ const siteSchema = z.strictObject({
   aboutHighlights: z.array(nonEmptyString),
   experienceHighlights: z.array(nonEmptyString),
   footerTagline: nonEmptyString,
+  footerCopyright: nonEmptyString,
   ogDescription: nonEmptyString,
   twitterDescription: nonEmptyString,
   ogImage: assetPath,
@@ -65,6 +66,28 @@ const sectionCopySchema = z.strictObject({
 });
 
 const sectionHeadingSchema = z.strictObject({ heading: nonEmptyString, icon: nonEmptyString.optional() });
+
+const copySchema = z.strictObject({
+  about: z.strictObject({ onlineLabel: nonEmptyString, workButton: nonEmptyString }),
+  createBand: z.strictObject({ ariaLabel: nonEmptyString }),
+  partners: z.strictObject({ label: nonEmptyString }),
+  experience: z.strictObject({
+    stackLabel: nonEmptyString,
+    aiToolsLabel: nonEmptyString,
+    roleCountSingular: nonEmptyString,
+    roleCountPlural: nonEmptyString,
+  }),
+  skills: z.strictObject({ listLabel: nonEmptyString, viewMore: nonEmptyString, viewLess: nonEmptyString }),
+  stats: z.strictObject({ ariaLabel: nonEmptyString, eyebrow: nonEmptyString }),
+  footer: z.strictObject({
+    navigateHeading: nonEmptyString,
+    contactHeading: nonEmptyString,
+    elsewhereHeading: nonEmptyString,
+    emailLabel: nonEmptyString,
+    callLabel: nonEmptyString,
+    ctaLabel: nonEmptyString,
+  }),
+});
 
 const outboundLinkSchema = z.strictObject({
   label: nonEmptyString,
@@ -104,7 +127,15 @@ const heroCardSchema = z.strictObject({
 
 const partnerSchema = z.strictObject({ name: nonEmptyString, logo: assetPath });
 
-const createBandItemSchema = z.strictObject({ text: nonEmptyString, variant: nonEmptyString });
+const createBandItemSchema = z.strictObject({
+  /** Absent on purely decorative tiles (the arrow). */
+  text: nonEmptyString.optional(),
+  variant: nonEmptyString,
+  icon: nonEmptyString,
+  parallax: z.number().positive(),
+  isChipOnDark: z.boolean().optional(),
+  isDecorative: z.boolean().optional(),
+});
 
 const articleSchema = z.strictObject({
   id: nonEmptyString,
@@ -176,6 +207,7 @@ const manifestSchema = z.strictObject({
 export const portfolioShapeSchema = z.strictObject({
   site: siteSchema,
   sections: sectionCopySchema,
+  copy: copySchema,
   sectionHeadings: z.strictObject({
     services: sectionHeadingSchema,
     experience: sectionHeadingSchema,

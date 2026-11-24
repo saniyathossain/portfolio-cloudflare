@@ -1,0 +1,11 @@
+---
+import { portfolio } from "../../bootstrap/container";
+import Icon from "../ui/Icon.astro";
+---
+
+{portfolio.nav.map((item, itemIndex) => (
+  <button type="button" x-on:click={`navGo(nav[${itemIndex}])`}>
+    <Icon name={item.icon} svgClass="ui-icon ui-icon--md" />
+    <span>{item.label}</span>
+  </button>
+))}

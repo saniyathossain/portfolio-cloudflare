@@ -55,6 +55,9 @@
   "fallbackIconName": "code",
   "accents": {
     "serviceRows": ["blue", "teal", "purple", "orange"],
-    "experienceRoles": ["blue", "purple", "teal", "orange", "cyan", "pink", "indigo", "green"]
+    "experienceRoles": ["blue", "purple", "teal", "orange", "cyan", "pink", "indigo", "green"],
+    "skillGroups": ["blue", "teal", "purple", "orange", "green", "cyan"],
+    "statTiles": ["cyan", "teal", "green", "orange"],
+    "educationRows": ["teal", "green", "indigo"]
   }
 }

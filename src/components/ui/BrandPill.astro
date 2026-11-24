@@ -1,0 +1,38 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { brandResolver } from "../../bootstrap/container";
+
+interface Props extends HTMLAttributes<"span"> {
+  stackName: string;
+  /** Square size of the brand icon (attribute only; sizing comes from CSS). */
+  iconSizePx: number;
+  /** Extra BEM modifier classes, e.g. "brand-pill--stack". */
+  modifierClass?: string;
+  /** Exposes the stack name as aria-label (experience pills and flat pills do; card pills use visible text). */
+  hasAriaLabel?: boolean;
+}
+
+const { stackName, iconSizePx, modifierClass, hasAriaLabel = false, ...passthroughAttributes } = Astro.props;
+const brand = brandResolver.resolve(stackName);
+---
+
+<span
+  class:list={["brand-pill", modifierClass, "spec"]}
+  tabindex="0"
+  style={`--brand:${brand.color}`}
+  aria-label={hasAriaLabel ? stackName : undefined}
+  {...passthroughAttributes}
+>
+  <span class="brand-pill__badge">
+    {brand.iconSrc ? (
+      <img src={brand.iconSrc} alt={stackName} width={iconSizePx} height={iconSizePx} loading="lazy" />
+    ) : (
+      <span class="brand-pill__mono">{brand.monogram}</span>
+    )}
+  </span>
+  <span class="brand-pill__label">
+    <span class="brand-pill__label-tx">
+      <span class="brand-pill__label-in">{stackName}</span>
+    </span>
+  </span>
+</span>

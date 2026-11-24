@@ -1,0 +1,107 @@
+---
+import { iconService, portfolio } from "../../bootstrap/container";
+import { fillTemplate } from "../../lib/text";
+import Icon from "../ui/Icon.astro";
+
+const { site, profile, nav, socials, copy, phoneHref, sectionHeadings, currentYear } = portfolio;
+const footerIconClass = "ui-icon ui-icon--sm ui-icon--on-ink";
+const copyrightTemplate = fillTemplate(site.footerCopyright, { name: profile.name, year: "{year}" });
+---
+
+<footer class="site-footer">
+  <div class="shell relative z-10 py-20 pb-10 lg:pt-24">
+    <div class="flex flex-col gap-8 border-b border-white/10 pb-16 lg:flex-row lg:items-end lg:justify-between">
+      <h2
+        class="max-w-md text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl"
+        data-blur-reveal
+        set:html={sectionHeadings.contact.heading}
+      />
+      <button type="button" class="pill-btn pill-btn-glass beam sheen site-footer__cta" x-on:click="openModal()">
+        <span class="site-footer__cta-label">{copy.footer.ctaLabel}</span>
+        <span class="pill-btn__icon pill-btn__icon--dark">
+          <Icon name="arrow" svgClass="ui-icon ui-icon--sm" />
+        </span>
+      </button>
+    </div>
+    <div class="site-footer__cols">
+      <div class="site-footer__col">
+        <div class="flex items-center gap-2 text-lg font-semibold">
+          <span>{profile.shortName}</span>
+        </div>
+        <p class="mt-4 max-w-xs text-sm text-white/55">{site.footerTagline}</p>
+      </div>
+      <div class="site-footer__col">
+        <p class="site-footer__heading text-xs uppercase tracking-wide">{copy.footer.navigateHeading}</p>
+        <ul class="site-footer__links text-sm">
+          {nav.map((item, itemIndex) => (
+            <li>
+              <button type="button" x-on:click={`navGo(nav[${itemIndex}])`}>
+                <span
+                  class="icon-chip icon-chip--sm icon-chip--on-dark"
+                  aria-hidden="true"
+                  set:html={iconService.render(item.icon, footerIconClass)}
+                />
+                <span>{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="site-footer__col">
+        <p class="site-footer__heading text-xs uppercase tracking-wide">{copy.footer.contactHeading}</p>
+        <ul class="site-footer__links text-sm">
+          <li>
+            <a href={`mailto:${profile.email}`} aria-label={copy.footer.emailLabel}>
+              <span
+                class="icon-chip icon-chip--sm icon-chip--on-dark"
+                aria-hidden="true"
+                set:html={iconService.render("contact", footerIconClass)}
+              />
+              <span>{copy.footer.emailLabel}</span>
+            </a>
+          </li>
+          <li class="hidden">
+            <a href={`tel:${phoneHref}`} aria-label={copy.footer.callLabel}>
+              <span
+                class="icon-chip icon-chip--sm icon-chip--on-dark"
+                aria-hidden="true"
+                set:html={iconService.render("phone", footerIconClass)}
+              />
+              <span>{copy.footer.callLabel}</span>
+            </a>
+          </li>
+          <li class="site-footer__static-row">
+            <span
+              class="icon-chip icon-chip--sm icon-chip--on-dark"
+              aria-hidden="true"
+              set:html={iconService.render("location", footerIconClass)}
+            />
+            <span>{profile.location}</span>
+          </li>
+        </ul>
+      </div>
+      <div class="site-footer__col">
+        <p class="site-footer__heading text-xs uppercase tracking-wide">{copy.footer.elsewhereHeading}</p>
+        <ul class="site-footer__links text-sm">
+          {socials.map((social) => (
+            <li>
+              <a href={social.href} target="_blank" rel="noopener noreferrer">
+                <span
+                  class="icon-chip icon-chip--sm icon-chip--on-dark"
+                  aria-hidden="true"
+                  set:html={iconService.render(social.icon, footerIconClass)}
+                />
+                <span>{social.label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+    <div class="flex items-center justify-center gap-4 border-t border-white/10 pt-8 text-xs site-footer__meta">
+      <span data-copyright-template={copyrightTemplate}>
+        {copyrightTemplate.replace("{year}", String(currentYear))}
+      </span>
+    </div>
+  </div>
+</footer>

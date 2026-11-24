@@ -1,0 +1,188 @@
+---
+import { iconService, portfolio, portfolioService, uiConfig } from "../../bootstrap/container";
+import BrandPill from "../ui/BrandPill.astro";
+import Icon from "../ui/Icon.astro";
+import SectionHeading from "../ui/SectionHeading.astro";
+
+const { experienceGroups, copy } = portfolio;
+const roleAccents = uiConfig.accents.experienceRoles;
+const closedChevronClass = "ui-icon ui-icon--chevron exp-row__chev";
+const openChevronClass = `${closedChevronClass} is-open`;
+
+function roleCountLabel(roleCount: number): string {
+  return `${roleCount} ${roleCount === 1 ? copy.experience.roleCountSingular : copy.experience.roleCountPlural}`;
+}
+---
+
+<section id="experience" class="sec sec-pad">
+  <div class="shell">
+    <SectionHeading
+      sectionId="experience"
+      headingClass="mb-2 max-w-lg text-3xl font-semibold tracking-tight sm:text-4xl"
+    />
+
+    <ul class="exp-list glass-panel" data-reveal data-delay="180">
+      {experienceGroups.map((group, groupIndex) => (
+        <li class:list={["exp-group", { "exp-group--sep": groupIndex > 0 }]} data-reveal data-delay={groupIndex * 80}>
+          <header class="exp-group__head">
+            <a
+              class="exp-group__link"
+              href={group.website}
+              target={group.website ? "_blank" : undefined}
+              rel={group.website ? "noopener noreferrer" : undefined}
+              aria-label={group.website ? `Visit ${group.company} website` : undefined}
+            >
+              <span class="exp-group__logo">
+                <img src={group.logo} alt="" width="28" height="28" loading="lazy" />
+              </span>
+              <div class="exp-group__meta">
+                <h3 class="exp-group__name">{group.company}</h3>
+                <p class="exp-group__loc">
+                  <Icon name="location" svgClass="ui-icon ui-icon--sm" class="meta-icon" />
+                  <span>{group.location}</span>
+                </p>
+              </div>
+            </a>
+            <span class="popover exp-group__tenure">
+              <span class="exp-group__tenure-badge popover__trigger" tabindex="0">
+                <Icon name="clock" svgClass="ui-icon ui-icon--sm" class="meta-icon" />
+                <span data-tenure-periods={JSON.stringify(group.roles.map((role) => role.period))}>
+                  {group.companyTenure.label}
+                </span>
+              </span>
+              <span class="popover__panel" role="tooltip">
+                <span class="popover__label tooltip-shine">{roleCountLabel(group.roles.length)}</span>
+              </span>
+            </span>
+          </header>
+
+          <ul class="exp-group__roles">
+            {group.roles.map((role, roleIndex) => (
+              <li class="exp-item" data-ci={roleAccents[(groupIndex + roleIndex) % roleAccents.length]}>
+                <button
+                  type="button"
+                  class="exp-row"
+                  aria-expanded="false"
+                  x-on:click={`toggleRole('${role.id}')`}
+                  x-bind:aria-expanded={`isRoleOpen('${role.id}')`}
+                >
+                  <span class="exp-row__gutter" aria-hidden="true" />
+                  <span class="exp-row__icon" aria-hidden="true">
+                    <Icon name="experience" svgClass="ui-icon ui-icon--md" />
+                  </span>
+                  <div class="exp-row__body">
+                    <div class="exp-row__top">
+                      <h4 class="exp-row__title">{role.roleDisplay}</h4>
+                      <div class="exp-row__badges">
+                        <span class={`exp-row__type exp-row__type--${role.employment.type}`}>
+                          <span class="exp-row__type-icon" aria-hidden="true">
+                            <Icon
+                              name={role.employment.icon}
+                              svgClass="ui-icon ui-icon--sm"
+                              isHiddenFromAssistiveTech={false}
+                            />
+                          </span>
+                          <span>{role.employment.label}</span>
+                        </span>
+                        <span class="popover">
+                          <time class="exp-row__period popover__trigger" tabindex="0" x-on:click.stop>
+                            <Icon name="years" svgClass="ui-icon ui-icon--sm" class="meta-icon" />
+                            <span>{role.period}</span>
+                          </time>
+                          <span class="popover__panel" role="tooltip">
+                            <span class="popover__label tooltip-shine" data-tenure-period={role.period}>
+                              {portfolioService.tenureLabelOf(role.period)}
+                            </span>
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                    <p class="exp-row__desc" set:html={portfolioService.highlightExperience(role.summary)} />
+                  </div>
+                  <span class="exp-row__arrow" aria-hidden="true">
+                    <span class="icon-chip icon-chip--sm">
+                      <span
+                        aria-hidden="true"
+                        x-html={`iconSvg('chevronDown', isRoleOpen('${role.id}') ? '${openChevronClass}' : '${closedChevronClass}')`}
+                        set:html={iconService.render("chevronDown", closedChevronClass)}
+                      />
+                    </span>
+                  </span>
+                </button>
+
+                <div
+                  class="exp-details"
+                  id={`exp-panel-${role.id}`}
+                  inert
+                  x-bind:class={`isRoleOpen('${role.id}') && 'is-open'`}
+                  x-bind:inert={`!isRoleOpen('${role.id}') ? '' : null`}
+                >
+                  <div class="exp-details__inner">
+                    {/* Lazy-mounted on first expand (hasOpenedOnce) so Alpine does not bind every role's pills upfront. */}
+                    <template x-if={`hasOpenedOnce('${role.id}')`}>
+                      <div>
+                        <ul class="exp-details__list">
+                          {role.details.map((detail) => (
+                            <li>
+                              <Icon name="check" svgClass="ui-icon ui-icon--sm" class="point-chip" />
+                              <span set:html={portfolioService.highlightExperience(detail)} />
+                            </li>
+                          ))}
+                        </ul>
+
+                        {(role.stacks.length > 0 || role.aiTools.length > 0) && (
+                          <div class="role-tags">
+                            {role.stacks.length > 0 && (
+                              <div class="role-tags__group">
+                                <span class="role-tags__label role-tags__label--stack">
+                                  <span class="icon-chip icon-chip--sm" aria-hidden="true">
+                                    <Icon name="chip" svgClass="ui-icon ui-icon--sm" />
+                                  </span>{" "}
+                                  {copy.experience.stackLabel}
+                                </span>
+                                <div class="pill-row">
+                                  {role.stacks.map((stackName) => (
+                                    <BrandPill
+                                      stackName={stackName}
+                                      iconSizePx={12}
+                                      modifierClass="brand-pill--stack"
+                                      hasAriaLabel
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {role.aiTools.length > 0 && (
+                              <div class="role-tags__group">
+                                <span class="role-tags__label role-tags__label--ai">
+                                  <span class="icon-chip icon-chip--sm" aria-hidden="true">
+                                    <Icon name="sparkles" svgClass="ui-icon ui-icon--sm" />
+                                  </span>{" "}
+                                  {copy.experience.aiToolsLabel}
+                                </span>
+                                <div class="pill-row">
+                                  {role.aiTools.map((toolName) => (
+                                    <BrandPill
+                                      stackName={toolName}
+                                      iconSizePx={12}
+                                      modifierClass="brand-pill--ai"
+                                      hasAriaLabel
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
