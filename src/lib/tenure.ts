@@ -7,7 +7,7 @@ export interface Tenure {
   readonly label: string;
 }
 
-export const EMPTY_TENURE: Tenure = { years: 0, months: 0, totalMonths: 0, label: "—" };
+const EMPTY_TENURE: Tenure = { years: 0, months: 0, totalMonths: 0, label: "—" };
 
 const MONTH_INDEX_BY_PREFIX: Readonly<Record<string, number>> = {
   jan: 0,

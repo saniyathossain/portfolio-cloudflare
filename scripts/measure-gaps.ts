@@ -2,7 +2,7 @@
  * Vertical whitespace between the content of adjacent sections, at several widths (px).
  *   BASE=http://127.0.0.1:8803/ [WIDTHS=360,768,1024,1440,1920] node scripts/measure-gaps.ts
  */
-import { launchBrowser, READY_SELECTOR, READY_TIMEOUT_MS, requireEnv, sleep } from "./lib/browser.ts";
+import { FORCE_VISIBLE_CSS, launchBrowser, READY_SELECTOR, READY_TIMEOUT_MS, requireEnv, sleep } from "./lib/browser.ts";
 
 const BASE = requireEnv("BASE");
 const WIDTHS = (process.env["WIDTHS"] ?? "360,768,1024,1440,1920").split(",").map(Number);
@@ -10,7 +10,6 @@ const VIEWPORT_HEIGHT_PX = 900;
 const AFTER_READY_MS = 2500;
 const WIDTH_COLUMN = 5;
 // Off-screen sections use their placeholder size under content-visibility:auto; render them all for true layout numbers.
-const FORCE_VISIBLE_CSS = ".sec { content-visibility: visible !important; }";
 
 const browser = await launchBrowser();
 for (const width of WIDTHS) {

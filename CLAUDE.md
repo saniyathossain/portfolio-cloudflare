@@ -14,7 +14,7 @@ system **SF Pro** fonts. No runtime build step.
   `src/content/security.json` (docs 57–58).
 - `scripts/` — TypeScript Node tooling run with `node scripts/<name>.ts` (build: `sync-head`, `build-client`, `optimize-images`, `hash-sw`…; checks: `behavior-check`, `dom-diff`, `fouc-check`…; doc 61).
 - `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
-  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **67**).
+  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **68**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it
@@ -23,7 +23,7 @@ system **SF Pro** fonts. No runtime build step.
   hand-edit inside the `<!-- SYNC:HEAD -->` / `<!-- SYNC:H1 -->` markers in `index.html`.
 - **CSS lives in `.css` files only (doc 64):** no `<style>` blocks and no `style=` attributes in `.astro`/`.tsx`/HTML source. Site CSS = `public/assets/css/*.css`;
   the outage page's = `src/styles/error-page.css` (inlined at build via `?inline`); per-item values use `data-*` + CSS (`data-tint`, `:nth-child` indices),
-  generated classes (`.bc-<hex>` brand tints from `scripts/build-brand-css.ts`) or the `hidden` attribute. Only runtime-computed values are set from JS (`el.style.setProperty`). **No Alpine** (removed, doc 61): interactivity is Preact islands (`src/islands`), delegated `data-action` / `data-nav-target` attributes (`src/client/actions.ts`) and plain modules.
+  generated classes (`.bc-<hex>` brand tints from `scripts/build-brand-css.ts`) or the `hidden` attribute. Only runtime-computed values are set from JS (`el.style.setProperty`). Likewise no JS in `.astro` files: the outage page script is `src/client/error-page.ts`, inlined from `src/generated/` (doc 66). **No Alpine** (removed, doc 61): interactivity is Preact islands (`src/islands`), delegated `data-action` / `data-nav-target` attributes (`src/client/actions.ts`) and plain modules.
 - **CSS:** prefer custom classes + design tokens in `styles.css`. Only run `./build-css.sh` if you add new
   **Tailwind utility** classes to the HTML (regenerates the gitignored `tailwind.css` with the pinned npm Tailwind v4 CLI;
   see `tailwind.input.css` for the v3-parity rules). Generated `*.min.js`/`*.min.css`/`tailwind.css` are gitignored.

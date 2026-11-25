@@ -2,10 +2,12 @@
 import puppeteer from "puppeteer-core";
 import type { Browser, ElementHandle } from "puppeteer-core";
 
-export const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 export const READY_SELECTOR = "html.is-ready";
 export const READY_TIMEOUT_MS = 15_000;
 export const SCROLL_SETTLE_MS = 500;
+/** content-visibility:auto skips off-screen sections, which would zero their measured height. */
+export const FORCE_VISIBLE_CSS = ".sec { content-visibility: visible !important; }";
 
 export const sleep = (milliseconds: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, milliseconds));
 

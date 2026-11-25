@@ -1,7 +1,7 @@
 /** Accordion bookkeeping for the Experience section — pure, so it can be unit-tested without a DOM. */
 
-export const ROLE_PANEL_ID_PREFIX = "exp-panel-";
-export const ROLE_BODY_ID_PREFIX = "exp-body-";
+const ROLE_PANEL_ID_PREFIX = "exp-panel-";
+const ROLE_BODY_ID_PREFIX = "exp-body-";
 
 export interface RoleAccordionState {
   /** True from the start of an open until the END of a close animation (the row stays "expanded" while closing). */

@@ -2,6 +2,7 @@
 import { errorCatalog, portfolio } from "../bootstrap/container";
 import { fillTemplate } from "../lib/text";
 // The page's stylesheet lives in its own file and is inlined at build time, so an outage page never depends on a second request.
+import errorPageScript from "../generated/error-page.min.js?raw";
 import errorPageCss from "../styles/error-page.css?inline";
 
 interface Props {
@@ -140,153 +141,8 @@ const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
         ))}
       </ul>
     </main>
-    <!-- Optional enhancement: request time/path and the self-healing retry countdown (exponential backoff,
-         configured in errors.json). Never throws; the static page is already complete without it. -->
-    <script is:inline>
-      (function () {
-        try {
-          var pathEl = document.querySelector("[data-well-path]");
-          var requestLine = document.querySelector("[data-well-request]");
-          if (pathEl && requestLine) {
-            pathEl.textContent = location.pathname + location.search;
-            requestLine.hidden = false;
-          }
-
-          var storageKey = "retry:" + location.pathname;
-          var store = {
-            read: function () {
-              try {
-                var parts = (sessionStorage.getItem(storageKey) || "").split("|");
-                var stale = Date.now() - Number(parts[1] || 0) > 10 * 60 * 1000;
-                return stale ? 0 : Number(parts[0]) || 0;
-              } catch (ignored) {
-                return 0;
-              }
-            },
-            write: function (value) {
-              try {
-                sessionStorage.setItem(storageKey, value + "|" + Date.now());
-              } catch (ignored) {}
-            },
-            clear: function () {
-              try {
-                sessionStorage.removeItem(storageKey);
-              } catch (ignored) {}
-            },
-          };
-
-          // Services marked live="network" follow the browser's connectivity (the build-time state is the fallback).
-          var serviceList = document.querySelector("[data-service-labels]");
-          var networkLine = document.querySelector('[data-service-live="network"]');
-          if (serviceList && networkLine) {
-            var stateLabels = JSON.parse(serviceList.getAttribute("data-service-labels"));
-            var syncNetwork = function () {
-              var state = navigator.onLine ? "ok" : "down";
-              networkLine.setAttribute("data-service-state", state);
-              var stateText = networkLine.querySelector("[data-service-text]");
-              if (stateText) stateText.textContent = stateLabels[state];
-            };
-            window.addEventListener("online", syncNetwork);
-            window.addEventListener("offline", syncNetwork);
-            syncNetwork();
-          }
-
-          var reloadButton = document.querySelector("[data-reload]");
-          if (reloadButton)
-            reloadButton.addEventListener("click", function () {
-              store.clear();
-              location.reload();
-            });
-
-          var orb = document.querySelector("[data-orb]");
-          var orbValue = document.querySelector("[data-orb-value]");
-          var orbProgress = document.querySelector("[data-orb-progress]");
-          var reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-          // The orb shows a bare glyph (status code / seconds); the unit label under the seconds is static markup.
-          var setOrbValue = function (value) {
-            if (orbValue && orbValue.firstChild) orbValue.firstChild.nodeValue = value;
-          };
-
-          var box = document.querySelector("[data-retry]");
-          if (!box) return;
-          var config = JSON.parse(box.getAttribute("data-retry"));
-          var copy = JSON.parse(box.getAttribute("data-retry-copy"));
-          var textEl = box.querySelector("[data-retry-text]");
-          var srEl = document.querySelector("[data-retry-sr]");
-          var attempt = store.read();
-
-          if (copy.reloadWhenOnline)
-            window.addEventListener("online", function () {
-              box.hidden = false;
-              textEl.textContent = copy.reconnected;
-              if (orb) orb.classList.add("is-online");
-              location.reload();
-            });
-
-          if (attempt >= config.maxAttempts) {
-            box.hidden = false;
-            textEl.textContent = copy.exhausted.replace("{attempts}", String(attempt));
-            if (orb) orb.classList.remove("is-counting");
-            if (orbValue) {
-              setOrbValue(orbValue.getAttribute("data-orb-idle") || "!");
-              var unit = orbValue.querySelector("small");
-              if (unit) unit.remove();
-            }
-            return;
-          }
-
-          // delay = min(max, base * factor^attempt), spread by ±jitter so visitors don't retry in lock-step
-          var exponential = Math.min(config.maxDelayMs, config.baseDelayMs * Math.pow(config.factor, attempt));
-          var spread = 1 + (Math.random() * 2 - 1) * config.jitterRatio;
-          var totalMs = Math.max(250, Math.round(exponential * spread));
-          var remainingMs = totalMs;
-          var lastTick = Date.now();
-          var shownSeconds = -1;
-          if (srEl)
-            srEl.textContent = srEl
-              .getAttribute("data-retry-sr-template")
-              .replace("{seconds}", String(Math.round(totalMs / 1000)));
-
-          // The ring drains through one CSS animation (no per-frame JS); reduced motion gets a stepped update instead.
-          if (orb && orbProgress && !reduceMotion) orb.style.setProperty("--orb-drain-ms", totalMs + "ms");
-
-          var draw = function () {
-            var seconds = Math.max(0, Math.ceil(remainingMs / 1000));
-            if (reduceMotion && orbProgress) orbProgress.style.strokeDashoffset = String((1 - remainingMs / totalMs) * 100);
-            if (seconds === shownSeconds) return; // the DOM only changes once per displayed second
-            shownSeconds = seconds;
-            textEl.textContent =
-              copy.attemptLabel + " " + (attempt + 1) + "/" + config.maxAttempts + " · " + copy.waitingLabel + " " + seconds + copy.secondsSuffix;
-            setOrbValue(String(seconds));
-            if (orbValue && !reduceMotion && orbValue.animate)
-              orbValue.animate(
-                [{ opacity: 0.55 }, { opacity: 1 }],
-                { duration: 320, easing: "ease-out" },
-              );
-          };
-
-          box.hidden = false;
-          draw();
-          // The countdown (and the ring animation) pauses while the tab is hidden, so both stay in sync.
-          document.addEventListener("visibilitychange", function () {
-            if (orbProgress) orbProgress.style.animationPlayState = document.hidden ? "paused" : "running";
-          });
-          var timer = setInterval(function () {
-            var now = Date.now();
-            if (!document.hidden) remainingMs -= now - lastTick;
-            lastTick = now;
-            if (remainingMs <= 0) {
-              clearInterval(timer);
-              store.write(attempt + 1);
-              location.reload();
-              return;
-            }
-            draw();
-          }, config.tickMs);
-        } catch (ignored) {
-          /* the static page is already complete */
-        }
-      })();
-    </script>
+    <!-- Optional enhancement (src/client/error-page.ts, bundled to src/generated/ by scripts/build-client.ts and inlined
+         here): request path, live network service and the self-healing retry countdown. The static page is complete without it. -->
+    <script is:inline set:html={errorPageScript}></script>
   </body>
 </html>

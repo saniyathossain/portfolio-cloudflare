@@ -31,5 +31,7 @@ Remaining, by design: JS animation code that writes `el.style` for runtime-compu
 critical `<style>` that `sync-head.ts` inlines from `critical.css` (generated, not authored).
 Rules updated in `CLAUDE.md` and `.cursor/rules/design-system.mdc`.
 
+> Follow-up (doc 66 §5): the outage page's inline script also moved out of the `.astro` file, into `src/client/error-page.ts`.
+
 ## Verification
 See the end of this doc once the last run is recorded.

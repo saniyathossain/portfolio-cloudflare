@@ -64,6 +64,13 @@ in `WorkerApplication.handle` → logged 500 page with a reference id.
 - Build-time states are the *typical* condition for that failure (a 500 means the worker failed; a 502 means assets did not answer);
   they are not live probes. A real health probe would be a Worker endpoint feeding the same `ServiceState` values.
 
+## 5. Outage page script moved to `src/client/error-page.ts`
+The inline `<script>` in `ErrorTerminal.astro` is now strict TypeScript (`RetryStore`, `Orb`, small functions, no magic numbers).
+`scripts/build-client.ts` bundles it to `src/generated/error-page.min.js` (gitignored, **not** under `public/`, so it is never served as
+an asset) and the component inlines it with `?raw`, so an outage page still needs no second request. `npm run typecheck` rebuilds it
+first; a fresh clone needs one `npm run build` (or `node scripts/build-client.ts`) before `astro dev`.
+Checked in a browser: path line, countdown + backoff, live `network` service on `offline`/`online`, exhausted state, reduced-motion stepping.
+
 ## Verification
 121 unit tests (new: resolver, KV repository), `tsc`, ESLint clean. `wrangler dev` end-to-end with
 `--var RATE_LIMIT_CONTACT_LIMIT:1`: submission 200 then 429, admin without token 401 / with token 200, OPTIONS 204, scanner probe 404,

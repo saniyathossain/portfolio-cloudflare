@@ -8,8 +8,3 @@ export function orDefault<T extends string | object>(value: T | null | undefined
 export function forceReflow(element: HTMLElement): number {
   return element.offsetHeight;
 }
-
-/** Same as forceReflow, via offsetWidth (the property the hero-card swap has always used). */
-export function forceReflowWidth(element: HTMLElement): number {
-  return element.offsetWidth;
-}

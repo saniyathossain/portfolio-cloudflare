@@ -1,21 +1,6 @@
 {
-  "$comment": "Outage / error pages rendered as a shell console. One entry per page; the 5W fields mirror the log format in docs/aidlc/54 §6. Served from /errors/<slug>/ (404 also as /404.html). services: each page lists the services it reports; ids must exist in terminal.services.catalog (add `cache`, `dataSource`, … there first).",
+  "$comment": "Outage / error pages. One entry per page, served from /errors/<slug>/ (404 also as /404.html). services: each page lists the services it reports; ids must exist in terminal.services.catalog (add `cache`, `dataSource`, … there first).",
   "terminal": {
-    "windowTitle": "saniyat — zsh — 80×24",
-    "userName": "visitor",
-    "hostName": "saniyat.com",
-    "promptSymbol": "$",
-    "labels": {
-      "when": "when",
-      "who": "who",
-      "what": "what",
-      "where": "where",
-      "why": "why",
-      "hint": "hint",
-      "ref": "ref"
-    },
-    "unknownValue": "—",
-    "footer": "Mohammad Saniyat Hossain · Staff Software Engineer",
     "retry": {
       "attemptLabel": "retry",
       "waitingLabel": "in",
@@ -55,17 +40,11 @@
       "status": 404,
       "statusText": "Not Found",
       "level": "ERROR",
-      "event": "page_not_found",
-      "actor": "edge/router",
       "title": "Page not found",
       "message": "That address does not exist on this site.",
-      "reason": "no route or asset matches this URL",
-      "hint": "Check the spelling, or head back to the home page.",
-      "command": "curl -I {url}",
       "actions": [
         {
           "label": "cd ~",
-          "description": "go to the home page",
           "href": "/"
         }
       ],
@@ -93,22 +72,15 @@
       "status": 500,
       "statusText": "Internal Server Error",
       "level": "ERROR",
-      "event": "unhandled_exception",
-      "actor": "edge/worker",
       "title": "Something broke on my side",
       "message": "The server hit an unexpected error while handling your request.",
-      "reason": "unhandled exception in the request pipeline",
-      "hint": "This is not your fault. Try again in a minute.",
-      "command": "curl -I {url}",
       "actions": [
         {
           "label": "retry",
-          "description": "reload this page",
           "isReload": true
         },
         {
           "label": "cd ~",
-          "description": "go to the home page",
           "href": "/"
         }
       ],
@@ -137,22 +109,15 @@
       "status": 502,
       "statusText": "Bad Gateway",
       "level": "ERROR",
-      "event": "upstream_failed",
-      "actor": "edge/assets",
       "title": "Upstream is not answering",
       "message": "The site's asset store returned an error instead of the page.",
-      "reason": "static asset binding responded with a 5xx status",
-      "hint": "It is usually brief. Reload in a moment.",
-      "command": "curl -I {url}",
       "actions": [
         {
           "label": "retry",
-          "description": "reload this page",
           "isReload": true
         },
         {
           "label": "cd ~",
-          "description": "go to the home page",
           "href": "/"
         }
       ],
@@ -180,22 +145,15 @@
       "status": 503,
       "statusText": "Service Unavailable",
       "level": "WARN",
-      "event": "maintenance_mode",
-      "actor": "edge/maintenance-gate",
       "title": "We'll be right back",
       "message": "The site is down briefly for scheduled maintenance and a few improvements. Please check back shortly — or reach me by email in the meantime.",
-      "reason": "MAINTENANCE_MODE is on",
-      "hint": "No data is lost. Nothing to do but wait.",
-      "command": "systemctl status portfolio",
       "actions": [
         {
           "label": "retry",
-          "description": "reload this page",
           "isReload": true
         },
         {
           "label": "mail",
-          "description": "email me",
           "href": "mailto:{email}"
         }
       ],
@@ -222,17 +180,11 @@
       "status": null,
       "statusText": "Offline",
       "level": "WARN",
-      "event": "network_unreachable",
-      "actor": "browser/service-worker",
       "title": "You're offline",
       "message": "This page isn't saved on your device yet and the network is unreachable.",
-      "reason": "navigator reports no connection and nothing is cached",
-      "hint": "Reconnect, then retry. Pages you have visited keep working offline.",
-      "command": "ping saniyat.com",
       "actions": [
         {
           "label": "retry",
-          "description": "reload this page",
           "isReload": true
         }
       ],

@@ -509,9 +509,6 @@ h1 {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-.actions .desc {
-  display: none;
-}
 
 .sr-only {
   position: absolute;

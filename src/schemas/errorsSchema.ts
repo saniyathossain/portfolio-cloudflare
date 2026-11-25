@@ -5,7 +5,6 @@ const nonEmptyString = z.string().min(1);
 
 const errorActionSchema = z.strictObject({
   label: nonEmptyString,
-  description: nonEmptyString,
   /** `{email}` is replaced with profile.email. */
   href: nonEmptyString.optional(),
   isReload: z.boolean().optional(),
@@ -49,14 +48,8 @@ const errorPageSchema = z.strictObject({
   status: z.number().int().min(400).max(599).nullable(),
   statusText: nonEmptyString,
   level: z.enum(["WARN", "ERROR"]),
-  event: z.string().regex(/^[a-z0-9_]+$/),
-  actor: nonEmptyString,
   title: nonEmptyString,
   message: nonEmptyString,
-  reason: nonEmptyString,
-  hint: nonEmptyString,
-  /** The shell command echoed at the prompt; `{url}` is replaced in the browser. */
-  command: nonEmptyString,
   actions: z.array(errorActionSchema).min(1),
   retry: retryPageSchema,
   /** Services this page reports on, in display order. */
@@ -67,20 +60,6 @@ export const errorsSchema = z
   .strictObject({
   $comment: z.string().optional(),
   terminal: z.strictObject({
-    windowTitle: nonEmptyString,
-    userName: nonEmptyString,
-    hostName: nonEmptyString,
-    promptSymbol: nonEmptyString,
-    labels: z.strictObject({
-      when: nonEmptyString,
-      who: nonEmptyString,
-      what: nonEmptyString,
-      where: nonEmptyString,
-      why: nonEmptyString,
-      hint: nonEmptyString,
-      ref: nonEmptyString,
-    }),
-    unknownValue: nonEmptyString,
     well: z.strictObject({
       /** Verb shown before the request path in the status well (error pages are always reached by a GET navigation). */
       requestVerb: nonEmptyString,
@@ -91,7 +70,6 @@ export const errorsSchema = z
       /** Unit label under the countdown number. */
       secondsLabel: nonEmptyString,
     }),
-    footer: nonEmptyString,
     services: z.strictObject({
       /** Small caps label above the list. */
       heading: nonEmptyString,

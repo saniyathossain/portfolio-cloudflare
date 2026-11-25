@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
-export const PUBLIC = join(import.meta.dirname, "..", "..", "public");
+const PUBLIC = join(import.meta.dirname, "..", "..", "public");
 
 const HASH_ALGORITHM = "sha256";
 const HASH_LENGTH = 12;

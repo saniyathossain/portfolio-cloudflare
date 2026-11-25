@@ -2,7 +2,7 @@ import { HttpStatus } from "../../enums/HttpStatus";
 import { hasControlCharacter } from "../support/controlCharacters";
 import type { SecurityConfig } from "../../types/SecurityConfig";
 
-export const GUARD_STATUS = {
+const GUARD_STATUS = {
   methodNotAllowed: HttpStatus.MethodNotAllowed,
   uriTooLong: HttpStatus.UriTooLong,
   badRequest: HttpStatus.BadRequest,
