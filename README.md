@@ -72,8 +72,7 @@ npm run dev        # astro dev
 npx wrangler dev   # run the real Worker locally (headers, API, rate limits) on :8787
 ```
 
-macOS image tooling used by `scripts/optimize-images.ts`: `cwebp` (`brew install webp`) and ImageMagick
-(`brew install imagemagick`).
+`scripts/optimize-images.ts` uses the `sharp` npm package (doc 62) — no system image tools (cwebp / ImageMagick / sips) needed.
 
 ### Checks
 

@@ -1,6 +1,6 @@
 import { EmailMessage } from "cloudflare:email";
 import { SecuritySeverity } from "../../enums/SecuritySeverity";
-import { timingSafeEqual } from "../../lib/timingSafeEqual";
+import { timingSafeEqual } from "../support/timingSafeEqual";
 import type { SecurityConfig } from "../../types/SecurityConfig";
 import { describeRequestMeta, logApiAccess, type RequestMeta } from "../http/apiAccessLog";
 import { jsonResponse } from "../http/jsonResponse";

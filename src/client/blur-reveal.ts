@@ -13,6 +13,7 @@
  * splitWords() for the overlay, the CSS `.brw__blur` rule, and reveal() for layer hygiene). Long
  * copy is grouped into a few segment-spans so the DOM stays light (see splitWords()).
  */
+import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
 export {};
 
@@ -41,7 +42,7 @@ interface Segment {
   words: string[];
 }
 
-const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduced = prefersReducedMotion();
 
 // At/under this word count (every section heading) we keep one span per word for the staggered
 // de-blur wave. Above it (the multi-sentence About statement) we group words into segments.

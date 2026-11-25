@@ -5,6 +5,7 @@
  * @author  Mohammad Saniyat Hossain
  * @license Proprietary — all rights reserved.
  */
+import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
 export {};
 
@@ -33,7 +34,7 @@ const EXIT_MS = 400;
 // 1.012 scale vs the true 1320px layout width, to 4 decimal places). Cutting the scale delta ~4x
 // cuts the CLS contribution proportionally while keeping the reveal effect intact, just subtler.
 const SCALE_MAX = 0.003;
-const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduced = prefersReducedMotion();
 let ready = false;
 let running = false;
 

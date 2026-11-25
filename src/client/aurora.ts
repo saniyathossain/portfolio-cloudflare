@@ -7,6 +7,7 @@
  * @author  Mohammad Saniyat Hossain
  * @license Proprietary — all rights reserved.
  */
+import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
 export {};
 
@@ -172,7 +173,7 @@ function init(): void {
 }
 
 function bootstrap(): void {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (prefersReducedMotion()) return;
   if (!window.matchMedia("(pointer: fine)").matches) return;
   window.addEventListener("portfolio-ready", init);
   if (window.__portfolioReady) init();

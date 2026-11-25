@@ -2,6 +2,7 @@
 import { navTriggerAttributes } from "../../lib/navigation";
 import { iconService, portfolio } from "../../bootstrap/container";
 import { fillTemplate } from "../../lib/text";
+import { ShellAction } from "../../enums/ShellAction";
 import Icon from "../ui/Icon.astro";
 
 const { site, profile, nav, socials, copy, phoneHref, sectionHeadings, currentYear } = portfolio;
@@ -17,7 +18,7 @@ const copyrightTemplate = fillTemplate(site.footerCopyright, { name: profile.nam
         data-blur-reveal
         set:html={sectionHeadings.contact.heading}
       />
-      <button type="button" class="pill-btn pill-btn-glass beam sheen site-footer__cta" data-action="open-modal">
+      <button type="button" class="pill-btn pill-btn-glass beam sheen site-footer__cta" data-action={ShellAction.OpenModal}>
         <span class="site-footer__cta-label">{copy.footer.ctaLabel}</span>
         <span class="pill-btn__icon pill-btn__icon--dark">
           <Icon name="arrow" svgClass="ui-icon ui-icon--sm" />

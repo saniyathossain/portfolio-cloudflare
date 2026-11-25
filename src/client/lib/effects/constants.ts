@@ -6,8 +6,4 @@ export const TIMING = {
 /** Luminance below which the hero text flips to its on-dark treatment. */
 export const HERO_ON_DARK_LUMINANCE = 0.58;
 
-export const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-
-export function prefersReducedMotion(): boolean {
-  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
-}
+export { REDUCED_MOTION_QUERY, prefersReducedMotion } from "../../../lib/browser/reducedMotion";

@@ -20,20 +20,21 @@ import {
   toggleMenu,
 } from "./lib/shell/controller";
 import { scrollToSection, setupHashNavigation } from "./lib/shell/navigation";
+import { ShellAction } from "../enums/ShellAction";
 
 const ACTIONS: Readonly<Record<string, () => void>> = {
-  "open-modal": openModal,
-  "open-menu": openMenu,
-  "close-menu": closeMenu,
-  "toggle-menu": toggleMenu,
-  "close-modal": closeModal,
-  "nav-modal": handOffToModal,
-  "menu-to-modal": menuToModal,
-  "scroll-top": scrollToTop,
+  [ShellAction.OpenModal]: openModal,
+  [ShellAction.OpenMenu]: openMenu,
+  [ShellAction.CloseMenu]: closeMenu,
+  [ShellAction.ToggleMenu]: toggleMenu,
+  [ShellAction.CloseModal]: closeModal,
+  [ShellAction.NavModal]: handOffToModal,
+  [ShellAction.MenuToModal]: menuToModal,
+  [ShellAction.ScrollTop]: scrollToTop,
 };
 
 const TRIGGER_SELECTOR = "[data-action],[data-nav-target],[data-scroll-target]";
-const BACKDROP_ACTION = "close-modal-backdrop";
+const BACKDROP_ACTION = ShellAction.CloseModalBackdrop;
 
 function handleClick(event: MouseEvent): void {
   if (!(event.target instanceof Element)) return;
@@ -60,7 +61,9 @@ function handleKeydown(event: KeyboardEvent): void {
 
 /** Keeps the header Menu button (outside the overlay island) in sync with the store. */
 function syncMenuButton({ menuOpen }: ShellState): void {
-  const button = document.querySelector<HTMLElement>(".site-header .menu-btn[data-action='toggle-menu']");
+  const button = document.querySelector<HTMLElement>(
+    `.site-header .menu-btn[data-action='${ShellAction.ToggleMenu}']`,
+  );
   if (!button) return;
   button.setAttribute("aria-expanded", String(menuOpen));
   button.setAttribute("aria-label", menuOpen ? shell.menuButton.closeAriaLabel : shell.menuButton.openAriaLabel);

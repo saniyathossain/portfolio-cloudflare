@@ -1,4 +1,5 @@
 /** Pure helpers for the shell's section navigation (the DOM-touching parts live in src/client/lib/shell). */
+import { ShellAction } from "../enums/ShellAction";
 
 export interface NavItemLike {
   readonly id: string;
@@ -25,5 +26,5 @@ export function sectionIdFromHash(hash: string): string {
 /** Delegated-listener attributes (src/client/actions.ts) for a nav trigger: modal hand-off or section navigation. */
 export function navTriggerAttributes(item: NavItemLike): Record<string, string> {
   const target = resolveNavTarget(item);
-  return target.kind === "modal" ? { "data-action": "nav-modal" } : { "data-nav-target": target.sectionId };
+  return target.kind === "modal" ? { "data-action": ShellAction.NavModal } : { "data-nav-target": target.sectionId };
 }

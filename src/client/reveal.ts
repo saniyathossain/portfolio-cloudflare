@@ -5,6 +5,7 @@
  * @author  Mohammad Saniyat Hossain
  * @license Proprietary — all rights reserved.
  */
+import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
 export {};
 
@@ -14,7 +15,7 @@ declare global {
   }
 }
 
-const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduced = prefersReducedMotion();
 
 const COUNT_UP_DURATION_MS = 2200;
 const OVERSHOOT_START = 0.9;

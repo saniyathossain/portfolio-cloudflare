@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { timingSafeEqual } from "../../src/lib/timingSafeEqual";
+import { timingSafeEqual } from "../../src/worker/support/timingSafeEqual";
 import { composeContactMail, encodeBase64Utf8 } from "../../src/worker/services/ContactMailComposer";
 import { isMaintenanceOn, readEnvironmentFlag, resolveFlag } from "../../src/worker/services/FeatureFlags";
 import { readBoundedText } from "../../src/worker/http/readBoundedText";

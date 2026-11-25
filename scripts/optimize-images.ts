@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-/** Generate WebP + PWA icons from the committed master images.
+/** Generate WebP + PWA icons (via sharp — no ImageMagick/cwebp/sips needed) from the committed master images.
  *  The source JPEGs are treated as immutable masters — never re-encoded in place — so there is no
  *  cumulative generation loss. Derivatives are regenerated only when their source content changes
  *  (tracked in a gitignored .img-cache.json), so a no-op build produces no git churn. */
-import { execFileSync, execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { logDone, logInfo, logWarn } from "./lib/console.ts";
+import sharp from "sharp";
+import { logDone, logInfo } from "./lib/console.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 const IMG = join(ROOT, "public/assets/img");
@@ -25,6 +25,7 @@ const FACE_CROP_X_RATIO = 0.067;
 const FACE_CROP_Y_RATIO = 0.13;
 const FAVICON_SVG_SOURCE_PX = 200;
 const FAVICON_SVG_ENCODED_BASE_PX = 100;
+const FAVICON_JPEG_QUALITY = 85;
 
 // ── Hero: responsive WebP srcset + PWA icons, all derived from the immutable master JPEG ───────
 // Widths cover mobile 1x/2x and the desktop 62vw-wide backdrop at 2x, so the browser never has to
@@ -71,70 +72,40 @@ function isImageCache(value: unknown): value is ImageCache {
   );
 }
 
-function hasCommand(command: string): boolean {
-  try {
-    execSync(`command -v ${command}`, { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function runQuietly(command: string, args: readonly string[]): void {
-  execFileSync(command, args, { stdio: "ignore" });
-}
-
-/** WebP resized to `width` (long edge), for the hero's responsive srcset. */
-function writeResizedWebp(source: string, destination: string, width: number, quality: number): void {
+/** WebP resized to `width` (long edge), for the hero's responsive srcset. Metadata is stripped (sharp's default). */
+async function writeResizedWebp(source: string, destination: string, width: number, quality: number): Promise<void> {
   if (!existsSync(source)) return;
-  if (hasCommand("cwebp")) {
-    runQuietly("cwebp", ["-q", String(quality), "-resize", String(width), "0", source, "-o", destination]);
-    logDone(`WebP: ${destination} (${width}w)`);
-    return;
-  }
-  logWarn(`cwebp not found — skip ${destination}`);
+  await sharp(source).resize({ width }).webp({ quality }).toFile(destination);
+  logDone(`WebP: ${destination} (${width}w)`);
 }
 
-/** Face-centered square crop (full color — no duotone/silhouette treatment) via ImageMagick.
+/** Face-centered square crop (full color — no duotone/silhouette treatment), kept lossless in memory.
  *  Crop rect is expressed as fractions of the source so it stays correct if the master photo changes. */
-function writeFaceCrop(source: string, destination: string): string | null {
-  if (!existsSync(source) || !hasCommand("magick")) return null;
-  const dimensions = execFileSync("magick", ["identify", "-format", "%w %h", source]).toString().trim().split(/\s+/);
-  const sourceWidth = parseInt(dimensions[0] ?? "", 10);
-  const sourceHeight = parseInt(dimensions[1] ?? "", 10);
+async function readFaceCrop(source: string): Promise<Buffer | null> {
+  if (!existsSync(source)) return null;
+  const { width: sourceWidth, height: sourceHeight } = await sharp(source).metadata();
   const side = Math.round(sourceWidth * FACE_CROP_SIDE_RATIO);
-  const offsetX = Math.round(sourceWidth * FACE_CROP_X_RATIO);
-  const offsetY = Math.round(sourceHeight * FACE_CROP_Y_RATIO);
-  runQuietly("magick", [source, "-crop", `${side}x${side}+${offsetX}+${offsetY}`, "+repage", destination]);
-  logDone(`Face crop: ${destination} (${side}x${side} @ ${offsetX},${offsetY})`);
-  return destination;
+  const left = Math.round(sourceWidth * FACE_CROP_X_RATIO);
+  const top = Math.round(sourceHeight * FACE_CROP_Y_RATIO);
+  const crop = await sharp(source).extract({ left, top, width: side, height: side }).png().toBuffer();
+  logDone(`Face crop: ${side}x${side} @ ${left},${top}`);
+  return crop;
 }
 
 /** Square PNG favicon fallback, resized from the face crop (OS applies its own icon rounding —
  *  no circle baked in here, matching platform convention for apple-touch/PWA icons). */
-function writeSquareIcon(cropSource: string | null, destination: string, sizePx: number): void {
-  if (!cropSource || !existsSync(cropSource)) return;
-  if (hasCommand("sips")) {
-    runQuietly("sips", ["-z", String(sizePx), String(sizePx), cropSource, "--out", destination]);
-  } else if (hasCommand("magick")) {
-    runQuietly("magick", [cropSource, "-resize", `${sizePx}x${sizePx}`, destination]);
-  }
+async function writeSquareIcon(faceCrop: Buffer, destination: string, sizePx: number): Promise<void> {
+  await sharp(faceCrop).resize(sizePx, sizePx).png().toFile(destination);
   logDone(`Favicon: ${destination} (${sizePx}px)`);
 }
 
 /** Primary favicon: the face-centered portrait masked into a true circle with a thin copper ring. */
-function writeFaviconSvg(cropSource: string | null, destination: string): void {
-  if (!cropSource || !existsSync(cropSource)) return;
-  const temporaryJpeg = `${destination}.src.jpg`;
-  if (hasCommand("sips")) {
-    runQuietly("sips", ["-Z", String(FAVICON_SVG_SOURCE_PX), "-s", "format", "jpeg", cropSource, "--out", temporaryJpeg]);
-  } else if (hasCommand("magick")) {
-    runQuietly("magick", [cropSource, "-resize", `${FAVICON_SVG_SOURCE_PX}x${FAVICON_SVG_SOURCE_PX}`, temporaryJpeg]);
-  } else {
-    return;
-  }
-  const encodedImage = readFileSync(temporaryJpeg).toString("base64");
-  rmSync(temporaryJpeg, { force: true });
+async function writeFaviconSvg(faceCrop: Buffer, destination: string): Promise<void> {
+  const jpeg = await sharp(faceCrop)
+    .resize(FAVICON_SVG_SOURCE_PX, FAVICON_SVG_SOURCE_PX)
+    .jpeg({ quality: FAVICON_JPEG_QUALITY })
+    .toBuffer();
+  const encodedImage = jpeg.toString("base64");
   const center = FAVICON_SVG_ENCODED_BASE_PX / 2;
   const radius = 46;
   const svg =
@@ -174,7 +145,7 @@ function recordSource(source: string): void {
   cache[relative(ROOT, source)] = hashFile(source);
 }
 
-function generateHeroDerivatives(): void {
+async function generateHeroDerivatives(): Promise<void> {
   const heroSrcset = HERO_WIDTHS.map((width) => join(IMG, `saniyat-hossain-${width}.webp`));
   const heroWebp = join(IMG, "saniyat-hossain.webp"); // 900w alias — plain <img src> fallback
   const appleTouchIcon = join(IMG, "apple-touch-icon.png");
@@ -182,7 +153,6 @@ function generateHeroDerivatives(): void {
   const icon512 = join(IMG, "icon-512.png");
   const favicon32 = join(IMG, "favicon-32.png");
   const faviconSvg = join(IMG, "favicon.svg");
-  const faceCropTemporary = join(IMG, ".face-crop-tmp.jpg");
 
   const outputs = [...heroSrcset, heroWebp, appleTouchIcon, icon192, icon512, favicon32, faviconSvg];
   if (!needsGeneration(HERO, outputs)) {
@@ -190,27 +160,23 @@ function generateHeroDerivatives(): void {
     return;
   }
   for (const width of HERO_WIDTHS) {
-    writeResizedWebp(HERO, join(IMG, `saniyat-hossain-${width}.webp`), width, HERO_WEBP_QUALITY);
+    await writeResizedWebp(HERO, join(IMG, `saniyat-hossain-${width}.webp`), width, HERO_WEBP_QUALITY);
   }
   copyFileSync(join(IMG, `saniyat-hossain-${HERO_ALIAS_WIDTH}.webp`), heroWebp);
   logDone(`WebP: ${heroWebp} (${HERO_ALIAS_WIDTH}w alias)`);
 
-  const faceCrop = writeFaceCrop(HERO, faceCropTemporary);
+  const faceCrop = await readFaceCrop(HERO);
   if (faceCrop) {
-    writeSquareIcon(faceCrop, favicon32, 32);
-    writeSquareIcon(faceCrop, appleTouchIcon, 180);
-    writeSquareIcon(faceCrop, icon192, 192);
-    writeSquareIcon(faceCrop, icon512, 512);
-    writeFaviconSvg(faceCrop, faviconSvg);
-    rmSync(faceCrop, { force: true });
-  } else {
-    logWarn("ImageMagick (`magick`) not found — skipping favicon/icon regeneration.");
-    logWarn("       Install with `brew install imagemagick` for the face-centered crop.");
+    await writeSquareIcon(faceCrop, favicon32, 32);
+    await writeSquareIcon(faceCrop, appleTouchIcon, 180);
+    await writeSquareIcon(faceCrop, icon192, 192);
+    await writeSquareIcon(faceCrop, icon512, 512);
+    await writeFaviconSvg(faceCrop, faviconSvg);
   }
   recordSource(HERO);
 }
 
-function generateLogoDerivatives(): void {
+async function generateLogoDerivatives(): Promise<void> {
   for (const name of LOGO_PNGS) {
     const source = join(LOGOS_DIR, name);
     const destination = join(LOGOS_DIR, name.replace(/\.png$/, ".webp"));
@@ -219,25 +185,17 @@ function generateLogoDerivatives(): void {
       continue;
     }
     if (!existsSync(source)) continue;
-    if (!hasCommand("cwebp")) {
-      logWarn(`cwebp not found — skip logo resize for ${name}`);
-      continue;
-    }
-    // Only pass -resize when the source is actually wider than the target — cwebp will upscale
-    // otherwise, which is strictly worse (blurrier AND bigger than just re-encoding at native size).
-    const measuredWidth = hasCommand("magick")
-      ? parseInt(execFileSync("magick", ["identify", "-format", "%w", source]).toString().trim(), 10)
-      : Infinity; // unknown → assume resize is safe
-    const shouldResize = measuredWidth > LOGO_MAX_WIDTH;
-    const resizeArguments = shouldResize ? ["-resize", String(LOGO_MAX_WIDTH), "0"] : [];
-    runQuietly("cwebp", ["-q", String(LOGO_WEBP_QUALITY), ...resizeArguments, source, "-o", destination]);
-    logDone(`Logo WebP: ${destination} ${shouldResize ? `(≤${LOGO_MAX_WIDTH}w)` : "(native size)"}`);
+    // `withoutEnlargement` keeps a source narrower than the target at native size — upscaling is strictly
+    // worse (blurrier AND bigger than just re-encoding).
+    const image = sharp(source).resize({ width: LOGO_MAX_WIDTH, withoutEnlargement: true });
+    await image.webp({ quality: LOGO_WEBP_QUALITY }).toFile(destination);
+    logDone(`Logo WebP: ${destination} (≤${LOGO_MAX_WIDTH}w)`);
     recordSource(source);
   }
 }
 
-generateHeroDerivatives();
-generateLogoDerivatives();
+await generateHeroDerivatives();
+await generateLogoDerivatives();
 
 writeFileSync(CACHE_PATH, `${JSON.stringify(cache, null, 2)}\n`);
 logDone("Image optimization done.");

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { stepIndex, swapDirectionOf, type SwapDirection } from "../lib/heroCard";
+import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
 export interface HeroCardView {
   readonly caption: string;
@@ -19,7 +20,6 @@ interface HeroCardsProps {
   readonly nextIconHtml: string;
 }
 
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const SWAP_CLASSES = [
   "is-swapping-next",
   "is-swapping-prev",
@@ -85,7 +85,7 @@ export default function HeroCards({
     if (cards.length === 0) return;
     const next = stepIndex(indexRef.current, direction, cards.length);
     const wrap = swapRef.current;
-    if (!wrap || window.matchMedia(REDUCED_MOTION_QUERY).matches) {
+    if (!wrap || prefersReducedMotion()) {
       commit(next);
       return;
     }

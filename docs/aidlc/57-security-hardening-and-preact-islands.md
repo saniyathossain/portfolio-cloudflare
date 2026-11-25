@@ -103,7 +103,7 @@ Method: grep across `public/assets/js/*.js` for repeated mechanics, then judge e
 | `getBoundingClientRect` + rAF throttle | app, editorial, motion, liquid-hero, reveal | `lib/browser/frame.ts` (`onNextFrame`, `rafThrottle`) in the same slice |
 | Cubic-bezier easing strings | editorial, motion, skills-flat, app | already tokenised in CSS (`--ease-glass`, `--ease-label`); JS copies move to one `easings.ts` constant |
 | Tenure / clock / text / colour helpers | already pure TS in `src/lib` with unit tests | done |
-| Server-side validation / header safety | new `src/lib/controlCharacters.ts` shared by Worker modules | done in this change |
+| Server-side validation / header safety | new `src/worker/support/controlCharacters.ts` shared by Worker modules | done in this change |
 
 Packages considered and **not** added: Floating UI / Radix (the site has no popover-positioning problem; +6–20 KB for no
 visible change), GSAP / framer-motion (Motion One and WAAPI already cover every effect at a fraction of the size), a

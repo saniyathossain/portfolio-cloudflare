@@ -1,6 +1,6 @@
 import type { SecuritySeverity as SecuritySeverityType } from "../enums/SecuritySeverity";
 import { SecuritySeverity } from "../enums/SecuritySeverity";
-import { timingSafeEqual } from "../lib/timingSafeEqual";
+import { timingSafeEqual } from "./support/timingSafeEqual";
 import type { SecurityServices } from "./bootstrap/container";
 import type { ContactController } from "./controllers/ContactController";
 import type { CspReportController } from "./controllers/CspReportController";

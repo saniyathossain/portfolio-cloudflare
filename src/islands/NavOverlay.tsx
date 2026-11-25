@@ -3,6 +3,7 @@ import type { CSSProperties } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { readClock, type ClockLabels } from "../lib/clock";
 import { shellStore } from "../stores/ui";
+import { ShellAction } from "../enums/ShellAction";
 
 export interface NavOverlayItem {
   readonly label: string;
@@ -54,7 +55,7 @@ export default function NavOverlay(props: NavOverlayProps) {
     >
       <div className="shell flex items-center justify-between pt-8 pb-6 pr-[1.8rem] sm:pr-[2.55rem]">
         <span className="text-lg font-semibold text-white">{props.brandName}</span>
-        <button type="button" className="menu-btn nav-overlay__close" data-action="close-menu">
+        <button type="button" className="menu-btn nav-overlay__close" data-action={ShellAction.CloseMenu}>
           <span className="menu-btn__ripple" aria-hidden="true" />
           <span>
             <span aria-hidden="true" dangerouslySetInnerHTML={{ __html: props.closeIconHtml }} />
@@ -71,7 +72,7 @@ export default function NavOverlay(props: NavOverlayProps) {
                   type="button"
                   className="nav-overlay__item"
                   style={{ "--stagger-i": String(itemIndex) } as CSSProperties}
-                  data-action={item.opensModal ? "nav-modal" : undefined}
+                  data-action={item.opensModal ? ShellAction.NavModal : undefined}
                   data-nav-target={item.opensModal ? undefined : item.sectionId}
                 >
                   <span className="nav-overlay__gutter" aria-hidden="true" />
@@ -90,7 +91,7 @@ export default function NavOverlay(props: NavOverlayProps) {
           {props.localTimeLabel}
           <span>{timeText}</span>
         </span>
-        <button type="button" className="text-white/70 hover:text-white" data-action="menu-to-modal">
+        <button type="button" className="text-white/70 hover:text-white" data-action={ShellAction.MenuToModal}>
           {props.contactLabel}
         </button>
       </div>

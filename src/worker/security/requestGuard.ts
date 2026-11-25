@@ -1,4 +1,4 @@
-import { hasControlCharacter } from "../../lib/controlCharacters";
+import { hasControlCharacter } from "../support/controlCharacters";
 import type { SecurityConfig } from "../../types/SecurityConfig";
 
 export const GUARD_STATUS = {

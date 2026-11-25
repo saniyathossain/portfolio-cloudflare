@@ -5,7 +5,8 @@
  * @author  Mohammad Saniyat Hossain
  * @license Proprietary — all rights reserved.
  */
-const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+import { prefersReducedMotion } from "../../../lib/browser/reducedMotion";
+const reduce = prefersReducedMotion();
 const finePointer = window.matchMedia("(pointer: fine)").matches;
 const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
 

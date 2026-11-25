@@ -4,6 +4,7 @@ import { useEffect, useState } from "preact/hooks";
 import { postContact, readContactPayload } from "../lib/contactForm";
 import { shellStore } from "../stores/ui";
 import FadeError from "./FadeError";
+import { ShellAction } from "../enums/ShellAction";
 
 interface FieldCopy {
   readonly label: string;
@@ -144,7 +145,7 @@ export default function ContactModal(props: ContactModalProps) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      data-action="close-modal-backdrop"
+      data-action={ShellAction.CloseModalBackdrop}
       inert={!modalOpen}
     >
       <div className="modal-panel">
@@ -152,7 +153,7 @@ export default function ContactModal(props: ContactModalProps) {
           <button
             type="button"
             className="modal-close grid place-items-center rounded-full"
-            data-action="close-modal"
+            data-action={ShellAction.CloseModal}
             aria-label={props.closeAriaLabel}
           >
             <Icon html={props.closeIconHtml} />
@@ -169,7 +170,7 @@ export default function ContactModal(props: ContactModalProps) {
                 </div>
                 <h2 className="text-2xl font-semibold">{props.success.heading}</h2>
                 <p className="max-w-sm text-sm text-ink/60">{props.success.message}</p>
-                <button type="button" className="pill-btn pill-btn-dark mt-2" data-action="close-modal">
+                <button type="button" className="pill-btn pill-btn-dark mt-2" data-action={ShellAction.CloseModal}>
                   {props.success.closeLabel}
                 </button>
               </div>

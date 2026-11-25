@@ -11,7 +11,6 @@
  * build).
  */
 import { readFileSync, writeFileSync } from "node:fs";
-import { get as httpsGet } from "node:https";
 import { join } from "node:path";
 import type { Article } from "../src/types/Portfolio.ts";
 import { logDone, logWarn } from "./lib/console.ts";
@@ -22,9 +21,6 @@ const DEVTO_USERNAME = "saniyathossain";
 const MEDIUM_USERNAME = "saniyathossain";
 const USER_AGENT = "portfolio-build-script";
 const REQUEST_TIMEOUT_MS = 10_000;
-const HTTP_OK = 200;
-const HTTP_REDIRECT_MIN = 300;
-const HTTP_REDIRECT_MAX = 400;
 const MAX_TAGS = 4;
 const MAX_EXCERPT_LENGTH = 220;
 const ISO_DATE_LENGTH = 10;
@@ -45,33 +41,13 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function get(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    httpsGet(url, { headers: { "User-Agent": USER_AGENT } }, (response) => {
-      const statusCode = response.statusCode ?? 0;
-      const redirectLocation = response.headers.location;
-      if (statusCode >= HTTP_REDIRECT_MIN && statusCode < HTTP_REDIRECT_MAX && redirectLocation) {
-        get(redirectLocation).then(resolve, reject);
-        return;
-      }
-      if (statusCode !== HTTP_OK) {
-        reject(new Error(`${url} → ${statusCode}`));
-        response.resume();
-        return;
-      }
-      let body = "";
-      response.on("data", (chunk: Buffer) => {
-        body += chunk.toString("utf8");
-      });
-      response.on("end", () => {
-        resolve(body);
-      });
-    })
-      .on("error", reject)
-      .setTimeout(REQUEST_TIMEOUT_MS, function onTimeout(this: { destroy(error: Error): void }) {
-        this.destroy(new Error(`timeout: ${url}`));
-      });
+async function get(url: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: { "User-Agent": USER_AGENT },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
+  if (!response.ok) throw new Error(`${url} → ${response.status}`);
+  return response.text();
 }
 
 function toDevToArticle(entry: unknown): FetchedArticle {

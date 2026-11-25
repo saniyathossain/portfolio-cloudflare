@@ -1,4 +1,4 @@
-import { collapseLineBreaks, stripControlCharacters } from "../../lib/controlCharacters";
+import { collapseLineBreaks, stripControlCharacters } from "../support/controlCharacters";
 import type { SecurityConfig } from "../../types/SecurityConfig";
 
 const HEADER_UNSAFE = /[<>"\\]/g;
