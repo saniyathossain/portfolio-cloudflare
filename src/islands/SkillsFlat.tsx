@@ -140,12 +140,12 @@ export default function SkillsFlat({
     <button
       type="button"
       className="skills-flat__toggle"
-      style={showToggle ? undefined : { display: "none" }}
+      hidden={!showToggle}
       onClick={toggle}
       aria-expanded={view.isOpen}
     >
       <span className="skills-flat__toggle-label">{view.isOpen ? viewLessLabel : viewMoreLabel}</span>
-      <span className="skills-flat__toggle-count" style={showCount ? undefined : { display: "none" }}>
+      <span className="skills-flat__toggle-count" hidden={!showCount}>
         {`+${hiddenCount}`}
       </span>
       <span

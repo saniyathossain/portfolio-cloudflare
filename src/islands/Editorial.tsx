@@ -8,7 +8,6 @@ import { EditorialMore } from "./editorial/EditorialMore";
 import { EditorialRow } from "./editorial/EditorialRow";
 import { EditorialSearch } from "./editorial/EditorialSearch";
 import { EditorialTabs } from "./editorial/EditorialTabs";
-import { hiddenUnless } from "./editorial/hiddenStyle";
 import type { EditorialConfig, EditorialCopy, EditorialOutbound, FilterAnimation } from "./editorial/types";
 import { useEditorial } from "./editorial/useEditorial";
 
@@ -77,7 +76,7 @@ export default function Editorial({ articles, config, copy, outbound, iconMarkup
           <ul
             ref={listRef}
             className="editorial-list editorial-list--v0"
-            style={hiddenUnless(visibleArticles.length > 0)}
+            hidden={visibleArticles.length === 0}
             data-reveal=""
             data-delay={LIST_REVEAL_DELAY_MS}
           >

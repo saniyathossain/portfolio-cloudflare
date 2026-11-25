@@ -32,5 +32,11 @@
       "limit": 20,
       "windowSeconds": 60
     }
+  },
+  "contactRetentionSeconds": 31536000,
+  "maintenanceRetryAfterSeconds": 3600,
+  "adminList": {
+    "defaultLimit": 50,
+    "maxLimit": 200
   }
 }

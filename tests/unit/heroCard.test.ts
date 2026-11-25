@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { stepIndex, swapDirectionOf, tintCustomProperties } from "../../src/lib/heroCard";
+import { stepIndex, swapDirectionOf, resolveTintName } from "../../src/lib/heroCard";
 
-const tints = {
-  accent: { tint: "var(--accent)", ink: "var(--accent-bright)" },
-  blue: { tint: "var(--c-blue)", ink: "var(--c-blue)" },
-};
+const tintNames = ["accent", "primary", "blue"];
 
 describe("stepIndex", () => {
   it("wraps forwards and backwards", () => {
@@ -24,14 +21,14 @@ describe("swapDirectionOf", () => {
   });
 });
 
-describe("tintCustomProperties", () => {
-  it("resolves a known tint", () => {
-    expect(tintCustomProperties("blue", tints, "accent")).toEqual({ "--tint": "var(--c-blue)", "--tint-ink": "var(--c-blue)" });
+describe("resolveTintName", () => {
+  it("keeps a known tint", () => {
+    expect(resolveTintName("blue", tintNames, "accent")).toBe("blue");
   });
   it("falls back for unknown tints", () => {
-    expect(tintCustomProperties("nope", tints, "accent")["--tint"]).toBe("var(--accent)");
+    expect(resolveTintName("nope", tintNames, "accent")).toBe("accent");
   });
   it("throws when the fallback is missing too", () => {
-    expect(() => tintCustomProperties("nope", {}, "accent")).toThrow();
+    expect(() => resolveTintName("nope", [], "accent")).toThrow();
   });
 });

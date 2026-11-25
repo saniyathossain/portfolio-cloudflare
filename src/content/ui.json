@@ -63,11 +63,7 @@
   "heroCard": {
     "swapMs": 240,
     "fallbackTint": "accent",
-    "tints": {
-      "accent": { "tint": "var(--accent)", "ink": "var(--accent-bright)" },
-      "primary": { "tint": "var(--c-violet)", "ink": "var(--c-violet)" },
-      "blue": { "tint": "var(--c-blue)", "ink": "var(--c-blue)" }
-    },
+    "tintNames": ["accent", "primary", "blue"],
     "previousLabel": "Previous",
     "nextLabel": "Next",
     "previousIcon": { "name": "arrowLeft", "classes": "ui-icon" },

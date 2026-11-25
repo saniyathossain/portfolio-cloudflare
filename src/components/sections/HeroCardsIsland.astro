@@ -1,14 +1,14 @@
 ---
 import { iconService, portfolio, uiConfig } from "../../bootstrap/container";
 import HeroCards from "../../islands/HeroCards";
-import { tintCustomProperties } from "../../lib/heroCard";
+import { resolveTintName } from "../../lib/heroCard";
 
 const { heroCard } = uiConfig;
 const cards = portfolio.heroCards.map((card) => ({
   caption: card.caption,
   title: card.title,
   iconHtml: iconService.render(card.icon, heroCard.badgeIconClasses),
-  tintStyle: tintCustomProperties(card.tint, heroCard.tints, heroCard.fallbackTint),
+  tint: resolveTintName(card.tint, heroCard.tintNames, heroCard.fallbackTint),
 }));
 ---
 

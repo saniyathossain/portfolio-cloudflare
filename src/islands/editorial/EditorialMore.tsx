@@ -1,4 +1,3 @@
-import { hiddenUnless } from "./hiddenStyle";
 import { IconSlot } from "./IconSlot";
 import type { EditorialCopy, EditorialOutbound, IconResolver } from "./types";
 
@@ -12,7 +11,7 @@ interface EditorialMoreProps {
 /** "More writing" strip linking to the full archives; hidden while searching. */
 export function EditorialMore({ outbound, copy, isShown, icon }: EditorialMoreProps) {
   return (
-    <aside className="editorial-more" aria-label={copy.moreAriaLabel} style={hiddenUnless(isShown)}>
+    <aside className="editorial-more" aria-label={copy.moreAriaLabel} hidden={!isShown}>
       <div className="editorial-more__copy">
         <p className="editorial-more__eyebrow">{outbound.eyebrow}</p>
         <p className="editorial-more__hint">{outbound.hint}</p>

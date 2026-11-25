@@ -29,6 +29,15 @@ describe("error page content", () => {
     }
   });
 
+  it("only reports services that exist in the catalog", () => {
+    for (const [pageKey, page] of pages) {
+      for (const service of page.services) expect(catalog.terminal.services.catalog, `${pageKey}/${service.id}`).toHaveProperty(service.id);
+    }
+    const broken = structuredClone(rawErrors);
+    broken.pages["server-error"].services.push({ id: "nope", state: "ok" });
+    expect(errorsSchema.safeParse(broken).success).toBe(false);
+  });
+
   it("rejects an unknown key so typos fail the build", () => {
     expect(errorsSchema.safeParse({ ...rawErrors, extra: 1 }).success).toBe(false);
   });

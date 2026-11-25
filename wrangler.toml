@@ -27,6 +27,23 @@ not_found_handling = "404-page"
 CONTACT_FROM = "contact@saniyat.com"
 CONTACT_TO = "saniyat1000@gmail.com"
 
+# ── Tunables (optional Worker vars; docs/aidlc/66 lists every name, range and default) ──────────────
+# Each overrides the matching value in src/content/security.json. Leave commented to use the JSON defaults.
+# Invalid values (not a whole number, or out of range) are ignored and logged once as `invalid_env_config`.
+# RATE_LIMIT_CONTACT_LIMIT = "3"
+# RATE_LIMIT_CONTACT_WINDOW_SECONDS = "600"
+# RATE_LIMIT_ADMIN_FAILURE_LIMIT = "5"
+# RATE_LIMIT_ADMIN_FAILURE_WINDOW_SECONDS = "900"
+# RATE_LIMIT_CSP_REPORT_LIMIT = "20"
+# RATE_LIMIT_CSP_REPORT_WINDOW_SECONDS = "60"
+# MAX_CONTACT_BODY_BYTES = "16384"
+# MAX_CSP_REPORT_BYTES = "8192"
+# MAX_URL_LENGTH = "2048"
+# CONTACT_RETENTION_SECONDS = "31536000"
+# MAINTENANCE_RETRY_AFTER_SECONDS = "3600"
+# ADMIN_LIST_DEFAULT_LIMIT = "50"
+# ADMIN_LIST_MAX_LIMIT = "200"
+
 # ── Feature flags (Worker vars) ────────────────────────────────────────────────────────────────────
 # Truthy: "1" / "true" / "on".  Falsy: "off" / "false" / "0".  Omit SKILLS_SCROLL_DESIGN → JSON default.
 MAINTENANCE_MODE = "off"

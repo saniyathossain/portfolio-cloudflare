@@ -5,6 +5,7 @@ cd "$ROOT"
 # Invoke shell steps via `bash` (not ./) so a missing git execute-bit can't break CI builds.
 node scripts/fetch-articles.ts
 bash "$ROOT/build-css.sh"
+node scripts/build-brand-css.ts
 node scripts/minify-css.ts
 bash "$ROOT/scripts/setup-fonts.sh"
 node scripts/optimize-images.ts

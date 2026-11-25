@@ -225,7 +225,7 @@ export default function ContactModal(props: ContactModalProps) {
                     className="cf-turnstile"
                     data-sitekey={turnstileSiteKey}
                     data-theme="light"
-                    style={turnstileSiteKey ? undefined : { display: "none" }}
+                    hidden={!turnstileSiteKey}
                   />
                   <FadeError
                     message={formError}

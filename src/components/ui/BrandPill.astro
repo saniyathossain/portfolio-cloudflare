@@ -17,9 +17,8 @@ const brand = brandResolver.resolve(stackName);
 ---
 
 <span
-  class:list={["brand-pill", modifierClass, "spec"]}
+  class:list={["brand-pill", modifierClass, "spec", brand.colorClass]}
   tabindex="0"
-  style={`--brand:${brand.color}`}
   aria-label={hasAriaLabel ? stackName : undefined}
   {...passthroughAttributes}
 >

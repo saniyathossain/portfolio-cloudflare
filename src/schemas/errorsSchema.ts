@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ServiceState } from "../enums/ServiceState";
 
 const nonEmptyString = z.string().min(1);
 
@@ -30,6 +31,18 @@ const retryPageSchema = z.strictObject({
   reloadWhenOnline: z.boolean().optional(),
 });
 
+const serviceStateSchema = z.enum([ServiceState.Ok, ServiceState.Degraded, ServiceState.Down, ServiceState.Unknown]);
+
+const pageServiceSchema = z.strictObject({
+  /** Must exist in terminal.services.catalog. */
+  id: z.string().regex(/^[a-zA-Z][a-zA-Z0-9]*$/),
+  state: serviceStateSchema,
+  /** Short reason shown next to the state. */
+  detail: nonEmptyString.optional(),
+  /** `network`: the browser keeps this entry in sync with navigator.onLine (the build-time state is the fallback). */
+  live: z.enum(["network"]).optional(),
+});
+
 const errorPageSchema = z.strictObject({
   slug: z.string().regex(/^[a-z0-9-]+$/),
   /** Null for client-side conditions such as being offline. */
@@ -46,9 +59,12 @@ const errorPageSchema = z.strictObject({
   command: nonEmptyString,
   actions: z.array(errorActionSchema).min(1),
   retry: retryPageSchema,
+  /** Services this page reports on, in display order. */
+  services: z.array(pageServiceSchema).default([]),
 });
 
-export const errorsSchema = z.strictObject({
+export const errorsSchema = z
+  .strictObject({
   $comment: z.string().optional(),
   terminal: z.strictObject({
     windowTitle: nonEmptyString,
@@ -65,6 +81,10 @@ export const errorsSchema = z.strictObject({
       ref: nonEmptyString,
     }),
     unknownValue: nonEmptyString,
+    well: z.strictObject({
+      /** Verb shown before the request path in the status well (error pages are always reached by a GET navigation). */
+      requestVerb: nonEmptyString,
+    }),
     orb: z.strictObject({
       /** Shown inside the orb on pages without a status code or a countdown. */
       idleGlyph: nonEmptyString,
@@ -72,6 +92,14 @@ export const errorsSchema = z.strictObject({
       secondsLabel: nonEmptyString,
     }),
     footer: nonEmptyString,
+    services: z.strictObject({
+      /** Small caps label above the list. */
+      heading: nonEmptyString,
+      /** Display text for each ServiceState. */
+      states: z.strictObject({ ok: nonEmptyString, degraded: nonEmptyString, down: nonEmptyString, unknown: nonEmptyString }),
+      /** Every service the pages may report: id → label. Add new ones (cache, data source, …) here. */
+      catalog: z.record(z.string().regex(/^[a-zA-Z][a-zA-Z0-9]*$/), nonEmptyString),
+    }),
     retry: z.strictObject({
       attemptLabel: nonEmptyString,
       waitingLabel: nonEmptyString,
@@ -85,4 +113,16 @@ export const errorsSchema = z.strictObject({
   }),
   retryDefaults: retryTuningSchema,
   pages: z.record(z.string().regex(/^[a-z0-9-]+$/), errorPageSchema),
-});
+  })
+  .superRefine((catalog, context) => {
+    for (const [pageKey, page] of Object.entries(catalog.pages)) {
+      page.services.forEach((service, index) => {
+        if (service.id in catalog.terminal.services.catalog) return;
+        context.addIssue({
+          code: "custom",
+          path: ["pages", pageKey, "services", index, "id"],
+          message: `unknown service "${service.id}": add it to terminal.services.catalog first`,
+        });
+      });
+    }
+  });

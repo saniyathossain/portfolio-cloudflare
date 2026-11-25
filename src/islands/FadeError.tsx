@@ -59,7 +59,7 @@ export default function FadeError({ message, className, transitionPrefix, enterM
   const classes = [className, transitionClasses[phase]].filter(Boolean).join(" ");
 
   return (
-    <p className={classes} role="alert" style={phase === "hidden" ? { display: "none" } : undefined}>
+    <p className={classes} role="alert" hidden={phase === "hidden"}>
       {lastMessage.current}
     </p>
   );

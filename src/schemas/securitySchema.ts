@@ -20,6 +20,12 @@ export const securitySchema = z.strictObject({
     maxEmailLength: positiveInt,
     maxProjectLength: positiveInt,
   }),
+  /** How long contact submissions stay in KV (seconds). */
+  contactRetentionSeconds: positiveInt,
+  /** `Retry-After` sent with the maintenance 503 (seconds). */
+  maintenanceRetryAfterSeconds: positiveInt,
+  /** Owner read endpoint: page size when `?limit` is absent / the most it will return. */
+  adminList: z.strictObject({ defaultLimit: positiveInt, maxLimit: positiveInt }),
   /** Hidden form field real visitors leave empty; bots that fill every input trip it. */
   honeypotField: z.string().regex(/^[a-z][a-z0-9_]*$/),
   blockedPathPatterns: z.array(regexSourceSchema),

@@ -50,7 +50,8 @@ export const uiSchema = z.strictObject({
     swapMs: z.number().int().min(1),
     fallbackTint: nonEmptyString,
     /** Tint name → CSS values for the badge's `--tint` / `--tint-ink` custom properties. */
-    tints: z.record(nonEmptyString, z.strictObject({ tint: nonEmptyString, ink: nonEmptyString })),
+    /** Names of the badge tints; the colours live in styles.css under `.hero-card__badge[data-tint="<name>"]`. */
+    tintNames: z.array(nonEmptyString).min(1),
     previousLabel: nonEmptyString,
     nextLabel: nonEmptyString,
     previousIcon: z.strictObject({ name: nonEmptyString, classes: nonEmptyString }),

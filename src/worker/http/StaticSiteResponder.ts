@@ -1,3 +1,4 @@
+import { HttpStatus } from "../../enums/HttpStatus";
 import type { Logger } from "../logging/Logger";
 import { ACCEPT_CLIENT_HINTS, buildSecurityHeaders } from "../security/headers";
 import { resolveFlag } from "../services/FeatureFlags";
@@ -5,12 +6,11 @@ import type { WorkerEnvironment } from "../types/WorkerEnvironment";
 import { EARLY_HINTS } from "./earlyHints";
 import { errorPageResponse } from "./errorPage";
 
+const SERVER_ERROR_FLOOR: number = HttpStatus.InternalServerError;
 const PORTFOLIO_JSON_PATH = "/assets/data/portfolio.json";
 const ONE_YEAR_IMMUTABLE = "public, max-age=31536000, immutable";
 const ONE_HOUR = "public, max-age=3600";
 const ALWAYS_REVALIDATE = "public, max-age=0, must-revalidate";
-const HTTP_SERVER_ERROR = 500;
-const HTTP_BAD_GATEWAY = 502;
 
 type JsonObject = Record<string, unknown>;
 
@@ -55,11 +55,11 @@ export class StaticSiteResponder {
       headers.set("Link", EARLY_HINTS);
       headers.set("Accept-CH", ACCEPT_CLIENT_HINTS);
     }
-    if (isHtml && response.status >= HTTP_SERVER_ERROR) {
+    if (isHtml && response.status >= SERVER_ERROR_FLOOR) {
       logger.error({ event: "upstream_failed", location: url.pathname, reason: `asset store answered ${response.status}` });
       return errorPageResponse(
         { assets: environment.ASSETS, logger, baseHeaders: buildSecurityHeaders(request.url) },
-        { requestUrl: request.url, slug: "bad-gateway", status: HTTP_BAD_GATEWAY },
+        { requestUrl: request.url, slug: "bad-gateway", status: HttpStatus.BadGateway },
       );
     }
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });

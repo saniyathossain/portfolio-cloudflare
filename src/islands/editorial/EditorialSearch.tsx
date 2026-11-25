@@ -1,6 +1,5 @@
 import type { RefObject } from "preact";
 import { classNames } from "./classNames";
-import { hiddenUnless } from "./hiddenStyle";
 import { IconSlot } from "./IconSlot";
 import type { EditorialCopy, IconResolver } from "./types";
 
@@ -54,7 +53,7 @@ export function EditorialSearch(props: EditorialSearchProps) {
         <button
           type="button"
           className="editorial-search__clear"
-          style={hiddenUnless(isSearchMode && query.length > 0)}
+          hidden={!(isSearchMode && query.length > 0)}
           onMouseDown={(event) => {
             event.preventDefault();
           }}

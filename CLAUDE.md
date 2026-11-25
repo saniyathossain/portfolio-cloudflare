@@ -14,14 +14,16 @@ system **SF Pro** fonts. No runtime build step.
   `src/content/security.json` (docs 57–58).
 - `scripts/` — TypeScript Node tooling run with `node scripts/<name>.ts` (build: `sync-head`, `build-client`, `optimize-images`, `hash-sw`…; checks: `behavior-check`, `dom-diff`, `fouc-check`…; doc 61).
 - `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
-  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **64**).
+  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **67**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it
   mirrors `docs/cv-modern-template.md`.
 - **`<head>` is generated:** run `node scripts/sync-head.ts` after editing `site`/`profile` in the JSON. Do **not**
   hand-edit inside the `<!-- SYNC:HEAD -->` / `<!-- SYNC:H1 -->` markers in `index.html`.
-- **No inline `style=""`** in HTML — use JSX `style` objects or JS `el.style` only. **No Alpine** (removed, doc 61): interactivity is Preact islands (`src/islands`), delegated `data-action` / `data-nav-target` attributes (`src/client/actions.ts`) and plain modules.
+- **CSS lives in `.css` files only (doc 64):** no `<style>` blocks and no `style=` attributes in `.astro`/`.tsx`/HTML source. Site CSS = `public/assets/css/*.css`;
+  the outage page's = `src/styles/error-page.css` (inlined at build via `?inline`); per-item values use `data-*` + CSS (`data-tint`, `:nth-child` indices),
+  generated classes (`.bc-<hex>` brand tints from `scripts/build-brand-css.ts`) or the `hidden` attribute. Only runtime-computed values are set from JS (`el.style.setProperty`). **No Alpine** (removed, doc 61): interactivity is Preact islands (`src/islands`), delegated `data-action` / `data-nav-target` attributes (`src/client/actions.ts`) and plain modules.
 - **CSS:** prefer custom classes + design tokens in `styles.css`. Only run `./build-css.sh` if you add new
   **Tailwind utility** classes to the HTML (regenerates the gitignored `tailwind.css` with the pinned npm Tailwind v4 CLI;
   see `tailwind.input.css` for the v3-parity rules). Generated `*.min.js`/`*.min.css`/`tailwind.css` are gitignored.
@@ -33,8 +35,8 @@ system **SF Pro** fonts. No runtime build step.
   says so in that turn; stage files by name.
 - **Data in JSON, logic in code (doc 54 §1a):** content, labels, vocabularies, brand/colour tables, thresholds, fallback
   values live in `portfolio.json` / `src/content/*.json` (Zod-validated), never as literals in `src/`.
-- **Error / outage pages:** all failures (404, 500, 502, 503 maintenance, offline) render the site-themed outage page (glass panel, orb + circular retry timer, nested shell-console strip; doc 58) from
-  `src/content/errors.json` via `src/components/ErrorTerminal.astro`; add a failure mode by adding a JSON entry.
+- **Error / outage pages:** all failures (404, 500, 502, 503 maintenance, offline) render the site-themed outage page (glass panel, orb + circular retry timer, frosted status well with a services list, Geist / Geist Mono; docs 58, 64, 66) from
+  `src/content/errors.json` via `src/components/ErrorTerminal.astro`; add a failure mode (or a service row such as cache / data source) by adding a JSON entry.
 - **Security (doc 57):** every Worker rejection goes through `logSecurityEvent` (severity low→critical, forensic IP/ASN/UA/ray
   context); admin read is `Authorization: Bearer` only; new endpoints must add origin check, body cap and a rate limit.
   Client/device details come from `worker/services/ClientProfileService` (tables in `src/content/clientSignatures.json`, DTOs in

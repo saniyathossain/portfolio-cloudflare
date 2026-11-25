@@ -1,5 +1,4 @@
 import { useStore } from "@nanostores/preact";
-import type { CSSProperties } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { readClock, type ClockLabels } from "../lib/clock";
 import { shellStore } from "../stores/ui";
@@ -66,12 +65,11 @@ export default function NavOverlay(props: NavOverlayProps) {
       <nav className="shell flex flex-1 flex-col justify-center">
         {menuMounted && (
           <ul className="flex flex-col gap-1">
-            {props.items.map((item, itemIndex) => (
+            {props.items.map((item) => (
               <li key={item.sectionId}>
                 <button
                   type="button"
                   className="nav-overlay__item"
-                  style={{ "--stagger-i": String(itemIndex) } as CSSProperties}
                   data-action={item.opensModal ? ShellAction.NavModal : undefined}
                   data-nav-target={item.opensModal ? undefined : item.sectionId}
                 >

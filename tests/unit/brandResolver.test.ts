@@ -29,3 +29,16 @@ describe("BrandResolver.distinctByIcon", () => {
     }
   });
 });
+
+describe("brand colour classes", () => {
+  it("defines a rule for every tint a pill can render", async () => {
+    const { brandColorClass, brandColorRules } = await import("../../src/lib/brandPalette");
+    const css = brandColorRules(resolver.allTints());
+    expect(resolver.allTints().length).toBeGreaterThan(0);
+    for (const stack of ["PHP", "Laravel", "Redis", "Totally Unknown Tool"]) {
+      const { color, colorClass } = resolver.resolve(stack);
+      expect(colorClass).toBe(brandColorClass(color));
+      expect(css).toContain(`.${colorClass}{--brand:${color.toLowerCase()}}`);
+    }
+  });
+});

@@ -19,7 +19,7 @@ content, deployed on **Cloudflare Workers** at **https://saniyat.com**.
 | `wrangler.toml` | Cloudflare config |
 | `.cursor/skills/portfolio/SKILL.md` | Agent project skill |
 | `.cursor/rules/` | Architecture, design-system, content-source rules |
-| `docs/aidlc/` | Design history & rationale (00–63) |
+| `docs/aidlc/` | Design history & rationale (00–66) |
 | `legacy/` | Old dc-runtime site (archived) |
 
 ## Doc index (recent)

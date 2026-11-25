@@ -1,3 +1,5 @@
+import { ApiErrorCode } from "../../enums/ApiErrorCode";
+import { HttpStatus } from "../../enums/HttpStatus";
 import { SecuritySeverity } from "../../enums/SecuritySeverity";
 import type { SecurityConfig } from "../../types/SecurityConfig";
 import { describeRequestMeta } from "../http/apiAccessLog";
@@ -9,8 +11,6 @@ import { logSecurityEvent } from "../security/securityEvents";
 import type { ClientProfileService } from "../services/ClientProfileService";
 import type { WorkerEnvironment } from "../types/WorkerEnvironment";
 
-const HTTP_NO_CONTENT = 204;
-const HTTP_METHOD_NOT_ALLOWED = 405;
 const MAX_FIELD_LENGTH = 200;
 const MAX_DIRECTIVE_LENGTH = 120;
 
@@ -35,28 +35,27 @@ function text(fields: ReportFields, ...keys: string[]): string {
  */
 export class CspReportController {
   constructor(
-    private readonly config: SecurityConfig,
     private readonly clientProfiles: ClientProfileService,
     private readonly memoryCounters: Map<string, number>,
   ) {}
 
-  async handle(request: Request, environment: WorkerEnvironment, logger: Logger): Promise<Response> {
-    if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, HTTP_METHOD_NOT_ALLOWED, { Allow: "POST" });
+  async handle(request: Request, environment: WorkerEnvironment, logger: Logger, config: SecurityConfig): Promise<Response> {
+    if (request.method !== "POST") return jsonResponse({ error: ApiErrorCode.MethodNotAllowed }, HttpStatus.MethodNotAllowed, { Allow: "POST" });
 
     const reportLogger = logger.forActor("CspReportController");
     const meta = describeRequestMeta(request, this.clientProfiles);
-    const decision = await createRateLimiter(environment, this.memoryCounters).consume("csp-report", meta.ip, this.config.rateLimits.cspReport);
-    if (!decision.allowed) return new Response(null, { status: HTTP_NO_CONTENT });
+    const decision = await createRateLimiter(environment, this.memoryCounters).consume("csp-report", meta.ip, config.rateLimits.cspReport);
+    if (!decision.allowed) return new Response(null, { status: HttpStatus.NoContent });
 
-    const rawBody = await readBoundedText(request, this.config.limits.maxCspReportBytes);
-    if (rawBody === undefined) return new Response(null, { status: HTTP_NO_CONTENT });
+    const rawBody = await readBoundedText(request, config.limits.maxCspReportBytes);
+    if (rawBody === undefined) return new Response(null, { status: HttpStatus.NoContent });
 
     let report: ReportFields;
     try {
       const parsed = asFields(JSON.parse(rawBody));
       report = asFields(parsed["csp-report"] ?? parsed);
     } catch {
-      return new Response(null, { status: HTTP_NO_CONTENT });
+      return new Response(null, { status: HttpStatus.NoContent });
     }
 
     logSecurityEvent(reportLogger, request, {
@@ -69,6 +68,6 @@ export class CspReportController {
         sourceFile: text(report, "source-file", "sourceFile").slice(0, MAX_FIELD_LENGTH),
       },
     });
-    return new Response(null, { status: HTTP_NO_CONTENT, headers: { "Cache-Control": "no-store" } });
+    return new Response(null, { status: HttpStatus.NoContent, headers: { "Cache-Control": "no-store" } });
   }
 }

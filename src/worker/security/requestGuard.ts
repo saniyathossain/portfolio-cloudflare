@@ -1,18 +1,19 @@
+import { HttpStatus } from "../../enums/HttpStatus";
 import { hasControlCharacter } from "../support/controlCharacters";
 import type { SecurityConfig } from "../../types/SecurityConfig";
 
 export const GUARD_STATUS = {
-  methodNotAllowed: 405,
-  uriTooLong: 414,
-  badRequest: 400,
-  notFound: 404,
+  methodNotAllowed: HttpStatus.MethodNotAllowed,
+  uriTooLong: HttpStatus.UriTooLong,
+  badRequest: HttpStatus.BadRequest,
+  notFound: HttpStatus.NotFound,
 } as const;
 
 export type GuardVerdict =
   | { readonly allowed: true }
   | {
       readonly allowed: false;
-      readonly status: number;
+      readonly status: HttpStatus;
       /** Machine-readable log event, e.g. "scanner_probe". */
       readonly event: string;
       /** Human-readable cause for the log record only; never sent to the visitor. */
@@ -22,7 +23,7 @@ export type GuardVerdict =
 const ALLOWED: GuardVerdict = { allowed: true };
 const API_PREFIX = "/api/";
 
-function reject(status: number, event: string, reason: string): GuardVerdict {
+function reject(status: HttpStatus, event: string, reason: string): GuardVerdict {
   return { allowed: false, status, event, reason };
 }
 

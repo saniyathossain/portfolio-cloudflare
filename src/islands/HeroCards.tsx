@@ -8,7 +8,8 @@ export interface HeroCardView {
   /** Pre-rendered badge icon SVG. */
   readonly iconHtml: string;
   /** `--tint` / `--tint-ink` custom properties for the badge. */
-  readonly tintStyle: Readonly<Record<string, string>>;
+  /** Tint name; the colours are CSS (`.hero-card__badge[data-tint]`). */
+  readonly tint: string;
 }
 
 interface HeroCardsProps {
@@ -125,7 +126,7 @@ export default function HeroCards({
       }}
     >
       <div className="hero-card__inner">
-        <div className="hero-card__badge" style={active.tintStyle}>
+        <div className="hero-card__badge" data-tint={active.tint}>
           <span
             ref={badgeIconRef}
             className="hero-card__badge-icon"

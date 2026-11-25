@@ -32,6 +32,8 @@ public/assets/js/*.min.js
 public/sw.js
 public/assets/css/*.min.css
 public/assets/css/tailwind.css
+public/assets/css/brands.css
+public/assets/css/brands.critical.css
 # Generated image build cache (idempotency guard)
 scripts/.img-cache.json
 # Astro / Vite / TypeScript caches

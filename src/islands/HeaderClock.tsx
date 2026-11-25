@@ -1,5 +1,4 @@
-import type { CSSProperties } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { readClock, type ClockLabels, type ClockReading } from "../lib/clock";
 
 interface HeaderClockProps {
@@ -27,16 +26,20 @@ export default function HeaderClock({ ariaLabel, labels, tickMs, initialReading 
     };
   }, [labels, tickMs]);
 
-  const faceStyle = {
-    "--clock-h": `${reading.hourAngleDeg}deg`,
-    "--clock-m": `${reading.minuteAngleDeg}deg`,
-    "--clock-s": `${reading.secondAngleDeg}deg`,
-    "--clock-s-delay": sweepDelay,
-  } as CSSProperties;
+  // Hand angles are derived from the current time, so they are written onto the face at runtime (no inline style attribute).
+  const faceRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const face = faceRef.current;
+    if (!face) return;
+    face.style.setProperty("--clock-h", `${reading.hourAngleDeg}deg`);
+    face.style.setProperty("--clock-m", `${reading.minuteAngleDeg}deg`);
+    face.style.setProperty("--clock-s", `${reading.secondAngleDeg}deg`);
+    face.style.setProperty("--clock-s-delay", sweepDelay);
+  }, [reading, sweepDelay]);
 
   return (
     <div className="clock-chip" aria-label={ariaLabel}>
-      <span className="clock-face" aria-hidden="true" style={faceStyle}>
+      <span className="clock-face" aria-hidden="true" ref={faceRef}>
         <span className="clock-tick clock-tick--12" />
         <span className="clock-tick clock-tick--3" />
         <span className="clock-tick clock-tick--6" />

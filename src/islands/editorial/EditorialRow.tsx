@@ -33,7 +33,6 @@ export function EditorialRow({ article, index, config, copy, icon }: EditorialRo
   return (
     <li
       className="editorial-row"
-      style={{ "--row-i": index }}
       data-ci={rowTint(index, config.rowTints)}
       data-reveal=""
       data-delay={index * ROW_REVEAL_STEP_MS}

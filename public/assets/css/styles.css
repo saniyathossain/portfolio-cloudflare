@@ -593,7 +593,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   --chip: var(--tint);
   display: inline-flex; align-items: center; gap: 0.28rem; margin-bottom: 0.45rem;
   border-radius: var(--radius-pill); padding: 0.2rem 0.62rem;
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  font-size: max(11px, 0.64rem); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   color: #1a4d24;
   color: color-mix(in srgb, var(--chip) 74%, #0a0a0a);
   background:
@@ -609,7 +609,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .edu-row__degree { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); }
 .edu-row__place {
   align-items: center; gap: 0.3rem; border-radius: var(--radius-pill);
-  padding: 0.16rem 0.62rem; font-size: 0.7rem; font-weight: 600; color: rgba(17,17,17,.64);
+  padding: 0.16rem 0.62rem; font-size: max(11px, 0.7rem); font-weight: 600; color: rgba(17,17,17,.64);
   white-space: nowrap;
   background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.45));
   box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 1px 5px -2px rgba(17,17,17,.16);
@@ -2061,6 +2061,10 @@ html.is-loading .site-header {
    .partner-orb already uses for --brand) — pinned to one of the site's 3 existing brand hues
    (accent/primary/teal), never a new color; falls back to the original copper if --tint is ever
    unset (e.g. before Alpine hydrates). */
+/* Badge tint per hero card (names come from ui.json heroCard.tintNames). */
+.hero-card__badge[data-tint="accent"] { --tint: var(--accent); --tint-ink: var(--accent-bright); }
+.hero-card__badge[data-tint="primary"] { --tint: var(--c-violet); --tint-ink: var(--c-violet); }
+.hero-card__badge[data-tint="blue"] { --tint: var(--c-blue); --tint-ink: var(--c-blue); }
 .hero-card__badge {
   position: relative;
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
@@ -4907,13 +4911,11 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
 .modal-panel {
   position: relative; width: 100%; max-width: 32rem; overflow: hidden;
   border-radius: var(--radius-card); padding: 1.5rem;
-  /* Liquid glass, same recipe as the outage dialog: translucent fill (padding-box) over a specular rim that
-     is bright at the lit corners and fades between (border-box). The page behind is already blurred by
-     .modal-backdrop — a panel-level backdrop-filter would only see that backdrop, so none is added. */
+  /* Liquid glass, same recipe as the outage dialog: a translucent fill, with the conic specular rim drawn by ::after
+     (a masked 1px ring, so it never shows through the fill). The page behind is already blurred by .modal-backdrop —
+     a panel-level backdrop-filter would only see that backdrop, so none is added. */
   border: 1px solid transparent;
-  background:
-    linear-gradient(155deg, rgba(255,255,255,.82), rgba(255,255,255,.64)) padding-box,
-    linear-gradient(140deg, rgba(255,255,255,.95), rgba(255,255,255,.14) 38%, rgba(255,255,255,.14) 62%, rgba(255,255,255,.85)) border-box;
+  background: linear-gradient(155deg, rgba(255,255,255,.82), rgba(255,255,255,.64));
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.9),
     inset 0 0 26px rgba(255,255,255,.28),
@@ -4922,6 +4924,27 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   transform: translateY(28px); transition: transform 0.45s var(--ease-spring);
 }
 .modal-backdrop.is-open .modal-panel { transform: none; }
+/* Phones: the dialog becomes a bottom sheet — attached to the bottom edge, large top corners, a grabber, the
+   home-indicator inset respected, and a taller slide-up. Scrolls inside itself when the form outgrows the screen. */
+@media (max-width: 639.98px) {
+  .modal-backdrop { padding: 0; }
+  .modal-panel {
+    max-width: none; max-height: calc(100dvh - 1rem);
+    overflow-y: auto; overscroll-behavior: contain;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+    transform: translateY(100%); transition: transform 0.55s var(--ease-spring);
+  }
+  .modal-backdrop.is-open .modal-panel { transform: none; }
+  .modal-titlebar::before {
+    content: ""; position: absolute; top: 0.5rem; left: 50%; z-index: 2; pointer-events: none;
+    width: 2.25rem; height: 0.3rem; border-radius: 9999px; background: rgba(17,17,17,.18);
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel { transition: none; transform: none; }
+}
 /* Shiny-tile gloss, same recipe as .icon-chip/.menu-btn — a light glass surface reads flatter
    without it once every other control on the page has the treatment. */
 .modal-panel::before {
@@ -4930,6 +4953,19 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   opacity: 0.8;
 }
 .modal-panel > * { position: relative; z-index: 1; }
+/* Conic specular rim: bright at the lit top-left and bottom-right, tint-fringed either side, faint between. */
+.modal-panel::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; padding: 1px; border-radius: inherit; pointer-events: none;
+  background: conic-gradient(from 0deg at 50% 50%,
+      rgba(255,255,255,.16) 0deg, rgba(255,255,255,.16) 40deg,
+      color-mix(in srgb, var(--tint, #b15f2c) 45%, rgba(255,255,255,.7)) 100deg,
+      rgba(255,255,255,.95) 135deg,
+      color-mix(in srgb, var(--tint, #b15f2c) 35%, rgba(255,255,255,.6)) 170deg,
+      rgba(255,255,255,.16) 225deg, rgba(255,255,255,.16) 275deg,
+      rgba(255,255,255,1) 315deg, rgba(255,255,255,.16) 355deg, rgba(255,255,255,.16) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
 /* macOS-style title bar: close control at left, small centered title, thin divider beneath — the
    heading/form content starts fresh below it on its own line instead of sharing space with a
    floating button (the old .modal-close was absolutely positioned over the top of .modal-header,
@@ -5569,5 +5605,46 @@ main > .sec > .create-band { padding-block: 0; }
 @supports (corner-shape: squircle) {
   .glass-panel, .glass-card, .hero-card, .modal-panel { corner-shape: squircle; }
   .hero-card__inner, .hero-card__body { corner-shape: squircle; }
-  .glass-panel::before, .glass-panel::after, .glass-card::before, .hero-card::after, .modal-panel::before { corner-shape: inherit; }
+  .glass-panel::before, .glass-panel::after, .glass-card::before, .hero-card::after, .modal-panel::before, .modal-panel::after { corner-shape: inherit; }
 }
+
+/* The `hidden` attribute always wins over a component's own display value (islands toggle it instead of inline styles). */
+[hidden] { display: none !important; }
+
+/* Position indices as plain CSS (no inline style attributes): the stagger / entrance delays read these. */
+.editorial-list > .editorial-row:nth-child(1) { --row-i: 0; }
+.editorial-list > .editorial-row:nth-child(2) { --row-i: 1; }
+.editorial-list > .editorial-row:nth-child(3) { --row-i: 2; }
+.editorial-list > .editorial-row:nth-child(4) { --row-i: 3; }
+.editorial-list > .editorial-row:nth-child(5) { --row-i: 4; }
+.editorial-list > .editorial-row:nth-child(6) { --row-i: 5; }
+.editorial-list > .editorial-row:nth-child(7) { --row-i: 6; }
+.editorial-list > .editorial-row:nth-child(8) { --row-i: 7; }
+.editorial-list > .editorial-row:nth-child(9) { --row-i: 8; }
+.editorial-list > .editorial-row:nth-child(10) { --row-i: 9; }
+.editorial-list > .editorial-row:nth-child(11) { --row-i: 10; }
+.editorial-list > .editorial-row:nth-child(12) { --row-i: 11; }
+.editorial-list > .editorial-row:nth-child(13) { --row-i: 12; }
+.editorial-list > .editorial-row:nth-child(14) { --row-i: 13; }
+.editorial-list > .editorial-row:nth-child(15) { --row-i: 14; }
+.editorial-list > .editorial-row:nth-child(16) { --row-i: 15; }
+.editorial-list > .editorial-row:nth-child(17) { --row-i: 16; }
+.editorial-list > .editorial-row:nth-child(18) { --row-i: 17; }
+.editorial-list > .editorial-row:nth-child(19) { --row-i: 18; }
+.editorial-list > .editorial-row:nth-child(20) { --row-i: 19; }
+.editorial-list > .editorial-row:nth-child(21) { --row-i: 20; }
+.editorial-list > .editorial-row:nth-child(22) { --row-i: 21; }
+.editorial-list > .editorial-row:nth-child(23) { --row-i: 22; }
+.editorial-list > .editorial-row:nth-child(24) { --row-i: 23; }
+.nav-overlay ul > li:nth-child(1) > .nav-overlay__item { --stagger-i: 0; }
+.nav-overlay ul > li:nth-child(2) > .nav-overlay__item { --stagger-i: 1; }
+.nav-overlay ul > li:nth-child(3) > .nav-overlay__item { --stagger-i: 2; }
+.nav-overlay ul > li:nth-child(4) > .nav-overlay__item { --stagger-i: 3; }
+.nav-overlay ul > li:nth-child(5) > .nav-overlay__item { --stagger-i: 4; }
+.nav-overlay ul > li:nth-child(6) > .nav-overlay__item { --stagger-i: 5; }
+.nav-overlay ul > li:nth-child(7) > .nav-overlay__item { --stagger-i: 6; }
+.nav-overlay ul > li:nth-child(8) > .nav-overlay__item { --stagger-i: 7; }
+.nav-overlay ul > li:nth-child(9) > .nav-overlay__item { --stagger-i: 8; }
+.nav-overlay ul > li:nth-child(10) > .nav-overlay__item { --stagger-i: 9; }
+.nav-overlay ul > li:nth-child(11) > .nav-overlay__item { --stagger-i: 10; }
+.nav-overlay ul > li:nth-child(12) > .nav-overlay__item { --stagger-i: 11; }

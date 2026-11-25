@@ -1,5 +1,8 @@
+import { EnvVar } from "../enums/EnvVar";
+import { HttpStatus } from "../enums/HttpStatus";
 import type { SecuritySeverity as SecuritySeverityType } from "../enums/SecuritySeverity";
 import { SecuritySeverity } from "../enums/SecuritySeverity";
+import type { SecurityConfig } from "../types/SecurityConfig";
 import { timingSafeEqual } from "./support/timingSafeEqual";
 import type { SecurityServices } from "./bootstrap/container";
 import type { ContactController } from "./controllers/ContactController";
@@ -14,11 +17,6 @@ import { isMaintenanceOn } from "./services/FeatureFlags";
 import type { WorkerEnvironment } from "./types/WorkerEnvironment";
 
 const CONTACT_PATH = "/api/contact";
-const HTTP_NO_CONTENT = 204;
-const HTTP_METHOD_NOT_ALLOWED = 405;
-const HTTP_SERVICE_UNAVAILABLE = 503;
-const HTTP_INTERNAL_ERROR = 500;
-const MAINTENANCE_RETRY_AFTER_SECONDS = "3600";
 
 export interface WorkerApplicationDependencies {
   readonly security: SecurityServices;
@@ -35,6 +33,9 @@ type RejectedVerdict = Extract<GuardVerdict, { allowed: false }>;
  * shell-console 500 page (the visitor sees only the reference id; the exception goes to the log).
  */
 export class WorkerApplication {
+  /** Environments whose invalid variables were already reported (once per isolate, not once per request). */
+  private readonly reportedEnvironments = new WeakSet<object>();
+
   constructor(private readonly dependencies: WorkerApplicationDependencies) {}
 
   async handle(request: Request, environment: WorkerEnvironment, logger: Logger): Promise<Response> {
@@ -45,7 +46,7 @@ export class WorkerApplication {
         { event: "unhandled_exception", location: `${request.method} ${new URL(request.url).pathname}`, reason: "request handler threw" },
         error,
       );
-      return this.errorPage(request, environment, logger, "server-error", HTTP_INTERNAL_ERROR);
+      return this.errorPage(request, environment, logger, "server-error", HttpStatus.InternalServerError);
     }
   }
 
@@ -53,32 +54,35 @@ export class WorkerApplication {
     const { security, contact, cspReports, staticSite } = this.dependencies;
     const url = new URL(request.url);
 
-    const verdict = security.guard.inspect(request);
-    if (!verdict.allowed) return this.rejected(request, logger, verdict);
+    const { config, issues } = security.configResolver.resolve(environment);
+    this.reportConfigIssues(environment, logger, issues);
+
+    const verdict = security.guardFor(config).inspect(request);
+    if (!verdict.allowed) return this.rejected(request, logger, verdict, config);
 
     // Same-origin only, so a CORS preflight is never legitimate: answer it without touching assets.
     if (request.method === "OPTIONS") {
       return new Response(null, {
-        status: HTTP_NO_CONTENT,
-        headers: { ...buildSecurityHeaders(request.url), Allow: security.config.allowedMethods.join(", ") },
+        status: HttpStatus.NoContent,
+        headers: { ...buildSecurityHeaders(request.url), Allow: config.allowedMethods.join(", ") },
       });
     }
 
     // Maintenance mode is a hard site-wide 503; the owner bypasses it with ?preview=<ADMIN_TOKEN>.
     let isPreview = false;
     if (isMaintenanceOn(environment)) {
-      const adminToken = environment.ADMIN_TOKEN;
-      isPreview = Boolean(adminToken) && timingSafeEqual(url.searchParams.get("preview") ?? "", adminToken ?? "");
-      if (!isPreview) return this.maintenance(request, environment, logger);
+      const adminToken = environment[EnvVar.AdminToken];
+      isPreview = typeof adminToken === "string" && adminToken !== "" && timingSafeEqual(url.searchParams.get("preview") ?? "", adminToken);
+      if (!isPreview) return this.maintenance(request, environment, logger, config);
     }
 
-    if (url.pathname === CSP_REPORT_PATH) return cspReports.handle(request, environment, logger);
-    if (url.pathname === CONTACT_PATH) return contact.handle(request, environment, logger);
+    if (url.pathname === CSP_REPORT_PATH) return cspReports.handle(request, environment, logger, config);
+    if (url.pathname === CONTACT_PATH) return contact.handle(request, environment, logger, config);
     return staticSite.respond(request, environment, logger, { isPreview });
   }
 
   /** Bare status for the visitor; the reason goes to the security log. */
-  private rejected(request: Request, logger: Logger, verdict: RejectedVerdict): Response {
+  private rejected(request: Request, logger: Logger, verdict: RejectedVerdict, config: SecurityConfig): Response {
     const severity: SecuritySeverityType = verdict.event === "scanner_probe" ? SecuritySeverity.Low : SecuritySeverity.Medium;
     logSecurityEvent(logger.forActor("RequestGuard"), request, { event: verdict.event, severity, reason: verdict.reason });
     const headers: Record<string, string> = {
@@ -86,16 +90,25 @@ export class WorkerApplication {
       "Cache-Control": "no-store",
       "Content-Type": "text/plain; charset=utf-8",
     };
-    if (verdict.status === HTTP_METHOD_NOT_ALLOWED) headers["Allow"] = this.dependencies.security.config.allowedMethods.join(", ");
+    if (verdict.status === HttpStatus.MethodNotAllowed) headers["Allow"] = config.allowedMethods.join(", ");
     return new Response(request.method === "HEAD" ? null : "Not available", { status: verdict.status, headers });
   }
 
-  private maintenance(request: Request, environment: WorkerEnvironment, logger: Logger): Promise<Response> {
+  private maintenance(request: Request, environment: WorkerEnvironment, logger: Logger, config: SecurityConfig): Promise<Response> {
     logger.warn({ event: "maintenance_served", location: new URL(request.url).pathname, reason: "MAINTENANCE_MODE is on" });
-    return this.errorPage(request, environment, logger, "maintenance", HTTP_SERVICE_UNAVAILABLE, {
+    return this.errorPage(request, environment, logger, "maintenance", HttpStatus.ServiceUnavailable, {
       overrides: { title: environment.MAINTENANCE_TITLE, message: environment.MAINTENANCE_MESSAGE },
-      extraHeaders: { "Retry-After": MAINTENANCE_RETRY_AFTER_SECONDS },
+      extraHeaders: { "Retry-After": String(config.maintenanceRetryAfterSeconds) },
     });
+  }
+
+  /** Ignored variables are a deploy mistake worth one warning, never a reason to fail requests. */
+  private reportConfigIssues(environment: WorkerEnvironment, logger: Logger, issues: readonly string[]): void {
+    if (issues.length === 0 || this.reportedEnvironments.has(environment)) return;
+    this.reportedEnvironments.add(environment);
+    for (const issue of issues) {
+      logger.warn({ event: "invalid_env_config", location: "EnvironmentConfigResolver", reason: `${issue}; the security.json default is used` });
+    }
   }
 
   private errorPage(

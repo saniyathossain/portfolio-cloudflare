@@ -1,5 +1,5 @@
 {
-  "$comment": "Outage / error pages rendered as a shell console. One entry per page; the 5W fields mirror the log format in docs/aidlc/54 §6. Served from /errors/<slug>/ (404 also as /404.html).",
+  "$comment": "Outage / error pages rendered as a shell console. One entry per page; the 5W fields mirror the log format in docs/aidlc/54 §6. Served from /errors/<slug>/ (404 also as /404.html). services: each page lists the services it reports; ids must exist in terminal.services.catalog (add `cache`, `dataSource`, … there first).",
   "terminal": {
     "windowTitle": "saniyat — zsh — 80×24",
     "userName": "visitor",
@@ -24,9 +24,29 @@
       "reconnected": "back online — reloading",
       "srAnnouncement": "Retrying automatically in {seconds} seconds."
     },
+    "well": {
+      "requestVerb": "GET"
+    },
     "orb": {
       "idleGlyph": "!",
       "secondsLabel": "sec"
+    },
+    "services": {
+      "heading": "services",
+      "states": {
+        "ok": "ok",
+        "degraded": "degraded",
+        "down": "down",
+        "unknown": "unknown"
+      },
+      "catalog": {
+        "edge": "edge",
+        "worker": "worker",
+        "assets": "assets",
+        "network": "network",
+        "cache": "cache",
+        "dataSource": "data source"
+      }
     }
   },
   "pages": {
@@ -51,7 +71,22 @@
       ],
       "retry": {
         "isEnabled": false
-      }
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "ok"
+        },
+        {
+          "id": "assets",
+          "state": "ok",
+          "detail": "no file at this path"
+        }
+      ]
     },
     "server-error": {
       "slug": "server-error",
@@ -79,7 +114,23 @@
       ],
       "retry": {
         "isEnabled": true
-      }
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "down",
+          "detail": "unhandled exception"
+        },
+        {
+          "id": "network",
+          "state": "unknown",
+          "live": "network"
+        }
+      ]
     },
     "bad-gateway": {
       "slug": "bad-gateway",
@@ -107,7 +158,22 @@
       ],
       "retry": {
         "isEnabled": true
-      }
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "ok"
+        },
+        {
+          "id": "assets",
+          "state": "down",
+          "detail": "not answering"
+        }
+      ]
     },
     "maintenance": {
       "slug": "maintenance",
@@ -138,7 +204,18 @@
         "baseDelayMs": 15000,
         "maxDelayMs": 120000,
         "maxAttempts": 8
-      }
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "degraded",
+          "detail": "maintenance mode"
+        }
+      ]
     },
     "offline": {
       "slug": "offline",
@@ -162,7 +239,22 @@
       "retry": {
         "isEnabled": true,
         "reloadWhenOnline": true
-      }
+      },
+      "services": [
+        {
+          "id": "network",
+          "state": "down",
+          "live": "network"
+        },
+        {
+          "id": "edge",
+          "state": "unknown"
+        },
+        {
+          "id": "worker",
+          "state": "unknown"
+        }
+      ]
     }
   },
   "retryDefaults": {

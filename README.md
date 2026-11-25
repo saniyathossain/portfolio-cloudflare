@@ -150,6 +150,12 @@ npx wrangler tail --format json | grep '"channel":"security"'   # live security 
 
 Production checklist (bindings, secrets, dashboard rules, what is still missing): `docs/aidlc/58`.
 
+### Configuration (env vars)
+Rate limits, request-size caps, retention, maintenance and logging are tunable without a code change. Copy `.dev.vars.example` to `.dev.vars`
+for local work; in production set public values under `[vars]` in `wrangler.toml` (or the Dashboard) and secrets with `wrangler secret put`.
+Every name, default and allowed range is listed in `docs/aidlc/66-env-configuration-and-worker-refactor.md` (names: `src/enums/EnvVar.ts`).
+Invalid values are ignored and logged once as `invalid_env_config`.
+
 CSP no longer allows `'unsafe-eval'` (Alpine is gone, doc 61). Remaining gap: `'unsafe-inline'` for the inline bootstrap scripts and critical `<style>` — next step is hashes/nonces.
 
 ## SEO checklist

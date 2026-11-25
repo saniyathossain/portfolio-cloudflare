@@ -1,5 +1,6 @@
 ---
 import { portfolio } from "../../bootstrap/container";
+import { brandColorClass } from "../../lib/brandPalette";
 
 const { partners, copy } = portfolio;
 ---
@@ -9,13 +10,12 @@ const { partners, copy } = portfolio;
   <div class="hero-partners__list" data-stagger>
     {partners.map((partner) => (
       <a
-        class="partner-orb"
+        class:list={["partner-orb", brandColorClass(partner.color)]}
         tabindex="0"
         href={partner.website}
         target={partner.website ? "_blank" : undefined}
         rel={partner.website ? "noopener noreferrer" : undefined}
         aria-label={partner.website ? `Visit ${partner.name} website` : partner.name}
-        style={`--brand:${partner.color}`}
       >
         <span class="partner-orb__badge">
           {partner.logo ? (

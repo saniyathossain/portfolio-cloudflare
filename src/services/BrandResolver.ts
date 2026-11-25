@@ -1,3 +1,4 @@
+import { brandColorClass } from "../lib/brandPalette";
 import { deriveUiTint } from "../lib/brandTint";
 import { readableForeground } from "../lib/color";
 import type { StackBrand } from "../types/StackBrand";
@@ -10,6 +11,15 @@ export class BrandResolver {
     private readonly ui: Pick<UiConfig, "brandTint" | "brandIconBasePath">,
   ) {}
 
+  /** Every tint `resolve` can return (each catalogued stack plus the unknown-brand fallback). */
+  allTints(): string[] {
+    const tints = Object.values(this.catalog.entries).map(
+      (entry) => entry.tint ?? deriveUiTint(entry.color, this.ui.brandTint),
+    );
+    tints.push(deriveUiTint(this.ui.brandTint.unknownBrandColor, this.ui.brandTint));
+    return tints;
+  }
+
   resolve(stackName: string): StackBrand {
     const lookupKey = stackName.toLowerCase().trim();
     const entry = this.catalog.entries[lookupKey];
@@ -18,6 +28,7 @@ export class BrandResolver {
     return {
       label: stackName,
       color,
+      colorClass: brandColorClass(color),
       rawColor,
       iconSrc: entry ? `${this.ui.brandIconBasePath}/${entry.icon}.svg` : null,
       monogram: (stackName.trim().charAt(0) || "?").toUpperCase(),

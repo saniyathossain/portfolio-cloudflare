@@ -1,6 +1,8 @@
 ---
 import { errorCatalog, portfolio } from "../bootstrap/container";
 import { fillTemplate } from "../lib/text";
+// The page's stylesheet lives in its own file and is inlined at build time, so an outage page never depends on a second request.
+import errorPageCss from "../styles/error-page.css?inline";
 
 interface Props {
   /** Key in errors.json → pages. */
@@ -18,6 +20,9 @@ const resolveHref = (href: string) => fillTemplate(href, { email: portfolio.prof
 // Same arrow glyph the site's pill buttons use (Lucide-style stroke), inlined so the page needs no other file.
 const arrowIcon =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+// Prompt chevron for the request line (same stroke language as the arrow chip).
+const promptIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
 const { retryDefaults } = errorCatalog;
 const retryConfig = {
   baseDelayMs: page.retry.baseDelayMs ?? retryDefaults.baseDelayMs,
@@ -46,416 +51,7 @@ const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
     <meta name="theme-color" content={portfolio.site.themeColor} />
     <title>{page.title} — {portfolio.profile.name}</title>
     <!-- Self-contained on purpose: an outage page must not depend on any other file being reachable. -->
-    <style is:inline>
-      /* One liquid-glass dialog on the site's own page colour. Same recipe as the site: Inter 800 headings at -0.042em,
-         translucent fill + backdrop blur + hue-tinted rim + soft-light top film, dark and glass pill buttons with the
-         arrow chip. Real backdrop-filter is fine here: one fixed, non-scrolling surface (docs/DESIGN.md §4 rule).
-         Self-contained on purpose: an outage page must not depend on any other file being reachable. */
-      @font-face {
-        font-family: "Inter";
-        font-style: normal;
-        font-weight: 400 800;
-        font-display: swap;
-        src: url("/assets/fonts/inter-latin.woff2") format("woff2");
-      }
-      @font-face {
-        font-family: "Inter Fallback";
-        src: local("Arial"), local("Helvetica Neue"), local("Liberation Sans");
-        ascent-override: 90.44%;
-        descent-override: 22.52%;
-        line-gap-override: 0%;
-        size-adjust: 107.4%;
-      }
-      :root {
-        color-scheme: light;
-        --fg: #111111;
-        --ink: #0a0a0a;
-        --faint: #8d8d8d;
-        --accent: #b15f2c;
-        --accent-dark: #97501f;
-        --error: #d62f45;
-        --tint: var(--accent);
-        --tint-deep: var(--accent-dark);
-        --sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-        --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
-        --ease-out: cubic-bezier(0.22, 1, 0.28, 1);
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html {
-        -webkit-text-size-adjust: 100%;
-      }
-      ::selection {
-        background: color-mix(in srgb, var(--tint) 24%, transparent);
-      }
-      body {
-        margin: 0;
-        min-height: 100dvh;
-        display: grid;
-        place-items: center;
-        padding: 1.25rem;
-        font-family: var(--sans);
-        letter-spacing: -0.011em;
-        line-height: 1.5;
-        color: var(--fg);
-        -webkit-font-smoothing: antialiased;
-        overflow-x: hidden;
-        /* The site's own page colour: the hero's sun-glare ray over the --hero-from → --hero-to gradient. */
-        background:
-          radial-gradient(38rem 30rem at 88% -8%, rgba(255, 214, 164, 0.3), transparent 62%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 38%),
-          linear-gradient(160deg, #f1f0ee 0%, #e3e2df 100%);
-        background-attachment: fixed;
-      }
-
-      /* Aurora whisper — the exact layer the site paints behind its glass (styles.css body::before), without the drift. */
-      body::before {
-        content: "";
-        position: fixed;
-        inset: -25vmax;
-        z-index: -1;
-        pointer-events: none;
-        background:
-          radial-gradient(52vmax 42vmax at 76% 1%, rgba(255, 216, 168, 0.1), transparent 60%),
-          radial-gradient(40vmax 40vmax at 12% 4%, rgba(110, 108, 240, 0.14), transparent 58%),
-          radial-gradient(36vmax 36vmax at 88% 0%, rgba(10, 132, 255, 0.11), transparent 58%),
-          radial-gradient(46vmax 46vmax at 84% 82%, rgba(63, 208, 224, 0.12), transparent 60%),
-          radial-gradient(42vmax 42vmax at 4% 90%, rgba(255, 159, 10, 0.07), transparent 58%),
-          radial-gradient(32vmax 32vmax at 48% 48%, rgba(255, 92, 138, 0.035), transparent 62%);
-        filter: blur(14px) saturate(118%);
-      }
-      .window {
-        position: relative;
-        width: min(28.5rem, 100%);
-        display: grid;
-        justify-items: center;
-        gap: 1.5rem;
-        padding: 2.5rem 2rem 1.6rem;
-        text-align: center;
-        border-radius: 2rem;
-        border: 1px solid transparent;
-        /* padding-box = the glass; border-box = a specular rim that is bright at the lit corners and fades between. */
-        background:
-          linear-gradient(155deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.2)) padding-box,
-          linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.12) 38%, rgba(255, 255, 255, 0.12) 62%, rgba(255, 255, 255, 0.85)) border-box;
-        -webkit-backdrop-filter: blur(26px) saturate(215%);
-        backdrop-filter: blur(26px) saturate(215%);
-        box-shadow:
-          inset 0 0 26px rgba(255, 255, 255, 0.38),
-          inset 0 -1px 0 rgba(255, 255, 255, 0.45),
-          0 30px 70px -20px rgba(24, 30, 56, 0.28),
-          0 6px 18px rgba(24, 30, 56, 0.1),
-          0 26px 60px -32px color-mix(in srgb, var(--tint) 45%, transparent),
-          inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        isolation: isolate;
-      }
-      @supports (corner-shape: squircle) {
-        .window, .window::before { corner-shape: squircle; }
-      }
-      .window.is-error {
-        --tint: var(--error);
-        --tint-deep: #8f1d2e;
-      }
-      /* Soft-light top film, as on .glass-panel. */
-      .window::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        border-radius: inherit;
-        pointer-events: none;
-        background:
-          radial-gradient(110% 70% at 12% -10%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 62%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, transparent 26%);
-        mix-blend-mode: soft-light;
-        opacity: 0.55;
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .window {
-          animation: arrive 0.8s var(--ease-out) both;
-        }
-      }
-      @keyframes arrive {
-        from {
-          opacity: 0;
-          transform: translateY(0.75rem) scale(0.985);
-        }
-      }
-
-      /* Orb: a glass lens (same recipe as the site's clock face) whose own edge is the countdown — one ring, no track. */
-      .orb {
-        --orb: var(--accent);
-        --orb-deep: var(--accent-dark);
-        position: relative;
-        width: 9.5rem;
-        aspect-ratio: 1;
-        display: grid;
-        place-items: center;
-        user-select: none;
-      }
-      .window.is-error .orb {
-        --orb: var(--error);
-        --orb-deep: #8f1d2e;
-      }
-      .orb.is-online {
-        --orb: #28c840;
-        --orb-deep: #1f8f4e;
-      }
-      .orb__glass {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        background:
-          radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.3) 34%, transparent 64%),
-          radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--orb) 34%, transparent) 0%, transparent 62%),
-          linear-gradient(160deg, rgba(255, 255, 255, 0.85), color-mix(in srgb, var(--orb) 12%, rgba(255, 255, 255, 0.6)));
-        box-shadow:
-          inset 0 1px 2px rgba(255, 255, 255, 0.95),
-          inset 0 -8px 18px color-mix(in srgb, var(--orb) 20%, transparent),
-          0 14px 28px -10px color-mix(in srgb, var(--orb-deep) 50%, transparent);
-      }
-      .orb__ring {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        transform: rotate(-90deg);
-        overflow: visible;
-        pointer-events: none;
-      }
-      .orb__progress {
-        fill: none;
-        stroke: var(--orb);
-        stroke-width: 3;
-        stroke-linecap: round;
-        stroke-dasharray: 100;
-        stroke-dashoffset: 0;
-      }
-      .orb__value {
-        position: relative;
-        font-size: 3.5rem;
-        font-weight: 300;
-        line-height: 1;
-        letter-spacing: -0.05em;
-        font-variant-numeric: tabular-nums;
-        color: var(--orb-deep);
-        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
-      }
-      .orb__value small {
-        display: block;
-        margin-top: 0.3rem;
-        font-size: 0.6rem;
-        font-weight: 500;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: color-mix(in srgb, var(--orb-deep) 55%, rgba(17, 17, 17, 0.5));
-        text-align: center;
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .orb__glass {
-          animation: float 5.2s ease-in-out infinite alternate;
-        }
-        .orb__progress {
-          animation: drain var(--orb-drain-ms, 0ms) linear forwards;
-        }
-        .orb:not(.is-counting) .orb__progress {
-          animation: none;
-        }
-      }
-      @keyframes float {
-        from {
-          transform: translateY(0.14rem);
-        }
-        to {
-          transform: translateY(-0.14rem);
-        }
-      }
-      @keyframes drain {
-        to {
-          stroke-dashoffset: 100;
-        }
-      }
-
-      .copy {
-        display: grid;
-        gap: 0.7rem;
-        justify-items: center;
-      }
-      h1 {
-        margin: 0;
-        font-size: clamp(2.3rem, 2.6vw + 1.3rem, 3rem);
-        font-weight: 600;
-        line-height: 1.05;
-        letter-spacing: -0.034em;
-        text-wrap: balance;
-        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 12px rgba(17, 17, 17, 0.06);
-      }
-      .message {
-        margin: 0;
-        max-width: 31ch;
-        font-size: 1.0625rem;
-        font-weight: 400;
-        letter-spacing: -0.006em;
-        line-height: 1.65;
-        text-wrap: pretty;
-        color: color-mix(in srgb, var(--tint-deep) 22%, rgba(17, 17, 17, 0.78));
-      }
-      .retry {
-        margin: 0.2rem 0 0;
-        font-size: 0.6875rem;
-        font-weight: 500;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: color-mix(in srgb, var(--tint-deep) 70%, rgba(17, 17, 17, 0.4));
-      }
-      .retry-text {
-        display: block;
-      }
-
-      /* Buttons: the site's pill buttons — dark primary + glass secondary, each with its white arrow chip. */
-      .actions {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.7rem;
-      }
-      .actions a,
-      .actions button {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.7rem;
-        padding: 0.4rem 0.4rem 0.4rem 1.2rem;
-        border: 0;
-        border-radius: 9999px;
-        font: inherit;
-        font-size: 0.875rem;
-        font-weight: 500;
-        letter-spacing: -0.005em;
-        text-decoration: none;
-        cursor: pointer;
-        transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
-      }
-      .actions li:first-child a,
-      .actions li:first-child button {
-        color: #fff;
-        background: linear-gradient(145deg, #2b2b2b, #060606);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.3),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-          0 10px 24px rgba(17, 17, 17, 0.18);
-      }
-      .actions li:not(:first-child) a,
-      .actions li:not(:first-child) button {
-        color: #111;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.68));
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.95),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.7),
-          0 4px 14px -7px rgba(17, 17, 17, 0.14);
-      }
-      .actions .chip {
-        display: grid;
-        place-items: center;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 9999px;
-        background: #fff;
-        color: var(--ink);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 3px rgba(17, 17, 17, 0.12);
-        transition: transform 0.45s var(--ease-glass);
-      }
-      .actions li:not(:first-child) .chip {
-        background: #111;
-        color: #fff;
-      }
-      .actions .chip svg {
-        width: 0.95rem;
-        height: 0.95rem;
-      }
-      .actions a:hover,
-      .actions button:hover {
-        transform: translateY(-1px);
-      }
-      .actions a:hover .chip,
-      .actions button:hover .chip {
-        transform: translateX(2px);
-      }
-      .actions a:active,
-      .actions button:active {
-        transform: scale(0.98);
-      }
-      .actions a:focus-visible,
-      .actions button:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 3px;
-      }
-      .actions .desc {
-        display: none;
-      }
-
-      .footer {
-        margin: 0;
-        padding-top: 1rem;
-        width: 100%;
-        border-top: 1px solid rgba(17, 17, 17, 0.08);
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.2rem 0.9rem;
-        font-size: 0.6875rem;
-        font-weight: 500;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: var(--faint);
-      }
-      .ref {
-        font-variant-numeric: tabular-nums;
-      }
-      .ref::before {
-        content: attr(data-label) " ";
-        opacity: 0.7;
-      }
-      .ref:empty {
-        display: none;
-      }
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        margin: -1px;
-        padding: 0;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
-        border: 0;
-      }
-      @media (max-width: 30rem) {
-        .window {
-          padding: 2rem 1.25rem 1.4rem;
-          border-radius: 1.75rem;
-        }
-        .orb {
-          width: 8.5rem;
-        }
-        .orb__value {
-          font-size: 3rem;
-        }
-      }
-      /* No backdrop-filter support: a slightly more opaque fill keeps the text legible. */
-      @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-        .window {
-          background:
-            linear-gradient(155deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.74)) padding-box,
-            linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.3)) border-box;
-        }
-      }
-    </style>
+    <style is:inline set:html={errorPageCss}></style>
   </head>
   <body>
     <main class:list={["window", tone]} aria-labelledby="error-title">
@@ -477,18 +73,52 @@ const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
           {page.message}
         </p>
         {page.retry.isEnabled && (
-          <>
-            <p
-              class="retry"
+          <p class="sr-only" role="status" data-retry-sr data-retry-sr-template={terminal.retry.srAnnouncement}>
+            {terminal.retry.srAnnouncement.replace("{seconds}", String(firstDelaySeconds))}
+          </p>
+        )}
+      </div>
+      <div class="well">
+        <ul class="well__list" aria-label="Request status">
+          <li class="well__line" hidden data-well-request>
+            <span class="well__mark" aria-hidden="true" set:html={promptIcon} />
+            <span class="well__text"><b>{terminal.well.requestVerb}</b> <span data-well-path></span></span>
+          </li>
+          <li class="well__line">
+            <span class="well__mark well__mark--status" aria-hidden="true"></span>
+            <span class="well__text">{statusLabel}</span>
+          </li>
+          {page.retry.isEnabled && (
+            <li
+              class="well__line"
               hidden
               data-retry={JSON.stringify(retryConfig)}
               data-retry-copy={JSON.stringify(retryCopyForClient)}
             >
-              <span class="retry-text" data-retry-text />
-            </p>
-            <p class="sr-only" role="status" data-retry-sr data-retry-sr-template={terminal.retry.srAnnouncement}>
-              {terminal.retry.srAnnouncement.replace("{seconds}", String(firstDelaySeconds))}
-            </p>
+              <span class="well__mark well__mark--retry" aria-hidden="true"></span>
+              <span class="well__text" data-retry-text></span>
+            </li>
+          )}
+        </ul>
+        {page.services.length > 0 && (
+          <>
+            <h2 class="well__heading" id="services-heading">
+              {terminal.services.heading}
+            </h2>
+            <ul class="well__list" aria-labelledby="services-heading" data-service-labels={JSON.stringify(terminal.services.states)}>
+              {page.services.map((service) => (
+                <li class="well__line well__line--service" data-service-state={service.state} data-service-live={service.live}>
+                  <span class="well__mark well__mark--service" aria-hidden="true" />
+                  <span class="well__text">
+                    <b>{terminal.services.catalog[service.id]}</b>
+                    {service.detail && <span class="service__detail">{service.detail}</span>}
+                  </span>
+                  <span class="service__state" data-service-text>
+                    {terminal.services.states[service.state]}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </>
         )}
       </div>
@@ -509,24 +139,18 @@ const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
           </li>
         ))}
       </ul>
-      <p class="footer">
-        <span>{statusLabel}</span>
-        <span class="ref" data-field="ref" data-label={terminal.labels.ref}></span>
-      </p>
     </main>
     <!-- Optional enhancement: request time/path and the self-healing retry countdown (exponential backoff,
          configured in errors.json). Never throws; the static page is already complete without it. -->
     <script is:inline>
       (function () {
         try {
-          var fill = function (name, value) {
-            var el = document.querySelector('[data-field="' + name + '"]');
-            if (el && value) el.textContent = value;
-          };
-          fill("when", new Date().toISOString());
-          fill("where", location.pathname + location.search);
-          var cmd = document.querySelector("[data-command-template]");
-          if (cmd) cmd.textContent = cmd.getAttribute("data-command-template").replace("{url}", location.href);
+          var pathEl = document.querySelector("[data-well-path]");
+          var requestLine = document.querySelector("[data-well-request]");
+          if (pathEl && requestLine) {
+            pathEl.textContent = location.pathname + location.search;
+            requestLine.hidden = false;
+          }
 
           var storageKey = "retry:" + location.pathname;
           var store = {
@@ -550,6 +174,22 @@ const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
               } catch (ignored) {}
             },
           };
+
+          // Services marked live="network" follow the browser's connectivity (the build-time state is the fallback).
+          var serviceList = document.querySelector("[data-service-labels]");
+          var networkLine = document.querySelector('[data-service-live="network"]');
+          if (serviceList && networkLine) {
+            var stateLabels = JSON.parse(serviceList.getAttribute("data-service-labels"));
+            var syncNetwork = function () {
+              var state = navigator.onLine ? "ok" : "down";
+              networkLine.setAttribute("data-service-state", state);
+              var stateText = networkLine.querySelector("[data-service-text]");
+              if (stateText) stateText.textContent = stateLabels[state];
+            };
+            window.addEventListener("online", syncNetwork);
+            window.addEventListener("offline", syncNetwork);
+            syncNetwork();
+          }
 
           var reloadButton = document.querySelector("[data-reload]");
           if (reloadButton)
@@ -615,7 +255,8 @@ const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
             if (reduceMotion && orbProgress) orbProgress.style.strokeDashoffset = String((1 - remainingMs / totalMs) * 100);
             if (seconds === shownSeconds) return; // the DOM only changes once per displayed second
             shownSeconds = seconds;
-            textEl.textContent = copy.attemptLabel + " " + (attempt + 1) + "/" + config.maxAttempts;
+            textEl.textContent =
+              copy.attemptLabel + " " + (attempt + 1) + "/" + config.maxAttempts + " · " + copy.waitingLabel + " " + seconds + copy.secondsSuffix;
             setOrbValue(String(seconds));
             if (orbValue && !reduceMotion && orbValue.animate)
               orbValue.animate(

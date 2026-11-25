@@ -30,6 +30,7 @@ export interface WorkerEnvironment {
   readonly MAINTENANCE_TITLE?: string | undefined;
   readonly MAINTENANCE_MESSAGE?: string | undefined;
   readonly SKILLS_SCROLL_DESIGN?: string | undefined;
+  /** Numeric tunables (MAX_*, RATE_LIMIT_*, …) are read through the index signature by EnvironmentConfigResolver. */
   readonly RATE_LIMITER?: unknown;
   readonly [binding: string]: unknown;
 }
