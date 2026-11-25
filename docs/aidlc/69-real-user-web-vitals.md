@@ -14,7 +14,7 @@ without a third-party script. Doc 68 left analytics opt-in and "zero requests" b
 | Endpoint | `POST /api/vitals` (`CollectVitalsAction`): 405 for non-POST, 413 over `limits.maxVitalsBodyBytes` (4096); everything else (feature off, bot, cross-origin, rate-limited, malformed) answers a quiet `204` and stores nothing. Rate limit `rateLimits.vitals` {20 / 60 s}. Payload is whitelisted and clamped by `parseVitalsPayload` (unknown keys/sections dropped, numbers clamped, text stripped of markup). |
 | Device facts | Browser: model, platform, viewport, DPR, memory, cores, connection, reduced-motion, colour scheme. Edge: country, device type/vendor, browser, OS (`ClientProfileService`). |
 | Privacy | No IP, cookie, user id or fingerprint stored. `country` only. Retention `vitalsRetentionDays` (90), pruned opportunistically on ~2 % of writes (no cron). |
-| Storage | D1 (default connection, binding `DB`, doc 70), table from `migrations/0002_create_web_vitals_table.sql`. No binding = measurement is logged on the `info` channel (`event: web_vitals`) so it is observable via `wrangler tail` before D1 exists. |
+| Storage | D1 (default connection, binding `DB`, doc 70), table from `migrations/0002_create_web_vitals_table.sql`. No database connection = one `warn` (`event: vitals_database_missing`, shows on stderr) and an immediate 204 before the body is read; nothing is stored. |
 | Read | `GET /api/vitals?days=7&limit=500` with `Authorization: Bearer $ADMIN_TOKEN` → JSON summary: p75 + good / needs-improvement / poor shares (PSI thresholds, `vitals.json`) overall and by device type, browser, OS, device model, connection and section (`summarizeVitals`). |
 
 ## Set-up (production)

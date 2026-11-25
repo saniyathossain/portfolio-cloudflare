@@ -37,7 +37,14 @@ export class SummarizeVitalsAction {
     if (refused) return refused;
 
     const repository = await resolveRepository();
-    if (!repository.isConfigured) return jsonResponse({ samples: 0, note: "vitals_db_not_configured" }, HttpStatus.Ok);
+    if (!repository.isConfigured) {
+      vitalsLogger.warn({
+        event: "vitals_database_missing",
+        location: "SummarizeVitalsAction",
+        reason: "no database connection (bind D1 as DB or set DB_CONNECTION)",
+      });
+      return jsonResponse({ samples: 0, note: "vitals_db_not_configured" }, HttpStatus.Ok);
+    }
     const { summary } = vitalsConfig;
     const query = new URL(request.url).searchParams;
     const days = clampedInteger(query.get("days"), summary.defaultDays, summary.maxDays);

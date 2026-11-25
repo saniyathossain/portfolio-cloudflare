@@ -56,6 +56,17 @@ export class CollectVitalsAction {
     );
     if (!decision.allowed) return noContent();
 
+    // No database connected: say so (warn, so it shows on stderr) and stop before reading or parsing anything.
+    const repository = await resolveRepository();
+    if (!repository.isConfigured) {
+      vitalsLogger.warn({
+        event: "vitals_database_missing",
+        location: "CollectVitalsAction",
+        reason: "no database connection (bind D1 as DB or set DB_CONNECTION); web vitals not stored",
+      });
+      return noContent();
+    }
+
     const rawBody = await readBoundedText(request, config.limits.maxVitalsBodyBytes);
     if (rawBody === undefined) return jsonResponse({ error: "payload_too_large" }, HttpStatus.PayloadTooLarge);
 
@@ -68,18 +79,8 @@ export class CollectVitalsAction {
     if (!payload) return noContent();
 
     const row = this.toStored(payload, profile);
-    const stored = await (await resolveRepository()).save(row);
-    // Without a database the measurement still reaches `wrangler tail` / the log channels, so the feature is observable
-    // before D1 is bound.
-    if (!stored) {
-      vitalsLogger.info({
-        event: "web_vitals",
-        location: payload.page,
-        reason: "no vitals database bound",
-        context: { ...row },
-      });
-    }
-    logApiAccess(vitalsLogger, { status: HttpStatus.NoContent, outcome: stored ? "stored" : "logged", ...meta });
+    const stored = await repository.save(row);
+    logApiAccess(vitalsLogger, { status: HttpStatus.NoContent, outcome: stored ? "stored" : "failed", ...meta });
     return noContent();
   }
 
