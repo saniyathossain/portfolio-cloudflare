@@ -24,6 +24,9 @@ const entryFiles = readdirSync(SOURCE_DIR)
   .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
   .map((file) => join(SOURCE_DIR, file));
 
+// public/assets/js holds only generated bundles (gitignored), so it does not exist in a fresh clone / CI checkout.
+mkdirSync(OUTPUT_DIR, { recursive: true });
+
 // Bundles whose TypeScript entry no longer exists must not linger in public/ (and so in dist/ and production).
 const expectedBundles = new Set(entryFiles.map((entry) => `${basename(entry, ".ts")}.min.js`));
 for (const file of readdirSync(OUTPUT_DIR)) {
