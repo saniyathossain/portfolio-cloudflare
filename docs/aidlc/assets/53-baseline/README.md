@@ -11,10 +11,10 @@ Captured 2026-11-24 on branch `feat/astro-port` (from `develop` @ 4aa1510 + unco
 - Zero console errors / step errors during capture.
 
 **Not committed** (`shots/` and `lighthouse/` are gitignored — 39 MB, regenerable). Re-capture with
-`scripts/baseline-capture.mjs` (puppeteer-core borrowed from the global `lighthouse` install):
+`scripts/baseline-capture.ts` (puppeteer-core borrowed from the global `lighthouse` install):
 
 ```bash
-BASE=http://127.0.0.1:8787/ OUT=$PWD/docs/aidlc/assets/53-baseline/shots node scripts/baseline-capture.mjs
+BASE=http://127.0.0.1:8787/ OUT=$PWD/docs/aidlc/assets/53-baseline/shots node scripts/baseline-capture.ts
 ```
 
 Baseline = capture from `develop`@4aa1510 (`git worktree`/checkout) before comparing a port phase. The Lighthouse

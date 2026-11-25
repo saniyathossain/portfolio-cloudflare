@@ -9,9 +9,9 @@ animation, nav pill, hero contrast sampling, hash navigation, liquid-warp pulse,
 A faithful port is done **slice by slice**, each verified against the legacy page before the next starts — never big-bang.
 
 ## Rules for every slice
-1. Same markup and class names as the legacy DOM (`scripts/dom-diff.mjs`, islands are unwrapped from `<astro-island>`).
-2. Same behaviour: `scripts/behavior-check.mjs` reports are identical to legacy at 1440 and 360 px, no console errors.
-3. No first-visit flash (`scripts/fouc-check.mjs`), no performance loss (`scripts/lh-runs.sh`, `scripts/perf-probe.mjs`).
+1. Same markup and class names as the legacy DOM (`scripts/dom-diff.ts`, islands are unwrapped from `<astro-island>`).
+2. Same behaviour: `scripts/behavior-check.ts` reports are identical to legacy at 1440 and 360 px, no console errors.
+3. No first-visit flash (`scripts/fouc-check.ts`), no performance loss (`scripts/lh-runs.sh`, `scripts/perf-probe.ts`).
 4. Values come from JSON (`ui.json` `behavior`/`clock`, `portfolio.json` `copy`), logic from code (doc 54 §1a).
 5. Pure logic lives in `src/lib/` with unit tests; the island is a thin view (`src/islands/`).
 6. One commit per slice, only on the owner's go-ahead.

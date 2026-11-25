@@ -72,7 +72,7 @@ npm run dev        # astro dev
 npx wrangler dev   # run the real Worker locally (headers, API, rate limits) on :8787
 ```
 
-macOS image tooling used by `scripts/optimize-images.js`: `cwebp` (`brew install webp`) and ImageMagick
+macOS image tooling used by `scripts/optimize-images.ts`: `cwebp` (`brew install webp`) and ImageMagick
 (`brew install imagemagick`).
 
 ### Checks
@@ -81,9 +81,9 @@ macOS image tooling used by `scripts/optimize-images.js`: `cwebp` (`brew install
 npm run lint && npm run typecheck && npm test
 ```
 
-Parity / performance tools (run against a built `dist/` served by `node scripts/serve-static.mjs dist 8803`):
-`scripts/behavior-check.mjs`, `scripts/dom-diff.mjs`, `scripts/fouc-check.mjs`, `scripts/measure-gaps.mjs`,
-`scripts/responsive-check.mjs`, `scripts/lh-matrix.sh 3 prod=https://saniyat.com/ new=http://127.0.0.1:8803/`.
+Parity / performance tools (run against a built `dist/` served by `node scripts/serve-static.ts dist 8803`):
+`scripts/behavior-check.ts`, `scripts/dom-diff.ts`, `scripts/fouc-check.ts`, `scripts/measure-gaps.ts`,
+`scripts/responsive-check.ts`, `scripts/lh-matrix.sh 3 prod=https://saniyat.com/ new=http://127.0.0.1:8803/`.
 
 ## Deploy
 
@@ -98,7 +98,7 @@ Attach `saniyat.com` and `www.saniyat.com` under Workers → Settings → Domain
 
 Single source of truth: `public/assets/data/portfolio.json` (validated by `src/schemas/portfolioSchema.ts`). CV truth is
 `docs/cv-modern-template.md` — do not invent employers, dates or titles. UI labels, brand/colour tables and error copy
-live in `src/content/*.json`. After editing `site`/`profile`, run `node scripts/sync-head.js` (it owns the content between
+live in `src/content/*.json`. After editing `site`/`profile`, run `node scripts/sync-head.ts` (it owns the content between
 the `SYNC:HEAD` / `SYNC:H1` markers in `index.html`).
 
 ## Editing styles

@@ -19,7 +19,7 @@ catalogue (`icons.ts`) are gone. The page is server-rendered by Astro; the inter
 
 Removed code: `src/client/{app,editorial,skills-flat,data,icons}.ts`, `lib/app/*`, `lib/hydrate.ts`, `lib/siteMeta.ts`, `lib/iconCatalog.ts`, `NavOverlayData/Items.astro`,
 `public/assets/js/vendor/alpine.min.js`, the migration parity tests (`legacyPortfolioParity`, `legacyIconParity` — they compared against the code that no longer exists),
-`[x-cloak]` rule and the `data.min.js` / `icons.min.js` script tags. `scripts/build-client.mjs` now also deletes stale `*.min.js` bundles whose TS entry is gone.
+`[x-cloak]` rule and the `data.min.js` / `icons.min.js` script tags. `scripts/build-client.ts` now also deletes stale `*.min.js` bundles whose TS entry is gone.
 
 ## Boot and loading
 `boot.ts` → registers the service worker, loads `actions` + `shell-effects`, then `reveal` + `blur-reveal`, then (idle) `motion`, `liquid-hero`, `aurora`. No Alpine,
@@ -54,3 +54,13 @@ Lighthouse numbers in the session report. Hover-heavy effects (pill FLIP, tilt, 
 | Requests | 34 | 38 | 37 | 41–42 |
 | A11y / best-practices / SEO | 100 / 100 / 100 | 100 / 100 / 100 | 100 / 100 / 100 | 100 / 100 / 100 |
 Less main-thread work (no Alpine, no per-load JSON fetch) is the whole TBT gain; the extra 4 requests are small island / bundle chunks that load after paint.
+
+## Follow-up: Node tooling is TypeScript too
+Every build and verification script in `scripts/` is now strict TypeScript run directly by Node 26 (`node scripts/<name>.ts`, native type stripping — no tsx, no
+build step): `fetch-articles`, `minify-css`, `optimize-images`, `build-client`, `set-asset-version`, `sync-head`, `hash-sw`, `preflight-check`, `serve-static`,
+`behavior-check`, `fouc-check`, `dom-diff`, `responsive-check`, `measure-gaps`, `section-heights`, `experience-accordion-check`, `perf-probe`, `baseline-capture`
+plus shared helpers `scripts/lib/{build-hash,browser,console}.ts` (Artisan-style status lines, one browser launcher). They are ESM (`scripts/package.json`), use `.ts` relative
+imports and **only erasable syntax** (no enums / namespaces / parameter properties — Node strips types, it does not transform them). `astro.config.ts` and `vitest.config.ts`
+replace the `.mjs` configs. Left as they are by convention: `eslint.config.mjs` and the shell wrappers (`build.sh`, `deploy.sh`, `build-css.sh`, `lh-*.sh`, `setup-fonts.sh`).
+Outputs were compared with the old scripts: `styles.min.css`, `critical.min.css` and `src/legacy/index.html` byte-identical, asset/service-worker hashes identical, behaviour-check
+JSON identical, dom-diff `A=B` identical.

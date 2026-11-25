@@ -11,7 +11,7 @@
     "preview": "wrangler dev --port 8787 --ip 127.0.0.1",
     "deploy": "bash deploy.sh",
     "typecheck": "astro check",
-    "lint": "eslint src tests",
+    "lint": "eslint src tests scripts",
     "format": "prettier --write src tests",
     "format:check": "prettier --check src tests",
     "test": "vitest run"

@@ -667,7 +667,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 /* Below-fold sections skip initial layout/paint until they scroll near the viewport — cuts
    main-thread render work + speeds first paint. `contain-intrinsic-size` values are REAL measured
    heights (headless-Chrome CDP, desktop 1440px + mobile 390px, collapsed/default accordion state; re-measured in doc 56 after the
-   uniform-spacing change — `node scripts/section-heights.mjs`; the numbers include each section's --sec-bleed padding) —
+   uniform-spacing change — `node scripts/section-heights.ts`; the numbers include each section's --sec-bleed padding) —
    a wrong placeholder size here is a CLS regression, so these must be re-measured if the underlying
    content changes materially. `content-visibility: auto` only affects rendering while off-screen;
    once a section scrolls near the viewport it renders normally regardless of this placeholder,

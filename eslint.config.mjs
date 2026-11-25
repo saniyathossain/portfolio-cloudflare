@@ -11,7 +11,6 @@ export default tseslint.config(
       "node_modules/**",
       "public/**",
       "src/legacy/**",
-      "scripts/**/*.js",
       "bin/**",
     ],
   },

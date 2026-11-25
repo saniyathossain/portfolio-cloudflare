@@ -5,7 +5,7 @@
 ## Section rhythm (owner: "gaps between sections are too much")
 `--sec-py` (padding above and below each `.sec-pad` section, in `styles.css` **and** `critical.css` — they must match or the
 page shifts when the full stylesheet arrives) went from `clamp(5rem, 3.4rem + 3.2vw, 7rem)` to
-`clamp(3.25rem, 2.5rem + 1.8vw, 4.75rem)`. Content-to-content whitespace (`scripts/measure-gaps.mjs`) dropped by ≈ 30 %:
+`clamp(3.25rem, 2.5rem + 1.8vw, 4.75rem)`. Content-to-content whitespace (`scripts/measure-gaps.ts`) dropped by ≈ 30 %:
 
 | width | before (px) | after (px) |
 |-------|-------------|------------|
@@ -18,7 +18,7 @@ page shifts when the full stylesheet arrives) went from `clamp(5rem, 3.4rem + 3.
 ### Revision — one uniform rule, no seams (owner: "same gap nai", "sections cut")
 Final tokens (`styles.css`): `--sec-gap` clamp 3–4.75rem (section→section, identical at every boundary), `--sec-title-gap`
 0.75–1.125rem (title→subtitle), `--sec-head-gap` clamp(1.625rem, 1.3rem + 1.1vw, 2.5rem) (subtitle→first card),
-`--sec-bleed` 5rem. Layout-measured section gaps (`scripts/measure-gaps.mjs`): 360 → 45, 390 → 48, 768 → 48, 1024 → 55,
+`--sec-bleed` 5rem. Layout-measured section gaps (`scripts/measure-gaps.ts`): 360 → 45, 390 → 48, 768 → 48, 1024 → 55,
 1440 → 61, 1920 → 69 px, every boundary within ±2 px.
 
 **Seam cause:** `content-visibility:auto` on #about/#services/#experience/#education implies paint containment, which clips

@@ -5,32 +5,40 @@
  *   2. every server-rendered block that is not covered by the inline critical CSS is hidden;
  *   3. no icon is oversized (an unsized inline SVG renders ~300 px wide);
  * then, once the stylesheet applies, the guard must lift and everything must be visible again.
- *   BASE=http://127.0.0.1:8803/ DELAY_MS=3000 node scripts/fouc-check.mjs   (exit 1 on any failure)
+ *   BASE=http://127.0.0.1:8803/ DELAY_MS=3000 node scripts/fouc-check.ts   (exit 1 on any failure)
  */
-import puppeteer from "puppeteer-core";
+import { launchBrowser, requireEnv, sleep } from "./lib/browser.ts";
 
-const BASE = process.env.BASE;
-const DELAY_MS = Number(process.env.DELAY_MS ?? 3000);
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const BASE = requireEnv("BASE");
+const DELAY_MS = Number(process.env["DELAY_MS"] ?? 3000);
+const STYLESHEET_URL_FRAGMENT = "/assets/css/styles.min.css";
 const GUARDED = [".nav-desktop button", ".hero-partners", "main > section:not(#home)", ".site-footer"];
 const MAX_PLAUSIBLE_ICON_PX = 80; // the largest intentional icon (hero card badge) is ~60 px
-const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const DOM_SETTLE_MS = 400;
+const SETTLE_AFTER_CSS_MS = 1500;
+const VIEWPORTS = [
+  { label: "mobile", width: 412, height: 823 },
+  { label: "desktop", width: 1440, height: 900 },
+] as const;
+const MAX_REPORTED_ICONS = 4;
 
-const failures = [];
-const browser = await puppeteer.launch({ executablePath: CHROME, headless: true });
-for (const [label, width, height] of [["mobile", 412, 823], ["desktop", 1440, 900]]) {
+const failures: string[] = [];
+const browser = await launchBrowser();
+for (const { label, width, height } of VIEWPORTS) {
   // A fresh browser context per viewport: no HTTP cache and no service worker left over from the previous run,
   // either of which would serve the stylesheet instantly and hide the window under test.
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
   await page.setViewport({ width, height });
   await page.setRequestInterception(true);
-  page.on("request", async (request) => {
-    if (request.url().includes("/assets/css/styles.min.css")) await sleep(DELAY_MS);
-    await request.continue();
+  page.on("request", (request) => {
+    void (async () => {
+      if (request.url().includes(STYLESHEET_URL_FRAGMENT)) await sleep(DELAY_MS);
+      await request.continue();
+    })();
   });
   await page.goto(BASE, { waitUntil: "domcontentloaded" });
-  await sleep(400);
+  await sleep(DOM_SETTLE_MS);
 
   const pending = await page.evaluate(
     (guarded, maxIconPx) => ({
@@ -49,9 +57,11 @@ for (const [label, width, height] of [["mobile", 412, 823], ["desktop", 1440, 90
   );
   if (!pending.isGuardOn) failures.push(`${label}: html.css-pending missing while the stylesheet is pending`);
   if (pending.visibleGuarded.length) failures.push(`${label}: visible before CSS: ${[...new Set(pending.visibleGuarded)].join(", ")}`);
-  if (pending.oversizedIcons.length) failures.push(`${label}: oversized icons before CSS: ${pending.oversizedIcons.slice(0, 4).join("; ")}`);
+  if (pending.oversizedIcons.length) {
+    failures.push(`${label}: oversized icons before CSS: ${pending.oversizedIcons.slice(0, MAX_REPORTED_ICONS).join("; ")}`);
+  }
 
-  await sleep(DELAY_MS + 1500);
+  await sleep(DELAY_MS + SETTLE_AFTER_CSS_MS);
   const settled = await page.evaluate(
     (guarded) => ({
       isGuardOn: document.documentElement.classList.contains("css-pending"),

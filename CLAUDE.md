@@ -7,19 +7,19 @@ system **SF Pro** fonts. No runtime build step.
 
 ## Layout
 - `public/` — the deployed site. Entry `public/index.html`; browser JS is **TypeScript in `src/client/*.ts`** (entries) + `src/client/lib/**`,
-  bundled by `scripts/build-client.mjs` into `public/assets/js/<name>.min.js` (generated, gitignored; `sw.ts` → `public/sw.js`, doc 60); CSS in
+  bundled by `scripts/build-client.ts` into `public/assets/js/<name>.min.js` (generated, gitignored; `sw.ts` → `public/sw.js`, doc 60); CSS in
   `public/assets/css/` (`styles.css` = the design system, `tailwind.css` = precompiled utilities).
 - `src/index.ts` — Cloudflare Worker entry (TypeScript, thin adapter). Pipeline in `src/worker/WorkerApplication.ts`; controllers in
   `src/worker/controllers/`, security modules in `src/worker/security/`, composition root `src/worker/bootstrap/`, policy values in
   `src/content/security.json` (docs 57–58).
-- `scripts/` — `sync-head.js` (generates `<head>` + h1 from data), `optimize-images.js`, `hash-sw.js`.
+- `scripts/` — TypeScript Node tooling run with `node scripts/<name>.ts` (build: `sync-head`, `build-client`, `optimize-images`, `hash-sw`…; checks: `behavior-check`, `dom-diff`, `fouc-check`…; doc 61).
 - `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
   each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **62**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it
   mirrors `docs/cv-modern-template.md`.
-- **`<head>` is generated:** run `node scripts/sync-head.js` after editing `site`/`profile` in the JSON. Do **not**
+- **`<head>` is generated:** run `node scripts/sync-head.ts` after editing `site`/`profile` in the JSON. Do **not**
   hand-edit inside the `<!-- SYNC:HEAD -->` / `<!-- SYNC:H1 -->` markers in `index.html`.
 - **No inline `style=""`** in HTML — use JSX `style` objects or JS `el.style` only. **No Alpine** (removed, doc 61): interactivity is Preact islands (`src/islands`), delegated `data-action` / `data-nav-target` attributes (`src/client/actions.ts`) and plain modules.
 - **CSS:** prefer custom classes + design tokens in `styles.css`. Only run `./build-css.sh` if you add new

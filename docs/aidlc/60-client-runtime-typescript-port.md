@@ -10,9 +10,9 @@ rest as plain JS against the rules, so the whole runtime moved now — behaviour
 ## What changed
 | Before | After |
 |--------|-------|
-| `public/assets/js/{app,motion,data,editorial,reveal,loader,icons,blur-reveal,liquid-hero,skills-flat,aurora,boot}.js` + `public/sw.js`, minified by `scripts/minify-js.js` | `src/client/*.ts` entries (+ `src/client/lib/**` modules, `src/client/types/runtime.d.ts`), bundled by `scripts/build-client.mjs` (esbuild, IIFE, minified, es2019) to the same `public/assets/js/<name>.min.js`; `src/client/sw.ts` → `public/sw.js` |
+| `public/assets/js/{app,motion,data,editorial,reveal,loader,icons,blur-reveal,liquid-hero,skills-flat,aurora,boot}.js` + `public/sw.js`, minified by `scripts/minify-js.js` | `src/client/*.ts` entries (+ `src/client/lib/**` modules, `src/client/types/runtime.d.ts`), bundled by `scripts/build-client.ts` (esbuild, IIFE, minified, es2019) to the same `public/assets/js/<name>.min.js`; `src/client/sw.ts` → `public/sw.js` |
 | `minify-js.js` step | removed from `build.sh` |
-| `boot.js` / `sw.js` stamped in `public/` | `scripts/set-asset-version.js`, `sync-head.js` stamp `ASSET_V` in `src/client/boot.ts`; `hash-sw.js` stamps `CACHE_VERSION` in `src/client/sw.ts`; `build.sh` runs `build-client` before the hash, after the stamp, and once more after `hash-sw` |
+| `boot.js` / `sw.js` stamped in `public/` | `scripts/set-asset-version.ts`, `sync-head.js` stamp `ASSET_V` in `src/client/boot.ts`; `hash-sw.js` stamps `CACHE_VERSION` in `src/client/sw.ts`; `build.sh` runs `build-client` before the hash, after the stamp, and once more after `hash-sw` |
 | unminified source `.js` files deployed next to the bundles | gone (smaller `dist/`); `public/sw.js` and `*.min.js` are build outputs (gitignored) |
 
 Build order: `…optimize-images → build-client → set-asset-version → build-client → sync-head → hash-sw → build-client`. The content
