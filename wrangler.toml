@@ -49,9 +49,10 @@ CONTACT_TO = "saniyat1000@gmail.com"
 # ADMIN_LIST_DEFAULT_LIMIT = "50"
 # ADMIN_LIST_MAX_LIMIT = "200"
 
-# Edge: HTML is sent with `Cache-Control: no-transform` so Cloudflare does NOT auto-inject its Web Analytics beacon
-# (10 KB third-party script + /cdn-cgi/rum request). Set to "on" only if you want that beacon.
-# ALLOW_EDGE_INJECTION = "off"
+# Edge: keep OFF. "on" adds `Cache-Control: no-transform` to HTML, which also makes Cloudflare skip gzip/brotli (the
+# document goes out ~370 KB uncompressed). To stop the automatic Web Analytics beacon, disable it in the dashboard instead:
+# Analytics & Logs → Web Analytics → your site → Manage → Disable automatic setup.
+# BLOCK_EDGE_INJECTION = "off"
 
 # ── Feature flags (Worker vars) ────────────────────────────────────────────────────────────────────
 # Truthy: "1" / "true" / "on".  Falsy: "off" / "false" / "0".  Omit SKILLS_SCROLL_DESIGN → JSON default.

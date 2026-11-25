@@ -14,7 +14,7 @@ system **SF Pro** fonts. No runtime build step.
   `src/content/security.json` (docs 57–58).
 - `scripts/` — TypeScript Node tooling run with `node scripts/<name>.ts` (build: `sync-head`, `build-client`, `optimize-images`, `hash-sw`…; checks: `behavior-check`, `dom-diff`, `fouc-check`…; doc 61).
 - `docs/aidlc/` — **design history & rationale** (00–53; index in `00-overview.md`). Read these before large design changes; add
-  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **71**).
+  each new piece of work as the next numbered doc (`NN-kebab-title.md`, next = **72**).
 
 ## Conventions (important)
 - **Single content source:** `public/assets/data/portfolio.json` → `data.js`. Never fabricate CV content; it

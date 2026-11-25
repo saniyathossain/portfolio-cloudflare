@@ -7,7 +7,7 @@ const HERO_SRCSET = HERO_WIDTHS.map((width) => `/assets/img/saniyat-hossain-${wi
 
 export const EARLY_HINTS: string = [
   `</assets/img/saniyat-hossain-480.webp>; rel=preload; as=image; type=image/webp; fetchpriority=high; imagesrcset="${HERO_SRCSET}"; imagesizes="(min-width: 1024px) 62vw, 100vw"`,
-  "</assets/css/styles.min.css?v=bb05fe8aacbb>; rel=preload; as=style",
-  "</assets/img/bismillah.svg?v=bb05fe8aacbb>; rel=preload; as=image; type=image/svg+xml",
+  "</assets/css/styles.min.css?v=58e74981b3d6>; rel=preload; as=style",
+  "</assets/img/bismillah.svg?v=58e74981b3d6>; rel=preload; as=image; type=image/svg+xml",
   "</assets/fonts/inter-latin.woff2>; rel=preload; as=font; type=font/woff2; crossorigin",
 ].join(", ");
