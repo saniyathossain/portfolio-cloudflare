@@ -16,12 +16,15 @@ export const securitySchema = z.strictObject({
     maxUrlLength: positiveInt,
     maxContactBodyBytes: positiveInt,
     maxCspReportBytes: positiveInt,
+    maxVitalsBodyBytes: positiveInt,
     maxNameLength: positiveInt,
     maxEmailLength: positiveInt,
     maxProjectLength: positiveInt,
   }),
   /** How long contact submissions stay in KV (seconds). */
   contactRetentionSeconds: positiveInt,
+  /** How long real-user Web Vitals rows are kept in D1 (days); pruned opportunistically on write. */
+  vitalsRetentionDays: positiveInt,
   /** `Retry-After` sent with the maintenance 503 (seconds). */
   maintenanceRetryAfterSeconds: positiveInt,
   /** Owner read endpoint: page size when `?limit` is absent / the most it will return. */
@@ -33,5 +36,6 @@ export const securitySchema = z.strictObject({
     contact: rateRuleSchema,
     adminAuthFailure: rateRuleSchema,
     cspReport: rateRuleSchema,
+    vitals: rateRuleSchema,
   }),
 });

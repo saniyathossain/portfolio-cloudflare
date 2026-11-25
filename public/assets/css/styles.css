@@ -1792,7 +1792,8 @@ html.is-loading .site-header {
   .hero__aside {
     margin-top: 0;
     align-items: flex-end;
-    transform: translate(1.5rem, 3.25rem);
+    /* Down only: the card's right edge sits on the same line as the header pill and the page gutter. */
+    transform: translate(0, 3.25rem);
   }
 }
 

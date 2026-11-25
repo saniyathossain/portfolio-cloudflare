@@ -1,6 +1,11 @@
 name = "portfolio-cloudflare"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
+# Variables added in the Cloudflare dashboard (Settings → Variables and secrets) survive `wrangler deploy` instead of being
+# wiped; anything listed in [vars] below still wins for the same name.
+keep_vars = true
+# No anonymous usage telemetry from wrangler (build log noise + privacy).
+send_metrics = false
 # Custom domain: saniyat.com (configure in Cloudflare dashboard → Workers → Domains & Routes)
 
 [assets]
@@ -44,6 +49,10 @@ CONTACT_TO = "saniyat1000@gmail.com"
 # ADMIN_LIST_DEFAULT_LIMIT = "50"
 # ADMIN_LIST_MAX_LIMIT = "200"
 
+# Edge: HTML is sent with `Cache-Control: no-transform` so Cloudflare does NOT auto-inject its Web Analytics beacon
+# (10 KB third-party script + /cdn-cgi/rum request). Set to "on" only if you want that beacon.
+# ALLOW_EDGE_INJECTION = "off"
+
 # ── Feature flags (Worker vars) ────────────────────────────────────────────────────────────────────
 # Truthy: "1" / "true" / "on".  Falsy: "off" / "false" / "0".  Omit SKILLS_SCROLL_DESIGN → JSON default.
 MAINTENANCE_MODE = "off"
@@ -74,13 +83,20 @@ MAINTENANCE_MODE = "off"
 
 # Log storage channels (optional, guarded — a channel is a no-op until its binding exists):
 #   kv       → [[kv_namespaces]] binding = "LOG_KV"   (records expire after ttlSeconds)
-#   database → [[d1_databases]]  binding = "LOG_DB"   (apply migrations/0001_create_logs_table.sql first)
+#   database → the default database connection (see the Database block below; apply migrations/0001 first)
 # [[kv_namespaces]]
 # binding = "LOG_KV"
 # id = "PASTE_REAL_KV_NAMESPACE_ID"
+
+# Database (docs/aidlc/70) — one D1 database serves the vitals store and the `database` log channel (Laravel-style
+# default connection; src/content/database.json names the binding: "DB"). Optional: without it both are quiet no-ops.
+#   1. npx wrangler d1 create portfolio-db            (paste the printed id below)
+#   2. npx wrangler d1 execute portfolio-db --remote --file=migrations/0001_create_logs_table.sql
+#      npx wrangler d1 execute portfolio-db --remote --file=migrations/0002_create_web_vitals_table.sql
+#   3. Uncomment the 4 lines, then redeploy. Switch connection with the DB_CONNECTION var (e.g. "null" = database off).
 # [[d1_databases]]
-# binding = "LOG_DB"
-# database_name = "portfolio-logs"
+# binding = "DB"
+# database_name = "portfolio-db"
 # database_id = "PASTE_REAL_D1_ID"
 
 # Turnstile SECRET key — set as an encrypted secret, NOT here:

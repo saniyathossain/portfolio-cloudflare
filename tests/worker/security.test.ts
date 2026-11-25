@@ -19,13 +19,29 @@ describe("security.json", () => {
 
 describe("request guard", () => {
   it("lets normal pages and assets through", () => {
-    for (const path of ["/", "/assets/css/styles.min.css", "/.well-known/security.txt", "/errors/offline/", "/api/contact"]) {
+    for (const path of [
+      "/",
+      "/assets/css/styles.min.css",
+      "/.well-known/security.txt",
+      "/errors/offline/",
+      "/api/contact",
+    ]) {
       expect(guard.inspect(get(path)).allowed, path).toBe(true);
     }
   });
 
   it("answers scanner probes with 404 and a probe event", () => {
-    for (const path of ["/.env", "/.git/config", "/wp-login.php", "/wp-admin/", "/xmlrpc.php", "/phpmyadmin/", "/backup.sql", "/shell.PHP", "/config.ini"]) {
+    for (const path of [
+      "/.env",
+      "/.git/config",
+      "/wp-login.php",
+      "/wp-admin/",
+      "/xmlrpc.php",
+      "/phpmyadmin/",
+      "/backup.sql",
+      "/shell.PHP",
+      "/config.ini",
+    ]) {
       const verdict = guard.inspect(get(path));
       expect(verdict, path).toMatchObject({ allowed: false, status: 404, event: "scanner_probe" });
     }
@@ -45,7 +61,11 @@ describe("request guard", () => {
   });
 
   it("allows only GET/HEAD/OPTIONS on static paths but any method reaches the API handlers", () => {
-    expect(guard.inspect(get("/", { method: "POST" }))).toMatchObject({ allowed: false, status: 405, event: "method_blocked" });
+    expect(guard.inspect(get("/", { method: "POST" }))).toMatchObject({
+      allowed: false,
+      status: 405,
+      event: "method_blocked",
+    });
     expect(guard.inspect(get("/", { method: "DELETE" }))).toMatchObject({ allowed: false, status: 405 });
     expect(guard.inspect(get("/", { method: "HEAD" })).allowed).toBe(true);
     expect(guard.inspect(get("/api/contact", { method: "POST" })).allowed).toBe(true);
@@ -86,14 +106,22 @@ describe("rate limiter", () => {
     expect((await limiter.peek("admin", "9.9.9.9", rule)).allowed).toBe(false);
     expect((await limiter.consume("admin", "", rule)).allowed).toBe(true);
     const broken = createRateLimiter(
-      { CONTACT_KV: { get: () => Promise.reject(new Error("kv down")), put: () => Promise.reject(new Error("kv down")) } },
+      {
+        CONTACT_KV: {
+          get: () => Promise.reject(new Error("kv down")),
+          put: () => Promise.reject(new Error("kv down")),
+        },
+      },
       new Map(),
     );
     expect((await broken.consume("contact", "3.3.3.3", rule)).allowed).toBe(true);
   });
 
   it("prefers the Workers rate-limit binding when present", async () => {
-    const limiter = createRateLimiter({ RATE_LIMITER: { limit: () => Promise.resolve({ success: false }) } }, new Map());
+    const limiter = createRateLimiter(
+      { RATE_LIMITER: { limit: () => Promise.resolve({ success: false }) } },
+      new Map(),
+    );
     expect((await limiter.consume("contact", "4.4.4.4", rule)).allowed).toBe(false);
   });
 });
@@ -105,14 +133,22 @@ describe("contact payload", () => {
   });
 
   it("rejects non-object bodies and coerces nothing", () => {
-    for (const body of [null, "x", 5, [], undefined]) expect(parseContactPayload(body, config)).toMatchObject({ valid: false, error: "bad_payload" });
-    expect(parseContactPayload({ ...valid, name: { nested: 1 } }, config)).toMatchObject({ valid: false, error: "missing_fields" });
+    for (const body of [null, "x", 5, [], undefined])
+      {expect(parseContactPayload(body, config)).toMatchObject({ valid: false, error: "bad_payload" });}
+    expect(parseContactPayload({ ...valid, name: { nested: 1 } }, config)).toMatchObject({
+      valid: false,
+      error: "missing_fields",
+    });
   });
 
   it("enforces lengths and email shape", () => {
-    expect(parseContactPayload({ ...valid, project: "x".repeat(config.limits.maxProjectLength + 1) }, config)).toMatchObject({ error: "too_long" });
+    expect(
+      parseContactPayload({ ...valid, project: "x".repeat(config.limits.maxProjectLength + 1) }, config),
+    ).toMatchObject({ error: "too_long" });
     expect(parseContactPayload({ ...valid, email: "nope" }, config)).toMatchObject({ error: "bad_email" });
-    expect(parseContactPayload({ ...valid, email: "a@b.co>\r\nBcc: x@y.z" }, config)).toMatchObject({ error: "bad_email" });
+    expect(parseContactPayload({ ...valid, email: "a@b.co>\r\nBcc: x@y.z" }, config)).toMatchObject({
+      error: "bad_email",
+    });
   });
 
   it("strips line breaks from single-line fields (mail header injection)", () => {
@@ -142,6 +178,8 @@ describe("security headers", () => {
   });
 
   it("does not upgrade to https on plain-http local development", () => {
-    expect(buildSecurityHeaders("http://127.0.0.1:8787/")["Content-Security-Policy"]).not.toContain("upgrade-insecure-requests");
+    expect(buildSecurityHeaders("http://127.0.0.1:8787/")["Content-Security-Policy"]).not.toContain(
+      "upgrade-insecure-requests",
+    );
   });
 });

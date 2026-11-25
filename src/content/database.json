@@ -1,0 +1,8 @@
+{
+  "$comment": "Database connections, modelled on Laravel's config/database.php. `default` is the connection used when the DB_CONNECTION Worker var is not set (e.g. DB_CONNECTION=null turns every database-backed feature off). Add a connection here + a driver in src/worker/database/DatabaseManager.ts to switch store; repositories never change (docs/aidlc/70).",
+  "default": "d1",
+  "connections": {
+    "d1": { "driver": "d1", "binding": "DB" },
+    "null": { "driver": "null" }
+  }
+}

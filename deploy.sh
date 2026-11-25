@@ -8,6 +8,13 @@ npm run build
 # <style>) before it goes to production, not after a user reports it.
 node scripts/preflight-check.ts
 
+# Cloudflare Workers Builds (WORKERS_CI=1) and other CI run their own deploy command after this build command, so deploying here
+# would upload everything twice. In CI this script is build + preflight only; locally it also deploys.
+if [[ "${WORKERS_CI:-}" == "1" || "${CI:-}" == "true" ]]; then
+  echo "CI detected: build and preflight passed; the platform deploy step publishes the Worker."
+  exit 0
+fi
+
 if ! command -v npx >/dev/null 2>&1; then
   echo "ERROR: npx not found"
   exit 1

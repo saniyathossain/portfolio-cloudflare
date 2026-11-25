@@ -1,0 +1,11 @@
+# gitleaks config (run: gitleaks dir . / gitleaks git .). Extends the default ruleset.
+# .agents/skills/* are third-party skill packs (gitignored, restored from skills-lock.json); their docs contain model names
+# like "whisper-large-v3 with word granularities" that the generic-api-key rule mistakes for secrets.
+title = "portfolio-cloudflare"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "vendored third-party skill packs (false positives, not our code)"
+paths = ['''^\.agents/skills/''', '''^\.claude/skills/''', '''^agent/skills/''']

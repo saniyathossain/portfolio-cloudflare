@@ -352,7 +352,8 @@ html.is-loading .site-header {
 .glass-pill {
   position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
-  padding: 0.92rem 0.62rem 0.92rem 1.4rem; border-radius: var(--radius-pill);
+  min-width: 0;
+  padding: 0.8rem 0.6rem 0.8rem 1.35rem; border-radius: var(--radius-pill);
   background: linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.16));
   backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
   -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.08);
@@ -537,7 +538,8 @@ html.is-loading .site-header {
   .hero__aside {
     margin-top: 0;
     align-items: flex-end;
-    transform: translate(1.5rem, 3.25rem);
+    /* Down only: the card's right edge sits on the same line as the header pill and the page gutter. */
+    transform: translate(0, 3.25rem);
   }
 }
 
@@ -561,6 +563,9 @@ html.is-loading .site-header {
   line-height: 1.02;
   letter-spacing: -0.03em;
   margin: 0;
+  /* Same fixed height + clip as styles.css (anti-CLS for the Inter font swap); keep the two in step. */
+  height: 3.42em;
+  overflow: hidden;
 }
 .hero h1 .line-wrap {
   display: block;
@@ -1396,6 +1401,10 @@ html.is-idle .beam::before {
 }
 
 /* Film-grain overlay — fixed, pointer-events-none; sits above content, below the fixed chrome/overlays */
+/* Aurora canvas is injected by JS (aurora.ts) before the full stylesheet may have landed; without these lines it sits in the
+   normal flow and pushes the whole page down by its default canvas height until styles.min.css arrives (a ~450 px jump). */
+#auroraCanvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; opacity: 0; }
+
 .grain {
   position: fixed; inset: 0; z-index: 100; pointer-events: none;
   opacity: 0.038; mix-blend-mode: overlay;
@@ -1753,4 +1762,38 @@ html.css-pending .site-footer {
    stylesheet arrives). */
 @supports (corner-shape: squircle) {
   .hero-card { corner-shape: squircle; }
+}
+
+/* Mobile / tablet hero overrides — mirrored from styles.css so the critical-only first paint has the same layout. Keep in step. */
+@media (max-width: 1023px) {
+  .hero__backdrop-liquid { touch-action: pan-y; }
+  .hero__backdrop-liquid img { object-position: 50% 20%; }
+  .hero__backdrop-scrim {
+    background:
+      linear-gradient(180deg, rgba(238,241,246,.94) 0%, rgba(238,241,246,.6) 30%, rgba(238,241,246,.2) 54%, transparent 74%),
+      linear-gradient(180deg, rgba(255,255,255,.22), transparent 30%, transparent 68%, rgba(17,17,17,.1));
+  }
+  .hero__glow { display: none; }
+  .hero__grid {
+    min-height: calc(100dvh - 4rem);
+    gap: 1.5rem;
+    padding-block: clamp(6.25rem, 12vw, 7rem) 1.25rem;
+  }
+  /* Middle-aligned on mobile — the desktop left-aligned column reads off-center once there's no
+     photo alongside it to balance the composition. */
+  .hero__copy { align-items: center; text-align: center; }
+  .eyebrow { justify-content: center; }
+  .hero-rating { justify-content: center; }
+  .hero__actions { justify-content: center; }
+  .hero__aside { align-items: center; }
+  .hero-partners__label { text-align: center; }
+  .hero-partners__list { justify-content: center; }
+}
+@media (max-width: 640px) {
+  .hero__grid {
+    gap: 1.25rem;
+    padding-block: 6.5rem 1rem;
+  }
+  .hero h1 { font-size: clamp(2.35rem, 10vw, 3rem); }
+  .hero-card, .hero-partners { max-width: 100%; }
 }

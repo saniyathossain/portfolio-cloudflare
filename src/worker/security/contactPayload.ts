@@ -56,7 +56,8 @@ export function parseContactPayload(body: unknown, config: SecurityConfig): Payl
     token: readText(source, "token") || readText(source, "cf-turnstile-response"),
     honeypot: readText(source, config.honeypotField).trim(),
   };
-  if (!submission.name || !submission.email || !submission.project) return { valid: false, error: "missing_fields", submission };
+  if (!submission.name || !submission.email || !submission.project)
+    {return { valid: false, error: "missing_fields", submission };}
   if (exceedsLimits(submission, config)) return { valid: false, error: "too_long", submission };
   if (!EMAIL_PATTERN.test(submission.email)) return { valid: false, error: "bad_email", submission };
   return { valid: true, submission };

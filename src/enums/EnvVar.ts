@@ -15,6 +15,14 @@ export enum EnvVar {
   MaintenanceTitle = "MAINTENANCE_TITLE",
   MaintenanceMessage = "MAINTENANCE_MESSAGE",
   MaintenanceRetryAfterSeconds = "MAINTENANCE_RETRY_AFTER_SECONDS",
+  // Real-user Web Vitals (docs/aidlc/69)
+  RumEnabled = "RUM_ENABLED",
+  MaxVitalsBodyBytes = "MAX_VITALS_BODY_BYTES",
+  RateLimitVitalsLimit = "RATE_LIMIT_VITALS_LIMIT",
+  RateLimitVitalsWindowSeconds = "RATE_LIMIT_VITALS_WINDOW_SECONDS",
+  VitalsRetentionDays = "VITALS_RETENTION_DAYS",
+  // Edge behaviour
+  AllowEdgeInjection = "ALLOW_EDGE_INJECTION",
   // Logging
   LogChannel = "LOG_CHANNEL",
   LogLevel = "LOG_LEVEL",

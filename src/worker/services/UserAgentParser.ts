@@ -59,7 +59,10 @@ export class UserAgentParser {
     this.browsers = compileVersioned(signatures.browsers);
     this.engines = compileVersioned(signatures.engines);
     this.operatingSystems = compileVersioned(signatures.operatingSystems);
-    this.devices = signatures.devices.map((signature) => ({ signature, expression: new RegExp(signature.pattern, "i") }));
+    this.devices = signatures.devices.map((signature) => ({
+      signature,
+      expression: new RegExp(signature.pattern, "i"),
+    }));
     this.bots = signatures.bots.map(({ category, pattern }) => ({ category, expression: new RegExp(pattern, "i") }));
   }
 

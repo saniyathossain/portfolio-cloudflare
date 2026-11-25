@@ -2,7 +2,8 @@ import { LogDriver } from "../../enums/LogDriver";
 import { parseLogLevel } from "../../lib/logLevel";
 import type { ChannelConfig, LoggingConfig } from "../../types/LoggingConfig";
 import { ConsoleChannel } from "./channels/ConsoleChannel";
-import { D1Channel, isD1Database } from "./channels/D1Channel";
+import { createLogRepository } from "../repositories/factories";
+import { DatabaseChannel } from "./channels/DatabaseChannel";
 import { isKvStore, KvChannel } from "./channels/KvChannel";
 import { NullChannel } from "./channels/NullChannel";
 import { StackChannel } from "./channels/StackChannel";
@@ -36,10 +37,8 @@ const CHANNEL_FACTORIES: {
       ttlSeconds: config.ttlSeconds,
     });
   },
-  [LogDriver.D1]: (config, { name, environment }) => {
-    const binding = environment[config.binding];
-    return new D1Channel(name, isD1Database(binding) ? binding : undefined, config.level, config.table);
-  },
+  [LogDriver.Database]: (config, { name, environment }) =>
+    new DatabaseChannel(name, () => createLogRepository(environment), config.level),
   [LogDriver.Stack]: (config, context) =>
     new StackChannel(
       context.name,

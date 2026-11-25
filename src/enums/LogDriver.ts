@@ -3,7 +3,7 @@ export enum LogDriver {
   Stderr = "stderr",
   Stdout = "stdout",
   Kv = "kv",
-  D1 = "d1",
+  Database = "database",
   Stack = "stack",
   Null = "null",
 }

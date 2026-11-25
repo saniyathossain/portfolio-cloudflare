@@ -12,7 +12,8 @@ node scripts/optimize-images.ts
 node scripts/build-client.ts
 node scripts/set-asset-version.ts
 node scripts/build-client.ts   # rebuild so boot picks up the freshly stamped ASSET_V
-node scripts/sync-head.ts
+# .env (gitignored, see .env.example) supplies the build variables for local builds; CI uses real environment variables.
+node --env-file-if-exists=.env scripts/sync-head.ts
 node scripts/hash-sw.ts
 node scripts/build-client.ts   # final pass: bundles sw.ts with its stamped cache version
 echo "Build complete."

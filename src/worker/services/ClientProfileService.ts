@@ -7,10 +7,19 @@ import { toBotInfo, type UserAgentFacts, type UserAgentParser } from "./UserAgen
 const REDUCED_ANDROID_MODEL = "K";
 
 /** Client Hints are authoritative where the User-Agent is frozen or reduced (Android model, desktop/mobile flag). */
-function refineDevice(device: DeviceInfo, facts: UserAgentFacts, hintModel: string, hintMobile: boolean | null): DeviceInfo {
+function refineDevice(
+  device: DeviceInfo,
+  facts: UserAgentFacts,
+  hintModel: string,
+  hintMobile: boolean | null,
+): DeviceInfo {
   const type = hintMobile === true && device.type === DeviceType.Desktop ? DeviceType.Mobile : device.type;
   const uaModel = device.model === REDUCED_ANDROID_MODEL ? "" : device.model;
-  return { ...device, type: facts.botCategory === "" ? type : DeviceType.Bot, model: hintModel === "" ? uaModel : hintModel };
+  return {
+    ...device,
+    type: facts.botCategory === "" ? type : DeviceType.Bot,
+    model: hintModel === "" ? uaModel : hintModel,
+  };
 }
 
 function refineOs(os: NamedVersion, hintPlatform: string, hintPlatformVersion: string): NamedVersion {
@@ -41,7 +50,10 @@ export class ClientProfileService {
       os: refineOs(facts.os, hints.platform, hints.platformVersion),
       device: refineDevice(facts.device, facts, hints.model, hints.mobile),
       hints,
-      bot: toBotInfo(facts.botCategory, { score: edge.botManagement?.score, verifiedBot: edge.botManagement?.verifiedBot }),
+      bot: toBotInfo(facts.botCategory, {
+        score: edge.botManagement?.score,
+        verifiedBot: edge.botManagement?.verifiedBot,
+      }),
       acceptLanguage: request.headers.get("Accept-Language") ?? "",
       network: this.networkProfileReader.read(request),
     };

@@ -11,7 +11,8 @@
     "maxCspReportBytes": 8192,
     "maxNameLength": 120,
     "maxEmailLength": 200,
-    "maxProjectLength": 4000
+    "maxProjectLength": 4000,
+    "maxVitalsBodyBytes": 4096
   },
   "honeypotField": "company",
   "blockedPathPatterns": [
@@ -31,6 +32,10 @@
     "cspReport": {
       "limit": 20,
       "windowSeconds": 60
+    },
+    "vitals": {
+      "limit": 20,
+      "windowSeconds": 60
     }
   },
   "contactRetentionSeconds": 31536000,
@@ -38,5 +43,6 @@
   "adminList": {
     "defaultLimit": 50,
     "maxLimit": 200
-  }
+  },
+  "vitalsRetentionDays": 90
 }

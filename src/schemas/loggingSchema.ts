@@ -5,7 +5,6 @@ import { LogLevel } from "../enums/LogLevel";
 const levelSchema = z.enum(LogLevel);
 const channelNameSchema = z.string().regex(/^[a-z0-9_-]+$/);
 const bindingSchema = z.string().regex(/^[A-Z][A-Z0-9_]*$/);
-const sqlIdentifierSchema = z.string().regex(/^[a-z_][a-z0-9_]*$/);
 
 const consoleChannelSchema = <TDriver extends LogDriver.Stderr | LogDriver.Stdout>(driver: TDriver) =>
   z.strictObject({
@@ -27,10 +26,8 @@ const channelSchema = z.discriminatedUnion("driver", [
     ttlSeconds: z.number().int().min(60),
   }),
   z.strictObject({
-    driver: z.literal(LogDriver.D1),
+    driver: z.literal(LogDriver.Database),
     level: levelSchema,
-    binding: bindingSchema,
-    table: sqlIdentifierSchema,
   }),
   z.strictObject({ driver: z.literal(LogDriver.Stack), channels: z.array(channelNameSchema).min(1) }),
   z.strictObject({ driver: z.literal(LogDriver.Null) }),

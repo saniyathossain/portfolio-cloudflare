@@ -44,6 +44,8 @@ export class AdminAuthenticator {
       reason: this.adminToken ? "bearer token did not match" : "ADMIN_TOKEN is not configured",
       detail: { tokenSupplied: token.length > 0 },
     });
-    return jsonResponse({ error: ApiErrorCode.Unauthorized }, HttpStatus.Unauthorized, { "WWW-Authenticate": "Bearer" });
+    return jsonResponse({ error: ApiErrorCode.Unauthorized }, HttpStatus.Unauthorized, {
+      "WWW-Authenticate": "Bearer",
+    });
   }
 }

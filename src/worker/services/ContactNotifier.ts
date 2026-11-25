@@ -31,7 +31,11 @@ export class EmailRoutingNotifier implements ContactNotifier {
       return true;
     } catch (error) {
       this.logger.exception(
-        { event: "contact_email_failed", location: "EmailRoutingNotifier.notify", reason: "email send failed; submission already stored" },
+        {
+          event: "contact_email_failed",
+          location: "EmailRoutingNotifier.notify",
+          reason: "email send failed; submission already stored",
+        },
         error,
       );
       return false;

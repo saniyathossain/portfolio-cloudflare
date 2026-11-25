@@ -50,15 +50,21 @@ export function createRequestGuard(config: SecurityConfig): RequestGuard {
       const isApi = url.pathname.startsWith(API_PREFIX);
 
       if (!isApi && !(config.allowedMethods as readonly string[]).includes(request.method)) {
-        return reject(GUARD_STATUS.methodNotAllowed, "method_blocked", `${request.method} is not served on static paths`);
+        return reject(
+          GUARD_STATUS.methodNotAllowed,
+          "method_blocked",
+          `${request.method} is not served on static paths`,
+        );
       }
       if (request.url.length > config.limits.maxUrlLength) {
         return reject(GUARD_STATUS.uriTooLong, "url_too_long", `url length ${request.url.length}`);
       }
 
       const decodedPath = decodePath(url.pathname);
-      if (decodedPath === undefined) return reject(GUARD_STATUS.badRequest, "bad_encoding", "path is not valid percent-encoding");
-      if (hasControlCharacter(decodedPath)) return reject(GUARD_STATUS.badRequest, "control_characters", "control character in path");
+      if (decodedPath === undefined)
+        {return reject(GUARD_STATUS.badRequest, "bad_encoding", "path is not valid percent-encoding");}
+      if (hasControlCharacter(decodedPath))
+        {return reject(GUARD_STATUS.badRequest, "control_characters", "control character in path");}
       if (decodedPath.includes("\\") || decodedPath.split("/").includes("..")) {
         return reject(GUARD_STATUS.badRequest, "path_traversal", "traversal sequence in path");
       }

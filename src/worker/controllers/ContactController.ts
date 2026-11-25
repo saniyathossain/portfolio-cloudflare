@@ -33,7 +33,11 @@ export class ContactController {
       createRateLimiter(environment, memoryCounters),
       config.rateLimits.adminAuthFailure,
     );
-    const repository = new KvContactSubmissionRepository(environment.CONTACT_KV, config.contactRetentionSeconds, logger.forActor("ContactSubmissionRepository"));
+    const repository = new KvContactSubmissionRepository(
+      environment.CONTACT_KV,
+      config.contactRetentionSeconds,
+      logger.forActor("ContactSubmissionRepository"),
+    );
     return list.execute(request, logger, config, authenticator, repository);
   }
 }

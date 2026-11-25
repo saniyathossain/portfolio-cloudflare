@@ -7,6 +7,7 @@ import { timingSafeEqual } from "./support/timingSafeEqual";
 import type { SecurityServices } from "./bootstrap/container";
 import type { ContactController } from "./controllers/ContactController";
 import type { CspReportController } from "./controllers/CspReportController";
+import type { VitalsController } from "./controllers/VitalsController";
 import { errorPageResponse } from "./http/errorPage";
 import type { StaticSiteResponder } from "./http/StaticSiteResponder";
 import type { Logger } from "./logging/Logger";
@@ -17,11 +18,13 @@ import { isMaintenanceOn } from "./services/FeatureFlags";
 import type { WorkerEnvironment } from "./types/WorkerEnvironment";
 
 const CONTACT_PATH = "/api/contact";
+const VITALS_PATH = "/api/vitals";
 
 export interface WorkerApplicationDependencies {
   readonly security: SecurityServices;
   readonly contact: ContactController;
   readonly cspReports: CspReportController;
+  readonly vitals: VitalsController;
   readonly staticSite: StaticSiteResponder;
 }
 
@@ -43,7 +46,11 @@ export class WorkerApplication {
       return await this.route(request, environment, logger);
     } catch (error) {
       logger.exception(
-        { event: "unhandled_exception", location: `${request.method} ${new URL(request.url).pathname}`, reason: "request handler threw" },
+        {
+          event: "unhandled_exception",
+          location: `${request.method} ${new URL(request.url).pathname}`,
+          reason: "request handler threw",
+        },
         error,
       );
       return this.errorPage(request, environment, logger, "server-error", HttpStatus.InternalServerError);
@@ -51,7 +58,7 @@ export class WorkerApplication {
   }
 
   private async route(request: Request, environment: WorkerEnvironment, logger: Logger): Promise<Response> {
-    const { security, contact, cspReports, staticSite } = this.dependencies;
+    const { security, contact, cspReports, vitals, staticSite } = this.dependencies;
     const url = new URL(request.url);
 
     const { config, issues } = security.configResolver.resolve(environment);
@@ -72,19 +79,27 @@ export class WorkerApplication {
     let isPreview = false;
     if (isMaintenanceOn(environment)) {
       const adminToken = environment[EnvVar.AdminToken];
-      isPreview = typeof adminToken === "string" && adminToken !== "" && timingSafeEqual(url.searchParams.get("preview") ?? "", adminToken);
+      isPreview =
+        typeof adminToken === "string" &&
+        adminToken !== "" &&
+        timingSafeEqual(url.searchParams.get("preview") ?? "", adminToken);
       if (!isPreview) return this.maintenance(request, environment, logger, config);
     }
 
-    if (url.pathname === CSP_REPORT_PATH) return cspReports.handle(request, environment, logger, config);
-    if (url.pathname === CONTACT_PATH) return contact.handle(request, environment, logger, config);
+    const endpoint = { [CSP_REPORT_PATH]: cspReports, [CONTACT_PATH]: contact, [VITALS_PATH]: vitals }[url.pathname];
+    if (endpoint) return endpoint.handle(request, environment, logger, config);
     return staticSite.respond(request, environment, logger, { isPreview });
   }
 
   /** Bare status for the visitor; the reason goes to the security log. */
   private rejected(request: Request, logger: Logger, verdict: RejectedVerdict, config: SecurityConfig): Response {
-    const severity: SecuritySeverityType = verdict.event === "scanner_probe" ? SecuritySeverity.Low : SecuritySeverity.Medium;
-    logSecurityEvent(logger.forActor("RequestGuard"), request, { event: verdict.event, severity, reason: verdict.reason });
+    const severity: SecuritySeverityType =
+      verdict.event === "scanner_probe" ? SecuritySeverity.Low : SecuritySeverity.Medium;
+    logSecurityEvent(logger.forActor("RequestGuard"), request, {
+      event: verdict.event,
+      severity,
+      reason: verdict.reason,
+    });
     const headers: Record<string, string> = {
       ...buildSecurityHeaders(request.url),
       "Cache-Control": "no-store",
@@ -94,8 +109,17 @@ export class WorkerApplication {
     return new Response(request.method === "HEAD" ? null : "Not available", { status: verdict.status, headers });
   }
 
-  private maintenance(request: Request, environment: WorkerEnvironment, logger: Logger, config: SecurityConfig): Promise<Response> {
-    logger.warn({ event: "maintenance_served", location: new URL(request.url).pathname, reason: "MAINTENANCE_MODE is on" });
+  private maintenance(
+    request: Request,
+    environment: WorkerEnvironment,
+    logger: Logger,
+    config: SecurityConfig,
+  ): Promise<Response> {
+    logger.warn({
+      event: "maintenance_served",
+      location: new URL(request.url).pathname,
+      reason: "MAINTENANCE_MODE is on",
+    });
     return this.errorPage(request, environment, logger, "maintenance", HttpStatus.ServiceUnavailable, {
       overrides: { title: environment.MAINTENANCE_TITLE, message: environment.MAINTENANCE_MESSAGE },
       extraHeaders: { "Retry-After": String(config.maintenanceRetryAfterSeconds) },
@@ -107,7 +131,11 @@ export class WorkerApplication {
     if (issues.length === 0 || this.reportedEnvironments.has(environment)) return;
     this.reportedEnvironments.add(environment);
     for (const issue of issues) {
-      logger.warn({ event: "invalid_env_config", location: "EnvironmentConfigResolver", reason: `${issue}; the security.json default is used` });
+      logger.warn({
+        event: "invalid_env_config",
+        location: "EnvironmentConfigResolver",
+        reason: `${issue}; the security.json default is used`,
+      });
     }
   }
 
@@ -117,7 +145,10 @@ export class WorkerApplication {
     logger: Logger,
     slug: string,
     status: number,
-    options: { overrides?: { title?: string | undefined; message?: string | undefined }; extraHeaders?: Record<string, string> } = {},
+    options: {
+      overrides?: { title?: string | undefined; message?: string | undefined };
+      extraHeaders?: Record<string, string>;
+    } = {},
   ): Promise<Response> {
     return errorPageResponse(
       { assets: environment.ASSETS, logger, baseHeaders: buildSecurityHeaders(request.url) },

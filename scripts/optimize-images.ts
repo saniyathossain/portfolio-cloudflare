@@ -2,7 +2,7 @@
 /** Generate WebP + PWA icons (via sharp — no ImageMagick/cwebp/sips needed) from the committed master images.
  *  The source JPEGs are treated as immutable masters — never re-encoded in place — so there is no
  *  cumulative generation loss. Derivatives are regenerated only when their source content changes
- *  (tracked in a gitignored .img-cache.json), so a no-op build produces no git churn. */
+ *  (tracked in a gitignored img-cache.json), so a no-op build produces no git churn. */
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -12,11 +12,11 @@ import { logDone, logInfo } from "./lib/console.ts";
 const ROOT = join(import.meta.dirname, "..");
 const IMG = join(ROOT, "public/assets/img");
 const HERO = join(IMG, "saniyat-hossain.jpg");
-const CACHE_PATH = join(import.meta.dirname, ".img-cache.json");
+const CACHE_PATH = join(import.meta.dirname, "img-cache.json");
 
 const RING_COLOR = "#b15f2c";
 const HERO_WEBP_QUALITY = 82;
-const LOGO_WEBP_QUALITY = 88;
+const LOGO_WEBP_QUALITY = 82;
 const HERO_ALIAS_WIDTH = 900; // the plain <img src> fallback is the 900w rendition
 // Face crop rect as fractions of the source so it stays correct if the master photo changes: the head
 // (profile, facing right) sits left-of-center in the 3000x4000 source.
@@ -50,9 +50,9 @@ const HERO_WIDTHS: readonly number[] = [480, 760, 840, 900, 1300, 1800];
 // exactly that, since nothing in HTML/CSS/JS references the .png filenames directly — they're only
 // referenced here, as build-time sources; always grep this script too before deleting an asset).
 const LOGOS_DIR = join(IMG, "logos");
-// 96 (not the old 192): confirmed via live Lighthouse image-delivery-insight that 192px wasted ~18KB
-// on a 96%-oversized icddrb-official.webp — the real max on-page display is 28px, not 48px.
-const LOGO_MAX_WIDTH = 96;
+// 56 (2x the 28px display size; was 96, was 192): PageSpeed image-delivery flagged icddrb-official.webp at 96x88 for a
+// 24-28px slot (6.7 KB wasted). The 16px partner orbs reuse these files and still get 3.5x headroom.
+const LOGO_MAX_WIDTH = 56;
 const LOGO_PNGS: readonly string[] = [
   "icddrb-official.png",
   "oss-official-transparent.png",

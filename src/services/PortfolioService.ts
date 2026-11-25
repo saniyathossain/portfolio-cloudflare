@@ -1,3 +1,4 @@
+import { applyBuildEnvironment, type BuildEnvironment } from "../lib/buildSettings";
 import { fillTemplate, highlightTerms } from "../lib/text";
 import { tenureOfPeriod, wholeYearsSince } from "../lib/tenure";
 import type { ContentRepository } from "../repositories/ContentRepository";
@@ -60,6 +61,8 @@ export class PortfolioService {
   constructor(
     private readonly repository: ContentRepository,
     private readonly clock: () => Date = () => new Date(),
+    /** Build-time variables (GOOGLE_ANALYTICS_ID, TURNSTILE_SITE_KEY, …) that override portfolio.json. */
+    private readonly buildEnvironment: BuildEnvironment = {},
   ) {}
 
   build(): PortfolioView {
@@ -76,7 +79,7 @@ export class PortfolioService {
     return {
       ...portfolio,
       site: {
-        ...portfolio.site,
+        ...applyBuildEnvironment(portfolio.site, this.buildEnvironment),
         aboutHeading: fillTemplate(portfolio.site.aboutHeading, { ...counts }),
         aboutKicker: fillTemplate(portfolio.site.aboutKicker, { ...counts }),
       },

@@ -28,10 +28,16 @@ interface Exchange {
   readonly logger: Logger;
   readonly meta: RequestMeta;
   readonly limiter: RateLimiter;
-  finish(status: HttpStatus, body: ApiBody, extra?: Record<string, unknown>, headers?: Record<string, string>): Response;
+  finish(
+    status: HttpStatus,
+    body: ApiBody,
+    extra?: Record<string, unknown>,
+    headers?: Record<string, string>,
+  ): Response;
 }
 
-type Step<TValue extends object> = { response: Response } & { [K in keyof TValue]?: never } | ({ response?: never } & TValue);
+type Step<TValue extends object> =
+  ({ response: Response } & { [K in keyof TValue]?: never }) | ({ response?: never } & TValue);
 
 export interface SubmitContactDependencies {
   readonly clientProfiles: ClientProfileService;
@@ -39,7 +45,11 @@ export interface SubmitContactDependencies {
   /** Isolate-local counters, used when neither the rate-limit binding nor KV is available. */
   readonly memoryCounters: Map<string, number>;
   /** Built per request because both depend on the environment and the request logger. */
-  readonly createRepository: (environment: WorkerEnvironment, config: SecurityConfig, logger: Logger) => ContactSubmissionRepository;
+  readonly createRepository: (
+    environment: WorkerEnvironment,
+    config: SecurityConfig,
+    logger: Logger,
+  ) => ContactSubmissionRepository;
   readonly createNotifier: (environment: WorkerEnvironment, logger: Logger) => ContactNotifier;
 }
 
@@ -51,7 +61,12 @@ export interface SubmitContactDependencies {
 export class SubmitContactAction {
   constructor(private readonly dependencies: SubmitContactDependencies) {}
 
-  async execute(request: Request, environment: WorkerEnvironment, logger: Logger, config: SecurityConfig): Promise<Response> {
+  async execute(
+    request: Request,
+    environment: WorkerEnvironment,
+    logger: Logger,
+    config: SecurityConfig,
+  ): Promise<Response> {
     const context = this.openExchange(request, environment, logger, config);
 
     const refused = this.refuseBadRequest(context) ?? (await this.refuseOverLimit(context));
@@ -77,17 +92,26 @@ export class SubmitContactAction {
     };
     const kvStored = await this.dependencies.createRepository(environment, config, context.logger).save(record);
     const emailed = await this.dependencies.createNotifier(environment, context.logger).notify(submission);
-    return context.finish(HttpStatus.Ok, { ok: true, emailed }, {
-      name: submission.name,
-      email: submission.email,
-      turnstile: screened.turnstile,
-      turnstile_configured: Boolean(environment[EnvVar.TurnstileSecret]),
-      kvStored,
-      emailed,
-    });
+    return context.finish(
+      HttpStatus.Ok,
+      { ok: true, emailed },
+      {
+        name: submission.name,
+        email: submission.email,
+        turnstile: screened.turnstile,
+        turnstile_configured: Boolean(environment[EnvVar.TurnstileSecret]),
+        kvStored,
+        emailed,
+      },
+    );
   }
 
-  private openExchange(request: Request, environment: WorkerEnvironment, logger: Logger, config: SecurityConfig): Exchange {
+  private openExchange(
+    request: Request,
+    environment: WorkerEnvironment,
+    logger: Logger,
+    config: SecurityConfig,
+  ): Exchange {
     const startedAt = Date.now();
     const { clientProfiles, memoryCounters } = this.dependencies;
     const contactLogger = logger.forActor("SubmitContactAction");
@@ -100,7 +124,13 @@ export class SubmitContactAction {
       meta,
       limiter: createRateLimiter(environment, memoryCounters),
       finish: (status, body, extra = {}, headers = {}) => {
-        logApiAccess(contactLogger, { status, ms: Date.now() - startedAt, outcome: body.error ?? "ok", ...meta, ...extra });
+        logApiAccess(contactLogger, {
+          status,
+          ms: Date.now() - startedAt,
+          outcome: body.error ?? "ok",
+          ...meta,
+          ...extra,
+        });
         return jsonResponse(body, status, headers);
       },
     };
@@ -110,7 +140,12 @@ export class SubmitContactAction {
   private refuseBadRequest(context: Exchange): Response | undefined {
     const { request, logger } = context;
     if (request.method !== "POST") {
-      return context.finish(HttpStatus.MethodNotAllowed, { error: ApiErrorCode.MethodNotAllowed }, {}, { Allow: "POST" });
+      return context.finish(
+        HttpStatus.MethodNotAllowed,
+        { error: ApiErrorCode.MethodNotAllowed },
+        {},
+        { Allow: "POST" },
+      );
     }
     if (!(request.headers.get("content-type") ?? "").includes("application/json")) {
       return context.finish(HttpStatus.UnsupportedMediaType, { error: ApiErrorCode.BadContentType });
@@ -138,9 +173,14 @@ export class SubmitContactAction {
       reason: `more than ${limit} submissions per ${windowSeconds}s`,
       detail: { scope: "contact" },
     });
-    return context.finish(HttpStatus.TooManyRequests, { error: ApiErrorCode.RateLimited }, {}, {
-      "Retry-After": String(decision.retryAfterSeconds),
-    });
+    return context.finish(
+      HttpStatus.TooManyRequests,
+      { error: ApiErrorCode.RateLimited },
+      {},
+      {
+        "Retry-After": String(decision.retryAfterSeconds),
+      },
+    );
   }
 
   /** Bounded body → JSON → validated submission, or the response that rejects it. */
@@ -166,13 +206,23 @@ export class SubmitContactAction {
     const parsed = parseContactPayload(body, config);
     const { submission } = parsed;
     if (!submission) {
-      return { response: context.finish(HttpStatus.BadRequest, { error: parsed.valid ? ApiErrorCode.BadPayload : parsed.error }) };
+      return {
+        response: context.finish(HttpStatus.BadRequest, {
+          error: parsed.valid ? ApiErrorCode.BadPayload : parsed.error,
+        }),
+      };
     }
 
     // Honeypot: a hidden field no human fills. Answer like a success so the bot learns nothing; store nothing.
     if (submission.honeypot !== "") return { response: await this.trapBot(context, submission) };
     if (!parsed.valid) {
-      return { response: context.finish(HttpStatus.Unprocessable, { error: parsed.error }, { name: submission.name, email: submission.email }) };
+      return {
+        response: context.finish(
+          HttpStatus.Unprocessable,
+          { error: parsed.error },
+          { name: submission.name, email: submission.email },
+        ),
+      };
     }
     return { submission };
   }
@@ -186,7 +236,11 @@ export class SubmitContactAction {
       reason: "hidden form field was filled in",
       detail: { field: config.honeypotField },
     });
-    return context.finish(HttpStatus.Ok, { ok: true, emailed: false }, { name: submission.name, email: submission.email, outcome: "honeypot" });
+    return context.finish(
+      HttpStatus.Ok,
+      { ok: true, emailed: false },
+      { name: submission.name, email: submission.email, outcome: "honeypot" },
+    );
   }
 
   /**
@@ -200,7 +254,8 @@ export class SubmitContactAction {
 
     const secret = context.environment[EnvVar.TurnstileSecret];
     if (typeof secret !== "string" || secret === "") return { turnstile: "skipped" };
-    if (await this.dependencies.turnstile.verify(secret, submission.token, context.meta.ip, context.logger)) return { turnstile: "passed" };
+    if (await this.dependencies.turnstile.verify(secret, submission.token, context.meta.ip, context.logger))
+      {return { turnstile: "passed" };}
 
     logSecurityEvent(context.logger, context.request, {
       event: "captcha_failed",

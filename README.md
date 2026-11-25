@@ -118,7 +118,7 @@ Browser → Cloudflare edge (DDoS, WAF, rate-limit rules, Bot Fight)
         → Worker src/index.ts → WorkerApplication
             1 request guard      method allowlist, URL/path sanity, scanner-probe paths   (src/worker/security)
             2 maintenance gate   MAINTENANCE_MODE → 503 shell-console page
-            3 API                /api/contact (POST form, GET admin read), /api/csp-report
+            3 API                /api/contact (POST form, GET admin read), /api/csp-report, /api/vitals (RUM beacon, admin summary)
             4 static assets      dist/ via ASSETS binding + security headers + Cache-Control + Early Hints
         → logger (stderr / stdout / KV / D1) with 5W records and a request id on every line
 ```
@@ -145,10 +145,16 @@ Operations:
 npx wrangler secret put ADMIN_TOKEN        # required to read submissions
 npx wrangler secret put TURNSTILE_SECRET   # turns the CAPTCHA on
 curl -H "Authorization: Bearer $ADMIN_TOKEN" https://saniyat.com/api/contact
+curl -H "Authorization: Bearer $ADMIN_TOKEN" "https://saniyat.com/api/vitals?days=7"   # real-user Web Vitals summary (docs/aidlc/69)
 npx wrangler tail --format json | grep '"channel":"security"'   # live security events
 ```
 
 Production checklist (bindings, secrets, dashboard rules, what is still missing): `docs/aidlc/58`.
+
+### Database
+Storage goes through one ORM layer (Drizzle, SQLite dialect) behind repository interfaces: `src/worker/database` (connections, schema),
+`src/worker/repositories` (contracts + `drizzle/` implementations). `src/content/database.json` lists connections; the `DB_CONNECTION` var picks one
+(`d1`, or `null` to switch the database off). See `docs/aidlc/70-database-orm-repository-drivers.md`.
 
 ### Configuration (env vars)
 Rate limits, request-size caps, retention, maintenance and logging are tunable without a code change. Copy `.dev.vars.example` to `.dev.vars`

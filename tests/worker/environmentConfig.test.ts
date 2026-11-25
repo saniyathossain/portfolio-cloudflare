@@ -54,7 +54,13 @@ describe("EnvironmentConfigResolver", () => {
 });
 
 describe("KvContactSubmissionRepository", () => {
-  const logger = new Logger(new NullChannel("null"), { actor: "test", requestId: "r1", includeStackTrace: false, redactedKeys: [], maxStringLength: 100 });
+  const logger = new Logger(new NullChannel("null"), {
+    actor: "test",
+    requestId: "r1",
+    includeStackTrace: false,
+    redactedKeys: [],
+    maxStringLength: 100,
+  });
 
   function fakeKv(): KvNamespace & { data: Map<string, string> } {
     const data = new Map<string, string>();
@@ -65,10 +71,26 @@ describe("KvContactSubmissionRepository", () => {
         data.set(key, value);
         return Promise.resolve();
       },
-      list: ({ prefix, limit }) => Promise.resolve({ keys: [...data.keys()].filter((key) => key.startsWith(prefix)).slice(0, limit).map((name) => ({ name })) }),
+      list: ({ prefix, limit }) =>
+        Promise.resolve({
+          keys: [...data.keys()]
+            .filter((key) => key.startsWith(prefix))
+            .slice(0, limit)
+            .map((name) => ({ name })),
+        }),
     };
   }
-  const submission = (ts: string) => ({ name: "A", email: "a@b.co", project: "p", ts, ip: "1.1.1.1", country: "BD", asn: undefined, ua: "ua", ray: "ray" });
+  const submission = (ts: string) => ({
+    name: "A",
+    email: "a@b.co",
+    project: "p",
+    ts,
+    ip: "1.1.1.1",
+    country: "BD",
+    asn: undefined,
+    ua: "ua",
+    ray: "ray",
+  });
 
   it("is a no-op without a binding", async () => {
     const repository = new KvContactSubmissionRepository(undefined, 60, logger);

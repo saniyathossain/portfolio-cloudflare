@@ -1,0 +1,38 @@
+{
+  "$comment": "Real-user Web Vitals (docs/aidlc/69). Thresholds are Google's published good / poor boundaries (PageSpeed Insights field data); a value between them is 'needs improvement'. Sections are the ids a measurement can be attributed to (header, each <section id>, the footer as 'contact'). Validated by src/schemas/vitalsSchema.ts.",
+  "thresholds": {
+    "lcp": { "good": 2500, "poor": 4000 },
+    "cls": { "good": 0.1, "poor": 0.25 },
+    "inp": { "good": 200, "poor": 500 },
+    "fcp": { "good": 1800, "poor": 3000 },
+    "ttfb": { "good": 800, "poor": 1800 },
+    "tbt": { "good": 200, "poor": 600 }
+  },
+  "percentile": 75,
+  "sections": [
+    "header",
+    "home",
+    "about",
+    "services",
+    "experience",
+    "skills",
+    "editorial",
+    "education",
+    "contact",
+    "page"
+  ],
+  "ranges": {
+    "maxTimeMs": 120000,
+    "maxCls": 10,
+    "maxDimensionPx": 20000,
+    "maxMemoryGb": 512,
+    "maxCores": 512,
+    "maxDpr": 10
+  },
+  "summary": {
+    "defaultDays": 7,
+    "maxDays": 90,
+    "defaultLimit": 500,
+    "maxLimit": 2000
+  }
+}
