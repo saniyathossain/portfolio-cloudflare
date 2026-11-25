@@ -1,0 +1,11 @@
+---
+import { iconService, portfolio, uiConfig } from "../../bootstrap/container";
+import BackToTop from "../../islands/BackToTop";
+---
+
+<BackToTop
+  client:idle
+  iconHtml={iconService.render("chevronUp", "ui-icon ui-icon--lg ui-icon--chevron")}
+  ariaLabel={portfolio.copy.backToTop.ariaLabel}
+  revealAfterPx={uiConfig.behavior.backToTopRevealPx}
+/>

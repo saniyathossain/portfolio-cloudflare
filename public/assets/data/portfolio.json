@@ -92,7 +92,8 @@
     "analytics": {
       "googleId": "",
       "cloudflareToken": ""
-    }
+    },
+    "footerCopyright": "© {year} {name}."
   },
   "sections": {
     "services": "Backend, architecture, APIs, and AI-assisted delivery.",
@@ -100,6 +101,34 @@
     "skills": "Languages, frameworks, data, platform, testing, and AI in the flow.",
     "editorial": "Backend engineering notes — full archive on dev.to and Medium.",
     "education": "Electronics & Telecommunication Engineering — Dhaka."
+  },
+  "sectionHeadings": {
+    "services": {
+      "heading": "What I build",
+      "icon": "layers"
+    },
+    "experience": {
+      "heading": "Where I've shipped",
+      "icon": "experience"
+    },
+    "skills": {
+      "heading": "Tools & craft",
+      "icon": "code"
+    },
+    "editorial": {
+      "heading": "Editorial",
+      "icon": "editorial"
+    },
+    "stats": {
+      "heading": "Proof in the work, not the words."
+    },
+    "education": {
+      "heading": "Foundations",
+      "icon": "education"
+    },
+    "contact": {
+      "heading": "Have a project in mind? Let's get to work."
+    }
   },
   "editorialOutbound": {
     "eyebrow": "More writing",
@@ -215,19 +244,28 @@
   "createBand": [
     {
       "text": "Code",
-      "variant": "code"
+      "variant": "code",
+      "icon": "code",
+      "parallax": 0.05
     },
     {
       "text": "Ship",
-      "variant": "accent"
+      "variant": "accent",
+      "icon": "rocket",
+      "parallax": 0.07,
+      "isChipOnDark": true
     },
     {
-      "text": "arrow",
-      "variant": "dark"
+      "variant": "dark",
+      "icon": "arrow",
+      "parallax": 0.06,
+      "isDecorative": true
     },
     {
       "text": "Scale",
-      "variant": "scale"
+      "variant": "scale",
+      "icon": "layers",
+      "parallax": 0.09
     }
   ],
   "articles": [
@@ -837,5 +875,59 @@
     "name": "Saniyat — Portfolio",
     "short_name": "Saniyat",
     "description": "Staff Software Engineer — backend, microservices, and AI-assisted delivery."
+  },
+  "copy": {
+    "about": {
+      "onlineLabel": "Find me online",
+      "workButton": "My work"
+    },
+    "createBand": {
+      "ariaLabel": "Code, ship, scale"
+    },
+    "partners": {
+      "label": "Worked with"
+    },
+    "experience": {
+      "stackLabel": "Stack",
+      "aiToolsLabel": "AI tools",
+      "roleCountSingular": "role",
+      "roleCountPlural": "roles"
+    },
+    "skills": {
+      "listLabel": "Tools and technologies",
+      "viewMore": "View more",
+      "viewLess": "View less"
+    },
+    "stats": {
+      "ariaLabel": "Statistics",
+      "eyebrow": "By the numbers"
+    },
+    "footer": {
+      "navigateHeading": "Navigate",
+      "contactHeading": "Contact",
+      "elsewhereHeading": "Elsewhere",
+      "emailLabel": "Email",
+      "callLabel": "Call",
+      "ctaLabel": "Get in touch"
+    },
+    "backToTop": {
+      "ariaLabel": "Scroll to top"
+    },
+    "clock": {
+      "ariaLabel": "Local time"
+    },
+    "editorial": {
+      "tablistLabel": "Filter articles by platform",
+      "searchPlaceholder": "Search",
+      "searchLabel": "Search articles",
+      "clearSearchLabel": "Clear search",
+      "closeSearchLabel": "Close search",
+      "tabAriaTemplate": "{label} ({count})",
+      "readTimeTemplate": "{minutes} min read",
+      "emptyTitle": "No matches",
+      "emptyHintWithQueryTemplate": "Nothing for \"{query}\" in this filter. Try another term or platform.",
+      "emptyHint": "No articles in this filter yet.",
+      "moreAriaLabel": "More writing on dev.to and Medium"
+    }
   }
 }

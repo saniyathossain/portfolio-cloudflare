@@ -1,0 +1,15 @@
+---
+import { errorCatalog } from "../../bootstrap/container";
+import ErrorTerminal from "../../components/ErrorTerminal.astro";
+
+export function getStaticPaths() {
+  return Object.entries(errorCatalog.pages).map(([pageKey, page]) => ({
+    params: { slug: page.slug },
+    props: { pageKey },
+  }));
+}
+
+const { pageKey } = Astro.props;
+---
+
+<ErrorTerminal pageKey={pageKey} />

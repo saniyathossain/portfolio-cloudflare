@@ -1,0 +1,543 @@
+/* One liquid-glass dialog on the site's own page colour, in a console voice: Geist for the headline and copy, Geist
+   Mono for everything the shell would print (request, status, retry, services, commands). Translucent fill + backdrop
+   blur + hue-tinted conic rim + soft-light top film, dark and glass pill buttons with the arrow chip. Real
+   backdrop-filter is fine here: one fixed, non-scrolling surface (docs/DESIGN.md §4 rule).
+   Self-contained on purpose: an outage page must not depend on any other file being reachable. */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/geist-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/geist-mono-latin.woff2") format("woff2");
+}
+:root {
+  color-scheme: light;
+  --fg: #111111;
+  --ink: #0a0a0a;
+  --faint: #8d8d8d;
+  --accent: #b15f2c;
+  --accent-dark: #97501f;
+  --error: #d62f45;
+  --tint: var(--accent);
+  --tint-deep: var(--accent-dark);
+  --ok: #1f9d55;
+  --warn: #c47a00;
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.28, 1);
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+::selection {
+  background: color-mix(in srgb, var(--tint) 24%, transparent);
+}
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  font-family: var(--sans);
+  letter-spacing: -0.011em;
+  line-height: 1.5;
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  /* The site's own page colour: the hero's sun-glare ray over the --hero-from → --hero-to gradient. */
+  background:
+    radial-gradient(38rem 30rem at 88% -8%, rgba(255, 214, 164, 0.3), transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(160deg, #f1f0ee 0%, #e3e2df 100%);
+  background-attachment: fixed;
+}
+
+/* Aurora whisper — the exact layer the site paints behind its glass (styles.css body::before), without the drift. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -25vmax;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(52vmax 42vmax at 76% 1%, rgba(255, 216, 168, 0.1), transparent 60%),
+    radial-gradient(40vmax 40vmax at 12% 4%, rgba(110, 108, 240, 0.14), transparent 58%),
+    radial-gradient(36vmax 36vmax at 88% 0%, rgba(10, 132, 255, 0.11), transparent 58%),
+    radial-gradient(46vmax 46vmax at 84% 82%, rgba(63, 208, 224, 0.12), transparent 60%),
+    radial-gradient(42vmax 42vmax at 4% 90%, rgba(255, 159, 10, 0.07), transparent 58%),
+    radial-gradient(32vmax 32vmax at 48% 48%, rgba(255, 92, 138, 0.035), transparent 62%);
+  filter: blur(14px) saturate(118%);
+}
+.window {
+  position: relative;
+  width: min(28.5rem, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+  padding: 2.5rem 2rem 1.6rem;
+  text-align: center;
+  border-radius: 2rem;
+  border: 1px solid transparent;
+  /* The glass is the fill; the conic specular rim is drawn by ::after (a masked 1px ring, so it never shows through). */
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.2));
+  -webkit-backdrop-filter: blur(26px) saturate(215%);
+  backdrop-filter: blur(26px) saturate(215%);
+  box-shadow:
+    inset 0 0 26px rgba(255, 255, 255, 0.38),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.45),
+    0 30px 70px -20px rgba(24, 30, 56, 0.28),
+    0 6px 18px rgba(24, 30, 56, 0.1),
+    0 26px 60px -32px color-mix(in srgb, var(--tint) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  isolation: isolate;
+}
+@supports (corner-shape: squircle) {
+  .window,
+  .window::before,
+  .window::after {
+    corner-shape: squircle;
+  }
+}
+.window.is-error {
+  --tint: var(--error);
+  --tint-deep: #8f1d2e;
+}
+/* Conic specular rim: bright at the lit corners, tint-fringed either side, faint between. */
+.window::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; padding: 1px; border-radius: inherit; pointer-events: none;
+  background: conic-gradient(from 0deg at 50% 50%,
+    rgba(255,255,255,.16) 0deg, rgba(255,255,255,.16) 40deg,
+    color-mix(in srgb, var(--tint, #b15f2c) 45%, rgba(255,255,255,.7)) 100deg,
+    rgba(255,255,255,.95) 135deg,
+    color-mix(in srgb, var(--tint, #b15f2c) 35%, rgba(255,255,255,.6)) 170deg,
+    rgba(255,255,255,.16) 225deg, rgba(255,255,255,.16) 275deg,
+    rgba(255,255,255,1) 315deg, rgba(255,255,255,.16) 355deg, rgba(255,255,255,.16) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+/* Soft-light top film, as on .glass-panel. */
+.window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 70% at 12% -10%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, transparent 26%);
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .window {
+    animation: arrive 0.8s var(--ease-out) both;
+  }
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.985);
+  }
+}
+
+/* Orb: a glass lens (same recipe as the site's clock face) whose own edge is the countdown — one ring, no track. */
+.orb {
+  --orb: var(--accent);
+  --orb-deep: var(--accent-dark);
+  position: relative;
+  width: 9.5rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  user-select: none;
+}
+.window.is-error .orb {
+  --orb: var(--error);
+  --orb-deep: #8f1d2e;
+}
+.orb.is-online {
+  --orb: #28c840;
+  --orb-deep: #1f8f4e;
+}
+.orb__glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.3) 34%, transparent 64%),
+    radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--orb) 34%, transparent) 0%, transparent 62%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.85), color-mix(in srgb, var(--orb) 12%, rgba(255, 255, 255, 0.6)));
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -8px 18px color-mix(in srgb, var(--orb) 20%, transparent),
+    0 14px 28px -10px color-mix(in srgb, var(--orb-deep) 50%, transparent);
+}
+.orb__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  overflow: visible;
+  pointer-events: none;
+}
+.orb__progress {
+  fill: none;
+  stroke: var(--orb);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+}
+.orb__value {
+  position: relative;
+  font-size: 3.5rem;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--orb-deep);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+.orb__value small {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--orb-deep) 55%, rgba(17, 17, 17, 0.5));
+  text-align: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .orb__glass {
+    animation: float 5.2s ease-in-out infinite alternate;
+  }
+  .orb__progress {
+    animation: drain var(--orb-drain-ms, 0ms) linear forwards;
+  }
+  .orb:not(.is-counting) .orb__progress {
+    animation: none;
+  }
+}
+@keyframes float {
+  from {
+    transform: translateY(0.14rem);
+  }
+  to {
+    transform: translateY(-0.14rem);
+  }
+}
+@keyframes drain {
+  to {
+    stroke-dashoffset: 100;
+  }
+}
+
+.copy {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: center;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(2.3rem, 2.6vw + 1.3rem, 3rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 12px rgba(17, 17, 17, 0.06);
+}
+.message {
+  margin: 0;
+  max-width: 31ch;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  letter-spacing: -0.006em;
+  line-height: 1.65;
+  text-wrap: pretty;
+  color: color-mix(in srgb, var(--tint-deep) 22%, rgba(17, 17, 17, 0.78));
+}
+/* Glass terminal well: one recessed, frosted inset (light, never black) holding what the shell would print — the
+   request, its status and the retry state, then a services list. Static markup is complete without JS; the request
+   path, the retry line and the live network entry are filled in by the script below. */
+.well {
+  width: 100%;
+  margin: 0;
+  padding: 0.3rem;
+  text-align: left;
+  font-family: var(--mono);
+  border-radius: 1.15rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.42));
+  box-shadow:
+    inset 0 1px 3px rgba(24, 30, 56, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 1px 0 rgba(255, 255, 255, 0.75);
+}
+.well__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.well__heading {
+  margin: 0;
+  padding: 0.55rem 0.75rem 0.15rem;
+  border-top: 1px solid rgba(17, 17, 17, 0.06);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--tint-deep) 45%, rgba(17, 17, 17, 0.5));
+}
+.well__line {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 450;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: rgba(17, 17, 17, 0.74);
+}
+.well__line[hidden] {
+  display: none;
+}
+.well__line + .well__line:not([hidden]) {
+  border-top: 1px solid rgba(17, 17, 17, 0.06);
+}
+.well__line--service {
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
+}
+.well__line--service[data-service-state="ok"] {
+  --svc: var(--ok);
+}
+.well__line--service[data-service-state="degraded"] {
+  --svc: var(--warn);
+}
+.well__line--service[data-service-state="down"] {
+  --svc: var(--error);
+}
+.well__line--service[data-service-state="unknown"] {
+  --svc: var(--faint);
+}
+.service__detail {
+  color: rgba(17, 17, 17, 0.55);
+}
+.service__detail::before {
+  content: "· ";
+}
+.service__state {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--svc, var(--faint)) 82%, rgba(17, 17, 17, 0.4));
+}
+.well__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.well__text b {
+  font-weight: 600;
+  color: var(--fg);
+}
+.well__mark {
+  width: 1rem;
+  height: 1rem;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--tint-deep) 60%, rgba(17, 17, 17, 0.45));
+}
+.well__mark svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+.well__mark--status::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--tint);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tint) 18%, transparent);
+}
+.well__mark--service::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--svc, var(--faint));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--svc, var(--faint)) 18%, transparent);
+}
+.well__mark--retry::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--tint);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .well__line {
+    animation: line-in 0.5s var(--ease-out) both;
+    animation-delay: 0.35s;
+  }
+  .well__line:nth-child(2) {
+    animation-delay: 0.44s;
+  }
+  .well__line:nth-child(3) {
+    animation-delay: 0.53s;
+  }
+  .well__heading ~ .well__list .well__line:nth-child(1) {
+    animation-delay: 0.62s;
+  }
+  .well__heading ~ .well__list .well__line:nth-child(2) {
+    animation-delay: 0.7s;
+  }
+  .well__heading ~ .well__list .well__line:nth-child(3) {
+    animation-delay: 0.78s;
+  }
+  .well__heading ~ .well__list .well__line:nth-child(n + 4) {
+    animation-delay: 0.86s;
+  }
+}
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.3rem);
+  }
+}
+@supports (corner-shape: squircle) {
+  .well {
+    corner-shape: squircle;
+  }
+}
+
+/* Buttons: the site's pill buttons — dark primary + glass secondary, each with its white arrow chip. */
+.actions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+}
+.actions a,
+.actions button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.4rem 0.4rem 0.4rem 1.2rem;
+  border: 0;
+  border-radius: 9999px;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.45s var(--ease-glass), box-shadow 0.45s var(--ease-glass);
+}
+.actions li:first-child a,
+.actions li:first-child button {
+  color: #fff;
+  background: linear-gradient(145deg, #2b2b2b, #060606);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 10px 24px rgba(17, 17, 17, 0.18);
+}
+.actions li:not(:first-child) a,
+.actions li:not(:first-child) button {
+  color: #111;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.68));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 4px 14px -7px rgba(17, 17, 17, 0.14);
+}
+.actions .chip {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 3px rgba(17, 17, 17, 0.12);
+  transition: transform 0.45s var(--ease-glass);
+}
+.actions li:not(:first-child) .chip {
+  background: #111;
+  color: #fff;
+}
+.actions .chip svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.actions a:hover,
+.actions button:hover {
+  transform: translateY(-1px);
+}
+.actions a:hover .chip,
+.actions button:hover .chip {
+  transform: translateX(2px);
+}
+.actions a:active,
+.actions button:active {
+  transform: scale(0.98);
+}
+.actions a:focus-visible,
+.actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 30rem) {
+  .window {
+    padding: 2rem 1.25rem 1.4rem;
+    border-radius: 1.75rem;
+  }
+  .orb {
+    width: 8.5rem;
+  }
+  .orb__value {
+    font-size: 3rem;
+  }
+}
+/* No backdrop-filter support: a slightly more opaque fill keeps the text legible. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .window {
+    background:
+      linear-gradient(155deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.74)) padding-box,
+      linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.3)) border-box;
+  }
+}

@@ -1,0 +1,74 @@
+---
+import { brandResolver, iconService, portfolio, uiConfig } from "../../bootstrap/container";
+import SkillsFlat from "../../islands/SkillsFlat";
+import BrandPill from "../ui/BrandPill.astro";
+import Icon from "../ui/Icon.astro";
+import SectionHeading from "../ui/SectionHeading.astro";
+
+const { skills, copy, site } = portfolio;
+const isFlatLayout = site.features.flags.skillsScrollDesign.enabled;
+const groupAccents = uiConfig.accents.skillGroups;
+const { chevronIcon, ...skillsFlatSettings } = uiConfig.skillsFlat;
+// One pill per logo across the whole flat list ("RediSearch" is part of "Redis", so it adds no pill).
+const visibleSkillNames = new Set(brandResolver.distinctByIcon(skills.flatMap((group) => group.items)));
+const flatEntries = skills
+  .flatMap((group) => group.items.map((item) => ({ group: group.title, item })))
+  .filter((entry) => visibleSkillNames.has(entry.item));
+---
+
+<section id="skills" class="sec sec-pad">
+  <div class="shell">
+    <SectionHeading sectionId="skills" headingClass="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl" />
+
+    {isFlatLayout ? (
+      <div class="skills-flat">
+        <div class="skills-flat__panel" id="skills-flat-panel">
+          <div class="skills-flat__inner">
+            <div class="skills-flat__row pill-row" role="list" aria-label={copy.skills.listLabel}>
+              {flatEntries.map((entry) => (
+                <BrandPill
+                  stackName={entry.item}
+                  iconSizePx={46}
+                  modifierClass="skills-flat__pill"
+                  hasAriaLabel
+                  role="listitem"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <SkillsFlat
+          client:idle
+          totalPills={flatEntries.length}
+          viewMoreLabel={copy.skills.viewMore}
+          viewLessLabel={copy.skills.viewLess}
+          chevronHtml={iconService.render(chevronIcon.name, chevronIcon.classes)}
+          settings={skillsFlatSettings}
+        />
+      </div>
+    ) : (
+      <div class="grid gap-6 md:grid-cols-2">
+        {skills.map((group, groupIndex) => (
+          <div
+            class="glass-panel spec spec--panel"
+            data-reveal
+            data-delay={groupIndex * 80}
+            data-ci={groupAccents[groupIndex]}
+          >
+            <div class="skills-panel__head">
+              <span class="icon-chip" aria-hidden="true">
+                <Icon name={group.icon} svgClass="ui-icon ui-icon--md" />
+              </span>
+              <h3>{group.title}</h3>
+            </div>
+            <div class="pill-row" data-stagger data-stagger-step="62">
+              {brandResolver.distinctByIcon(group.items).map((item) => (
+                <BrandPill stackName={item} iconSizePx={14} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>

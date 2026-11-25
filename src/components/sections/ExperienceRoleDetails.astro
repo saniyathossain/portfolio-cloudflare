@@ -1,0 +1,57 @@
+---
+import { brandResolver, portfolio, portfolioService } from "../../bootstrap/container";
+import type { RoleView } from "../../types/ExperienceGroup";
+import BrandPill from "../ui/BrandPill.astro";
+import Icon from "../ui/Icon.astro";
+
+interface Props {
+  role: RoleView;
+}
+
+const { role } = Astro.props;
+const { copy } = portfolio;
+---
+
+<ul class="exp-details__list">
+  {role.details.map((detail) => (
+    <li>
+      <Icon name="check" svgClass="ui-icon ui-icon--sm" class="point-chip" />
+      <span set:html={portfolioService.highlightExperience(detail)} />
+    </li>
+  ))}
+</ul>
+
+{(role.stacks.length > 0 || role.aiTools.length > 0) && (
+  <div class="role-tags">
+    {role.stacks.length > 0 && (
+      <div class="role-tags__group">
+        <span class="role-tags__label role-tags__label--stack">
+          <span class="icon-chip icon-chip--sm" aria-hidden="true">
+            <Icon name="chip" svgClass="ui-icon ui-icon--sm" />
+          </span>{" "}
+          {copy.experience.stackLabel}
+        </span>
+        <div class="pill-row">
+          {brandResolver.distinctByIcon(role.stacks).map((stackName) => (
+            <BrandPill stackName={stackName} iconSizePx={12} modifierClass="brand-pill--stack" hasAriaLabel />
+          ))}
+        </div>
+      </div>
+    )}
+    {role.aiTools.length > 0 && (
+      <div class="role-tags__group">
+        <span class="role-tags__label role-tags__label--ai">
+          <span class="icon-chip icon-chip--sm" aria-hidden="true">
+            <Icon name="sparkles" svgClass="ui-icon ui-icon--sm" />
+          </span>{" "}
+          {copy.experience.aiToolsLabel}
+        </span>
+        <div class="pill-row">
+          {role.aiTools.map((toolName) => (
+            <BrandPill stackName={toolName} iconSizePx={12} modifierClass="brand-pill--ai" hasAriaLabel />
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+)}

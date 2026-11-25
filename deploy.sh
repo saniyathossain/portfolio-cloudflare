@@ -2,11 +2,11 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
-./build.sh
+npm run build
 
 # Ship-gate: catch broken HTML/CSS structure (e.g. an unbalanced brace in the inlined critical
 # <style>) before it goes to production, not after a user reports it.
-node scripts/preflight-check.js
+node scripts/preflight-check.ts
 
 if ! command -v npx >/dev/null 2>&1; then
   echo "ERROR: npx not found"

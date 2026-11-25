@@ -1,0 +1,12 @@
+---
+import { navTriggerAttributes } from "../../lib/navigation";
+import { portfolio } from "../../bootstrap/container";
+import Icon from "../ui/Icon.astro";
+---
+
+{portfolio.nav.map((item) => (
+  <button type="button" {...navTriggerAttributes(item)}>
+    <Icon name={item.icon} svgClass="ui-icon ui-icon--md" />
+    <span>{item.label}</span>
+  </button>
+))}

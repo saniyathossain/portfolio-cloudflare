@@ -14,5 +14,5 @@ alwaysApply: false
 - **Brand pills**: `.brand-pill` + `.brand-pill--stack` / `--ai`; expand label on hover; brand mono badge with gradient fill.
 - **Hero partners**: `.partner-pill` — frosted pill with logo + company name (simple, readable).
 - **Motion**: `[data-reveal]`, `.blur-reveal`, `--ease-glass`; all animations gated by `prefers-reduced-motion`.
-- **No inline CSS** in static HTML; styles in `styles.css` or prebuilt `tailwind.css`.
+- **No inline CSS** (no `<style>` blocks, no `style=` attributes) in HTML/Astro/TSX source; styles in `styles.css`, prebuilt `tailwind.css` or `src/styles/*.css` (doc 64).
 - **Effects**: `.beam`, `.sheen`, `.spec` (pointer-tracked highlight) — use sparingly on CTAs/cards.

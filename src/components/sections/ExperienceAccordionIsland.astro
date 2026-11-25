@@ -1,0 +1,13 @@
+---
+import { uiConfig } from "../../bootstrap/container";
+import ExperienceAccordion from "../../islands/ExperienceAccordion";
+
+interface Props {
+  sectionId: string;
+}
+
+const { sectionId } = Astro.props;
+---
+
+<!-- client:idle, not :visible — the island renders no box, so an IntersectionObserver would never see it. -->
+<ExperienceAccordion client:idle sectionId={sectionId} config={uiConfig.experienceAccordion} />

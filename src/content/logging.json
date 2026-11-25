@@ -1,0 +1,15 @@
+{
+  "$comment": "Log channels, modelled on Laravel's config/logging.php. `default` can be overridden per environment with the LOG_CHANNEL Worker var (e.g. LOG_CHANNEL=stderr). Records are single-line JSON with the 5W fields (docs/aidlc/54 §6).",
+  "default": "stack",
+  "includeStackTrace": true,
+  "redactedKeys": ["token", "secret", "authorization", "cookie", "password", "project", "cf-turnstile-response"],
+  "maxContextStringLength": 300,
+  "channels": {
+    "stack": { "driver": "stack", "channels": ["stdout", "stderr", "kv"] },
+    "stdout": { "driver": "stdout", "level": "debug", "maxLevel": "info" },
+    "stderr": { "driver": "stderr", "level": "warn" },
+    "kv": { "driver": "kv", "level": "error", "binding": "LOG_KV", "keyPrefix": "log:", "ttlSeconds": 604800 },
+    "database": { "driver": "d1", "level": "error", "binding": "LOG_DB", "table": "logs" },
+    "silent": { "driver": "null" }
+  }
+}

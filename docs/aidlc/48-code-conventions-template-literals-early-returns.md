@@ -98,14 +98,29 @@ Only flatten a loop that's genuinely nested at *definition time* over two differ
 
 Commit messages and PR descriptions in this repo **must not** include a `Co-Authored-By: Claude …` (or any other
 AI/agent) trailer, nor a "Generated with …" footer. Authorship is the owner's alone. This overrides any agent or
-tool default attribution. Agents also **never push** (and never merge/deploy) unless the owner explicitly says so
-in that turn — commit locally, report, stop.
+tool default attribution. Agents **never commit** without the owner's explicit go-ahead for that commit, and
+**never push** (or merge/deploy) unless the owner explicitly says so in that turn — make changes, report, wait.
 
 Message style: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …), subject ≤ 72 chars, body explains why.
 Stage files by name (no `git add -A`).
 
+## Rule 5 — meaningful names, no single-letter identifiers (2026-11-24)
+
+Variables, parameters, callbacks and functions are named for what they mean: `experienceGroup`, `scrollOffsetPx`,
+`handleMenuToggle` — never `a`, `b`, `c`, `x`, `e`, `tmp`, `fn2`. Loop indices are `index`/`row`/`column`, event
+parameters `event`. Functions are verbs, booleans read as questions (`isOpen`, `hasFocus`), units sit in the name
+(`delayMs`). Existing short names in legacy `public/assets/js/` are renamed only when that code is touched or ported;
+new code never introduces them. Details and lint enforcement: doc 54 §2 and §7.
+
+## Rule 6 — TypeScript, structure, logging and security standards
+
+New and ported code (`.ts`/`.tsx`/`.astro`) follows doc 54: strict TypeScript with DTO interfaces, enums and Zod
+schemas; Laravel-style layered folders; DRY/SOLID; 5W logging with Artisan-style console output; ESLint + Prettier;
+least-privilege security; PWA and browser/device compatibility — all without changing performance or UX.
+
 ## Scope
 
-Applies to all hand-written files under `public/assets/js/` and `scripts/`. Existing hot loops that
+Rules 1–5 apply to all hand-written files under `public/assets/js/` and `scripts/` (and, with rule 6, to everything
+under `src/`). Existing hot loops that
 are already structured for rAF-coalescing / performance (documented inline) are not rewritten purely
 for style — behaviour and perf come first.
