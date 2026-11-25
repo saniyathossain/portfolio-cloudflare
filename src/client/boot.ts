@@ -8,7 +8,7 @@
  */
 import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
-const ASSET_V = "58e74981b3d6"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+const ASSET_V = "487ce326021b"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
 const SERVICE_WORKER_URL = "/sw.js";
 const IDLE_TIMEOUT_MS = 3000;
 const RUM_META_NAME = "portfolio-rum";

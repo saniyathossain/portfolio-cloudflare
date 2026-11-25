@@ -269,7 +269,8 @@ function initScrollProgress(): void {
   };
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", schedule, { passive: true });
-  update();
+  // First reading on the next frame, not now: scrollHeight / clientHeight here would flush a pending layout mid-boot.
+  schedule();
 }
 
 function observeLateMountedNode(node: Node): void {

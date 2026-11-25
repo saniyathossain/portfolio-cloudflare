@@ -108,9 +108,11 @@ function buildStylesheetLinks(): string {
   // critical.css during it, so a first (uncached) visit never flashes unstyled markup — oversized SVG icons,
   // default-blue links. It is cleared on load, on error, and after a 6 s failsafe so content can never stay hidden.
   // Without JS the class is never added, so the markup shows (the <noscript> stylesheet is render-blocking).
-  return `  <script>(function(){var r=document.documentElement;r.classList.add("css-pending");setTimeout(function(){r.classList.remove("css-pending")},${CSS_PENDING_FAILSAFE_MS})})()</script>
-  <style>${criticalMinCss}</style>
-  <link rel="preload" href="${stylesHref}" as="style" onload="this.onload=null;this.rel='stylesheet';document.documentElement.classList.remove('css-pending')" onerror="document.documentElement.classList.remove('css-pending')">
+  // One inline script (allowed by hash in the CSP, docs/aidlc/73) instead of onload/onerror attributes, which would need
+  // 'unsafe-hashes'. If the preload finished before the listeners attached (cached), the resource timing entry tells us.
+  return `  <style>${criticalMinCss}</style>
+  <link rel="preload" href="${stylesHref}" as="style">
+  <script>(function(){var r=document.documentElement,l=document.currentScript.previousElementSibling;r.classList.add("css-pending");function d(){r.classList.remove("css-pending")}function s(){l.rel="stylesheet";d()}setTimeout(d,${CSS_PENDING_FAILSAFE_MS});l.addEventListener("load",s);l.addEventListener("error",d);var e=performance.getEntriesByName(l.href)[0];if(e&&e.responseEnd>0)s()})()</script>
   <noscript><link rel="stylesheet" href="${stylesHref}"></noscript>`;
 }
 
