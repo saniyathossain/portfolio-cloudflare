@@ -5649,3 +5649,14 @@ main > .sec > .create-band { padding-block: 0; }
 .nav-overlay ul > li:nth-child(10) > .nav-overlay__item { --stagger-i: 9; }
 .nav-overlay ul > li:nth-child(11) > .nav-overlay__item { --stagger-i: 10; }
 .nav-overlay ul > li:nth-child(12) > .nav-overlay__item { --stagger-i: 11; }
+
+/* Marker watched by the back-to-top island (src/islands/BackToTop.tsx): as tall as the reveal distance, never painted. */
+.back-to-top-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: var(--reveal-after, 600px);
+  opacity: 0;
+  pointer-events: none;
+}

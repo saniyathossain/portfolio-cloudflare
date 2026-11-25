@@ -1,7 +1,8 @@
 import { EnvVar } from "../../enums/EnvVar";
 import { HttpStatus } from "../../enums/HttpStatus";
 import type { Logger } from "../logging/Logger";
-import { ACCEPT_CLIENT_HINTS, buildSecurityHeaders } from "../security/headers";
+import { CSP_MANIFEST_PATH, loadCspManifest } from "../security/cspManifest";
+import { ACCEPT_CLIENT_HINTS, buildSecurityHeaders, strictContentSecurityPolicy } from "../security/headers";
 import { readEnvironmentFlag, resolveFlag } from "../services/FeatureFlags";
 import type { WorkerEnvironment } from "../types/WorkerEnvironment";
 import { withNoTransform } from "./cacheControl";
@@ -47,6 +48,12 @@ export class StaticSiteResponder {
     options: StaticResponseOptions,
   ): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === CSP_MANIFEST_PATH) {
+      return errorPageResponse(
+        { assets: environment.ASSETS, logger, baseHeaders: buildSecurityHeaders(request.url) },
+        { requestUrl: request.url, slug: "not-found", status: HttpStatus.NotFound },
+      );
+    }
     const response = await environment.ASSETS.fetch(request);
     const headers = new Headers(response.headers);
     for (const [name, value] of Object.entries(buildSecurityHeaders(request.url))) headers.set(name, value);
@@ -58,7 +65,7 @@ export class StaticSiteResponder {
     if (options.isPreview) headers.set("Cache-Control", "no-store");
 
     const isHtml = isHtmlResponse(request.url, response);
-    if (isHtml) this.applyHtmlHeaders(headers, environment);
+    if (isHtml) await this.applyHtmlHeaders(headers, environment, request.url);
     if (isHtml && response.status >= SERVER_ERROR_FLOOR) {
       logger.error({
         event: "upstream_failed",
@@ -75,9 +82,16 @@ export class StaticSiteResponder {
 
   /** Preload hints and client-hint opt-in. `no-transform` is opt-in (BLOCK_EDGE_INJECTION=on) because Cloudflare also
    *  skips gzip/brotli for responses that carry it: the 370 KB document was served uncompressed (PageSpeed, doc 71). */
-  private applyHtmlHeaders(headers: Headers, environment: WorkerEnvironment): void {
+  private async applyHtmlHeaders(headers: Headers, environment: WorkerEnvironment, requestUrl: string): Promise<void> {
     headers.set("Link", EARLY_HINTS);
     headers.set("Accept-CH", ACCEPT_CLIENT_HINTS);
+    // Hash-based CSP for built pages; if the manifest cannot be read the permissive policy stays (the page keeps working).
+    const manifest = await loadCspManifest(environment.ASSETS, new URL(requestUrl).origin);
+    if (manifest) {
+      const beacon = environment[EnvVar.CspAllowCloudflareBeacon];
+      const allowBeacon = readEnvironmentFlag(typeof beacon === "string" ? beacon : undefined) !== false;
+      headers.set("Content-Security-Policy", strictContentSecurityPolicy(requestUrl, manifest, allowBeacon));
+    }
     const blocked = environment[EnvVar.BlockEdgeInjection];
     if (readEnvironmentFlag(typeof blocked === "string" ? blocked : undefined) === true) {
       headers.set("Cache-Control", withNoTransform(headers.get("Cache-Control")));

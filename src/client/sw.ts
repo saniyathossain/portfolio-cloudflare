@@ -25,7 +25,7 @@ interface WorkerScope {
 
 const worker = self as unknown as WorkerScope;
 
-const CACHE_VERSION = "ba6751df87fc"; // stamped by scripts/hash-sw.js on every ./build.sh — do not hand-edit
+const CACHE_VERSION = "913a30e453bf"; // stamped by scripts/hash-sw.js on every ./build.sh — do not hand-edit
 const OFFLINE_PAGE_URL = "/errors/offline/";
 const SHELL_URLS = ["/", "/index.html", OFFLINE_PAGE_URL];
 const SERVICE_UNAVAILABLE = 503;

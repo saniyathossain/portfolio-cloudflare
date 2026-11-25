@@ -15,6 +15,8 @@ TURNSTILE_SECRET=1x0000000000000000000000000000000AA
 # BLOCK_EDGE_INJECTION=off                # keep off: "on" adds no-transform, which also disables gzip/brotli on the HTML.
 #                                         # Disable Cloudflare's automatic Web Analytics in the dashboard instead.
 
+# CSP_ALLOW_CLOUDFLARE_BEACON=on          # off = stop allowing static.cloudflareinsights.com in script-src (after disabling the dashboard beacon)
+
 # ── Maintenance mode ─────────────────────────────────────────────────────────────────────────────────────────
 # MAINTENANCE_MODE=off                    # on | off — site-wide 503, bypass with ?preview=<ADMIN_TOKEN>
 # MAINTENANCE_TITLE=Back soon             # optional page title override

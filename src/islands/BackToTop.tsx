@@ -8,26 +8,28 @@ interface BackToTopProps {
   readonly revealAfterPx: number;
 }
 
-/** Floating "scroll to top" control. One rAF-coalesced threshold check per frame, never per scroll event. */
+/**
+ * Floating "scroll to top" control. An invisible marker at the top of the page, as tall as the reveal distance, is watched
+ * with an IntersectionObserver: the button shows once the marker has scrolled out of view. No scroll listener and no
+ * `scrollY` read, so mounting never forces a synchronous layout (PageSpeed "forced reflow").
+ */
 export default function BackToTop({ iconHtml, ariaLabel, revealAfterPx }: BackToTopProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    let frameId = 0;
-    const check = () => {
-      frameId = 0;
-      setIsVisible(window.scrollY > revealAfterPx);
-    };
-    const schedule = () => {
-      if (!frameId) frameId = requestAnimationFrame(check);
-    };
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule, { passive: true });
-    check();
+    const marker = document.createElement("div");
+    marker.className = "back-to-top-marker";
+    marker.setAttribute("aria-hidden", "true");
+    marker.style.setProperty("--reveal-after", `${String(revealAfterPx)}px`);
+    document.body.prepend(marker);
+    const observer = new IntersectionObserver((entries) => {
+      const latest = entries[entries.length - 1];
+      if (latest) setIsVisible(!latest.isIntersecting);
+    });
+    observer.observe(marker);
     return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      cancelAnimationFrame(frameId);
+      observer.disconnect();
+      marker.remove();
     };
   }, [revealAfterPx]);
 

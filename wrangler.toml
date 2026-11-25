@@ -54,6 +54,11 @@ CONTACT_TO = "saniyat1000@gmail.com"
 # Analytics & Logs → Web Analytics → your site → Manage → Disable automatic setup.
 # BLOCK_EDGE_INJECTION = "off"
 
+# CSP (docs/aidlc/73): built pages get a hash-based script-src (no 'unsafe-inline'). The Cloudflare Web Analytics beacon host
+# stays allowed so the automatic beacon is not reported as a violation; once you have disabled automatic setup in the
+# dashboard, set this to "off" to drop the host allowlist as well.
+# CSP_ALLOW_CLOUDFLARE_BEACON = "on"
+
 # ── Feature flags (Worker vars) ────────────────────────────────────────────────────────────────────
 # Truthy: "1" / "true" / "on".  Falsy: "off" / "false" / "0".  Omit SKILLS_SCROLL_DESIGN → JSON default.
 MAINTENANCE_MODE = "off"

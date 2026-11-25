@@ -23,6 +23,8 @@ export enum EnvVar {
   VitalsRetentionDays = "VITALS_RETENTION_DAYS",
   // Edge behaviour
   BlockEdgeInjection = "BLOCK_EDGE_INJECTION",
+  /** `off` stops allowing Cloudflare Web Analytics' beacon script in the CSP (set once automatic setup is disabled). */
+  CspAllowCloudflareBeacon = "CSP_ALLOW_CLOUDFLARE_BEACON",
   // Logging
   LogChannel = "LOG_CHANNEL",
   LogLevel = "LOG_LEVEL",

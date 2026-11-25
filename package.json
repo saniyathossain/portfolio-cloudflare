@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "astro dev",
     "build:legacy": "bash build.sh",
-    "build": "npm run build:legacy && astro build",
+    "build": "npm run build:legacy && astro build && node scripts/modulepreload.ts && node scripts/csp-manifest.ts",
     "preview": "wrangler dev --port 8787 --ip 127.0.0.1",
     "deploy": "bash deploy.sh",
     "typecheck": "node scripts/build-client.ts && astro check",
