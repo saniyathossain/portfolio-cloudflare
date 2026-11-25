@@ -1,109 +1,128 @@
 # Mohammad Saniyat Hossain
 
-- Phone: [+8801711092048](tel:+8801711092048)
-- Email: [saniyat1000@gmail.com](mailto:saniyat1000@gmail.com)
-- GitHub: github.com/saniyathossain
-- LinkedIn: linkedin.com/in/saniyathossain
-- dev.to: dev.to/saniyathossain
-- Medium: [saniyathossain.medium.com](https://saniyathossain.medium.com)
+Staff Software Engineer | Backend and Solution Architecture
 
-## EXPERIENCE
+Dhaka, Bangladesh | +880 1711 092048 | saniyat1000@gmail.com
+LinkedIn: linkedin.com/in/saniyathossain | GitHub: github.com/saniyathossain | Portfolio: saniyat.com
+
+## Summary
+
+Staff Software Engineer with 14 years in backend development, mostly PHP and Laravel, with Node.js and TypeScript experience. Most recently, I led backend architecture for a learning platform serving about 36,000 students per yearly batch, focusing on MySQL performance, queues and stable exam days. Before that, I spent over five years on Grameenphone's MyGP app (23 million+ monthly users), from the microservices migration to sprint delivery and optimization.
+
+## Core Skills
+
+- Languages: PHP, JavaScript, TypeScript, SQL
+- Backend: Laravel, Lumen, Node.js, NestJS, Express, CodeIgniter, CakePHP
+- Frontend: Vue.js, jQuery, Bootstrap
+- Data and Infrastructure: MySQL, MongoDB, Cassandra, MSSQL, Redis, RediSearch, Elasticsearch, RabbitMQ, MinIO, Docker, Nginx, Kibana, Git, Jira
+- Testing: PHPUnit, Pest, PHPStan, JMeter, Mockoon
+- Architecture: REST API Design, Microservices, Monolith Decomposition, API Gateway, Backend-for-Frontend, Change Data Capture, Event-Driven Design, Role-Based Access Control
+- AI-Assisted Development: AI-DLC, Claude, Cursor, GitHub Copilot, ChatGPT, Gemini, Antigravity
+- Practices: Solution Design, Code Review, Performance Optimization, Refactoring
+
+## Experience
 
 ### Brain Station 23 PLC, Dhaka, Bangladesh
 
-- **January 2025 – PRESENT** — *Staff Software Engineer*
-- **January 2022 – December 2024** — *Technical Lead*
-- **January 2021 – December 2021** — *Senior Software Engineer (Permanent)*
-- **October 2020 – December 2020** — *Senior Software Engineer (Contract)*
+Staff Software Engineer | Jan 2025 - Present
 
-#### Focus
+Focus Learning Platform | May 2026 - Nov 2026 (Maintenance & Support from Sep 2026)
 
-- Serving as a **Staff Software Engineer** on a coaching center application, leading backend and mobile app architecture, design, infrastructure planning, and development. Plan and worked on scalable PHP/Laravel, Node.js APIs with MySQL optimization, and leveraged AI-assisted workflows (AIDLC) to improve feature delivery, enhance security, and performance optimization.
+- Led backend architecture and infrastructure for a platform with about 36,000 students per yearly batch and 800+ exams a year.
+- Scaled exam traffic with isolated Laravel Horizon queues and autoscaling workers.
+- Optimized MySQL indexes on a 3M-row results table and moved bulk PDF/Excel exports to resumable queues.
+- Built a central notification module and introduced AI-DLC for planning and audits.
 
-  **Tech Stack**: PHP, Laravel, Nginx, Node.js, Docker, Git.
+Tech: PHP, Laravel, Laravel Horizon, Node.js, MySQL, Redis, REST API, Docker, Nginx, Git
 
-  **AI Tools:** Claude, Cursor, Antigravity.
+SB7 Affiliate Marketing Platform | Mar 2026 - May 2026
 
-#### Ecom Intelligence
+- Built features, cleared legacy technical debt and integrated third-party platforms.
+- Reviewed code and paired with developers.
 
-- Served as a **Staff Software Engineer** on a SaaS-based multi-tenant e-commerce platform. Contributed to solution design and implementation of tenant subdomain routing and request handling architecture.
+Tech: PHP, Laravel, MySQL, Redis, Docker, Git
 
-  **Tech Stack**: Nginx, Node.js, Docker, Git.
+Ecom Intelligence: Multi-Tenant SaaS E-Commerce Platform | Feb 2026 - Mar 2026
 
-  **AI Tools:** Cursor, Antigravity.
+- Contributed to a proof of concept for tenant subdomain routing and request handling.
 
-#### Grameenphone LTD | MyGP Project
+Tech: Node.js, MongoDB, Redis, Nginx, Docker, Git
 
-- Served as **Technical Lead**, contributing to **solution design, feature delivery, backend development, and code reviews** for the MyGP Squad.
-- Developed **custom internal PHP packages** to optimize **Redis usage**, implement **fail-over mechanisms**, and enable **asynchronous API calls** across **monolithic and microservice architectures**, improving performance and reliability.
-- Built **internal library** supporting **custom cURL handling, feature-toggled database/query logging**, **mock service integration** using **Mockoon, Docker, and Nginx header-based routing**, enabling safe testing and debugging.
-- Contributed to a **Backend-for-Frontend (BFF) and API Gateway POC**, consolidating multiple backend services into optimized asynchronous responses and reducing network latency.
-- Actively involved in **refactoring and migrating a large monolithic backend into microservices**, applying **design patterns and separation of concerns** to improve scalability, resiliency, development velocity, and customer experience.
-- Was involved in complex optimized refactoring on a global configuration API using Redis caching with microservice fallback response to minimize redundant service calls.
-- Conducted a **Change Data Capture (CDC) POC** using **Go, MySQL, and Elasticsearch Data Shipper** for near real-time data synchronization.
-- Contributed at the **organizational level** by participating in **L10 meetings**, owning and delivering **quarterly Rocks**, and aligning technical execution across squads.
+Grameenphone MyGP Back-End Squad | Jan 2025 - Feb 2026
 
-  **Features:** Authentication, Card, Balance, Offers, Star Offers, Pack Purchase, Pack Gifting, Live Score, API Gateway, One tap payments, Usage History, Partner Integrations, SSO Journeys, Backoffice, PHP version upgradation etc.
+- Contributed to solution design, feature delivery, backend development and code reviews for an app with 23 million+ monthly users.
+- Built internal PHP packages for Redis optimization, failover, async multi-cURL requests and feature-toggled logging.
+- Contributed to Laravel upgrades across microservices, managing dependency compatibility.
+- Worked on authentication, offers, pack purchase, live score, API Gateway, SSO and the admin panel. Took part in L10 meetings, quarterly Rocks and team management.
 
-  **Stacks & Tools**: PHP, Laravel, Lumen, Node, TypeScript, Nest, MySQL, Redis, RediSearch, Elasticsearch, Kibana, RabbitMQ, Minio, Mockoon, Jmeter, Git, Docker.
+Tech: PHP, Laravel, Lumen, Node.js, TypeScript, MySQL, Cassandra, Redis, RediSearch, Elasticsearch, Kibana, RabbitMQ, MinIO, Docker, PHPStan, REST API
 
-  **AI Tools:** ChatGPT, Claude, Gemini, Co-pilot, Antigravity.
+Technical Lead | Jan 2022 - Dec 2024
 
-### Grameenphone Limited, Dhaka, Bangladesh — *PHP Developer - Digital Ninja (Contract)*
+Grameenphone MyGP Sprint Delivery and Optimization
 
-**January 2019 – October 2020**
+- Contributed to a Backend-for-Frontend and API Gateway proof of concept that combined backend calls into async responses and reduced latency.
+- Reworked the global configuration API with Redis caching and a microservice fallback, cutting API calls by around 87%.
+- Contributed to the authentication migration from MySQL to Cassandra using worker-based data migration.
+- Helped refactor the login microservice out of the monolith, using feature toggles and the adapter pattern to switch between Cassandra and MySQL.
 
-- Worked on a Warehouse and Logistics Management System with dynamic and configurable workflow journeys. Efficiently handled dynamic billing management, streamlining operations for multiple logistics companies under a single management point.
-- Involved in development of a Firebase based Cloud Messaging system.
+Tech: PHP, Laravel, Lumen, Node.js, TypeScript, MySQL, Cassandra, Redis, RediSearch, Elasticsearch, Kibana, RabbitMQ, Docker, Git
 
-  **Stacks & Tools**: PHP, CakePHP, MySQL, jQuery, Vue, Open-street Maps, Kendo UI, Handsontable, Datatables, Node, Express, TypeScript, Redis, RabbitMQ, Minio, Git, Docker.
+Senior Software Engineer | Oct 2020 - Dec 2021
 
-### icddr,b, Dhaka, Bangladesh — *Consultant (Contract)*
+Grameenphone MyGP Microservice Refactoring
 
-**September 2016 – January 2019**
+- Contributed to refactoring a large monolithic back end into microservices using design patterns and separation of concerns.
+- Conducted a Change Data Capture proof of concept for near real-time data sync.
 
-- As a Team Lead, successfully led the development of a comprehensive Human Resource Information System (HRIS) encompassing multiple modules, featuring Role-Based Access Control and efficient workflow management.
+Tech: PHP, Laravel, Lumen, FlightPHP, Node.js, TypeScript, MySQL, Elasticsearch
 
-  **Modules:** Performance Management Development System, Training Development Information System, E-recruitment System, Scientific Ranking System, Certificate Management System.
+### Grameenphone Limited, Dhaka, Bangladesh
 
-- Engaged in the development of a research-based web application.
+PHP Developer, Digital Ninja (Contract) | Jan 2019 - Oct 2020
 
-  **Stacks & Tools**: PHP, Laravel, MSSQL, Vue, Webpack, Parcel Builder, SVN.
+- Worked on a warehouse and logistics management system with configurable workflows and dynamic billing for multiple logistics companies.
+- Involved in developing a Firebase-based cloud messaging system.
 
-### Optimum Solution & Services Ltd, Dhaka, Bangladesh — *Associate Software Engineer*
+Tech: PHP, CakePHP, MySQL, Redis, RabbitMQ, MinIO, Node.js, Express, TypeScript, Vue.js, jQuery, Docker
 
-**March 2014 – August 2016**
+### icddr,b, Dhaka, Bangladesh
 
-- Developed a responsive news portal, creating an engaging platform to deliver up-to-date news content to users across devices.
-- Developed a job portal, enabling users to efficiently search and apply for job opportunities.
-- Successfully built an online study, exam and result management application, facilitating a seamless learning and assessment process.
-- Developed a domain registration automation application, incorporating access control, report generation, auditing, payment gateway integration, DNS server integration using cron, and more for streamlined domain registration processes.
-- Conducted website performance optimization for desktop, mobile views, implementing the following techniques:
+Consultant, Team Lead (Contract) | Sep 2016 - Jan 2019
 
-  **Techniques:** Avoiding render blocking, Leverage browser caching, GZIP compression, Asset files minification, Google page speed module etc.
+- Led development of a Human Resource Information System with role-based access control and workflows, covering performance management, training, e-recruitment, scientific ranking and certificates.
 
-  **Stacks & Tools**: PHP, Laravel, WordPress, Codeigniter, Datatables, Kendo UI, WYSIWYG editor, MySQL, jQuery, Twitter Bootstrap, Form Wizard, Highcharts.
+Tech: PHP, Laravel, MSSQL, Vue.js, Webpack
 
-### Runner Cyberlink Limited, Dhaka, Bangladesh — *PHP Programmer*
+### Optimum Solution & Services Ltd, Dhaka, Bangladesh
 
-**September 2012 – February 2014**
+Associate Software Engineer | Mar 2014 - Aug 2016
 
-- Experience of designing and developing responsive websites using Codeigniter, Joomla.
-- Experience of working in a social networking web application using elgg PHP framework.
-- Successfully developed responsive garments portal, company websites, and e-commerce platforms, delivering seamless digital experiences for clients.
+- Developed news and job portals, an online exam and result application, and a domain registration system with payment gateway and DNS integration.
+- Improved page speed with browser caching, GZIP and asset minification.
 
-  **Stacks & Tools**: PHP, Codeigniter, MySQL, jQuery, Twitter Bootstrap, UIKIT, WYSIWYG editor.
+Tech: PHP, Laravel, CodeIgniter, WordPress, MySQL, jQuery, Bootstrap
 
-## EDUCATION
+### Runner Cyberlink Limited, Dhaka, Bangladesh
 
-### East West University, Dhaka, Bangladesh — *BSc in Electronics & Telecommunication Engineering (ETE)*
+PHP Programmer | Sep 2012 - Feb 2014
 
-**2008 – 2011, Certification Awarded**
+- Built responsive websites and e-commerce platforms on CodeIgniter and Joomla, and worked on a social networking application on Elgg.
 
-### St. Joseph Higher Secondary School, Dhaka, Bangladesh — *HSc in Science*
+Tech: PHP, CodeIgniter, Joomla, Elgg, MySQL, jQuery, Bootstrap
 
-**2005 – 2007, Certification Awarded**
+## Projects and Talks
 
-### Motijheel Govt. Boys' High School, Dhaka, Bangladesh — *SSc in Science*
+- Spoke at "A Day with Cursor at Brain Station 23" (Jun 2026), presented as a team: MCP servers, cloud agents, auto mode and workflow automation.
+- Personal interactive learning platform for Python with in-browser code execution (Flask, React, PostgreSQL).
 
-**2003 – 2005, Certification Awarded**
+## Education
+
+BSc in Electronics and Telecommunication Engineering
+East West University, Dhaka, Bangladesh | 2008 - 2011
+
+Higher Secondary Certificate, Science
+St. Joseph Higher Secondary School, Dhaka | 2005 - 2007
+
+Secondary School Certificate, Science
+Motijheel Government Boys' High School, Dhaka | 2003 - 2005

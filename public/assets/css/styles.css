@@ -67,7 +67,7 @@ html:not(.is-loading) #main.is-liquid-warp {
   --accent: #b15f2c;
   --accent-bright: #cf8047;
   --accent-dark: #97501f;
-  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1, harmonises with copper) */
+  --beige: #735f3e;          /* warm taupe-beige — hero designation (AA >= 5:1, harmonises with copper) */
   --primary: var(--accent);
   --primary-deep: var(--accent-dark);
   --teal: #2b8c9a;           /* sea */
@@ -178,8 +178,9 @@ html:not(.is-loading) #main.is-liquid-warp {
   --shadow-outset-sm: 0 1px 0 rgba(255,255,255,.95), 0 2px 5px rgba(17,17,17,.07), 0 6px 14px rgba(17,17,17,.06);
   --shadow-outset-md: 0 1px 0 rgba(255,255,255,.98), 0 4px 10px rgba(17,17,17,.08), 0 12px 28px rgba(17,17,17,.08);
   --shadow-outset-hover: 0 2px 0 rgba(255,255,255,.98), 0 8px 22px rgba(17,17,17,.1), 0 16px 36px rgba(17,17,17,.08);
-  /* Fluid section rhythm — tablet↔desktop interpolates; used by .sec-pad / .sec-pad-b (not blanket .sec). */
-  --sec-py: clamp(5rem, 3.4rem + 3.2vw, 7rem);
+  /* Fluid section rhythm — tablet↔desktop interpolates; used by .sec-pad / .sec-pad-b (not blanket .sec).
+     Doc 56: tightened from 5–7rem to 2–3rem per side (≈ 64–96 px between sections instead of 150–224 px). */
+  --sec-py: clamp(2rem, 1.4rem + 1.4vw, 3rem);
 }
 
 .sec-pad { padding-block: var(--sec-py); }
@@ -592,7 +593,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
   --chip: var(--tint);
   display: inline-flex; align-items: center; gap: 0.28rem; margin-bottom: 0.45rem;
   border-radius: var(--radius-pill); padding: 0.2rem 0.62rem;
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  font-size: max(11px, 0.64rem); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   color: #1a4d24;
   color: color-mix(in srgb, var(--chip) 74%, #0a0a0a);
   background:
@@ -608,7 +609,7 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 .edu-row__degree { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem; font-size: 0.9375rem; color: rgba(17,17,17,.62); }
 .edu-row__place {
   align-items: center; gap: 0.3rem; border-radius: var(--radius-pill);
-  padding: 0.16rem 0.62rem; font-size: 0.7rem; font-weight: 600; color: rgba(17,17,17,.64);
+  padding: 0.16rem 0.62rem; font-size: max(11px, 0.7rem); font-weight: 600; color: rgba(17,17,17,.64);
   white-space: nowrap;
   background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.45));
   box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 1px 5px -2px rgba(17,17,17,.16);
@@ -665,25 +666,26 @@ code, kbd, pre, samp { font-family: var(--font-mono); }
 
 /* Below-fold sections skip initial layout/paint until they scroll near the viewport — cuts
    main-thread render work + speeds first paint. `contain-intrinsic-size` values are REAL measured
-   heights (headless-Chrome CDP, desktop 1440px + mobile 390px, collapsed/default accordion state) —
+   heights (headless-Chrome CDP, desktop 1440px + mobile 390px, collapsed/default accordion state; re-measured in doc 56 after the
+   uniform-spacing change — `node scripts/section-heights.ts`; the numbers include each section's --sec-bleed padding) —
    a wrong placeholder size here is a CLS regression, so these must be re-measured if the underlying
    content changes materially. `content-visibility: auto` only affects rendering while off-screen;
    once a section scrolls near the viewport it renders normally regardless of this placeholder,
    including any user-expanded accordion rows in #experience. Hero (#home) is intentionally excluded
    — it holds the LCP element and must never be skip-rendered. */
-#about        { content-visibility: auto; contain-intrinsic-size: auto 860px; }
-#services     { content-visibility: auto; contain-intrinsic-size: auto 775px; }
-#experience   { content-visibility: auto; contain-intrinsic-size: auto 1803px; }
+#about        { content-visibility: auto; contain-intrinsic-size: auto 794px; }
+#services     { content-visibility: auto; contain-intrinsic-size: auto 714px; }
+#experience   { content-visibility: auto; contain-intrinsic-size: auto 1628px; }
 /* #skills excluded — height changes from pill FLIP reflow + mobile "View more"; placeholder
    caused a size swap that read as a jump for Editorial / Stats below. Near the fold anyway. */
 /* #editorial excluded — sits directly below Skills; same reflow jump as #skills. */
-#education    { content-visibility: auto; contain-intrinsic-size: auto 542px; }
+#education    { content-visibility: auto; contain-intrinsic-size: auto 582px; }
 #stats        { content-visibility: auto; contain-intrinsic-size: auto 420px; }
 @media (max-width: 640px) {
-  #about      { contain-intrinsic-size: auto 920px; }
-  #services   { contain-intrinsic-size: auto 933px; }
-  #experience { contain-intrinsic-size: auto 3435px; }
-  #education  { contain-intrinsic-size: auto 713px; }
+  #about      { contain-intrinsic-size: auto 914px; }
+  #services   { contain-intrinsic-size: auto 912px; }
+  #experience { contain-intrinsic-size: auto 3034px; }
+  #education  { contain-intrinsic-size: auto 774px; }
 }
 
 /* Stats: 2-col mobile/tablet, 4-col from desktop up. */
@@ -858,7 +860,7 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
      the lines instead of beside the first word. flex-start pins it to the top of the line box; the
      dot's own margin-top nudges it down from the line-box top to the text's visual cap-height. */
   display: inline-flex; align-items: flex-start; gap: 0.55rem;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+  font-size: max(11px, 0.72rem); font-weight: 700; letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--tint-deep);
   text-shadow: var(--text-sh-emboss);
@@ -1064,6 +1066,34 @@ html.is-loading .site-header {
 .site-header { position: fixed; inset-inline: 0; top: 0; z-index: 50; padding-block: 1rem; }
 .site-header.is-ready { animation: headerIn 0.85s var(--ease-spring) 0.15s both; }
 @keyframes headerIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+
+/* Progressive blur at the viewport edges (doc 63): ONE fixed, non-scrolling, pointer-transparent strip per
+   edge — a single blur radius whose strength is faded out by an alpha mask, so content blurs gradually as
+   it slides under the header (top) and the page bottom (bottom). Fixed chrome only, per the DESIGN.md
+   backdrop-filter rule. Hidden (opacity 0 → no backdrop work) until the page is scrolled; the top strip
+   keys off the header pill's existing .is-scrolled state, the bottom strip off scroll-driven animation
+   (unsupported browsers simply never show it). */
+@supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+  .site-header::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; z-index: -1; pointer-events: none;
+    height: calc(100% + 2.25rem);
+    -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+    opacity: 0; transition: opacity 0.45s var(--ease-glass);
+  }
+  .site-header:has(.glass-pill.is-scrolled)::before { opacity: 1; }
+  @supports (animation-timeline: scroll()) {
+    html::after {
+      content: ""; position: fixed; inset: auto 0 0 0; z-index: 20; pointer-events: none; height: 4.5rem;
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      -webkit-mask-image: linear-gradient(to top, #000 0%, #000 30%, transparent 100%);
+      mask-image: linear-gradient(to top, #000 0%, #000 30%, transparent 100%);
+      opacity: 0; animation: edgeBlurBottom linear both; animation-timeline: scroll(root block);
+    }
+    @keyframes edgeBlurBottom { 0%, 2% { opacity: 0; } 5%, 93% { opacity: 1; } 99%, 100% { opacity: 0; } }
+  }
+}
 
 /* macOS Tahoe "Liquid Glass" nav pill: real backdrop refraction (blur + saturate + brightness) so
    whatever scrolls behind it reads as lensed glass, a gradient-border rim for the specular edge, and
@@ -1570,7 +1600,7 @@ html.is-loading .site-header {
   position: relative; z-index: 2;
   flex: 1 1 auto; width: 100%;
   display: flex; align-items: center; justify-content: center; gap: 0.36rem;
-  padding: 0.48rem 0.72rem; font-size: 0.6875rem; font-weight: 500;
+  padding: 0.48rem 0.72rem; font-size: max(11px, 0.6875rem); font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
 }
 /* Hamburger-to-X morph — 3 plain bars instead of a single SVG (CSS can't interpolate between two
@@ -2031,6 +2061,10 @@ html.is-loading .site-header {
    .partner-orb already uses for --brand) — pinned to one of the site's 3 existing brand hues
    (accent/primary/teal), never a new color; falls back to the original copper if --tint is ever
    unset (e.g. before Alpine hydrates). */
+/* Badge tint per hero card (names come from ui.json heroCard.tintNames). */
+.hero-card__badge[data-tint="accent"] { --tint: var(--accent); --tint-ink: var(--accent-bright); }
+.hero-card__badge[data-tint="primary"] { --tint: var(--c-violet); --tint-ink: var(--c-violet); }
+.hero-card__badge[data-tint="blue"] { --tint: var(--c-blue); --tint-ink: var(--c-blue); }
 .hero-card__badge {
   position: relative;
   aspect-ratio: 1; width: 6rem; display: grid; place-items: center;
@@ -2108,7 +2142,7 @@ html.is-loading .site-header {
   .hero-card__swap.is-entering-next, .hero-card__swap.is-entering-prev { opacity: 1; transform: none; }
 }
 .hero-card__caption {
-  font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+  font-size: max(11px, 0.6875rem); font-weight: 500; text-transform: uppercase;
   letter-spacing: 0.05em; color: rgba(17, 17, 17, 0.45);
 }
 .hero-card__title {
@@ -3442,7 +3476,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(17,17,17,.42);
+  color: rgba(17,17,17,.62);
 }
 .editorial-more__hint {
   margin: 0.28rem 0 0;
@@ -3450,7 +3484,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: -0.02em;
-  color: rgba(17,17,17,.58);
+  color: rgba(17,17,17,.68);
 }
 .editorial-more__links {
   display: inline-flex;
@@ -3646,7 +3680,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 .editorial-row__meta {
   margin: 0 0 0.35rem;
   font-size: 0.78rem;
-  color: rgba(17, 17, 17, 0.5);
+  color: rgba(17, 17, 17, 0.64);
   letter-spacing: 0.01em;
 }
 .editorial-row__platform {
@@ -3875,7 +3909,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 
 /* Skills flat mode (SKILLS_SCROLL_DESIGN) — rounded brand pills, label reveal + FLIP */
 .skills-flat {
-  margin-top: 0.65rem;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3986,7 +4020,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
   align-content: flex-start;
   max-width: 100%;
   margin-inline: auto;
-  padding-block: 0.25rem 0.5rem;
+  padding-block: 0 0.5rem;
 }
 .skills-flat .brand-pill { padding: 0.32rem; }
 .skills-flat .brand-pill__badge {
@@ -4296,7 +4330,7 @@ html.is-idle .create-band--flow.create-band[data-stagger].is-visible .create-ban
 }
 .exp-details .role-tags { margin-top: 0.85rem; }
 
-#experience .exp-list { margin-top: 0.25rem; }
+#experience .exp-list { margin-top: 0; }
 
 @media (max-width: 639px) {
   .exp-group__head { flex-wrap: wrap; }
@@ -4876,10 +4910,41 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
 .modal-backdrop.is-open { opacity: 1; pointer-events: auto; }
 .modal-panel {
   position: relative; width: 100%; max-width: 32rem; overflow: hidden;
-  border-radius: var(--radius-card); background: #fff; padding: 1.5rem;
-  border: 1px solid var(--line); transform: translateY(28px); transition: transform 0.45s var(--ease-spring);
+  border-radius: var(--radius-card); padding: 1.5rem;
+  /* Liquid glass, same recipe as the outage dialog: a translucent fill, with the conic specular rim drawn by ::after
+     (a masked 1px ring, so it never shows through the fill). The page behind is already blurred by .modal-backdrop —
+     a panel-level backdrop-filter would only see that backdrop, so none is added. */
+  border: 1px solid transparent;
+  background: linear-gradient(155deg, rgba(255,255,255,.82), rgba(255,255,255,.64));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 0 26px rgba(255,255,255,.28),
+    0 30px 70px -20px rgba(24,30,56,.3),
+    0 6px 18px rgba(24,30,56,.1);
+  transform: translateY(28px); transition: transform 0.45s var(--ease-spring);
 }
 .modal-backdrop.is-open .modal-panel { transform: none; }
+/* Phones: the dialog becomes a bottom sheet — attached to the bottom edge, large top corners, a grabber, the
+   home-indicator inset respected, and a taller slide-up. Scrolls inside itself when the form outgrows the screen. */
+@media (max-width: 639.98px) {
+  .modal-backdrop { padding: 0; }
+  .modal-panel {
+    max-width: none; max-height: calc(100dvh - 1rem);
+    overflow-y: auto; overscroll-behavior: contain;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+    transform: translateY(100%); transition: transform 0.55s var(--ease-spring);
+  }
+  .modal-backdrop.is-open .modal-panel { transform: none; }
+  .modal-titlebar::before {
+    content: ""; position: absolute; top: 0.5rem; left: 50%; z-index: 2; pointer-events: none;
+    width: 2.25rem; height: 0.3rem; border-radius: 9999px; background: rgba(17,17,17,.18);
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel { transition: none; transform: none; }
+}
 /* Shiny-tile gloss, same recipe as .icon-chip/.menu-btn — a light glass surface reads flatter
    without it once every other control on the page has the treatment. */
 .modal-panel::before {
@@ -4888,6 +4953,19 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
   opacity: 0.8;
 }
 .modal-panel > * { position: relative; z-index: 1; }
+/* Conic specular rim: bright at the lit top-left and bottom-right, tint-fringed either side, faint between. */
+.modal-panel::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; padding: 1px; border-radius: inherit; pointer-events: none;
+  background: conic-gradient(from 0deg at 50% 50%,
+      rgba(255,255,255,.16) 0deg, rgba(255,255,255,.16) 40deg,
+      color-mix(in srgb, var(--tint, #b15f2c) 45%, rgba(255,255,255,.7)) 100deg,
+      rgba(255,255,255,.95) 135deg,
+      color-mix(in srgb, var(--tint, #b15f2c) 35%, rgba(255,255,255,.6)) 170deg,
+      rgba(255,255,255,.16) 225deg, rgba(255,255,255,.16) 275deg,
+      rgba(255,255,255,1) 315deg, rgba(255,255,255,.16) 355deg, rgba(255,255,255,.16) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
 /* macOS-style title bar: close control at left, small centered title, thin divider beneath — the
    heading/form content starts fresh below it on its own line instead of sharing space with a
    floating button (the old .modal-close was absolutely positioned over the top of .modal-header,
@@ -4902,7 +4980,7 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
 }
 .modal-titlebar__label {
   font-size: 0.8125rem; font-weight: 600; letter-spacing: -0.005em;
-  color: rgba(17,17,17,.5);
+  color: rgba(17,17,17,.62);
 }
 /* Black + copper glass recipe (same as .menu-btn/.back-to-top), not a literal macOS red dot — the
    red circle read as an off-brand borrowed pattern rather than this site's own control language.
@@ -4937,7 +5015,7 @@ html.touch-pills .brand-pill.is-open .brand-pill__label { grid-template-columns:
 .modal-field label {
   display: flex; align-items: center; gap: 0.35rem;
   font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em;
-  color: rgba(17,17,17,.5); margin-bottom: 0.35rem;
+  color: rgba(17,17,17,.62); margin-bottom: 0.35rem;
   transition: color 0.22s var(--ease-hover);
 }
 .modal-field label .ui-icon { width: 0.85rem; height: 0.85rem; opacity: 0.9; }
@@ -5412,3 +5490,161 @@ body.scroll-lock { position: fixed; width: 100%; }
     hyphens: auto;
   }
 }
+
+/* ── Liquid layer v2 (doc 56) ───────────────────────────────────────────────────────────────────────────────
+   Inspired by the "glass swells under the finger" feel of onemorethink.dev, kept to what is cheap and universal:
+   a spring press-swell on the few glass controls that had no press feedback. The individual `scale` property
+   composes with each element's own transform (no clobbering) and animates on the compositor; the transition
+   lists below repeat each element's existing one and append `scale`. Browsers without `scale` simply skip it.
+   Motion is off under prefers-reduced-motion. No filters, no backdrop-filter, no JS. */
+@media (prefers-reduced-motion: no-preference) {
+  .exp-row {
+    transition: background 0.5s var(--ease-glass), transform 0.5s var(--ease-glass), scale 0.4s var(--ease-spring);
+  }
+  .exp-row:active { scale: 0.988; transition-duration: 0.5s, 0.5s, 0.12s; }
+
+  .editorial-tabs__btn {
+    transition: color 0.32s var(--ease-glass), transform 0.42s cubic-bezier(0.3, 1.9, 0.6, 1), scale 0.4s var(--ease-spring);
+  }
+  .editorial-tabs__btn:active { scale: 0.94; transition-duration: 0.32s, 0.42s, 0.12s; }
+
+  .back-to-top {
+    transition: opacity 0.3s var(--ease-glass), transform 0.3s var(--ease-glass), box-shadow 0.3s var(--ease-glass),
+      border-color 0.3s var(--ease-glass), scale 0.4s var(--ease-spring);
+  }
+  .back-to-top:active { scale: 0.92; transition-duration: 0.3s, 0.3s, 0.3s, 0.3s, 0.12s; }
+}
+
+/* A touch more body in the frosted backdrop behind the contact modal (fixed, offscreen until opened, so it costs
+   nothing at rest). Falls back to the existing tint when backdrop-filter is unsupported. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .modal-backdrop {
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    backdrop-filter: blur(22px) saturate(150%);
+  }
+}
+
+/* Pill label reveal, smoother (doc 56) — desktop pointer path only (the FLIP reveal in motion.js; touch pills and
+   reduced motion keep their own rules). The shell still reflows once, then glides its neighbours with FLIP; what
+   changes is how the label arrives: it is wiped out from the icon's edge (clip-path) with an ease-out-quint, starts
+   a beat earlier, and the open pill swells a few percent (compositor-only `scale`) like glass under the pointer.
+   Closing stays quick (0.18 s) so the row never feels laggy. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .brand-pill {
+    --ease-label: cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+      top 0.38s cubic-bezier(0.23, 0.84, 0.35, 1),
+      box-shadow 0.38s cubic-bezier(0.23, 0.84, 0.35, 1),
+      border-color 0.38s cubic-bezier(0.23, 0.84, 0.35, 1),
+      scale 0.5s var(--ease-spring);
+  }
+  .brand-pill.is-open { scale: 1.035; }
+
+  html:not(.touch-pills) .brand-pill__label-in {
+    clip-path: inset(0 100% 0 0);
+    transform: translate3d(-8px, 0, 0);
+    transition:
+      opacity 0.18s var(--ease-label),
+      transform 0.18s var(--ease-label),
+      clip-path 0.18s var(--ease-label),
+      color 0.2s var(--ease-pill-flip),
+      text-shadow 0.2s var(--ease-pill-flip);
+  }
+  html:not(.touch-pills) .brand-pill.is-open .brand-pill__label-in {
+    clip-path: inset(0 0 0 0);
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity 0.38s var(--ease-label) 0.03s,
+      transform 0.6s var(--ease-label) 0.03s,
+      clip-path 0.56s var(--ease-label) 0.03s,
+      color 0.3s var(--ease-pill-flip) 0.04s,
+      text-shadow 0.34s var(--ease-pill-flip) 0.06s;
+  }
+}
+
+/* Section heading rhythm — one rule for every section (doc 56). Space after the subtitle was 3–4 rem (48–64 px)
+   before the first block of content; it is now a single token, 1.625–2.5 rem (26–40 px), the title → subtitle gap is
+   0.75–1.125 rem (12–18 px), and the first block's own small top margins are neutralised so every section reads the same.
+   Hierarchy: section gap > subtitle → content > title → subtitle. */
+:root { --sec-head-gap: clamp(1.625rem, 1.3rem + 1.1vw, 2.5rem); }   /* subtitle → first block */
+.sec .sec-sub { margin-top: var(--sec-title-gap); margin-bottom: var(--sec-head-gap); }
+.sec .sec-sub + * { margin-top: 0; }
+
+/* Uniform section spacing — ONE rule for the whole page (doc 56).
+   Content-to-content distance between any two sections is exactly --sec-gap. Several sections use
+   `content-visibility: auto` (above), which implies paint containment: it clips anything that paints outside the
+   section box, and the cards' soft drop shadows reach ~80 px below them. So each section keeps --sec-bleed of padding
+   inside its box purely as paint room, and a negative margin gives that room back to the layout:
+       margin-top = --sec-gap − 2 × --sec-bleed   (the bleed of this section and of the previous one).
+   The transparent bleed zones overlap neighbouring sections' edges, so they ignore the pointer (children opt back in).
+   Tune the rhythm with --sec-gap / --sec-head-gap / --sec-title-gap only. */
+:root {
+  --sec-gap: clamp(3rem, 2.4rem + 1.6vw, 4.75rem);     /* section → section */
+  --sec-bleed: 5rem;                                    /* paint room for shadows, inside each section box */
+  --sec-title-gap: clamp(0.75rem, 0.6rem + 0.6vw, 1.125rem); /* title → subtitle */
+}
+main > .sec {
+  padding-block: var(--sec-bleed);
+  margin-top: calc(var(--sec-gap) - 2 * var(--sec-bleed));
+  pointer-events: none;
+}
+main > .sec > * { pointer-events: auto; }
+#home + .sec { margin-top: calc(var(--sec-gap) - var(--sec-bleed)); }   /* hero has no bleed */
+main { padding-bottom: calc(var(--sec-gap) - var(--sec-bleed)); }        /* last section → footer */
+/* The Create Band strip carried its own 2.25–3.25 rem vertical padding (room for tile lift/glow), which made the gaps
+   around it larger than every other boundary. Tiles are overflow-visible, so the shadow room is not needed. */
+main > .sec > .create-band { padding-block: 0; }
+
+/* Spam honeypot (docs/aidlc/57): off-screen so humans never see or focus it; bots that fill every input trip it. */
+.hp-field { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+/* macOS continuous ("squircle") corners where the browser supports them (Chrome 139+; elsewhere the
+   plain circular border-radius above stays). Same radii, no layout change, no runtime cost. Pseudo-elements
+   that copy the panel's radius with `inherit` must copy the corner shape too, or their gloss would clip to a
+   circular corner and show a sliver at the squircle edge. */
+@supports (corner-shape: squircle) {
+  .glass-panel, .glass-card, .hero-card, .modal-panel { corner-shape: squircle; }
+  .hero-card__inner, .hero-card__body { corner-shape: squircle; }
+  .glass-panel::before, .glass-panel::after, .glass-card::before, .hero-card::after, .modal-panel::before, .modal-panel::after { corner-shape: inherit; }
+}
+
+/* The `hidden` attribute always wins over a component's own display value (islands toggle it instead of inline styles). */
+[hidden] { display: none !important; }
+
+/* Position indices as plain CSS (no inline style attributes): the stagger / entrance delays read these. */
+.editorial-list > .editorial-row:nth-child(1) { --row-i: 0; }
+.editorial-list > .editorial-row:nth-child(2) { --row-i: 1; }
+.editorial-list > .editorial-row:nth-child(3) { --row-i: 2; }
+.editorial-list > .editorial-row:nth-child(4) { --row-i: 3; }
+.editorial-list > .editorial-row:nth-child(5) { --row-i: 4; }
+.editorial-list > .editorial-row:nth-child(6) { --row-i: 5; }
+.editorial-list > .editorial-row:nth-child(7) { --row-i: 6; }
+.editorial-list > .editorial-row:nth-child(8) { --row-i: 7; }
+.editorial-list > .editorial-row:nth-child(9) { --row-i: 8; }
+.editorial-list > .editorial-row:nth-child(10) { --row-i: 9; }
+.editorial-list > .editorial-row:nth-child(11) { --row-i: 10; }
+.editorial-list > .editorial-row:nth-child(12) { --row-i: 11; }
+.editorial-list > .editorial-row:nth-child(13) { --row-i: 12; }
+.editorial-list > .editorial-row:nth-child(14) { --row-i: 13; }
+.editorial-list > .editorial-row:nth-child(15) { --row-i: 14; }
+.editorial-list > .editorial-row:nth-child(16) { --row-i: 15; }
+.editorial-list > .editorial-row:nth-child(17) { --row-i: 16; }
+.editorial-list > .editorial-row:nth-child(18) { --row-i: 17; }
+.editorial-list > .editorial-row:nth-child(19) { --row-i: 18; }
+.editorial-list > .editorial-row:nth-child(20) { --row-i: 19; }
+.editorial-list > .editorial-row:nth-child(21) { --row-i: 20; }
+.editorial-list > .editorial-row:nth-child(22) { --row-i: 21; }
+.editorial-list > .editorial-row:nth-child(23) { --row-i: 22; }
+.editorial-list > .editorial-row:nth-child(24) { --row-i: 23; }
+.nav-overlay ul > li:nth-child(1) > .nav-overlay__item { --stagger-i: 0; }
+.nav-overlay ul > li:nth-child(2) > .nav-overlay__item { --stagger-i: 1; }
+.nav-overlay ul > li:nth-child(3) > .nav-overlay__item { --stagger-i: 2; }
+.nav-overlay ul > li:nth-child(4) > .nav-overlay__item { --stagger-i: 3; }
+.nav-overlay ul > li:nth-child(5) > .nav-overlay__item { --stagger-i: 4; }
+.nav-overlay ul > li:nth-child(6) > .nav-overlay__item { --stagger-i: 5; }
+.nav-overlay ul > li:nth-child(7) > .nav-overlay__item { --stagger-i: 6; }
+.nav-overlay ul > li:nth-child(8) > .nav-overlay__item { --stagger-i: 7; }
+.nav-overlay ul > li:nth-child(9) > .nav-overlay__item { --stagger-i: 8; }
+.nav-overlay ul > li:nth-child(10) > .nav-overlay__item { --stagger-i: 9; }
+.nav-overlay ul > li:nth-child(11) > .nav-overlay__item { --stagger-i: 10; }
+.nav-overlay ul > li:nth-child(12) > .nav-overlay__item { --stagger-i: 11; }

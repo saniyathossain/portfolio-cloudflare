@@ -1,0 +1,58 @@
+---
+import { portfolio, uiConfig } from "../../bootstrap/container";
+import { tenureOfYears } from "../../lib/tenure";
+import Icon from "../ui/Icon.astro";
+import SectionHeading from "../ui/SectionHeading.astro";
+
+const rowAccents = uiConfig.accents.educationRows;
+---
+
+<section id="education" class="sec sec-pad-b">
+  <div class="shell">
+    <SectionHeading sectionId="education" headingClass="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl" />
+    <ul class="grid gap-4 edu-grid" data-reveal data-delay="180">
+      {portfolio.education.map((entry, entryIndex) => (
+        <li
+          class="edu-row glass-card glass-lux spec sheen"
+          data-reveal
+          data-delay={entryIndex * 50}
+          data-ci={rowAccents[entryIndex]}
+        >
+          <a
+            class="edu-row__link"
+            href={entry.website}
+            target={entry.website ? "_blank" : undefined}
+            rel={entry.website ? "noopener noreferrer" : undefined}
+            aria-label={entry.website ? `Visit ${entry.school} website` : undefined}
+          >
+            <span class="edu-row__logo">
+              <img src={entry.logo} alt="" width="48" height="48" loading="lazy" />
+            </span>
+            <div class="edu-row__body">
+              <span class="popover">
+                <span class="edu-row__years popover__trigger" tabindex="0">
+                  <Icon name="years" svgClass="ui-icon ui-icon--sm" class="meta-icon" />
+                  <span>{`${entry.startYear} — ${entry.endYear}`}</span>
+                </span>
+                <span class="popover__panel" role="tooltip">
+                  <span class="popover__label tooltip-shine">
+                    {tenureOfYears(entry.startYear, entry.endYear).label}
+                  </span>
+                </span>
+              </span>
+              <h3 class="edu-row__school">{entry.school}</h3>
+              <p class="edu-row__degree">
+                <Icon name="education" svgClass="ui-icon ui-icon--sm" class="meta-icon" />
+                <span>{`${entry.degreeType} in ${entry.subject}`}</span>
+              </p>
+            </div>
+          </a>
+          <span class="edu-place edu-row__place">
+            <Icon name="location" svgClass="ui-icon ui-icon--sm" class="meta-icon" />
+            <span>{entry.place}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

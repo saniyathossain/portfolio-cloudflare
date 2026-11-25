@@ -1,0 +1,16 @@
+---
+// Transitional shell: the legacy page, with each ported section swapped in at its <!--ASTRO:name--> marker.
+import legacyHtml from "../legacy/index.html?raw";
+import { isSectionComponentName, SECTION_COMPONENTS } from "../components/sections/registry";
+
+const PLACEHOLDER_PATTERN = /<!--ASTRO:(\w+)-->/;
+// split() with one capture group alternates: markup, marker name, markup, marker name, …
+const segments = legacyHtml.split(PLACEHOLDER_PATTERN);
+---
+
+{segments.map((segment, segmentIndex) => {
+  if (segmentIndex % 2 === 0) return <Fragment set:html={segment} />;
+  if (!isSectionComponentName(segment)) throw new Error(`No section component registered for <!--ASTRO:${segment}-->`);
+  const SectionComponent = SECTION_COMPONENTS[segment];
+  return <SectionComponent />;
+})}

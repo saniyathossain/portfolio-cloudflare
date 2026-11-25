@@ -1,0 +1,48 @@
+{
+  "name": "portfolio-cloudflare",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Portfolio of Mohammad Saniyat Hossain — Astro build served by a Cloudflare Worker",
+  "scripts": {
+    "dev": "astro dev",
+    "build:legacy": "bash build.sh",
+    "build": "npm run build:legacy && astro build",
+    "preview": "wrangler dev --port 8787 --ip 127.0.0.1",
+    "deploy": "bash deploy.sh",
+    "typecheck": "node scripts/build-client.ts && astro check",
+    "lint": "eslint src tests scripts",
+    "format": "prettier --write src tests",
+    "format:check": "prettier --check src tests",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@astrojs/preact": "6.1.6",
+    "@eslint/js": "10.0.1",
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "@nanostores/preact": "1.1.1",
+    "@tailwindcss/cli": "4.3.5",
+    "astro": "7.4.13",
+    "esbuild": "0.28.2",
+    "eslint": "10.15.0",
+    "eslint-plugin-astro": "3.2.1",
+    "lighthouse": "13.6.0",
+    "nanostores": "1.5.5",
+    "preact": "11.2.0",
+    "prettier": "3.10.1",
+    "prettier-plugin-astro": "1.1.2",
+    "puppeteer-core": "25.18.1",
+    "sharp": "0.35.5",
+    "tailwindcss": "4.3.5",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.74.0",
+    "vitest": "5.1.1",
+    "wrangler": "4.168.0",
+    "zod": "4.6.7"
+  },
+  "engines": {
+    "node": ">=26.13.1"
+  }
+}

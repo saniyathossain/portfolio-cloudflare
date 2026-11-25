@@ -1,0 +1,40 @@
+---
+import { iconService, portfolio, uiConfig } from "../../bootstrap/container";
+import ContactModal from "../../islands/ContactModal";
+
+const { site, profile } = portfolio;
+const { contactModal } = site;
+const { shell } = uiConfig;
+const fieldIconClasses = "ui-icon ui-icon--sm";
+const fields = {
+  name: { ...contactModal.fields.name, iconHtml: iconService.render("users", fieldIconClasses) },
+  email: { ...contactModal.fields.email, iconHtml: iconService.render("contact", fieldIconClasses) },
+  project: { ...contactModal.fields.project, iconHtml: iconService.render("rocket", fieldIconClasses) },
+};
+---
+
+<ContactModal
+  client:idle
+  titlebarLabel={contactModal.titlebarLabel}
+  closeAriaLabel={contactModal.closeAriaLabel}
+  heading={contactModal.heading}
+  fields={fields}
+  footerNote={contactModal.footerNote}
+  errorNote={contactModal.errorNote}
+  submitLabel={contactModal.submitLabel}
+  submittingLabel={contactModal.submittingLabel}
+  success={contactModal.success}
+  honeypotLabel={shell.honeypotLabel}
+  turnstileSiteKey={site.turnstileSiteKey}
+  turnstileScriptUrl={shell.turnstileScriptUrl}
+  contactEndpoint={shell.contactEndpoint}
+  resetMs={shell.modalResetMs}
+  errorEnterMs={shell.errorEnterMs}
+  errorLeaveMs={shell.errorLeaveMs}
+  underConstruction={site.features.underConstruction.contactForm}
+  email={profile.email}
+  closeIconHtml={iconService.render("close", fieldIconClasses)}
+  arrowIconHtml={iconService.render("arrow", fieldIconClasses)}
+  mailIconHtml={iconService.render("mail", fieldIconClasses)}
+  wrenchIconHtml={iconService.render("wrench", "ui-icon")}
+/>

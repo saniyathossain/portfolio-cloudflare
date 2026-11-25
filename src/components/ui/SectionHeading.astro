@@ -1,0 +1,28 @@
+---
+import { portfolio } from "../../bootstrap/container";
+import type { SectionHeadingId } from "../../types/SectionHeadingId";
+import Icon from "./Icon.astro";
+
+interface Props {
+  sectionId: SectionHeadingId;
+  /** Layout/typography utility classes — they differ per section, so they stay with the markup. */
+  headingClass: string;
+  /** Adds the `sec-sub--nowrap` modifier (editorial). */
+  isSubtitleNoWrap?: boolean;
+  /** Keeps the legacy `data-sec-sub` hook that data.js fills; drop once data.js is retired. */
+  hasLegacySubtitleHook?: boolean;
+}
+
+const { sectionId, headingClass, isSubtitleNoWrap = false, hasLegacySubtitleHook = true } = Astro.props;
+const { heading, icon } = portfolio.sectionHeadings[sectionId];
+const subtitle = portfolio.sections[sectionId as keyof typeof portfolio.sections];
+const subtitleClass = isSubtitleNoWrap ? "sec-sub sec-sub--nowrap" : "sec-sub";
+---
+
+<h2 class={headingClass} data-blur-reveal data-delay="120" set:html={heading} />
+{icon && subtitle && (
+  <p class={subtitleClass}>
+    <Icon name={icon} svgClass="ui-icon ui-icon--md" class="sec-sub__icon" />
+    <span data-sec-sub={hasLegacySubtitleHook ? sectionId : undefined}>{subtitle}</span>
+  </p>
+)}

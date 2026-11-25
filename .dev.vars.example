@@ -1,0 +1,42 @@
+# Copy to .dev.vars (gitignored) for `wrangler dev`. Production secrets are set with `wrangler secret put`, never committed.
+# Full reference: docs/aidlc/66-env-configuration-and-worker-refactor.md  (names live in src/enums/EnvVar.ts)
+
+# ── Secrets (production: `npx wrangler secret put NAME`) ─────────────────────────────────────────────────────
+ADMIN_TOKEN=change-me-to-a-long-random-string
+# Cloudflare's published always-pass Turnstile test secret — safe for local development only.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+
+# ── Contact delivery (production: wrangler.toml [vars]) ──────────────────────────────────────────────────────
+# CONTACT_FROM=contact@example.com        # address on a domain with Email Routing enabled
+# CONTACT_TO=you@example.com              # VERIFIED destination address in Email Routing
+# CONTACT_RETENTION_SECONDS=31536000      # how long submissions stay in KV (60 .. 157680000)
+
+# ── Maintenance mode ─────────────────────────────────────────────────────────────────────────────────────────
+# MAINTENANCE_MODE=off                    # on | off — site-wide 503, bypass with ?preview=<ADMIN_TOKEN>
+# MAINTENANCE_TITLE=Back soon             # optional page title override
+# MAINTENANCE_MESSAGE=Scheduled maintenance.   # optional message override
+# MAINTENANCE_RETRY_AFTER_SECONDS=3600    # Retry-After header (1 .. 86400)
+
+# ── Logging ──────────────────────────────────────────────────────────────────────────────────────────────────
+# LOG_CHANNEL=stderr                      # stack | stdout | stderr | kv | database | silent (default: logging.json)
+# LOG_LEVEL=debug                         # debug | info | warn | error
+
+# ── Request limits (each overrides src/content/security.json; invalid values are ignored and logged once) ─────
+# MAX_URL_LENGTH=2048                     # 64 .. 8192
+# MAX_CONTACT_BODY_BYTES=16384            # 256 .. 1048576
+# MAX_CSP_REPORT_BYTES=8192               # 256 .. 65536
+# MAX_NAME_LENGTH=120                     # 1 .. 500
+# MAX_EMAIL_LENGTH=200                    # 3 .. 320
+# MAX_PROJECT_LENGTH=4000                 # 1 .. 20000
+
+# ── Rate limits (limit = requests per window; windows in seconds, 1 .. 86400) ────────────────────────────────
+# RATE_LIMIT_CONTACT_LIMIT=3
+# RATE_LIMIT_CONTACT_WINDOW_SECONDS=600
+# RATE_LIMIT_ADMIN_FAILURE_LIMIT=5        # failed admin logins before lockout
+# RATE_LIMIT_ADMIN_FAILURE_WINDOW_SECONDS=900
+# RATE_LIMIT_CSP_REPORT_LIMIT=20
+# RATE_LIMIT_CSP_REPORT_WINDOW_SECONDS=60
+
+# ── Owner read endpoint (GET /api/contact) ───────────────────────────────────────────────────────────────────
+# ADMIN_LIST_DEFAULT_LIMIT=50             # 1 .. 1000
+# ADMIN_LIST_MAX_LIMIT=200                # 1 .. 1000

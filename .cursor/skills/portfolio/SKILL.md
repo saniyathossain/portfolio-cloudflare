@@ -67,8 +67,9 @@ npx wrangler dev    # local preview
 
 ## Docs & skills
 
-- **Architecture / history:** `docs/aidlc/` (00–18), especially `01-design-system.md`, `05-redesign-liquid-glass.md`, `08-cloudflare-deploy.md`, `17-aurora-canvas-smoothscroll-parallax.md`, `18-signature-uplift-whisper-aurora-motion.md`.
+- **Architecture / history:** `docs/aidlc/` (00–52, index in `00-overview.md`; latest: `51-cv-v9-sync-stack-focused-copy.md`, `52-stack-migration-astro-react-islands-plan.md`), especially `01-design-system.md`, `05-redesign-liquid-glass.md`, `08-cloudflare-deploy.md`, `17-aurora-canvas-smoothscroll-parallax.md`, `18-signature-uplift-whisper-aurora-motion.md`.
 - **Design taste (installed):** `.agents/skills/` + `skills-lock.json` — use for large visual passes, not for overriding established chip/pill patterns above.
+- **Stack-migration skills:** `astro`, `shadcn`, `vercel-react-best-practices`, `workers-best-practices` in `.agents/skills/` — for the Astro + React islands plan (`docs/aidlc/52-…`).
 - **PageSpeed / SEO / PWA:** `docs/aidlc/07-pagespeed-seo-pwa-plan.md` — keep CSP, no new runtime network deps, SW network-first for `/assets/js/*` and `/assets/css/*`.
 
 ## Checklist before deploy

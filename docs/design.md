@@ -106,6 +106,9 @@ surface that **scrolls with the page** uses `--frost-bg` (an opaque gradient app
 "faux-frost" — because `backdrop-filter` on a large scrolling surface tanks mobile PageSpeed. Do not
 add `backdrop-filter` to a scrolling panel; this has been tried and reverted more than once (see
 `docs/aidlc/16`, `18`, and this session's hero-card-badge blur revert).
+**Edge strips (doc 63):** the header's top strip and the page-bottom strip are fixed, non-scrolling, hidden (opacity 0)
+until the page scrolls, so they stay inside this rule. Squircle corners use `corner-shape` under `@supports`; the contact
+modal panel is translucent liquid glass over the existing `.modal-backdrop` blur (no panel-level `backdrop-filter`).
 
 **Radii / layout:** `--radius-pill:9999px` `--radius-card:2rem` `--radius-card-sm:1.25rem`
 `--radius-control:0.875rem`. Shell max-width `--shell:88rem`. Watermark type size `--watermark:13rem`.
@@ -311,8 +314,7 @@ desktop pill nav, hero switches to a 2-column grid, hover-only interactions beco
 ## 9. Relationship to the Lumora template
 
 This site is a content-and-brand adaptation of the **Lumora — Independent Design & Engineering
-Studio** landing-page template (`docs/template-prompt-getlayers.ai-lumora-template.md` has the full
-original spec: dark-ink/near-white palette, Onest typeface, Lenis smooth scroll, canvas liquid-cursor
+Studio** landing-page template (the original spec — since removed from the repo, see aidlc 67 — was: dark-ink/near-white palette, Onest typeface, Lenis smooth scroll, canvas liquid-cursor
 hero reveal, react-spring-style entrance motion, `000→100` loader). What was kept structurally: the
 `.shell` page-width constraint, the rem-based section rhythm, the pill-button/eyebrow/tag-chip
 component shapes, the reveal-on-scroll interaction language, the overall section ordering. What was
@@ -348,7 +350,7 @@ authoritative for current state:
   consistency, by direct request — that reversal is what's shipped today (§4 above). Don't restore
   the system-font-first approach based on reading doc 01/07 alone.
   - **Grep-verify before trusting either narrative:** `grep -n "font-sans:" public/assets/css/styles.css`.
-- **Portfolio/"Selected Work" section**: the original `REBUILD-PLAN.md`/template spec includes it;
+- **Portfolio/"Selected Work" section**: the original rebuild plan / template spec (removed, aidlc 67) included it;
   `docs/aidlc/02` and `04` confirm it was dropped for lacking real content. Current `index.html` has
   no such section — confirmed by `grep -n '<section' public/index.html` (§2 lists the actual order).
 - **`scripts/minify-css.js` / `scripts/set-asset-version.js`**: part of the live `build.sh` pipeline

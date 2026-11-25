@@ -1,0 +1,370 @@
+{
+  "$comment": "Stack brand catalogue. Key = lower-cased stack name. icon = file in public/assets/img/brands/. color = logo colour. tint = curated pill hue; omit it to derive one from color using the brandTint rules in ui.json.",
+  "entries": {
+    "php": {
+      "icon": "php",
+      "color": "#777BB4",
+      "tint": "#7F88DC"
+    },
+    "javascript": {
+      "icon": "javascript",
+      "color": "#F7DF1E",
+      "tint": "#DDB85A"
+    },
+    "typescript": {
+      "icon": "typescript",
+      "color": "#3178C6",
+      "tint": "#5A96D4"
+    },
+    "go": {
+      "icon": "go",
+      "color": "#00ADD8",
+      "tint": "#48B8CC"
+    },
+    "golang": {
+      "icon": "go",
+      "color": "#00ADD8",
+      "tint": "#48B8CC"
+    },
+    "laravel": {
+      "icon": "laravel",
+      "color": "#FF2D20",
+      "tint": "#DE6E62"
+    },
+    "lumen": {
+      "icon": "lumen",
+      "color": "#E74430",
+      "tint": "#D87868"
+    },
+    "nestjs": {
+      "icon": "nestjs",
+      "color": "#E0234E",
+      "tint": "#D86A82"
+    },
+    "nest": {
+      "icon": "nestjs",
+      "color": "#E0234E",
+      "tint": "#D86A82"
+    },
+    "node": {
+      "icon": "nodedotjs",
+      "color": "#5FA04E",
+      "tint": "#52C08A"
+    },
+    "node.js": {
+      "icon": "nodedotjs",
+      "color": "#5FA04E",
+      "tint": "#52C08A"
+    },
+    "nodejs": {
+      "icon": "nodedotjs",
+      "color": "#5FA04E",
+      "tint": "#52C08A"
+    },
+    "express": {
+      "icon": "express",
+      "color": "#3B4A54",
+      "tint": "#5E8A98"
+    },
+    "vue": {
+      "icon": "vuedotjs",
+      "color": "#42B883",
+      "tint": "#4EB894"
+    },
+    "vue.js": {
+      "icon": "vuedotjs",
+      "color": "#42B883",
+      "tint": "#4EB894"
+    },
+    "vuejs": {
+      "icon": "vuedotjs",
+      "color": "#42B883",
+      "tint": "#4EB894"
+    },
+    "mysql": {
+      "icon": "mysql",
+      "color": "#4479A1",
+      "tint": "#4A9BB0"
+    },
+    "mssql": {
+      "icon": "mssql",
+      "color": "#CC2927",
+      "tint": "#C8706A"
+    },
+    "redis": {
+      "icon": "redis",
+      "color": "#FF4438",
+      "tint": "#DE7268"
+    },
+    "redisearch": {
+      "icon": "redis",
+      "color": "#FF4438",
+      "tint": "#DE7268"
+    },
+    "elasticsearch": {
+      "icon": "elasticsearch",
+      "color": "#005571",
+      "tint": "#2E8498"
+    },
+    "kibana": {
+      "icon": "kibana",
+      "color": "#005571",
+      "tint": "#3A9AAA"
+    },
+    "rabbitmq": {
+      "icon": "rabbitmq",
+      "color": "#FF6600",
+      "tint": "#E0A05C"
+    },
+    "minio": {
+      "icon": "minio",
+      "color": "#C72E49",
+      "tint": "#CC7480"
+    },
+    "mockoon": {
+      "icon": "mockoon",
+      "color": "#242830",
+      "tint": "#6E929E"
+    },
+    "vs code": {
+      "icon": "visualstudiocode",
+      "color": "#007ACC",
+      "tint": "#4A9AD8"
+    },
+    "vscode": {
+      "icon": "visualstudiocode",
+      "color": "#007ACC",
+      "tint": "#4A9AD8"
+    },
+    "visual studio code": {
+      "icon": "visualstudiocode",
+      "color": "#007ACC",
+      "tint": "#4A9AD8"
+    },
+    "phpstorm": {
+      "icon": "phpstorm",
+      "color": "#765AF8",
+      "tint": "#8A7AE8"
+    },
+    "php storm": {
+      "icon": "phpstorm",
+      "color": "#765AF8",
+      "tint": "#8A7AE8"
+    },
+    "webstorm": {
+      "icon": "webstorm",
+      "color": "#00CDD7",
+      "tint": "#4CC0D0"
+    },
+    "web storm": {
+      "icon": "webstorm",
+      "color": "#00CDD7",
+      "tint": "#4CC0D0"
+    },
+    "sublime text": {
+      "icon": "sublimetext",
+      "color": "#FF9800",
+      "tint": "#E0A858"
+    },
+    "sublimetext": {
+      "icon": "sublimetext",
+      "color": "#FF9800",
+      "tint": "#E0A858"
+    },
+    "sublime merge": {
+      "icon": "sublimemerge",
+      "color": "#00E6E7",
+      "tint": "#48D0D8"
+    },
+    "sublimemerge": {
+      "icon": "sublimemerge",
+      "color": "#00E6E7",
+      "tint": "#48D0D8"
+    },
+    "jmeter": {
+      "icon": "apachejmeter",
+      "color": "#D22128",
+      "tint": "#CA7070"
+    },
+    "nginx": {
+      "icon": "nginx",
+      "color": "#009639",
+      "tint": "#48B878"
+    },
+    "docker": {
+      "icon": "docker",
+      "color": "#2496ED",
+      "tint": "#52A8E0"
+    },
+    "git": {
+      "icon": "git",
+      "color": "#F05032",
+      "tint": "#D48258"
+    },
+    "jira": {
+      "icon": "jira",
+      "color": "#0052CC",
+      "tint": "#5288D8"
+    },
+    "svn": {
+      "icon": "subversion",
+      "color": "#809CC9",
+      "tint": "#8A9EC0"
+    },
+    "firebase": {
+      "icon": "firebase",
+      "color": "#DD2C00",
+      "tint": "#DE8458"
+    },
+    "wordpress": {
+      "icon": "wordpress",
+      "color": "#21759B",
+      "tint": "#4A96B8"
+    },
+    "codeigniter": {
+      "icon": "codeigniter",
+      "color": "#EF4223",
+      "tint": "#DE7A62"
+    },
+    "joomla": {
+      "icon": "joomla",
+      "color": "#5091CD",
+      "tint": "#5AA0D8"
+    },
+    "jquery": {
+      "icon": "jquery",
+      "color": "#0769AD",
+      "tint": "#4A90C4"
+    },
+    "bootstrap": {
+      "icon": "bootstrap",
+      "color": "#7952B3",
+      "tint": "#8E7CC8"
+    },
+    "webpack": {
+      "icon": "webpack",
+      "color": "#1C78C0",
+      "tint": "#4A92C0"
+    },
+    "parcel": {
+      "icon": "parcel",
+      "color": "#E7A03C",
+      "tint": "#D8A868"
+    },
+    "parcel builder": {
+      "icon": "parcel",
+      "color": "#E7A03C",
+      "tint": "#D8A868"
+    },
+    "openstreetmap": {
+      "icon": "openstreetmap",
+      "color": "#578f4a",
+      "tint": "#5AAA78"
+    },
+    "dotenv": {
+      "icon": "dotenv",
+      "color": "#a08800",
+      "tint": "#BE9A62"
+    },
+    "cakephp": {
+      "icon": "cakephp",
+      "color": "#D33C43",
+      "tint": "#D87278"
+    },
+    "kendo ui": {
+      "icon": "kendo",
+      "color": "#FF6358",
+      "tint": "#DE8278"
+    },
+    "kendo": {
+      "icon": "kendo",
+      "color": "#FF6358",
+      "tint": "#DE8278"
+    },
+    "handsontable": {
+      "icon": "handsontable",
+      "color": "#166b45",
+      "tint": "#4A9E72"
+    },
+    "datatables": {
+      "icon": "datatables",
+      "color": "#1f5a86",
+      "tint": "#4A84A8"
+    },
+    "highcharts": {
+      "icon": "highcharts",
+      "color": "#5c63c9",
+      "tint": "#7A82D0"
+    },
+    "uikit": {
+      "icon": "uikit",
+      "color": "#2396F3",
+      "tint": "#5AA8E8"
+    },
+    "elgg": {
+      "icon": "elgg",
+      "color": "#3a3a3a",
+      "tint": "#7A8E9A"
+    },
+    "microservices": {
+      "icon": "microservices",
+      "color": "#97501f",
+      "tint": "#C08858"
+    },
+    "wysiwyg editor": {
+      "icon": "wysiwyg-editor",
+      "color": "#6b5b95",
+      "tint": "#8A7AB0"
+    },
+    "form wizard": {
+      "icon": "form-wizard",
+      "color": "#2f7a6b",
+      "tint": "#4A9888"
+    },
+    "claude": {
+      "icon": "claude",
+      "color": "#D97757",
+      "tint": "#DE9878"
+    },
+    "chatgpt": {
+      "icon": "openai",
+      "color": "#10A37F",
+      "tint": "#52B898"
+    },
+    "openai": {
+      "icon": "openai",
+      "color": "#10A37F",
+      "tint": "#52B898"
+    },
+    "gemini": {
+      "icon": "googlegemini",
+      "color": "#9168C0",
+      "tint": "#A088D8"
+    },
+    "copilot": {
+      "icon": "githubcopilot",
+      "color": "#24292E",
+      "tint": "#6078A0"
+    },
+    "cursor": {
+      "icon": "cursor",
+      "color": "#0A0A0A",
+      "tint": "#5A88D8"
+    },
+    "antigravity": {
+      "icon": "antigravity",
+      "color": "#3186ff",
+      "tint": "#5AA0E8"
+    },
+    "github copilot": {
+      "icon": "githubcopilot",
+      "color": "#24292E",
+      "tint": "#6078A0"
+    },
+    "laravel horizon": {
+      "icon": "laravel",
+      "color": "#FF2D20",
+      "tint": "#E87870"
+    }
+  }
+}

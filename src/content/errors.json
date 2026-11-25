@@ -1,0 +1,220 @@
+{
+  "$comment": "Outage / error pages. One entry per page, served from /errors/<slug>/ (404 also as /404.html). services: each page lists the services it reports; ids must exist in terminal.services.catalog (add `cache`, `dataSource`, … there first).",
+  "terminal": {
+    "retry": {
+      "attemptLabel": "retry",
+      "waitingLabel": "in",
+      "secondsSuffix": "s",
+      "exhausted": "gave up after {attempts} attempts — run retry to try again",
+      "reconnected": "back online — reloading",
+      "srAnnouncement": "Retrying automatically in {seconds} seconds."
+    },
+    "well": {
+      "requestVerb": "GET"
+    },
+    "orb": {
+      "idleGlyph": "!",
+      "secondsLabel": "sec"
+    },
+    "services": {
+      "heading": "services",
+      "states": {
+        "ok": "ok",
+        "degraded": "degraded",
+        "down": "down",
+        "unknown": "unknown"
+      },
+      "catalog": {
+        "edge": "edge",
+        "worker": "worker",
+        "assets": "assets",
+        "network": "network",
+        "cache": "cache",
+        "dataSource": "data source"
+      }
+    }
+  },
+  "pages": {
+    "not-found": {
+      "slug": "not-found",
+      "status": 404,
+      "statusText": "Not Found",
+      "level": "ERROR",
+      "title": "Page not found",
+      "message": "That address does not exist on this site.",
+      "actions": [
+        {
+          "label": "cd ~",
+          "href": "/"
+        }
+      ],
+      "retry": {
+        "isEnabled": false
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "ok"
+        },
+        {
+          "id": "assets",
+          "state": "ok",
+          "detail": "no file at this path"
+        }
+      ]
+    },
+    "server-error": {
+      "slug": "server-error",
+      "status": 500,
+      "statusText": "Internal Server Error",
+      "level": "ERROR",
+      "title": "Something broke on my side",
+      "message": "The server hit an unexpected error while handling your request.",
+      "actions": [
+        {
+          "label": "retry",
+          "isReload": true
+        },
+        {
+          "label": "cd ~",
+          "href": "/"
+        }
+      ],
+      "retry": {
+        "isEnabled": true
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "down",
+          "detail": "unhandled exception"
+        },
+        {
+          "id": "network",
+          "state": "unknown",
+          "live": "network"
+        }
+      ]
+    },
+    "bad-gateway": {
+      "slug": "bad-gateway",
+      "status": 502,
+      "statusText": "Bad Gateway",
+      "level": "ERROR",
+      "title": "Upstream is not answering",
+      "message": "The site's asset store returned an error instead of the page.",
+      "actions": [
+        {
+          "label": "retry",
+          "isReload": true
+        },
+        {
+          "label": "cd ~",
+          "href": "/"
+        }
+      ],
+      "retry": {
+        "isEnabled": true
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "ok"
+        },
+        {
+          "id": "assets",
+          "state": "down",
+          "detail": "not answering"
+        }
+      ]
+    },
+    "maintenance": {
+      "slug": "maintenance",
+      "status": 503,
+      "statusText": "Service Unavailable",
+      "level": "WARN",
+      "title": "We'll be right back",
+      "message": "The site is down briefly for scheduled maintenance and a few improvements. Please check back shortly — or reach me by email in the meantime.",
+      "actions": [
+        {
+          "label": "retry",
+          "isReload": true
+        },
+        {
+          "label": "mail",
+          "href": "mailto:{email}"
+        }
+      ],
+      "retry": {
+        "isEnabled": true,
+        "baseDelayMs": 15000,
+        "maxDelayMs": 120000,
+        "maxAttempts": 8
+      },
+      "services": [
+        {
+          "id": "edge",
+          "state": "ok"
+        },
+        {
+          "id": "worker",
+          "state": "degraded",
+          "detail": "maintenance mode"
+        }
+      ]
+    },
+    "offline": {
+      "slug": "offline",
+      "status": null,
+      "statusText": "Offline",
+      "level": "WARN",
+      "title": "You're offline",
+      "message": "This page isn't saved on your device yet and the network is unreachable.",
+      "actions": [
+        {
+          "label": "retry",
+          "isReload": true
+        }
+      ],
+      "retry": {
+        "isEnabled": true,
+        "reloadWhenOnline": true
+      },
+      "services": [
+        {
+          "id": "network",
+          "state": "down",
+          "live": "network"
+        },
+        {
+          "id": "edge",
+          "state": "unknown"
+        },
+        {
+          "id": "worker",
+          "state": "unknown"
+        }
+      ]
+    }
+  },
+  "retryDefaults": {
+    "baseDelayMs": 2000,
+    "factor": 2,
+    "maxDelayMs": 60000,
+    "maxAttempts": 5,
+    "jitterRatio": 0.2,
+    "tickMs": 250
+  }
+}

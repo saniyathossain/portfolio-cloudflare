@@ -1,0 +1,49 @@
+---
+import { iconService, portfolio } from "../../bootstrap/container";
+import Icon from "../ui/Icon.astro";
+
+const { site, socials, copy } = portfolio;
+---
+
+<section id="about" class="sec sec-pad">
+  <div class="shell">
+    <div class="about-plain">
+      <p class="about-plain__kicker">{site.aboutKicker}</p>
+      <h2
+        class="about-plain__statement"
+        data-blur-reveal
+        data-blur-speed="1.2"
+        data-blur-highlight={site.aboutHighlights.join("|")}
+        data-text={site.aboutHeading}
+      >
+        {site.aboutHeading}
+      </h2>
+      <p class="about-plain__lead" data-reveal data-delay="120">
+        {site.aboutLead}
+      </p>
+      <div class="about-card__footer" data-reveal data-delay="200">
+        <div>
+          <p class="about-card__label">{copy.about.onlineLabel}</p>
+          <div class="mt-3 flex gap-2">
+            {socials.map((social) => (
+              <a
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-link"
+                aria-label={social.label}
+                set:html={iconService.render(social.icon, "ui-icon ui-icon--md ui-icon--on-ink")}
+              />
+            ))}
+          </div>
+        </div>
+        <button type="button" class="pill-btn pill-btn-outline beam sheen" data-scroll-target="experience">
+          {copy.about.workButton}
+          <span class="pill-btn__icon">
+            <Icon name="arrow" svgClass="ui-icon ui-icon--sm" />
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

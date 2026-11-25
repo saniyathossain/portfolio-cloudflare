@@ -1,0 +1,148 @@
+---
+import { errorCatalog, portfolio } from "../bootstrap/container";
+import { fillTemplate } from "../lib/text";
+// The page's stylesheet lives in its own file and is inlined at build time, so an outage page never depends on a second request.
+import errorPageScript from "../generated/error-page.min.js?raw";
+import errorPageCss from "../styles/error-page.css?inline";
+
+interface Props {
+  /** Key in errors.json → pages. */
+  pageKey: string;
+}
+
+const { pageKey } = Astro.props;
+const page = errorCatalog.pages[pageKey];
+if (!page) throw new Error(`errors.json has no page "${pageKey}"`);
+
+const { terminal } = errorCatalog;
+const statusLabel = page.status === null ? page.statusText : `${page.status} ${page.statusText}`;
+const tone = page.level === "ERROR" ? "is-error" : "is-warn";
+const resolveHref = (href: string) => fillTemplate(href, { email: portfolio.profile.email });
+// Same arrow glyph the site's pill buttons use (Lucide-style stroke), inlined so the page needs no other file.
+const arrowIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+// Prompt chevron for the request line (same stroke language as the arrow chip).
+const promptIcon =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+const { retryDefaults } = errorCatalog;
+const retryConfig = {
+  baseDelayMs: page.retry.baseDelayMs ?? retryDefaults.baseDelayMs,
+  factor: page.retry.factor ?? retryDefaults.factor,
+  maxDelayMs: page.retry.maxDelayMs ?? retryDefaults.maxDelayMs,
+  maxAttempts: page.retry.maxAttempts ?? retryDefaults.maxAttempts,
+  jitterRatio: retryDefaults.jitterRatio,
+  tickMs: retryDefaults.tickMs,
+};
+const retryCopyForClient = {
+  ...terminal.retry,
+  reloadWhenOnline: page.retry.reloadWhenOnline === true,
+};
+const firstDelaySeconds = Math.round(retryConfig.baseDelayMs / 1000);
+const idleGlyph = page.status === null ? terminal.orb.idleGlyph : String(page.status);
+const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content={portfolio.site.themeColor} />
+    <title>{page.title} — {portfolio.profile.name}</title>
+    <!-- Self-contained on purpose: an outage page must not depend on any other file being reachable. -->
+    <style is:inline set:html={errorPageCss}></style>
+  </head>
+  <body>
+    <main class:list={["window", tone]} aria-labelledby="error-title">
+      <div class:list={["orb", { "is-counting": page.retry.isEnabled }]} data-orb aria-hidden="true">
+        <span class="orb__glass"></span>
+        <svg class="orb__ring" viewBox="0 0 100 100" focusable="false">
+          <circle class="orb__progress" cx="50" cy="50" r="48.5" pathLength="100" data-orb-progress></circle>
+        </svg>
+        <span class="orb__value" data-orb-value data-orb-idle={idleGlyph}>
+          {orbGlyph}
+          {page.retry.isEnabled && <small>{terminal.orb.secondsLabel}</small>}
+        </span>
+      </div>
+      <div class="copy" role="status">
+        <h1 id="error-title" data-error-title>
+          {page.title}
+        </h1>
+        <p class="message" data-error-message>
+          {page.message}
+        </p>
+        {page.retry.isEnabled && (
+          <p class="sr-only" role="status" data-retry-sr data-retry-sr-template={terminal.retry.srAnnouncement}>
+            {terminal.retry.srAnnouncement.replace("{seconds}", String(firstDelaySeconds))}
+          </p>
+        )}
+      </div>
+      <div class="well">
+        <ul class="well__list" aria-label="Request status">
+          <li class="well__line" hidden data-well-request>
+            <span class="well__mark" aria-hidden="true" set:html={promptIcon} />
+            <span class="well__text"><b>{terminal.well.requestVerb}</b> <span data-well-path></span></span>
+          </li>
+          <li class="well__line">
+            <span class="well__mark well__mark--status" aria-hidden="true"></span>
+            <span class="well__text">{statusLabel}</span>
+          </li>
+          {page.retry.isEnabled && (
+            <li
+              class="well__line"
+              hidden
+              data-retry={JSON.stringify(retryConfig)}
+              data-retry-copy={JSON.stringify(retryCopyForClient)}
+            >
+              <span class="well__mark well__mark--retry" aria-hidden="true"></span>
+              <span class="well__text" data-retry-text></span>
+            </li>
+          )}
+        </ul>
+        {page.services.length > 0 && (
+          <>
+            <h2 class="well__heading" id="services-heading">
+              {terminal.services.heading}
+            </h2>
+            <ul class="well__list" aria-labelledby="services-heading" data-service-labels={JSON.stringify(terminal.services.states)}>
+              {page.services.map((service) => (
+                <li class="well__line well__line--service" data-service-state={service.state} data-service-live={service.live}>
+                  <span class="well__mark well__mark--service" aria-hidden="true" />
+                  <span class="well__text">
+                    <b>{terminal.services.catalog[service.id]}</b>
+                    {service.detail && <span class="service__detail">{service.detail}</span>}
+                  </span>
+                  <span class="service__state" data-service-text>
+                    {terminal.services.states[service.state]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+      <ul class="actions">
+        {page.actions.map((action) => (
+          <li>
+            {action.isReload ? (
+              <button type="button" data-reload>
+                {action.label}
+                <span class="chip" aria-hidden="true" set:html={arrowIcon} />
+              </button>
+            ) : (
+              <a href={resolveHref(action.href ?? "/")}>
+                {action.label}
+                <span class="chip" aria-hidden="true" set:html={arrowIcon} />
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </main>
+    <!-- Optional enhancement (src/client/error-page.ts, bundled to src/generated/ by scripts/build-client.ts and inlined
+         here): request path, live network service and the self-healing retry countdown. The static page is complete without it. -->
+    <script is:inline set:html={errorPageScript}></script>
+  </body>
+</html>

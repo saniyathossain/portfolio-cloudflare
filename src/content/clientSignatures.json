@@ -1,0 +1,58 @@
+{
+  "$comment": "User-Agent signature tables for the security log (docs/aidlc/58). First match wins, so specific entries (Edge, Opera, Samsung) come before generic ones (Chrome, Safari). Group 1 captures the version. Patterns run on the raw User-Agent, case-insensitively.",
+  "browsers": [
+    { "name": "Edge", "pattern": "edg(?:e|a|ios)?/([\\d.]+)" },
+    { "name": "Opera", "pattern": "(?:opr|opera)/([\\d.]+)" },
+    { "name": "Samsung Internet", "pattern": "samsungbrowser/([\\d.]+)" },
+    { "name": "Firefox", "pattern": "(?:firefox|fxios)/([\\d.]+)" },
+    { "name": "Brave", "pattern": "brave/([\\d.]+)" },
+    { "name": "Vivaldi", "pattern": "vivaldi/([\\d.]+)" },
+    { "name": "UC Browser", "pattern": "ucbrowser/([\\d.]+)" },
+    { "name": "Facebook in-app", "pattern": "(?:fban|fbav)/([\\d.]+)" },
+    { "name": "Instagram in-app", "pattern": "instagram ([\\d.]+)" },
+    { "name": "LinkedIn in-app", "pattern": "linkedinapp()" },
+    { "name": "Chrome", "pattern": "(?:chrome|crios)/([\\d.]+)" },
+    { "name": "Safari", "pattern": "version/([\\d.]+).*safari/" },
+    { "name": "Internet Explorer", "pattern": "(?:msie |trident/.*rv:)([\\d.]+)" }
+  ],
+  "engines": [
+    { "name": "Blink", "pattern": "(?:chrome|crios|edg)[a-z]*/([\\d.]+)" },
+    { "name": "Gecko", "pattern": "gecko/([\\d.]+)" },
+    { "name": "WebKit", "pattern": "applewebkit/([\\d.]+)" },
+    { "name": "Trident", "pattern": "trident/([\\d.]+)" }
+  ],
+  "operatingSystems": [
+    { "name": "Windows", "pattern": "windows nt ([\\d.]+)" },
+    { "name": "Android", "pattern": "android ([\\d.]+)" },
+    { "name": "iOS", "pattern": "(?:iphone|cpu) os ([\\d_]+)", "underscoreVersion": true },
+    { "name": "iPadOS", "pattern": "ipad.*os ([\\d_]+)", "underscoreVersion": true },
+    { "name": "macOS", "pattern": "mac os x ([\\d_]+)", "underscoreVersion": true },
+    { "name": "ChromeOS", "pattern": "cros [a-z0-9_]+ ([\\d.]+)" },
+    { "name": "Linux", "pattern": "(?:linux|x11)()" }
+  ],
+  "devices": [
+    { "type": "tablet", "vendor": "Apple", "pattern": "(ipad)" },
+    { "type": "mobile", "vendor": "Apple", "pattern": "(iphone|ipod)" },
+    { "type": "mobile", "vendor": "Samsung", "pattern": "android[^;]*; (sm-[a-z0-9]+)" },
+    { "type": "tablet", "vendor": "Samsung", "pattern": "android[^;]*; (sm-t[a-z0-9]+)" },
+    { "type": "mobile", "vendor": "Google", "pattern": "android[^;]*; (pixel[ a-z0-9]*)" },
+    { "type": "mobile", "vendor": "Xiaomi", "pattern": "android[^;]*; ((?:redmi|mi|poco)[ a-z0-9-]*)" },
+    { "type": "mobile", "vendor": "Huawei", "pattern": "android[^;]*; ((?:huawei|honor)[ a-z0-9-]*)" },
+    { "type": "mobile", "vendor": "OnePlus", "pattern": "android[^;]*; ((?:oneplus|cph)[ a-z0-9]*)" },
+    { "type": "mobile", "vendor": "Oppo/Realme", "pattern": "android[^;]*; ((?:cph|rmx)[a-z0-9]*)" },
+    { "type": "mobile", "vendor": "Vivo", "pattern": "android[^;]*; (v[0-9]{4}[a-z]*)" },
+    { "type": "tablet", "vendor": "Android", "pattern": "android(?!.*mobile)()" },
+    { "type": "mobile", "vendor": "Android", "pattern": "android[^;]*; ([^;)]+)" },
+    { "type": "desktop", "vendor": "Apple", "pattern": "(macintosh)" },
+    { "type": "desktop", "vendor": "Microsoft", "pattern": "(windows nt)" },
+    { "type": "desktop", "vendor": "Linux", "pattern": "(x11|linux x86_64)" }
+  ],
+  "bots": [
+    { "category": "scanner", "pattern": "sqlmap|nikto|nmap|masscan|zgrab|nuclei|acunetix|wpscan|dirbuster|gobuster|ffuf|burp|havij|netsparker|openvas" },
+    { "category": "automation", "pattern": "headlesschrome|phantomjs|puppeteer|playwright|selenium|webdriver|electron/" },
+    { "category": "tool", "pattern": "curl/|wget/|python-requests|python-urllib|aiohttp|httpx|go-http-client|okhttp|java/|libwww-perl|axios/|node-fetch|undici|postmanruntime|insomnia" },
+    { "category": "scraper", "pattern": "scrapy|httrack|semrushbot|ahrefsbot|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|amazonbot" },
+    { "category": "search", "pattern": "googlebot|bingbot|duckduckbot|baiduspider|yandexbot|slurp|applebot|facebookexternalhit|twitterbot|linkedinbot|whatsapp" },
+    { "category": "generic", "pattern": "\\b(?:bot|crawler|spider|scraper)\\b" }
+  ]
+}

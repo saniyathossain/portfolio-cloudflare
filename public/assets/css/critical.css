@@ -67,7 +67,7 @@ html:not(.is-loading) .load-scrim { display: none; }
   --accent: #b15f2c;
   --accent-bright: #cf8047;
   --accent-dark: #97501f;
-  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1, harmonises with copper) */
+  --beige: #735f3e;          /* warm taupe-beige — hero designation (AA >= 5:1, harmonises with copper) */
   --primary: var(--accent);
   --primary-deep: var(--accent-dark);
   --teal: #2b8c9a;           /* sea */
@@ -178,8 +178,9 @@ html:not(.is-loading) .load-scrim { display: none; }
   --shadow-outset-sm: 0 1px 0 rgba(255,255,255,.95), 0 2px 5px rgba(17,17,17,.07), 0 6px 14px rgba(17,17,17,.06);
   --shadow-outset-md: 0 1px 0 rgba(255,255,255,.98), 0 4px 10px rgba(17,17,17,.08), 0 12px 28px rgba(17,17,17,.08);
   --shadow-outset-hover: 0 2px 0 rgba(255,255,255,.98), 0 8px 22px rgba(17,17,17,.1), 0 16px 36px rgba(17,17,17,.08);
-  /* Fluid section rhythm — tablet↔desktop interpolates; used by .sec-pad / .sec-pad-b (not blanket .sec). */
-  --sec-py: clamp(5rem, 3.4rem + 3.2vw, 7rem);
+  /* Fluid section rhythm — tablet↔desktop interpolates; used by .sec-pad / .sec-pad-b (not blanket .sec).
+     Doc 56: tightened from 5–7rem to 2–3rem per side (≈ 64–96 px between sections instead of 150–224 px). */
+  --sec-py: clamp(2rem, 1.4rem + 1.4vw, 3rem);
 }
 @font-face {
   font-family: "Inter";
@@ -600,7 +601,7 @@ html.is-loading .site-header {
 
 .eyebrow {
   display: inline-flex; align-items: flex-start; gap: 0.55rem;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+  font-size: max(11px, 0.72rem); font-weight: 700; letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--tint-deep);
   text-shadow: var(--text-sh-emboss);
@@ -776,7 +777,7 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
 .hero-card__swap.is-swap-instant { transition: none; }
 
 .hero-card__caption {
-  font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+  font-size: max(11px, 0.6875rem); font-weight: 500; text-transform: uppercase;
   letter-spacing: 0.05em; color: rgba(17, 17, 17, 0.45);
 }
 
@@ -1697,7 +1698,7 @@ html.is-idle .beam::before {
   position: relative; z-index: 2;
   flex: 1 1 auto; width: 100%;
   display: flex; align-items: center; justify-content: center; gap: 0.36rem;
-  padding: 0.48rem 0.72rem; font-size: 0.6875rem; font-weight: 500;
+  padding: 0.48rem 0.72rem; font-size: max(11px, 0.6875rem); font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
 }
 
@@ -1722,3 +1723,34 @@ html.is-idle .beam::before {
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(2) { opacity: 0; }
 
 .menu-btn[aria-expanded="true"] .menu-btn__bar:nth-child(3) { transform: translateY(-4.3px) rotate(-45deg); }
+
+/* Doc 53 — first-visit flash guard. These blocks are server-rendered, so they exist before the full stylesheet
+   has arrived; until it is applied (html.css-pending, see scripts/sync-head.js) they stay invisible instead of
+   showing as unstyled, oversized icons and default-blue links. `visibility` (not display) keeps their layout
+   boxes, and elements that are not visible do not count toward layout shift. */
+html.css-pending .nav-desktop button,
+html.css-pending .hero-partners,
+html.css-pending main > section:not(#home),
+html.css-pending .site-footer {
+  visibility: hidden;
+}
+
+/* Doc 53 — icon base sizing for first paint. An inline <svg> has no intrinsic size, so without these (they
+   otherwise arrive with the full stylesheet) any icon in the initial HTML renders ~300 px wide and in the default
+   link/text colour. Same values as the "UI icons" block in styles.css. */
+.ui-icon { display: block; flex: none; width: 1em; height: 1em; }
+.ui-icon--sm { width: 0.8125rem; height: 0.8125rem; }
+.ui-icon--md { width: 1rem; height: 1rem; }
+.ui-icon--lg { width: 1.2rem; height: 1.2rem; }
+.ui-icon--chevron { width: 0.88em; height: 0.88em; stroke-width: 2; }
+.ui-icon--social,
+.ui-icon--social path { fill: currentColor; stroke: none; }
+.ui-icon--filled,
+.ui-icon--filled path,
+.ui-icon--filled g { fill: currentColor; stroke: none; }
+
+/* Squircle corners for the above-the-fold hero card (mirrors styles.css so the shape does not change when the full
+   stylesheet arrives). */
+@supports (corner-shape: squircle) {
+  .hero-card { corner-shape: squircle; }
+}
