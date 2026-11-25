@@ -8,7 +8,7 @@
  */
 import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
-const ASSET_V = "fd421623ed59"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+const ASSET_V = "f3bd5c9ce27a"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
 const SERVICE_WORKER_URL = "/sw.js";
 const IDLE_TIMEOUT_MS = 3000;
 const IDLE_FALLBACK_DELAY_MS = 800;

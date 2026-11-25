@@ -151,6 +151,9 @@ const orbGlyph = page.retry.isEnabled ? String(firstDelaySeconds) : idleGlyph;
           inset 0 1px 0 rgba(255, 255, 255, 0.9);
         isolation: isolate;
       }
+      @supports (corner-shape: squircle) {
+        .window, .window::before { corner-shape: squircle; }
+      }
       .window.is-error {
         --tint: var(--error);
         --tint-deep: #8f1d2e;

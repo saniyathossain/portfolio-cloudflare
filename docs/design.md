@@ -106,6 +106,9 @@ surface that **scrolls with the page** uses `--frost-bg` (an opaque gradient app
 "faux-frost" — because `backdrop-filter` on a large scrolling surface tanks mobile PageSpeed. Do not
 add `backdrop-filter` to a scrolling panel; this has been tried and reverted more than once (see
 `docs/aidlc/16`, `18`, and this session's hero-card-badge blur revert).
+**Edge strips (doc 63):** the header's top strip and the page-bottom strip are fixed, non-scrolling, hidden (opacity 0)
+until the page scrolls, so they stay inside this rule. Squircle corners use `corner-shape` under `@supports`; the contact
+modal panel is translucent liquid glass over the existing `.modal-backdrop` blur (no panel-level `backdrop-filter`).
 
 **Radii / layout:** `--radius-pill:9999px` `--radius-card:2rem` `--radius-card-sm:1.25rem`
 `--radius-control:0.875rem`. Shell max-width `--shell:88rem`. Watermark type size `--watermark:13rem`.

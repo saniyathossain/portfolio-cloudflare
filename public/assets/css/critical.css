@@ -1748,3 +1748,9 @@ html.css-pending .site-footer {
 .ui-icon--filled,
 .ui-icon--filled path,
 .ui-icon--filled g { fill: currentColor; stroke: none; }
+
+/* Squircle corners for the above-the-fold hero card (mirrors styles.css so the shape does not change when the full
+   stylesheet arrives). */
+@supports (corner-shape: squircle) {
+  .hero-card { corner-shape: squircle; }
+}
