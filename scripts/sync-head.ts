@@ -2,6 +2,7 @@
 /** Sync <head> SEO, preloads, JSON-LD, and h1 fallbacks from portfolio.json */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { applyBuildEnvironment, readSampleRate } from "../src/lib/buildSettings.ts";
 import type { Portfolio, Profile, Site } from "../src/types/Portfolio.ts";
 import { logDone, logWarn } from "./lib/console.ts";
 
@@ -64,10 +65,12 @@ function fillTemplate(template: string, variables: Readonly<Record<string, numbe
   );
 }
 
-// Opt-in analytics — emitted only when an id/token is set in portfolio.json (site.analytics).
+// Opt-in analytics — emitted only when an id/token is set (GOOGLE_ANALYTICS_ID / CLOUDFLARE_ANALYTICS_TOKEN build variables,
+// else portfolio.json site.analytics).
 // Empty by default → nothing injected → zero external requests. Ids are sanitised to [\w-] so the
 // value can't break out of the tag. CSP hosts for these are allow-listed in src/worker/security/headers.ts.
-function buildAnalytics(site: Site): string {
+function buildAnalytics(jsonSite: Site): string {
+  const site = applyBuildEnvironment(jsonSite, process.env);
   const googleId = site.analytics.googleId.replace(/[^\w-]/g, "");
   const cloudflareToken = site.analytics.cloudflareToken.replace(/[^\w-]/g, "");
   let markup = "";
@@ -80,6 +83,17 @@ function buildAnalytics(site: Site): string {
     markup += `\n  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"${cloudflareToken}"}'></script>`;
   }
   return markup;
+}
+
+// Opt-in real-user Web Vitals (docs/aidlc/69): a meta tag carries the endpoint and sampling rate to boot.ts. Emitted only when
+// RUM_SAMPLE_RATE > 0, so the default build adds no script, no meta and no request.
+const RUM_ENDPOINT = "/api/vitals";
+
+function buildRumMeta(): string {
+  const sample = readSampleRate(process.env);
+  if (sample === 0) return "";
+  const content = JSON.stringify({ endpoint: RUM_ENDPOINT, sample }).replace(/"/g, "&quot;");
+  return `\n  <meta name="portfolio-rum" content="${content}">`;
 }
 
 function buildStylesheetLinks(): string {
@@ -146,7 +160,7 @@ ${heroWebpLink}  <meta property="og:type" content="website">
   <meta name="twitter:description" content="${escapeHtml(site.twitterDescription || site.description)}">
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <script type="application/ld+json" id="ld-person">${JSON.stringify(personJsonLd)}</script>
-${buildStylesheetLinks()}${buildAnalytics(site)}`;
+${buildStylesheetLinks()}${buildAnalytics(site)}${buildRumMeta()}`;
 }
 
 function buildHeroEyebrow(profile: Profile): string {

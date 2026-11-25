@@ -9,7 +9,7 @@
     "stdout": { "driver": "stdout", "level": "debug", "maxLevel": "info" },
     "stderr": { "driver": "stderr", "level": "warn" },
     "kv": { "driver": "kv", "level": "error", "binding": "LOG_KV", "keyPrefix": "log:", "ttlSeconds": 604800 },
-    "database": { "driver": "d1", "level": "error", "binding": "LOG_DB", "table": "logs" },
+    "database": { "driver": "database", "level": "error" },
     "silent": { "driver": "null" }
   }
 }

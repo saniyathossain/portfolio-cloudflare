@@ -28,7 +28,8 @@ export class ListContactSubmissionsAction {
     const refused = await authenticator.refuse(request, meta.ip, contactLogger);
     if (refused) return refused;
 
-    if (!repository.isConfigured) return jsonResponse({ count: 0, items: [], note: "kv_not_configured" }, HttpStatus.Ok);
+    if (!repository.isConfigured)
+      {return jsonResponse({ count: 0, items: [], note: "kv_not_configured" }, HttpStatus.Ok);}
     const items = await repository.recent(this.pageSize(new URL(request.url).searchParams.get("limit"), config));
     logApiAccess(contactLogger, { status: HttpStatus.Ok, outcome: "list", count: items.length, ...meta });
     return jsonResponse({ count: items.length, items }, HttpStatus.Ok);

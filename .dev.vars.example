@@ -11,6 +11,10 @@ TURNSTILE_SECRET=1x0000000000000000000000000000000AA
 # CONTACT_TO=you@example.com              # VERIFIED destination address in Email Routing
 # CONTACT_RETENTION_SECONDS=31536000      # how long submissions stay in KV (60 .. 157680000)
 
+# ── Edge behaviour ───────────────────────────────────────────────────────────────────────────────────────────
+# ALLOW_EDGE_INJECTION=off                # on = let Cloudflare inject its Web Analytics beacon (~10 KB, 3rd party). Default off:
+#                                         # HTML is sent with Cache-Control no-transform so PageSpeed / privacy stay clean.
+
 # ── Maintenance mode ─────────────────────────────────────────────────────────────────────────────────────────
 # MAINTENANCE_MODE=off                    # on | off — site-wide 503, bypass with ?preview=<ADMIN_TOKEN>
 # MAINTENANCE_TITLE=Back soon             # optional page title override
@@ -40,3 +44,13 @@ TURNSTILE_SECRET=1x0000000000000000000000000000000AA
 # ── Owner read endpoint (GET /api/contact) ───────────────────────────────────────────────────────────────────
 # ADMIN_LIST_DEFAULT_LIMIT=50             # 1 .. 1000
 # ADMIN_LIST_MAX_LIMIT=200                # 1 .. 1000
+
+# ── Database (docs/aidlc/70) ─────────────────────────────────────────────────────────────────────────────────
+# DB_CONNECTION=d1                        # a connection name from src/content/database.json: d1 | null (null = database off)
+
+# ── Real-user Web Vitals (docs/aidlc/69) ─────────────────────────────────────────────────────────────────────
+# RUM_ENABLED=off                         # on | off — POST /api/vitals stores nothing unless on (build also needs RUM_SAMPLE_RATE)
+# MAX_VITALS_BODY_BYTES=4096              # 256 .. 65536
+# RATE_LIMIT_VITALS_LIMIT=20
+# RATE_LIMIT_VITALS_WINDOW_SECONDS=60
+# VITALS_RETENTION_DAYS=90                # 1 .. 3650 — older rows are pruned opportunistically

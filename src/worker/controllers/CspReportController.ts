@@ -39,12 +39,22 @@ export class CspReportController {
     private readonly memoryCounters: Map<string, number>,
   ) {}
 
-  async handle(request: Request, environment: WorkerEnvironment, logger: Logger, config: SecurityConfig): Promise<Response> {
-    if (request.method !== "POST") return jsonResponse({ error: ApiErrorCode.MethodNotAllowed }, HttpStatus.MethodNotAllowed, { Allow: "POST" });
+  async handle(
+    request: Request,
+    environment: WorkerEnvironment,
+    logger: Logger,
+    config: SecurityConfig,
+  ): Promise<Response> {
+    if (request.method !== "POST")
+      {return jsonResponse({ error: ApiErrorCode.MethodNotAllowed }, HttpStatus.MethodNotAllowed, { Allow: "POST" });}
 
     const reportLogger = logger.forActor("CspReportController");
     const meta = describeRequestMeta(request, this.clientProfiles);
-    const decision = await createRateLimiter(environment, this.memoryCounters).consume("csp-report", meta.ip, config.rateLimits.cspReport);
+    const decision = await createRateLimiter(environment, this.memoryCounters).consume(
+      "csp-report",
+      meta.ip,
+      config.rateLimits.cspReport,
+    );
     if (!decision.allowed) return new Response(null, { status: HttpStatus.NoContent });
 
     const rawBody = await readBoundedText(request, config.limits.maxCspReportBytes);
@@ -61,7 +71,10 @@ export class CspReportController {
     logSecurityEvent(reportLogger, request, {
       event: "csp_violation",
       severity: SecuritySeverity.Medium,
-      reason: (text(report, "violated-directive", "effectiveDirective") || "unknown directive").slice(0, MAX_DIRECTIVE_LENGTH),
+      reason: (text(report, "violated-directive", "effectiveDirective") || "unknown directive").slice(
+        0,
+        MAX_DIRECTIVE_LENGTH,
+      ),
       detail: {
         blockedUri: text(report, "blocked-uri", "blockedURL").slice(0, MAX_FIELD_LENGTH),
         documentUri: text(report, "document-uri", "documentURL").slice(0, MAX_FIELD_LENGTH),

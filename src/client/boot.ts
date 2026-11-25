@@ -8,9 +8,10 @@
  */
 import { prefersReducedMotion } from "../lib/browser/reducedMotion";
 
-const ASSET_V = "e2cf15b0b9ba"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
+const ASSET_V = "bb05fe8aacbb"; // stamped by scripts/set-asset-version.js on every ./build.sh — do not hand-edit
 const SERVICE_WORKER_URL = "/sw.js";
 const IDLE_TIMEOUT_MS = 3000;
+const RUM_META_NAME = "portfolio-rum";
 const IDLE_FALLBACK_DELAY_MS = 800;
 const reduced = prefersReducedMotion();
 const finePointer = window.matchMedia("(pointer: fine)").matches;
@@ -54,8 +55,21 @@ function registerServiceWorker(): void {
  * motion hand-rolls its own rAF-lerp spring for magnetic CTAs + hero tilt (no external library) — desktop /
  * fine-pointer only, so it no-ops and costs nothing on touch devices.
  */
+/** True when the build enabled real-user metrics (meta tag) and this visitor falls inside the sampling rate. */
+function isSampledForRum(): boolean {
+  const content = document.querySelector(`meta[name="${RUM_META_NAME}"]`)?.getAttribute("content");
+  if (!content || navigator.webdriver) return false;
+  try {
+    const { sample } = JSON.parse(content) as { sample?: number };
+    return typeof sample === "number" && Math.random() < sample;
+  } catch {
+    return false;
+  }
+}
+
 async function loadIdleScripts(): Promise<void> {
   const idleScripts = ["/assets/js/motion.min.js"];
+  if (isSampledForRum()) idleScripts.push("/assets/js/vitals.min.js");
   if (finePointer && !reduced) idleScripts.push("/assets/js/liquid-hero.min.js", "/assets/js/aurora.min.js");
   await Promise.all(idleScripts.map(loadScript));
 }

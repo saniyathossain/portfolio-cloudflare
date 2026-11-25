@@ -7,7 +7,10 @@ import { PortfolioService } from "../services/PortfolioService";
 const contentRepository = new JsonContentRepository();
 const ui = contentRepository.ui();
 
-export const portfolioService = new PortfolioService(contentRepository);
+// Build-time variables: real environment first (Cloudflare Workers Builds), then Astro's .env handling for local builds.
+const buildEnvironment = { ...import.meta.env, ...process.env };
+
+export const portfolioService = new PortfolioService(contentRepository, () => new Date(), buildEnvironment);
 export const portfolio = portfolioService.build();
 export const iconService = new IconService(contentRepository.icons(), ui.fallbackIconName);
 export const brandResolver = new BrandResolver(contentRepository.brands(), ui);

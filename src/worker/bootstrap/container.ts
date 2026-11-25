@@ -31,7 +31,11 @@ export function createSecurityServices(): SecurityServices {
   return {
     baseConfig,
     configResolver: new EnvironmentConfigResolver(baseConfig),
-    clientProfiles: new ClientProfileService(new UserAgentParser(signatures), new ClientHintsReader(), new NetworkProfileReader()),
+    clientProfiles: new ClientProfileService(
+      new UserAgentParser(signatures),
+      new ClientHintsReader(),
+      new NetworkProfileReader(),
+    ),
     guardFor(config) {
       let guard = guards.get(config);
       if (!guard) {

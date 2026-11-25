@@ -70,7 +70,8 @@ describe("composeContactMail", () => {
 });
 
 describe("readBoundedText", () => {
-  const post = (body: string, headers: Record<string, string> = {}) => new Request("https://saniyat.com/api/contact", { method: "POST", body, headers });
+  const post = (body: string, headers: Record<string, string> = {}) =>
+    new Request("https://saniyat.com/api/contact", { method: "POST", body, headers });
 
   it("returns the text under the limit and undefined over it", async () => {
     expect(await readBoundedText(post("hello"), 10)).toBe("hello");
@@ -79,5 +80,16 @@ describe("readBoundedText", () => {
 
   it("rejects on the declared Content-Length before reading", async () => {
     expect(await readBoundedText(post("hi", { "content-length": "9999" }), 10)).toBeUndefined();
+  });
+});
+
+describe("withNoTransform", () => {
+  it("adds the directive once and keeps the existing ones", async () => {
+    const { withNoTransform } = await import("../../src/worker/http/cacheControl");
+    expect(withNoTransform(null)).toBe("no-transform");
+    expect(withNoTransform("public, max-age=0, must-revalidate")).toBe(
+      "public, max-age=0, must-revalidate, no-transform",
+    );
+    expect(withNoTransform("public, No-Transform")).toBe("public, No-Transform");
   });
 });

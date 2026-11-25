@@ -24,7 +24,11 @@ export function encodeBase64Utf8(text: string): string {
  * visitor types survives, and every header value derived from visitor input is single-line and header-safe, so
  * nothing the visitor types can add a header (Bcc, extra To…). Reply-To is the visitor so a reply goes straight back.
  */
-export function composeContactMail(mail: ContactMail, messageId: string = crypto.randomUUID(), now: Date = new Date()): string {
+export function composeContactMail(
+  mail: ContactMail,
+  messageId: string = crypto.randomUUID(),
+  now: Date = new Date(),
+): string {
   const safeName = toHeaderSafeName(mail.name) || FALLBACK_NAME;
   const subject = `New portfolio contact — ${safeName}`;
   const body = `Name: ${safeName}\r\nEmail: ${mail.email}\r\n\r\n${mail.project}\r\n`;

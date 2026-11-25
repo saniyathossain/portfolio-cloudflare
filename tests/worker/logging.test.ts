@@ -37,10 +37,12 @@ describe("logging config", () => {
     expect(loggingSchema.safeParse({ ...rawLogging, default: "missing" }).success).toBe(false);
   });
 
-  it("rejects a SQL-unsafe D1 table name", () => {
-    const broken = structuredClone(rawLogging);
-    broken.channels.database.table = "logs; DROP TABLE x";
-    expect(loggingSchema.safeParse(broken).success).toBe(false);
+  it("rejects unknown keys on the database channel (no table name from config any more)", () => {
+    const broken = {
+      ...structuredClone(rawLogging),
+      channels: { database: { driver: "database", level: "error", table: "x" } },
+    };
+    expect(loggingSchema.safeParse({ ...broken, default: "database" }).success).toBe(false);
   });
 });
 

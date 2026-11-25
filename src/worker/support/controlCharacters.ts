@@ -30,5 +30,8 @@ export function stripControlCharacters(value: string, keepNewlines: boolean): st
 
 /** Collapses every line break (CR, LF, U+2028/2029) to one space. */
 export function collapseLineBreaks(value: string): string {
-  return Array.from(value).map((character) => (isLineBreakCode(character.codePointAt(0) ?? 0) ? " " : character)).join("").replace(/ {2,}/g, " ");
+  return Array.from(value)
+    .map((character) => (isLineBreakCode(character.codePointAt(0) ?? 0) ? " " : character))
+    .join("")
+    .replace(/ {2,}/g, " ");
 }

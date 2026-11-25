@@ -1,0 +1,13 @@
+# Normalise line endings; keep binary assets and generated files out of diffs and language stats.
+* text=auto eol=lf
+
+*.woff2 binary
+*.webp binary
+*.png binary
+*.jpg binary
+*.ico binary
+
+package-lock.json -diff linguist-generated
+*.min.js linguist-generated
+*.min.css linguist-generated
+src/legacy/index.html linguist-generated=false

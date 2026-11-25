@@ -1,8 +1,10 @@
+import { EnvVar } from "../../enums/EnvVar";
 import { HttpStatus } from "../../enums/HttpStatus";
 import type { Logger } from "../logging/Logger";
 import { ACCEPT_CLIENT_HINTS, buildSecurityHeaders } from "../security/headers";
-import { resolveFlag } from "../services/FeatureFlags";
+import { readEnvironmentFlag, resolveFlag } from "../services/FeatureFlags";
 import type { WorkerEnvironment } from "../types/WorkerEnvironment";
+import { withNoTransform } from "./cacheControl";
 import { EARLY_HINTS } from "./earlyHints";
 import { errorPageResponse } from "./errorPage";
 
@@ -38,7 +40,12 @@ export interface StaticResponseOptions {
 
 /** Serves the built site from the ASSETS binding and layers on security headers, cache policy and preload hints. */
 export class StaticSiteResponder {
-  async respond(request: Request, environment: WorkerEnvironment, logger: Logger, options: StaticResponseOptions): Promise<Response> {
+  async respond(
+    request: Request,
+    environment: WorkerEnvironment,
+    logger: Logger,
+    options: StaticResponseOptions,
+  ): Promise<Response> {
     const url = new URL(request.url);
     const response = await environment.ASSETS.fetch(request);
     const headers = new Headers(response.headers);
@@ -51,12 +58,13 @@ export class StaticSiteResponder {
     if (options.isPreview) headers.set("Cache-Control", "no-store");
 
     const isHtml = isHtmlResponse(request.url, response);
-    if (isHtml) {
-      headers.set("Link", EARLY_HINTS);
-      headers.set("Accept-CH", ACCEPT_CLIENT_HINTS);
-    }
+    if (isHtml) this.applyHtmlHeaders(headers, environment);
     if (isHtml && response.status >= SERVER_ERROR_FLOOR) {
-      logger.error({ event: "upstream_failed", location: url.pathname, reason: `asset store answered ${response.status}` });
+      logger.error({
+        event: "upstream_failed",
+        location: url.pathname,
+        reason: `asset store answered ${response.status}`,
+      });
       return errorPageResponse(
         { assets: environment.ASSETS, logger, baseHeaders: buildSecurityHeaders(request.url) },
         { requestUrl: request.url, slug: "bad-gateway", status: HttpStatus.BadGateway },
@@ -65,13 +73,27 @@ export class StaticSiteResponder {
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   }
 
+  /** Preload hints, client-hint opt-in and — unless ALLOW_EDGE_INJECTION is on — `no-transform`, which keeps Cloudflare from
+   *  injecting its 10 KB third-party Web Analytics beacon into the page. */
+  private applyHtmlHeaders(headers: Headers, environment: WorkerEnvironment): void {
+    headers.set("Link", EARLY_HINTS);
+    headers.set("Accept-CH", ACCEPT_CLIENT_HINTS);
+    const allowed = environment[EnvVar.AllowEdgeInjection];
+    if (readEnvironmentFlag(typeof allowed === "string" ? allowed : undefined) !== true) {
+      headers.set("Cache-Control", withNoTransform(headers.get("Cache-Control")));
+    }
+  }
+
   /** The Worker var SKILLS_SCROLL_DESIGN overrides the JSON default, so the flag is resolved per request, uncached. */
   private async portfolioJson(response: Response, environment: WorkerEnvironment, headers: Headers): Promise<Response> {
     const raw = asObject(await response.json());
     const site = asObject(raw["site"]);
     const features = asObject(site["features"]);
     const flags = asObject(features["flags"]);
-    flags["skillsScrollDesign"] = resolveFlag(flags["skillsScrollDesign"] as boolean | undefined, environment.SKILLS_SCROLL_DESIGN);
+    flags["skillsScrollDesign"] = resolveFlag(
+      flags["skillsScrollDesign"] as boolean | undefined,
+      environment.SKILLS_SCROLL_DESIGN,
+    );
     features["flags"] = flags;
     site["features"] = features;
     raw["site"] = site;

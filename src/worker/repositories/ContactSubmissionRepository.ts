@@ -34,7 +34,11 @@ export class KvContactSubmissionRepository implements ContactSubmissionRepositor
       return true;
     } catch (error) {
       this.logger.exception(
-        { event: "contact_store_failed", location: "ContactSubmissionRepository.save", reason: "KV put failed; submission still accepted" },
+        {
+          event: "contact_store_failed",
+          location: "ContactSubmissionRepository.save",
+          reason: "KV put failed; submission still accepted",
+        },
         error,
       );
       return false;

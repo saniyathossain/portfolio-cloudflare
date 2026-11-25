@@ -22,12 +22,6 @@ const BRANDS_CRITICAL_SOURCE = join(CSS_DIR, "brands.critical.css");
 const CRITICAL_SOURCE = join(CSS_DIR, "critical.css");
 const CRITICAL_OUTPUT = join(CSS_DIR, "critical.min.css");
 
-const MIN_BLOCK_BODY_LENGTH = 24;
-const MIN_PROBE_LENGTH = 16;
-const MAX_PROBE_LENGTH = 80;
-const PROBE_WINDOW_LENGTH = 48;
-const LABEL_MAX_LENGTH = 60;
-const PROBE_PREVIEW_LENGTH = 40;
 const URL_OPENER_LENGTH = 4;
 
 type CssTokenKind = "comment" | "whitespace" | "string" | "url-open" | "url-body" | "other";
@@ -134,78 +128,9 @@ function minifyCss(css: string): string {
   return `${output.trim()}\n`;
 }
 
-function stripComments(css: string): string {
-  return tokenizeCss(css)
-    .map((token) => (token.kind === "comment" ? "" : token.text))
-    .join("");
-}
-
-interface RuleBlock {
-  selector: string;
-  body: string;
-}
-
-/** Top-level `selector { body }` blocks with a substantial body. */
-function extractSubstantialBlocks(criticalCss: string): RuleBlock[] {
-  const blocks: RuleBlock[] = [];
-  let depth = 0;
-  let blockStart = 0;
-  for (const token of tokenizeCss(criticalCss)) {
-    if (token.kind !== "other") continue;
-    if (token.text === "{") {
-      if (depth === 0) blockStart = token.start;
-      depth++;
-      continue;
-    }
-    if (token.text !== "}") continue;
-    depth--;
-    if (depth !== 0) continue;
-    const block = readBlock(criticalCss, blockStart, token.start);
-    if (block.body.length >= MIN_BLOCK_BODY_LENGTH) blocks.push(block);
-  }
-  return blocks;
-}
-
-function readBlock(criticalCss: string, openIndex: number, closeIndex: number): RuleBlock {
-  let selectorStart = openIndex;
-  while (selectorStart > 0 && criticalCss[selectorStart - 1] !== "}") selectorStart--;
-  return {
-    selector: criticalCss.slice(selectorStart, openIndex).trim().replace(/\s+/g, " "),
-    body: criticalCss.slice(openIndex + 1, closeIndex).trim(),
-  };
-}
-
-/** A short distinctive slice of a rule body, used to look the rule up in styles.css. */
-function buildProbe(body: string): string {
-  const compact = body.replace(/\s+/g, " ").trim();
-  if (compact.length <= MAX_PROBE_LENGTH) return compact;
-  const windowStart = Math.floor((compact.length - PROBE_WINDOW_LENGTH) / 2);
-  return compact.slice(windowStart, windowStart + PROBE_WINDOW_LENGTH);
-}
-
-/** Warn if distinctive body text from substantial critical rule blocks is missing in styles.css. */
-function checkContainment(criticalSource: string, stylesSource: string): void {
-  const blocks = extractSubstantialBlocks(stripComments(criticalSource));
-  // Collapse WS on both sides so probes survive formatting differences between extract + source.
-  const normalizedStyles = stylesSource.replace(/\s+/g, " ");
-
-  let warningCount = 0;
-  for (const { selector, body } of blocks) {
-    const probe = buildProbe(body);
-    if (probe.length < MIN_PROBE_LENGTH) continue;
-    if (!normalizedStyles.includes(probe)) {
-      warningCount++;
-      const label = (selector.split(/\s*,\s*/)[0] ?? "").slice(0, LABEL_MAX_LENGTH);
-      const preview = probe.slice(0, PROBE_PREVIEW_LENGTH) + (probe.length > PROBE_PREVIEW_LENGTH ? "…" : "");
-      logWarn(`minify-css containment — critical rule not found in styles.css: ${label} … probe=${JSON.stringify(preview)}`);
-    }
-  }
-  if (warningCount === 0) {
-    logDone(`minify-css: critical containment OK (${blocks.length} substantial blocks checked)`);
-  } else {
-    logWarn(`minify-css: critical containment — ${warningCount} WARNING(s)`);
-  }
-}
+// The old "containment" probe check lived here: it compared formatted critical.css to the minified bundle by text, so it
+// raised false positives (Tailwind's `.shell`, `:root`) and missed real drift (a rule that exists in both files with
+// different declarations). `scripts/critical-parity-check.ts` replaces it by measuring the rendered layout instead.
 
 const stylesSource = readFileSync(STYLES_SOURCE, "utf8");
 const tailwindSource = existsSync(TAILWIND_SOURCE) ? readFileSync(TAILWIND_SOURCE, "utf8") : "";
@@ -220,8 +145,10 @@ logDone(
 
 if (existsSync(CRITICAL_SOURCE)) {
   const criticalSource = readFileSync(CRITICAL_SOURCE, "utf8");
-  checkContainment(criticalSource, stylesSource);
-  const criticalMinified = minifyCss(`${criticalSource}\n${readIfPresent(BRANDS_CRITICAL_SOURCE)}`);
+  // The whole compiled Tailwind output (reset + components + the utilities the markup uses) goes in first: it is only ~20 KB and
+  // the markup is full of utility classes, so without it the first paint lays out with UA margins and default line-heights and the
+  // page reflows when styles.min.css lands (CLS). Order matches the full bundle: tailwind, then critical.css overrides.
+  const criticalMinified = minifyCss(`${tailwindSource}\n${criticalSource}\n${readIfPresent(BRANDS_CRITICAL_SOURCE)}`);
   writeFileSync(CRITICAL_OUTPUT, criticalMinified);
   logDone(
     `minify-css: critical.css ${criticalSource.length}B → critical.min.css ${criticalMinified.length}B (${percentSmaller(criticalSource.length, criticalMinified.length)}% smaller)`,
