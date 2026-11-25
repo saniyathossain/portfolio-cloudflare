@@ -22,7 +22,7 @@ export enum EnvVar {
   RateLimitVitalsWindowSeconds = "RATE_LIMIT_VITALS_WINDOW_SECONDS",
   VitalsRetentionDays = "VITALS_RETENTION_DAYS",
   // Edge behaviour
-  AllowEdgeInjection = "ALLOW_EDGE_INJECTION",
+  BlockEdgeInjection = "BLOCK_EDGE_INJECTION",
   // Logging
   LogChannel = "LOG_CHANNEL",
   LogLevel = "LOG_LEVEL",

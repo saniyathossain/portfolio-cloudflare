@@ -73,13 +73,13 @@ export class StaticSiteResponder {
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   }
 
-  /** Preload hints, client-hint opt-in and — unless ALLOW_EDGE_INJECTION is on — `no-transform`, which keeps Cloudflare from
-   *  injecting its 10 KB third-party Web Analytics beacon into the page. */
+  /** Preload hints and client-hint opt-in. `no-transform` is opt-in (BLOCK_EDGE_INJECTION=on) because Cloudflare also
+   *  skips gzip/brotli for responses that carry it: the 370 KB document was served uncompressed (PageSpeed, doc 71). */
   private applyHtmlHeaders(headers: Headers, environment: WorkerEnvironment): void {
     headers.set("Link", EARLY_HINTS);
     headers.set("Accept-CH", ACCEPT_CLIENT_HINTS);
-    const allowed = environment[EnvVar.AllowEdgeInjection];
-    if (readEnvironmentFlag(typeof allowed === "string" ? allowed : undefined) !== true) {
+    const blocked = environment[EnvVar.BlockEdgeInjection];
+    if (readEnvironmentFlag(typeof blocked === "string" ? blocked : undefined) === true) {
       headers.set("Cache-Control", withNoTransform(headers.get("Cache-Control")));
     }
   }
