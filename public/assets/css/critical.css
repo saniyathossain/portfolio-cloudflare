@@ -67,7 +67,7 @@ html:not(.is-loading) .load-scrim { display: none; }
   --accent: #b15f2c;
   --accent-bright: #cf8047;
   --accent-dark: #97501f;
-  --beige: #7f6a49;          /* warm taupe-beige — hero designation (AA ~4.7:1, harmonises with copper) */
+  --beige: #735f3e;          /* warm taupe-beige — hero designation (AA >= 5:1, harmonises with copper) */
   --primary: var(--accent);
   --primary-deep: var(--accent-dark);
   --teal: #2b8c9a;           /* sea */
@@ -601,7 +601,7 @@ html.is-loading .site-header {
 
 .eyebrow {
   display: inline-flex; align-items: flex-start; gap: 0.55rem;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em;
+  font-size: max(11px, 0.72rem); font-weight: 700; letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--tint-deep);
   text-shadow: var(--text-sh-emboss);
@@ -777,7 +777,7 @@ p, .exp-row__desc, .service-row__desc, .hero-card__title, .loader__tagline { tex
 .hero-card__swap.is-swap-instant { transition: none; }
 
 .hero-card__caption {
-  font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+  font-size: max(11px, 0.6875rem); font-weight: 500; text-transform: uppercase;
   letter-spacing: 0.05em; color: rgba(17, 17, 17, 0.45);
 }
 
@@ -1698,7 +1698,7 @@ html.is-idle .beam::before {
   position: relative; z-index: 2;
   flex: 1 1 auto; width: 100%;
   display: flex; align-items: center; justify-content: center; gap: 0.36rem;
-  padding: 0.48rem 0.72rem; font-size: 0.6875rem; font-weight: 500;
+  padding: 0.48rem 0.72rem; font-size: max(11px, 0.6875rem); font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.045em; color: #fff;
 }
 
